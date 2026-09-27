@@ -2,6 +2,31 @@
 
 Entradas mais recentes primeiro. Cada sessão: o que se fez · o que ficou por fazer · próximo passo.
 
+## 2026-09-27 (cont. 13) — D-007 fechada; todas as decisões em aberto resolvidas
+
+- **D-007 aceite:** sem licença (todos os direitos reservados) — visível mas não reutilizável por terceiros; coerente com D-002 (uso só pessoal). MIT foi considerada e descartada.
+- `README.md` atualizado: estado corrigido (já há código de lógica pura, não é "sem código ainda") e disclaimer reforçado com a nota de licença/risco.
+- Com isto, `DECISIONS.md` fica sem itens "Em aberto" exceto D-008, que não é bem uma decisão pendente — é a regra fixa de que git/GitHub são só do dono.
+- **Próximo passo:** não há mais decisões de alcance/risco a bloquear trabalho. Pode avançar-se para código de A3 (treinos, transferências) — o dono decide se quer começar por aí, ou por outra coisa.
+
+## 2026-09-27 (cont. 12) — D-012 e D-006 fechadas
+
+- Discussão sobre risco dos anúncios: corrigida a leitura do precedente de junho — é sobre **exceder** limites via bug, não sobre automatizar **dentro** dos limites (isso fica desconhecido, não confirmado nem afastado). `DISCOVERY.md` §5 e `RISKS_AND_COMPLIANCE.md` corrigidos.
+- Dono propôs mitigação: respeitar sempre os limites do jogo, capar a fração de janelas apanhadas (~60-70%, por afinar) com timings aleatórios, correr só nas horas em que as máquinas estão ligadas (sem horário fixo, varia dia a dia).
+- **D-012 aceite:** anúncios (A4) sem servidor dedicado — corre em PC pessoal, MacBook e PC da empresa (dono é o IT da empresa, sem risco de política de TI de terceiros).
+- **D-006 aceite:** CLI fina + biblioteca, arranque automático por máquina (Task Scheduler/LaunchAgent), sem horário fixo.
+- Descartada a ideia de usar um iPhone antigo (6s/8) como "servidor": iOS não corre automação em background sem jailbreak, e mesmo com jailbreak não é viável correr um browser real para ver o anúncio sem forjar a confirmação.
+- Sem código novo.
+- **Próximo passo:** só falta **D-007** (licença do repo) para fechar todas as decisões em aberto. Depois disso, pode começar-se código (treinos/transferências, A3, não depende de mais nada).
+
+## 2026-09-27 (cont. 11) — D-004 e D-002 fechadas
+
+- Pesquisa web nova em `DISCOVERY.md` §5: OSM tem "device ban"; precedente de junho 2026 em que contas foram banidas por ver vídeos ilimitados (bug do jogo, não bot) e a sanção foi mantida — sinal de que a deteção olha para o padrão/volume, não só para a intenção. Refletido também em `RISKS_AND_COMPLIANCE.md`.
+- **D-004 aceite:** dono aceita risco A3 já, A4 quando D-012 estiver resolvida; testes começam em conta secundária "a seu tempo"; registado que a conta secundária não isola 100% (device ban).
+- **D-002 aceite:** alcance = A3 (treinos, transferências automáticos). A4 (anúncios) fica preso a D-012, que passou a depender só de **infraestrutura** (onde correr algo 24/7 sem gastar dinheiro — servidor vs. Raspberry Pi), não de risco.
+- Sem código novo.
+- **Próximo passo:** decidir D-006 (interface) e D-007 (licença), agora destravadas; D-012 fica para quando o dono resolver a questão de infraestrutura.
+
 ## 2026-09-27 (cont. 10) — Teoria fechada, incluindo vídeos e finanças
 
 - Acrescentados em `THEORY.md`: análise do adversário e objetivo de época (§11); vídeos de treino, loja e finanças (§12); poupança e juros (§13, ≈2% por dia de jogo).

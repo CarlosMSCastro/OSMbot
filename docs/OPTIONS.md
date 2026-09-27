@@ -4,6 +4,8 @@
 
 ## A. Alcance — o que faz o bot?
 
+*Decidido: A3 para treinos/transferências, A4 (anúncios) dependente de D-012. Ver `DECISIONS.md` D-002/D-004.*
+
 | Nível | Exemplos | Toca no jogo? | Risco de ban |
 |---|---|---|---|
 | **A0 — Offline** | Otimizador/simulador de plantel e táticas com dados que o utilizador introduz ou exporta à mão | Não | Nenhum |

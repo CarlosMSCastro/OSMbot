@@ -35,13 +35,28 @@ Python ≥ 3.11 (testado em 3.12), layout `src/`, testes com pytest. Sem depend�
 Identificadores, docstrings e testes em inglês (convenção para um repo público); docs em `docs/` em português europeu. Mensagens de commit e README público por decidir.
 **Porquê:** assumido por nós ao começar a escrever código; o dono pode inverter.
 
+### D-004 · Postura de risco face aos ToS · Aceite · 2026-09-27
+O dono aceita o risco de ban ao nível **A3** (ações automáticas: treinos e transferências) desde já, e **A4** (anúncios) quando D-012 estiver decidida. Os testes começam numa **conta secundária**, "a seu tempo" — não há pressa. Fica registado que a conta secundária **não isola totalmente** o risco à conta principal: o OSM tem "device ban" (bloqueia contas novas no mesmo dispositivo/browser); ligação por IP não está confirmada. Ver `DISCOVERY.md` §5.
+**Porquê:** decisão consciente do dono, informado do precedente de junho 2026 (contas banidas por volume anómalo de vídeos mesmo sendo um bug do jogo, não intenção maliciosa) e de que a deteção tende a olhar para o **padrão de comportamento** (timing, ausência de eventos reais de rato/teclado), não só para o volume.
+
+### D-002 · Alcance (A0–A4) · Aceite · 2026-09-27
+Alcance = **A3** para treinos e transferências (ações automáticas, escrita na conta). **A4** (ver anúncios) fica dependente de D-012 — não por risco, mas por infraestrutura (precisa de algo sempre online: servidor próprio ou Raspberry Pi, que o dono não quer pagar por agora).
+**Porquê:** decorre de D-010 (propósito) e D-004 (risco aceite).
+
+### D-012 · Anúncios (A4): incluir, sem servidor dedicado · Aceite · 2026-09-27
+O bot vê anúncios **sempre a respeitar os limites do próprio jogo** (nunca exceder tetos tipo "4/hora"; nunca forjar callbacks de recompensa — isso fica excluído por completo, regra 8 do `CLAUDE.md`). Corre nas máquinas do dono conforme estiverem ligadas — **PC pessoal, MacBook, PC da empresa** (este último sob controlo do próprio dono, que é o IT da empresa, logo sem o risco de política de TI de terceiros) — **sem horário fixo codificado** e **sem servidor/Raspberry Pi/dispositivo dedicado**. Dentro das horas em que uma máquina está ligada, salta propositadamente algumas janelas de anúncio (não tenta 100%) com timings aleatórios entre cliques, para não ter uma disponibilidade "perfeita demais".
+**Porquê:** ver `DISCOVERY.md` §5 e `RISKS_AND_COMPLIANCE.md` — o único precedente de ban conhecido (jun. 2026) foi por **exceder** o teto do jogo via bug, não por automatizar dentro dos limites; essa segunda situação continua **desconhecida** (nem confirmada nem afastada), daí a mitigação de variar o padrão em vez de o maximizar. **Percentagem alvo de janelas apanhadas: por afinar quando construirmos** (ordem de grandeza 60-70%, não é definitivo).
+
+### D-006 · Interface: CLI fina + biblioteca · Aceite · 2026-09-27
+`osmbot/` continua biblioteca pura; uma CLI fina chama as suas funções (`osmbot treinos --aplicar`, etc.). Para correr "sozinho", cada máquina arranca o processo automaticamente ao ligar/sessão iniciar (Windows: Task Scheduler/Startup; macOS: LaunchAgent) e ele fica ativo enquanto a máquina estiver ligada — sem horário fixo, adapta-se aos ritmos reais do dono.
+**Porquê:** uso é só pessoal (sem necessidade de Discord/Telegram/web); Python (D-001) já é multi-plataforma; evita custo/complexidade de servidor.
+
+### D-007 · Licença do repo: nenhuma (todos os direitos reservados) · Aceite · 2026-09-27
+Sem ficheiro `LICENSE`. O repo fica público e visível, mas sem autorização legal para terceiros copiarem/reutilizarem/redistribuírem o código. Adicionado disclaimer de risco em `README.md`.
+**Porquê:** o dono não está preocupado com apropriação de ideias (baixa visibilidade do seu GitHub), mas o bot é para uso **só dele** (D-002); "sem licença" é mais coerente com essa intenção do que MIT, que convidaria à redistribuição como ferramenta. Diferença prática pequena — o risco de ban (D-004) depende do que o dono corre contra o OSM, não da licença do código.
+
 ## Em aberto
 
 | ID | Decisão | Depende de | Notas |
 |---|---|---|---|
-| D-012 | Anúncios: incluir ou não, e como | D-004 | O repo forja callbacks de recompensa; **não vamos replicar isso**. Ver `PRIOR_ART.md` |
-| D-002 | Alcance (A0–A4) | D-004 | Ver `OPTIONS.md` §A |
-| D-004 | Postura de risco face aos ToS | — | Ver `RISKS_AND_COMPLIANCE.md` |
-| D-006 | Interface (CLI/Discord/Telegram/web/lib) | D-002 | |
-| D-007 | Licença do repo | D-004 | Relevante se o destino for GitHub público |
 | D-008 | Git / repo no GitHub | — | **Do dono.** Ele faz commits, pulls e tudo o que é git/GitHub. O Claude só ajuda com mensagens de commit e versões quando pedido |

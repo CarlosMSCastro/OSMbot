@@ -27,6 +27,12 @@ Consequência para o utilizador: **conta banida e itens/moedas perdidos.** Um re
 - Pedir autorização escrita à Gamebasics (única via limpa para A1+).
 - Se publicar no GitHub: disclaimer claro, sem incluir nada que facilite contornar deteção, sem credenciais.
 
+**[R]** O OSM tem "device ban" (dispositivo banido fica bloqueado para contas novas no mesmo dispositivo) — ver `DISCOVERY.md` §5. Isto limita a mitigação "conta descartável": se for testada no mesmo PC/browser que a conta principal, o isolamento pode não ser total. Não confirmado se o OSM liga contas por IP/fingerprint além do device ban.
+
+**[R] Precedente de junho 2026 (D-012, ver `DISCOVERY.md` §5):** contas banidas por **exceder o teto normal de vídeos/hora** via um bug, sanção mantida mesmo sem intenção maliciosa. **Isto é sobre exceder limites, não sobre automatizar dentro deles** — não é prova de que um bot que respeite os limites do jogo (ex.: 4 vídeos/hora, cooldown) seja detetado da mesma forma. Essa questão específica fica **[H] em aberto**: os ToS proíbem "bots" como categoria, independentemente de exceder limites, mas não há precedente conhecido de deteção nesse caso mais moderado.
+
+**Mitigação proposta pelo dono para D-012:** em vez de tentar apanhar 100% das janelas de anúncio, capar a uma fração (ex. 60-70%, valor **[H]** por afinar) com timings aleatórios entre cliques, e correr só durante as horas em que o PC normalmente está ligado (não 24/7) — aproxima o padrão de um jogador muito dedicado em vez de disponibilidade perfeita, e evita precisar de servidor/Raspberry Pi dedicado.
+
 ## Postura de risco — **por decidir (D-004)**
 
 O Claude não assume nenhuma. Antes de qualquer contacto com o jogo real, o utilizador confirma o nível de risco que aceita e em que conta.

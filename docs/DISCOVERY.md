@@ -33,7 +33,15 @@ Legenda: **[V]** verificado por nós · **[R]** reportado por fonte de terceiros
 
 Resumo (detalhe e citações em `RISKS_AND_COMPLIANCE.md`): bots e software de terceiros são tratados como *cheating*; scraping/uso das APIs sem autorização escrita é proibido; sanções vão de aviso a ban permanente com perda de itens virtuais sem reembolso.
 
-## 5. Próximos passos de descoberta
+## 5. Deteção e histórico de bans (pesquisa web, 2026-09-27)
+
+- **[R]** O jogo tem **"device ban"**: um dispositivo banido fica impedido de jogar com contas novas criadas nesse mesmo dispositivo/browser. Fonte: fóruns de terceiros sobre OSM.
+- **[R] Caso concreto relevante (fórum oficial, ~junho 2026):** um bug no jogo permitiu a alguns jogadores ver **vídeos ilimitados** (mais do que o limite normal). A Gamebasics baniu essas contas; mesmo depois de confirmarem que era um bug do jogo e não erro do jogador, **mantiveram as sanções** porque consideraram que os jogadores "abusaram de um exploit". Fonte: `forum.onlinesoccermanager.com/topic/76755` e tópicos relacionados.
+  - **Porque interessa (e o que NÃO prova):** este caso foi especificamente sobre **exceder o teto normal de vídeos/hora** via bug — não sobre automatizar cliques **dentro** dos limites do jogo. Não é prova de que um bot bem-comportado (respeita "4/hora", respeita o cooldown de 1-3h) seja detetado da mesma forma; isso continua **desconhecido**, não confirmado nem afastado. O que prova é que "não sabia que era um exploit" não livra da sanção — relevante se algum dia se exceder um limite por engano, não para o caso de respeitar os limites.
+- **[H]** Deteção por *fingerprint* de dispositivo (Canvas/WebGL/resolução/etc.) e correlação de IP entre contas é comum noutros jogos com sistemas anti-multi-conta; **não confirmado especificamente para o OSM**, só inferido de artigos genéricos sobre deteção de multi-contas.
+- **Leitura para D-004:** uma conta secundária no mesmo PC/browser que a principal pode não isolar totalmente o risco, se o OSM ligar contas por dispositivo. Testar em conta separada ajuda, mas não é garantia total enquanto não soubermos se há device-linking aqui.
+
+## 6. Próximos passos de descoberta
 
 1. Ler o tópico do fórum "Osm API" (manualmente, no browser, por causa do Anubis).
 2. Ler o artigo do suporte "What's considered cheating in OSM?" (devolveu 403 ao fetch automático).
