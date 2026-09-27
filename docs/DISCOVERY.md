@@ -1,0 +1,41 @@
+# Discovery — o que é possível
+
+*Recolhido em 2026-09-27 por pesquisa web. Nada foi testado contra o jogo real.*
+Legenda: **[V]** verificado por nós · **[R]** reportado por fonte de terceiros · **[H]** hipótese
+
+## 1. API oficial
+
+- **[R] Não foi encontrada API pública oficial nem documentação.** A pesquisa devolve sobretudo docs do *Online Scout Manager* (outro produto) — não confundir.
+- **[R]** Os ToS mencionam "our APIs", o que sugere que existem APIs internas, usadas pelo próprio front-end.
+- O fórum oficial tem um tópico "Osm API" (`forum.onlinesoccermanager.com/topic/70973/osm-api`) mas está atrás de proteção anti-bot (Anubis) e não deu para o ler. **Por ler.**
+
+## 2. Projetos existentes (prior art)
+
+| Repo | Stack | O que faz | Notas |
+|---|---|---|---|
+| [nsozturk/osm-ad-bot](https://github.com/nsozturk/osm-ad-bot) | Python + Playwright | Farm de BossCoin vendo anúncios; gestor opcional de treinos | Arquitetura "conductor + watcher" (1 tab monitoriza rate limits via API, N tabs veem anúncios). Sessão importada por dump de cookies/localStorage. Usa endpoints `forecast`/`forecastUniversal` para treinos. Trata rate limits. |
+| [RuiRC/Online-Soccer-Manager-Ad-Watch-Bot](https://github.com/RuiRC/Online-Soccer-Manager-Ad-Watch-Bot) | Selenium | Vê anúncios automaticamente | Simples |
+| [okch-codes/onlinesoccermanager-auto-manager](https://github.com/okch-codes/onlinesoccermanager-auto-manager) | Node/TS + Playwright + Docker | Moedas grátis via testes Playwright | **Arquivado a 2026-03-26.** Login por `.env` com user/password. Autor diz ser "apenas demonstração". |
+| [atuncer/OSM_Scraping](https://github.com/atuncer/OSM_Scraping) | Python + Selenium + SQLite | Scraping de dados de jogadores para `players.db` | Cookie de sessão em `cookie.pkl`. **Avisa que o servidor pode bloquear a conta por excesso de pedidos.** |
+
+**Leitura:** todos os projetos encontrados são automação de browser, e o caso de uso dominante é farm de moedas. Não encontrei nenhuma biblioteca de cliente HTTP para o jogo nem documentação de endpoints. Ninguém publicou a forma da API — é território por mapear.
+
+## 3. O que se sabe sobre a superfície técnica
+
+- **[R]** Existe rate limiting do lado do servidor (nsozturk e atuncer tratam-no/avisam).
+- **[R]** Os tokens são de curta duração e rodados pelo front-end (nsozturk mantém a página viva para os manter).
+- **[R]** Sessão por cookies funciona para automação (dois projetos independentes o usam).
+- **[H]** O jogo é uma web app com API interna JSON. Não confirmado; hosts/paths desconhecidos.
+- **[H]** Existe algum tipo de proteção anti-automação no jogo (não foi observada). Desconhecido.
+- **Por descobrir:** autenticação exata, hosts, formato dos dados de plantel/mercado/jogos, limites concretos de pedidos.
+
+## 4. Regras do jogo/ToS relevantes
+
+Resumo (detalhe e citações em `RISKS_AND_COMPLIANCE.md`): bots e software de terceiros são tratados como *cheating*; scraping/uso das APIs sem autorização escrita é proibido; sanções vão de aviso a ban permanente com perda de itens virtuais sem reembolso.
+
+## 5. Próximos passos de descoberta
+
+1. Ler o tópico do fórum "Osm API" (manualmente, no browser, por causa do Anubis).
+2. Ler o artigo do suporte "What's considered cheating in OSM?" (devolveu 403 ao fetch automático).
+3. **Só com OK do utilizador e conta que ele aceite arriscar:** observar, no browser, as chamadas de rede da web app durante uso normal (só leitura), para mapear hosts/endpoints/auth.
+4. Considerar contactar a Gamebasics a pedir autorização escrita (única via limpa para scraping/API).

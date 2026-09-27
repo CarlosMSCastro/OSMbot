@@ -1,0 +1,43 @@
+# Segredos e sessões — NUNCA versionar (repo público)
+.env
+.env.*
+*.env
+.env-osm-credentials
+cookies.json
+cookie.pkl
+local.json
+session.json
+storage-dump/
+storagedump*/
+*.har
+tmp/
+
+# Dados recolhidos
+*.db
+*.sqlite
+*.sqlite3
+data/raw/
+
+# Node
+node_modules/
+dist/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Playwright
+playwright-report/
+test-results/
+.playwright/
+
+# Editor / SO
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Claude Code (local)
+.claude/settings.local.json
