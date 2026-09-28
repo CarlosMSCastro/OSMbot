@@ -29,9 +29,9 @@ def test_choose_formation(mine, theirs, expected):
     assert choose_formation(mine, theirs, similar_margin=5) == expected
 
 
-def test_similar_margin_is_required():
-    with pytest.raises(TypeError):
-        choose_formation(80, 80)  # type: ignore[call-arg]
+def test_similar_margin_defaults_to_2():
+    assert choose_formation(80, 82) == Formation.F433_B  # within default margin
+    assert choose_formation(80, 83) == Formation.F532  # just outside it
 
 
 def test_negative_margin_rejected():

@@ -79,16 +79,17 @@ class TacticSetup:
     defence: DefenceRole
 
 
-def choose_formation(my_rating: float, opp_rating: float, *, similar_margin: float) -> Formation:
+def choose_formation(my_rating: float, opp_rating: float, *, similar_margin: float = 2) -> Formation:
     """Pick the formation from the team-rating matchup.
 
     - opponent stronger by more than ``similar_margin``  -> 5-3-2
     - ratings within ``similar_margin``                  -> 4-3-3 B (defensive midfielder)
     - opponent weaker by more than ``similar_margin``    -> 4-3-3 A (attacking midfielder)
 
-    ``similar_margin`` is deliberately required: the owner has not yet defined it.
-    Between the two 4-3-3 variants the owner says it "depends on the squad"; this
-    function only encodes the matchup-driven default.
+    ``similar_margin`` defaults to 2 (the owner's rule: within +-2 points he still
+    considers playing 4-3-3). Between the two 4-3-3 variants the owner says it also
+    "depends on the squad" (e.g. having a good MCD available); this function only
+    encodes the matchup-driven default.
     """
     if similar_margin < 0:
         raise ValueError("similar_margin must be >= 0")

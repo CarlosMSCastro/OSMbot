@@ -6,6 +6,25 @@ Este ficheiro é o **histórico de versões, para quem lê o repo**. O diário i
 
 ## [Por lançar]
 
+## [0.2.0] — 2026-09-28
+
+Primeiro contacto real com o jogo: login confirmado a funcionar.
+
+### Decidido
+- D-013 encerrada: dono deu OK explícito (regra 5) para contacto real com o jogo — login e leitura, para já.
+- D-004 emendada: os testes começam já na **conta principal**, não numa conta secundária como estava previsto; fica registado que isto expõe a conta principal diretamente ao risco de ban (sem isolamento de "conta descartável").
+
+### Adicionado
+- `osmbot login`: abre uma janela real de Firefox (Playwright, perfil persistente guardado fora do repo em `~/.osmbot/firefox-profile`) para um login manual único; a sessão fica guardada e é reutilizada sozinha depois — sem copiar cookies nem guardar password. **Confirmado pelo dono a funcionar.**
+- `osmbot dashboard`: abre a sessão guardada na área do clube, passo de descoberta antes de qualquer extração de dados.
+- `pyproject.toml`: dependência de runtime `playwright` e entry point `osmbot`.
+
+### Corrigido
+- `choose_formation`: `similar_margin` passa a ter valor por omissão **2** (regra do dono: dentro de ±2 pontos ainda considera 4-3-3), deixando de ser obrigatório.
+
+### Notas técnicas
+- Login foi tentado primeiro em Chromium (Playwright); o popup de login do Facebook (única via de login desta conta) bloqueia o build "Chrome for Testing", mesmo com login manual por uma pessoa real. Resolvido trocando para **Firefox** (também gerido pelo Playwright, sem instalar nada como programa no Windows).
+
 ## [0.1.0] — 2026-09-27
 
 Âmbito e postura de risco definidos. **Continua sem nenhum acesso ao jogo.**

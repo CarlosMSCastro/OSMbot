@@ -23,9 +23,10 @@ O bot existe para poupar tempo ao dono: (1) obter coins via vídeos promocionais
 Não adaptamos nem copiamos o repo `nsozturk/osm-ad-bot`; usamo-lo como especificação (mapa da API, lógica dos treinos). Escrevemos o nosso código.
 **Porquê:** sem LICENSE (não se pode copiar para repo público), pode estar desatualizado, é macOS-cêntrico, e a política de seleção deve ser a do dono. Ver `PRIOR_ART.md`.
 
-### D-013 · Contacto com o jogo real adiado · Aceite · 2026-09-27
+### D-013 · Contacto com o jogo real adiado · Aceite · 2026-09-27 · **Encerrada 2026-09-28**
 D-004 (conta e postura de risco) não precisa de estar fechada já. Até ser decidida, só se trabalha em coisas que **não tocam no jogo**: arquitetura, lógica pura (políticas de treino/transferência), testes com dados sintéticos. Verificação de endpoints e login só depois de D-004 e com OK explícito.
 **Porquê:** o dono perguntou se tinha de decidir já; não é necessário para avançar.
+**Encerramento (2026-09-28):** o dono deu OK explícito nesta sessão para contacto real com o jogo (login e leitura), conforme exige a regra 5 do `CLAUDE.md`. A partir daqui o trabalho pode tocar no jogo (conta principal, ver D-004 emendada), começando por login e leitura, antes de qualquer ação de escrita.
 
 ### D-001 · Linguagem: Python · Aceite · 2026-09-27
 Python ≥ 3.11 (testado em 3.12), layout `src/`, testes com pytest. Sem dependências de runtime por agora; `httpx` entra quando houver cliente de API.
@@ -35,9 +36,10 @@ Python ≥ 3.11 (testado em 3.12), layout `src/`, testes com pytest. Sem depend�
 Identificadores, docstrings e testes em inglês (convenção para um repo público); docs em `docs/` em português europeu. Mensagens de commit e README público por decidir.
 **Porquê:** assumido por nós ao começar a escrever código; o dono pode inverter.
 
-### D-004 · Postura de risco face aos ToS · Aceite · 2026-09-27
-O dono aceita o risco de ban ao nível **A3** (ações automáticas: treinos e transferências) desde já, e **A4** (anúncios) quando D-012 estiver decidida. Os testes começam numa **conta secundária**, "a seu tempo" — não há pressa. Fica registado que a conta secundária **não isola totalmente** o risco à conta principal: o OSM tem "device ban" (bloqueia contas novas no mesmo dispositivo/browser); ligação por IP não está confirmada. Ver `DISCOVERY.md` §5.
-**Porquê:** decisão consciente do dono, informado do precedente de junho 2026 (contas banidas por volume anómalo de vídeos mesmo sendo um bug do jogo, não intenção maliciosa) e de que a deteção tende a olhar para o **padrão de comportamento** (timing, ausência de eventos reais de rato/teclado), não só para o volume.
+### D-004 · Postura de risco face aos ToS · Aceite · 2026-09-27 · **Emendada 2026-09-28**
+O dono aceita o risco de ban ao nível **A3** (ações automáticas: treinos e transferências) desde já, e **A4** (anúncios) quando D-012 estiver decidida.
+**Emenda (2026-09-28):** o plano original de começar numa conta secundária foi substituído — o dono decidiu conscientemente começar já pela **conta principal**, sem conta de teste. Fica registado que isto expõe a conta principal diretamente ao risco descrito abaixo (não há isolamento de "conta descartável").
+**Porquê (original):** decisão consciente do dono, informado do precedente de junho 2026 (contas banidas por volume anómalo de vídeos mesmo sendo um bug do jogo, não intenção maliciosa) e de que a deteção tende a olhar para o **padrão de comportamento** (timing, ausência de eventos reais de rato/teclado), não só para o volume. Ver `DISCOVERY.md` §5.
 
 ### D-002 · Alcance (A0–A4) · Aceite · 2026-09-27
 Alcance = **A3** para treinos e transferências (ações automáticas, escrita na conta). **A4** (ver anúncios) fica dependente de D-012 — não por risco, mas por infraestrutura (precisa de algo sempre online: servidor próprio ou Raspberry Pi, que o dono não quer pagar por agora).

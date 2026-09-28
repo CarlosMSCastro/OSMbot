@@ -1,0 +1,2 @@
+[console_scripts]
+osmbot = osmbot.cli:main

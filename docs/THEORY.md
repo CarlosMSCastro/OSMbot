@@ -14,11 +14,11 @@
 
 A tática só pesa realmente em matchups difíceis. A "força" compara o **rating da equipa** (o do dono vs. o do adversário).
 
-Implementado em `choose_formation(my_rating, opp_rating, *, similar_margin)`:
+Implementado em `choose_formation(my_rating, opp_rating, *, similar_margin=2)`:
 mais forte → 5-3-2 · parecido → 4-3-3 B · mais fraco → 4-3-3 A.
 
-- **[?] `similar_margin`:** quantos pontos de rating contam como "parecido"? É argumento obrigatório, sem valor por omissão.
-- **[?] "Fora de casa em matchups equilibrados":** na implementação atual "equilibrado" = "parecido", portanto a cláusula de jogar fora já está incluída e o local do jogo é ignorado. Se "fora de casa" deve alargar a margem (ex.: fora com adversário ligeiramente mais fraco → 4-3-3 B), diz.
+- **`similar_margin` (resolvido, 2026-09-27):** **2 pontos**, para os dois lados. Dentro de ±2 o dono considera que "ainda pode jogar 433"; passado isso (adversário mais forte por mais de 2) joga 5-3-2.
+- **"Fora de casa em matchups equilibrados" (resolvido):** não alarga a margem — o local do jogo continua a não entrar na conta. **Pouco relevante na prática:** o dono faz as táticas manualmente (não é para automatizar, ver §6 do histórico/cont. 6). Nuance dele: dentro da margem de ±2, se tiver um **bom MCD** disponível nesse jogo, prefere 4-3-3 B por causa do jogador, não por o adversário ser "parecido" — isto já estava coberto pela nota existente de que a escolha entre A/B "depende do plantel".
 - **Rating da equipa (resolvido):** vem da **média do plantel de 0 a 100 em rating** que o jogo mostra **antes de cada jogo** (não é o preço). Ver §11. **[?]** O campo na API só se sabe observando o jogo.
 
 ## 2. Instruções por formação
@@ -150,19 +150,19 @@ Implementado em `plan_training` / `pick_trainee`:
 - **Banco de suplentes do jogo (confirmado pelo dono):** tem sempre a mesma estrutura, **7 lugares: 2 ATT, 2 MID, 2 DEF, 1 GK**. Isto é o que a checklist de preparação (§6) espera no banco.
 - Se o plantel for **só** estes jogadores, são **18**.
 
-### 7.2 Mínimo de jogadores por posição (regra do jogo, **por confirmar**)
+### 7.2 Mínimo de jogadores por posição (regra do jogo, **confirmado**)
 
-O jogo obriga a um **mínimo de jogadores por posição** no plantel. O dono **não tem a certeza** dos valores; palpite dele:
+O jogo obriga a um **mínimo de jogadores por posição** no plantel. Confirmado no jogo, posição a posição:
 
-| Posição | Mínimo (palpite) |
-|---|---|
-| ATT | 3 |
-| MID | 4 |
-| DEF | 4 |
-| GK | 2 |
-| **Total** | **13** |
+| Posição | Mínimo (palpite) | Confirmado |
+|---|---|---|
+| ATT | 3 | **Sim (2026-09-27):** com 4 atacantes, o jogo **não deixa listar 2 ao mesmo tempo** (ficaria em 2) — confirma mínimo de **3** |
+| MID | 4 | **Sim (2026-09-27):** com 5 médios, o jogo só deixa listar 1 de cada vez (2 deixaria em 3) — confirma mínimo de **4** |
+| DEF | 4 | **Sim (2026-09-27):** com 7 defesas (depois de vender 1), o jogo não deixa listar 4 — confirma mínimo de **4** |
+| GK | 2 | **Sim (2026-09-27):** confirmado pelo dono com certeza |
+| **Total** | **13** | |
 
-- **[?]** Valores reais: só se confirmam quando observarmos o jogo.
+Os 4 mínimos ficam **confirmados**, batendo certo com o palpite inicial (13 no total).
 - A estrutura de 18 fica acima do mínimo em todas as posições, exceto GK (exatamente no mínimo).
 - Relevante para rodar o plantel por transferências: limita quantos jogadores de cada posição podem estar fora ao mesmo tempo.
 
@@ -212,7 +212,13 @@ Observações:
 - **O jogo acaba por vender os jogadores a bots, independentemente do preço** (afirmação do dono). Por isso pedir o máximo não atrasa a venda.
 - **Os 75% são do preço máximo permitido** (não do valor de mercado). Exemplo do dono: o preço máximo do Haaland é **111 M€** (o dono foi ver ao jogo), por isso pediria 75% disso ≈ **83,25 M€**.
 - **Motivo (experiência do dono):** acima de 100 M€ fica **muito mais difícil vender pelo preço máximo**.
-- **Observação nossa:** o Haaland tem valor 44,0 M€ e máximo 111 M€, ou seja ≈ **2,5×**, igual ao que o prior art reporta noutra liga (`PRIOR_ART.md`). Se o multiplicador for mesmo ~2,5×, o limiar de 100 M€ de preço máximo corresponde a valor ≈ 40 M€ e, no plantel das capturas, só o Haaland o passaria. **[?]** Confirmar o multiplicador; não assumir.
+- **Multiplicador confirmado (2026-09-27): ≈2,5×.** Pontos de dados (valor → preço máximo):
+  - Haaland: 44,0 M€ → 111 M€ = **2,52×**
+  - L. Martínez: 7,9 M€ → 20,0 M€ = **2,53×**
+  - Iwobi: 12,0 M€ → 30,2 M€ = **2,52×**
+  - Kvaratskhelia: 19,2 M€ → 48,1 M€ = **2,51×**
+  - 4 exemplos, todos entre 2,51× e 2,53× — coerente com o prior art (`PRIOR_ART.md`, que reporta ~2,5× noutra liga). Multiplicador = **2,5×** para efeitos práticos.
+  - Consequência: o limiar de 100 M€ de preço máximo (§7.5, regra dos 75%) corresponde a valor de mercado ≈ **40 M€**.
 - O preço máximo é um valor que o jogo mostra ao listar o jogador; onde se lê na API é desconhecido.
 
 ### 7.6 Comprar: só jogadores "SALE"
@@ -261,7 +267,7 @@ Pelo mesmo preço, o do jogo tem **+6 de rating** que o de utilizador (PL) e o "
 - **Forma do alerta (confirmada pelo dono):** é um **aviso** para ele ir **espreitar**; a decisão de comprar é dele. Exemplo dele: *"Há 5 jogadores com tag "SALE" novos! Tens um DC de 79 no plantel, e existem DC's com mais rating à venda!"*
   - Ou seja: (1) quantos "SALE" novos apareceram; (2) para as posições em que o plantel tem um titular fraco, compara o rating dele com os "SALE" disponíveis nessa posição e diz se há melhores.
 - **Horas certas:** mais tarde, com análise de dados, quando o dono souber a hora ao certo; por agora vai verificando "mais ou menos".
-- **[?]** O que conta como titular "fraco" (abaixo da média do 11? só o mais fraco por posição?): o exemplo do DC de 79 sugere comparar cada titular com os "SALE" da sua posição. Por afinar quando chegarmos lá.
+- **Titular "fraco" (resolvido, 2026-09-27):** **ambos os critérios contam** — é "fraco" quem for o **mais baixo da sua posição** entre os titulares, **ou** quem estiver **abaixo da média do 11** (não precisa de ser os dois ao mesmo tempo).
 
 ### 7.8 Guarda-redes, moedas e o porquê do jogador fraco
 
@@ -289,7 +295,7 @@ Razões plausíveis:
 **Palpite do dono (mais provável, ainda sem certeza): o motivo é não ter dinheiro parado** (razão 3). Ou seja, o jogador fraco é a forma mais barata de preencher o plantel sem prender capital em jogadores que não estão a render.
 
 **Opinião nossa:** faz sentido mantê-lo. Sem ele a rotação **poderia** funcionar em ATT e DEF (no limite), mas em MID e GK depende de os mínimos serem os palpitados, e sem margem nenhuma para lesões.
-- **[?]** Para saber ao certo se é necessário: **confirmar os mínimos reais** do jogo (e se o jogo bloqueia pôr à venda ou só a venda quando se fica abaixo do mínimo). Só se vê observando o jogo.
+- **Confirmado (2026-09-27):** os mínimos reais batem certo com os palpitados (ATT 3, MID 4, DEF 4, GK 2 — ver §7.2), e o jogo **bloqueia mesmo listar para venda** quando isso deixaria a posição abaixo do mínimo (testado em ATT/MID/DEF). A análise acima confirma-se: sem o jogador fraco, MID e GK ficariam exatamente no mínimo, sem margem para lesões/suspensões.
 
 ## 8. Estádio
 
@@ -305,7 +311,7 @@ Há **3 componentes** a melhorar, cada um com **níveis 0, 1, 2 e 3**:
 
 - **Ordem do dono:** melhora **sempre primeiro os Treinos**, até ao máximo (nível 3); **depois o Campo**; **por fim a Capacidade**.
 - **Custo:** cada melhoramento custa cerca de **200k** em **dinheiro do clube** (confirmado; não são boss coins).
-- **Melhoramentos por nível:** do nível 0 para o 1 é **só 1 melhoramento**; do 1 para o 2 são **mais**, e assim sucessivamente. **[?]** Quantos em cada passo.
+- **Melhoramentos por nível (fechado, 2026-09-27, número exato não é necessário):** do nível 0 para o 1 é **só 1 melhoramento**. Do 1 para 2 e do 2 para 3 são mais, e o número **varia por clube/liga** (Betis 2→3: 11; clube pequeno na Arménia 2→3: 7), provavelmente pelo nível da liga — mas o dono considera **irrelevante para a automação**: a regra que importa é a **ordem de prioridade** (Treinos ao máximo → depois Campo → depois Capacidade, ver acima), que já não depende de saber quantos melhoramentos cada passo leva.
 - **Duração total:** normalmente leva **quase uma época** a levar os 3 componentes ao máximo.
 - Liga-se à automação de treinos (§5): o nível de Treinos aumenta o ganho de cada sessão.
 
@@ -318,7 +324,7 @@ Há **3 componentes** a melhorar, cada um com **níveis 0, 1, 2 e 3**:
 - É preciso **renovar no fim do contrato de cada slot**.
 - **Os ~200k são por jogo, por slot** (confirmado). Conta nossa: com os 4 slots cheios e valores parecidos seriam cerca de 800k por jogo (não confirmado).
 - **Ao renovar** aparecem **várias hipóteses, mas é só isco ("bait")**: ninguém escolheria uma hipótese pior, ou seja, há sempre uma opção claramente melhor e é essa que se escolhe.
-- **[?]** Moeda: presume-se dinheiro do clube.
+- **Moeda (resolvido, 2026-09-27): dinheiro do clube**, confirmado pelo dono — 200k em boss coins não faria sentido para um valor residual deste tipo.
 
 ## 10. Médico e advogado
 
@@ -326,8 +332,9 @@ Há **3 componentes** a melhorar, cada um com **níveis 0, 1, 2 e 3**:
 
 - **Médico:** cura lesões. Se a lesão for de **2 ou 3 dias**, pode curar **de uma vez** ("1x"), mas **nem sempre** funciona.
 - **Advogado:** baixa uma suspensão de **vários jogos para 1 jogo**. **Não remove a suspensão por completo:** fica **sempre no mínimo 1 jogo**.
-- **Uso:** o dono usa **sempre** (médico e advogado), porque os custos são **residuais**.
-- **[?]** Moeda e valor exatos: o dono não se lembra se é dinheiro do clube ou boss coins, "mas é residual". Só se vê no jogo.
+- **Custo e moeda (resolvido, 2026-09-27): usar não gasta nada.** Ambos **demoram 8 horas** a fazer efeito de graça; **boss coins só são gastos se se quiser saltar a espera** ("skip"), tal como os vídeos de treino (§12.1) — mesma lógica, moeda diferente (aqui é sempre boss coins para o skip, não vídeos).
+- **Uso:** o dono usa **sempre** (médico e advogado) — faz sentido, já que o uso base é grátis.
+- **[?]** Valor exato do skip em boss coins: não indicado, por confirmar se algum dia interessar.
 
 ## 11. Análise do adversário e objetivo da época
 
@@ -353,23 +360,21 @@ Há **3 componentes** a melhorar, cada um com **níveis 0, 1, 2 e 3**:
 ### 12.1 Treinos
 
 - Ver **1 vídeo retira 2 horas** ao tempo de um treino.
-- **Máximo de 4 vídeos por hora** → dá para retirar **8 horas** (4 × 2 h), **distribuídas** por vários jogadores ou **todas ao mesmo jogador**.
+- **Máximo de 4 vídeos por ciclo de 3 horas** (não por hora — ver confirmação abaixo) → dá para retirar **8 horas** (4 × 2 h), **distribuídas** por vários jogadores ou **todas ao mesmo jogador**.
 - Na prática, 4 vídeos num jogador **acabam-lhe a sessão de treino**, que dura **8 horas**.
 - **A duração varia com o momento do jogo.** Normalmente 8 h, mas **em certas alturas os treinos baixam para 2 h por jogador**: as mesmas alturas em que as transferências permitem **6 slots em vez de 4** (§7.8). É provavelmente o que o prior art (`PRIOR_ART.md`) observou (7200 s = 2 h). **Ler a duração real no jogo, nunca fixá-la no código.** O dono diz que é **por isso que automatizar vai ser bom**: com sessões de 2 h há muito mais recolhas e recolocações a fazer.
 - Liga-se à checklist (§6): as **4 sessões de treino têm de estar concluídas no dia do jogo**; os vídeos são o que permite encurtá-las.
 - **Limites separados** (confirmado): o teto dos vídeos de treino é **independente** do teto dos vídeos da loja (boss coins).
-- **[?]** O "máximo de 4 vídeos por hora" renova-se de hora a hora (mais 4 na hora seguinte)? Não respondido.
+- **Renovação (resolvido, 2026-09-27): não é de hora a hora.** Depois dos 4 vídeos, o próprio jogo diz: *"Atingiste o número máximo de vídeos que podes ver aqui. Regressa dentro de **3 horas** para veres um novo vídeo!"* Ou seja, o ciclo de treino é **4 vídeos por 3 horas**, não 4 por 1h como os vídeos da loja (§12.2). Confirmado por captura de ecrã do dono.
 
 ### 12.2 Loja: vídeos que dão boss coins
 
 - Na loja, ver vídeos **dá boss coins**.
-- O limite são **10 vídeos** (o dono **não tem a certeza**). O prior art também reporta um teto de 10 (`threshold` do endpoint da loja, `PRIOR_ART.md`), o que é coerente.
-- Ao atingir o limite o jogo diz: **"não há mais vídeos para ver nessa secção, volte daqui a 1 hora"**.
-- Ao ver os **10 vídeos**, recebe ainda uma **recompensa extra**.
-- **Cada vídeo dá 1 boss coin** (confirmado pelo dono; coincide com a estimativa do prior art).
-- **Recompensa extra dos 10 vídeos:** coisas como **troca de posição universal**, **treinador universal**, etc. (variável). É daqui que vêm os treinadores universais que o dono "ganha algumas vezes" (§5).
-- **[?]** O tempo de espera é sempre 1 hora ou depende de quando se vê o último?
-- **Conta (com os números do dono, o limite de 10 por confirmar):** 10 vídeos = 10 boss coins por ciclo de 1 hora, mais a recompensa extra. Um amigável custa 4 (§6), ou seja, um ciclo paga cerca de 2 amigáveis e meio.
+- **Limite confirmado (2026-09-27): 9 vídeos**, não 10 — corrige o palpite inicial do dono e a leitura do prior art (que reportava um `threshold` de 10 noutro contexto/liga; ver `PRIOR_ART.md`).
+- **Tempo de espera confirmado: 1 hora.** Ao atingir o limite, o jogo pára a secção durante 1h (o dono não distinguiu se é fixo ou conta do último vídeo, mas o valor de 1h fica confirmado).
+- **[?]** Continua por confirmar se, ao ver os 9 vídeos, há **recompensa extra** (o dono tinha mencionado isso para o limite antigo de "10"; por reconfirmar com o número certo).
+- **Cada vídeo dá 1 boss coin** (confirmado pelo dono).
+- **Conta (atualizada):** 9 vídeos = 9 boss coins por ciclo de 1 hora (mais a possível recompensa extra, por confirmar). Um amigável custa 4 (§6), ou seja, um ciclo paga mais de 2 amigáveis.
 
 ### 12.3 Finanças/poupança: vídeos de dinheiro
 
@@ -388,7 +393,10 @@ Há **3 componentes** a melhorar, cada um com **níveis 0, 1, 2 e 3**:
 - **Só se pode transferir tudo de uma vez**, não parte: por exemplo, não dá para "transferir 10 milhões dos meus 50 para a poupança". É tudo ou nada.
 - Notas nossas (não ditas pelo dono): como é tudo ou nada, **qualquer compra obriga a tirar todo o dinheiro da poupança**; convém voltar a depositar o que sobra o mais depressa possível, sobretudo antes do jogo do dia (é aí que o juro conta). O prior art reporta um endpoint que devolve saldo e poupança em separado (`PRIOR_ART.md`).
 - **Enviar e depositar** na poupança funcionam **da mesma forma: sempre tudo** (confirmado).
-- **Taxa do juro:** exemplo do dono no Betis: **5,45 M na poupança → juro de 109k**. Conta nossa: 109k ÷ 5,45M = **2%** por dia de jogo. **[?]** Só há este exemplo; confirmar que é sempre 2% e que é o saldo da poupança no fim do jogo do dia.
+- **Taxa do juro (confirmada, 2026-09-27): 2% por dia de jogo.** Três exemplos do dono, em dois clubes/ligas diferentes:
+  - Betis: 5,45 M€ → 109k (2,00%)
+  - Betis (outro dia): 26,6 M€ → 534k (2,01%)
+  - FC Van (Arménia): 3,8 M€ → 76k (2,00%)
 - Consequência (nossa): a 2% por dia, dinheiro nos fundos do clube "custa" 2% por dia em juro perdido (50 M parados = 1 M/dia). Reforça o palpite do dono sobre o jogador fraco (§7.8): dinheiro preso num suplente valioso também não rende juro.
 
 ## 14. Notas de implementação (nossas)

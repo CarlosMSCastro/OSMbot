@@ -41,9 +41,19 @@ Resumo (detalhe e citações em `RISKS_AND_COMPLIANCE.md`): bots e software de t
 - **[H]** Deteção por *fingerprint* de dispositivo (Canvas/WebGL/resolução/etc.) e correlação de IP entre contas é comum noutros jogos com sistemas anti-multi-conta; **não confirmado especificamente para o OSM**, só inferido de artigos genéricos sobre deteção de multi-contas.
 - **Leitura para D-004:** uma conta secundária no mesmo PC/browser que a principal pode não isolar totalmente o risco, se o OSM ligar contas por dispositivo. Testar em conta separada ajuda, mas não é garantia total enquanto não soubermos se há device-linking aqui.
 
-## 6. Próximos passos de descoberta
+## 6. Níveis do estádio: pesquisa web (2026-09-27, sem resultado fiável)
+
+*Motivo: o dono viu que o número de melhoramentos para subir o estádio de nível 2→3 difere entre clubes (Betis: 11; clube pequeno na liga da Arménia: 7) e pediu para procurar online como funciona.*
+
+- **Sem resposta fiável.** O tópico do fórum oficial mais relevante (`forum.onlinesoccermanager.com/topic/5022/upgrading-stadium`) está atrás do mesmo bloqueio anti-bot (Anubis) já registado em §1/§7 — não deu para ler.
+- **[R], com reserva:** a pesquisa devolveu uma percentagem de bónus por nível (Campo: +2%/+4%/+6%; Treinos: +10%/+25%/+50%) supostamente vinda de uma wiki chamada "Online Soccer Manager Wiki" (Fandom), mas o fetch direto a essa página falhou (erro 402) — não conseguimos confirmar o conteúdo em primeira mão.
+- **Risco de confusão de jogo (como o aviso do `GLOSSARY.md` para OpenStreetMap/Scout Manager):** várias páginas devolvidas eram de **`soccermanager.com`** ("Soccer Manager"), um jogo **diferente** do nosso (`onlinesoccermanager.com`, Gamebasics), com nome muito parecido. Não é seguro que os números acima sejam do jogo certo. **Tratar como não confirmado até se ver o mesmo no jogo do dono.**
+- **Conclusão:** não há fonte online fiável para "quantos melhoramentos por nível". A via mais fiável continua a ser o dono recolher mais exemplos reais (mais clubes/ligas) e nós procurarmos um padrão (ex.: será que escala com o nível da liga ou com o valor do plantel?).
+
+## 7. Próximos passos de descoberta
 
 1. Ler o tópico do fórum "Osm API" (manualmente, no browser, por causa do Anubis).
 2. Ler o artigo do suporte "What's considered cheating in OSM?" (devolveu 403 ao fetch automático).
 3. **Só com OK do utilizador e conta que ele aceite arriscar:** observar, no browser, as chamadas de rede da web app durante uso normal (só leitura), para mapear hosts/endpoints/auth.
 4. Considerar contactar a Gamebasics a pedir autorização escrita (única via limpa para scraping/API).
+5. Se o dono conseguir mais exemplos de melhoramentos/nível do estádio (clube + liga + número), procurar padrão (§6).
