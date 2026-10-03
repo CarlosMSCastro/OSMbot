@@ -12,14 +12,22 @@ Uso por conta e risco de quem o correr, incluindo o autor. Código sem licença 
 
 ## Instalação e login
 
+Funciona em Windows e macOS. Cria o ambiente virtual e ativa-o:
+
+| | Windows (PowerShell) | macOS / Linux |
+|---|---|---|
+| Criar | `python -m venv .venv` | `python3 -m venv .venv` |
+| Ativar | `.venv\Scripts\Activate.ps1` | `source .venv/bin/activate` |
+
+Com o ambiente ativado, os comandos são iguais nos dois sistemas:
+
 ```
-python -m venv .venv
-.venv/Scripts/pip install -e .
-.venv/Scripts/python -m playwright install firefox   # transferência única (~120 MB)
-.venv/Scripts/osmbot login
+pip install -e .
+python -m playwright install firefox   # transferência única (~120 MB)
+osmbot login
 ```
 
-O comando `login` abre uma janela de Firefox a sério (não Chromium — o popup de login do Facebook bloqueia o build "Chrome for Testing" do Playwright); entra no OSM à mão nessa janela. A sessão fica guardada em `~/.osmbot/firefox-profile` (fora do repo, nunca commitada) e é reutilizada sozinha nas próximas vezes — só precisas de repetir o login se a sessão expirar.
+O comando `login` abre uma janela de Firefox a sério (não Chromium — o popup de login do Facebook bloqueia o build "Chrome for Testing" do Playwright); entra no OSM à mão nessa janela. A sessão fica guardada em `~/.osmbot/session.json` (cookies exportados; fora do repo, nunca commitada — trata como uma password) e é reutilizada sozinha nas próximas vezes — só precisas de repetir o login se a sessão expirar.
 
 ## Documentação
 

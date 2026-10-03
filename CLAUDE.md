@@ -24,7 +24,7 @@ src/osmbot/training/policy.py   quem treinar em cada slot        (§5)
 tests/                          pytest, dados sintéticos
 ```
 
-Correr testes: `.venv/Scripts/python -m pytest` (criar venv: `python -m venv .venv && .venv/Scripts/python -m pip install pytest`).
+Correr testes (com o venv ativado, igual em Windows e macOS): `python -m pytest`. Criar o venv e ativá-lo: ver `README.md`. O projeto corre em Windows e macOS (o dono desenvolve nos dois): código com `pathlib`, `encoding="utf-8"` explícito, sem comandos específicos de um SO; a sessão do browser (`~/.osmbot/`) é por máquina e nunca se sincroniza.
 
 Regra: **cada regra do código tem de estar em `THEORY.md`**. Se o código precisar de uma regra que a teoria não cobre, marcar como suposição **[S]** lá e perguntar ao dono.
 

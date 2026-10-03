@@ -6,6 +6,25 @@ Este ficheiro é o **histórico de versões, para quem lê o repo**. O diário i
 
 ## [Por lançar]
 
+## [0.3.0] — 2026-10-03
+
+Sessão persistente e primeiro cliente sem browser (só leitura).
+
+### Adicionado
+- Sessão guardada em `~/.osmbot/session.json` (cookies, 0600, fora do repo), restaurada no arranque: o login deixa de se repetir. Funciona no Mac; Windows por testar.
+- `src/osmbot/game/client.py`: cliente HTTP sem browser (só GET) que renova o `access_token` sozinho pelo `tokenRefresh` e guarda os tokens novos. Os códigos OAuth do cliente são apanhados do pedido do próprio site para `~/.osmbot/client.json` (0600, nunca versionados).
+- `osmbot status`: clubes ativos, ranking, orçamento e boss coins.
+- `osmbot probe <caminho>`: GET de leitura que mostra só a estrutura da resposta (nomes e tipos, nunca valores).
+- Comandos de descoberta: `inspect-session`, `token-info`, `inspect-network`.
+- Dependência `certifi` (o Python do Homebrew no Mac não traz certificados).
+- 7 testes novos (cliente e status); 51 no total.
+
+### Corrigido
+- O "login funciona" de 0.2.0 não guardava a sessão: os tokens do OSM são cookies de sessão e o Firefox apagava-os ao fechar. Perfil persistente abandonado.
+
+### Descoberto (ver `docs/DISCOVERY.md`)
+- `access_token` dura 20 min; `refresh_token` 7 dias com prazo deslizante; formato do `tokenRefresh` (OAuth2); autenticação por `Authorization: Bearer` confirmada.
+
 ## [0.2.0] — 2026-09-28
 
 Primeiro contacto real com o jogo: login confirmado a funcionar.

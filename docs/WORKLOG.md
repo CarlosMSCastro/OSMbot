@@ -2,6 +2,26 @@
 
 Entradas mais recentes primeiro. Cada sessão: o que se fez · o que ficou por fazer · próximo passo.
 
+## 2026-10-03 — Formato do `tokenRefresh` observado (Mac)
+
+- Dono deu OK explícito para contacto real nesta sessão (regra 5). Correu `osmbot inspect-network` com a sessão de 3 dias: o site renovou os tokens sozinho. Formato registado em `DISCOVERY.md` §3 (OAuth2 `refresh_token`, pedido form-urlencoded, resposta JSON). Só leitura; nada foi escrito na conta por nós.
+- **Cuidado:** o pedido leva `client_id`/`client_secret`; tratar como segredo, nunca versionar.
+- **Feito (cont.):** `src/osmbot/game/client.py` (cliente sem browser, renova o token, só GET, `urllib` + `certifi`), `osmbot probe <caminho>` (mostra só a estrutura da resposta) e `osmbot status` (clubes + boss coins). Códigos do cliente apanhados do browser para `~/.osmbot/client.json`. 51 testes a passar. Bearer confirmado (200).
+- **Pendente:** testar no Windows (sessão + `certifi`); confirmar que `ranking` é a posição na liga; testar se login numa máquina desliga a outra.
+- **Próximo passo:** ver a estrutura de `players`, `teamtrainings`, `trainingsessions/ongoing` e `timers` (probe) para desenhar a automação de treinos.
+
+## 2026-09-30 — Sessão persistente: causa encontrada e solução (Mac)
+
+- **Correção:** o "login funciona" de 2026-09-28 só queria dizer que o Firefox abria e dava para fazer login; a sessão **nunca** ficou guardada (o dono tinha de repetir o login, também no Windows e no Firefox normal).
+- **Causa (Verificado, `inspect-session`):** `access_token` e `refresh_token` do OSM são cookies de sessão, apagados quando o Firefox fecha; só a sessão do Facebook dura (1 ano) — daí o botão "Continuar como Carlos". Ver `DISCOVERY.md` §3.
+- **Solução:** `browser.py` exporta os cookies (`context.cookies()`) para `~/.osmbot/session.json` (0600, fora do repo) ao fechar a janela e restaura-os no arranque. **Testado pelo dono no Mac:** `login` → `dashboard` entrou direto no jogo. Perfil persistente abandonado.
+- **Armadilhas:** `input()` falha com EOF quando corrido via `!` no Claude Code → o fecho da janela é o sinal. `context.storage_state()` em ciclo abre janelas brancas e parte o popup do Facebook → usar só `cookies()`.
+- **Novo comando:** `osmbot inspect-session` (descoberta: só nomes/tamanhos, nada em disco).
+- **Ambiente Mac:** venv em `.venv/bin`, Playwright/Firefox instalados; README/CLAUDE.md com instruções Windows+macOS e `.gitattributes` (eol=lf).
+- **Cont.: tokens e renovação descobertos** (`token-info`, `inspect-network`): ver `DISCOVERY.md` §3. Resumo: access 20 min, refresh 7 dias com prazo deslizante, `POST /api/tokenRefresh`. Não escrever IDs de ligas/equipas nos docs (repo público).
+- **Próximo passo:** observar só o **formato** (nomes de campos, não valores) do corpo e da resposta do `tokenRefresh`; depois cliente HTTP com renovação automática, depois `status`.
+- ~~**Por fazer:** (1) repetir `osmbot dashboard` horas/dia depois para medir a validade do `access_token`; ~~(feito acima)~~ Resta: testar no Windows.
+
 ## 2026-09-28 (cont.) — Login funciona; mudança para Firefox
 
 - **Problema:** o popup de login do Facebook (única via de login desta conta, não há email/password) ficava preso em branco no Chromium do Playwright. Causa: o build "Chrome for Testing" que o Playwright usa é detetado e bloqueado pelo Facebook, independentemente de o login ser feito à mão por uma pessoa real.
