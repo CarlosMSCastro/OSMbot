@@ -90,6 +90,7 @@ Implementado em `plan_training` / `pick_trainee`:
 - Melhor = maior *rating* da posição **[S]** (ver acima). Treinadores 1–4 são por posição (ATT, MID, DEF, GK).
 - Exclui (confirmado pelo dono): lesionados, já em treino, **quem está na lista de transferências (nunca treinar)**, e **idade ≥ 30**: nesse caso não treina o melhor, treina outros.
 - Se o melhor tem 30+, usa-se o melhor dos restantes (confirmado).
+- **Exceção (dono, 2026-10-04): guarda-redes treinam sempre o melhor, independentemente da idade.** O limite de 30+ aplica-se só a jogadores de campo.
 - **[S]** Jogadores com forecast ≤ 0 (previsão do servidor: nada a ganhar) também são excluídos, quando essa informação existe.
 - **Treinador universal (5): fora de âmbito.** O dono não o usa por padrão: só ganha um às vezes e usa-o situacionalmente. Não automatizar.
 

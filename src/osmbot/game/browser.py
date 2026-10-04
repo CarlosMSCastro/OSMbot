@@ -37,8 +37,11 @@ def _capture_client_codes(request) -> None:
         form = parse_qs(request.post_data or "")
         codes = {k: form[k][0] for k in ("client_id", "client_secret") if k in form}
         if len(codes) == 2:
-            from osmbot.game.client import CLIENT_FILE, save_private
+            from osmbot.game.client import CLIENT_FILE, SKIPPED_HEADERS, save_private
 
+            # The site also sends its app version (the server refuses renewals without it)
+            # and other headers: keep them so the browserless client can repeat the request.
+            codes["headers"] = {k: v for k, v in request.headers.items() if k.lower() not in SKIPPED_HEADERS}
             save_private(CLIENT_FILE, codes)
     except Exception:
         pass  # never let a bad event break the session
@@ -292,3 +295,45 @@ def inspect_network(state_file: Path = STATE_FILE, url: str = HOME_URL) -> None:
         if urlsplit(address).hostname == "web-api.onlinesoccermanager.com":
             print(f"{method} | {address} | {status} | {' '.join(flags)}")
     print(f"\n(+ {len(others)} hosts de terceiros ignorados: anuncios/analytics)")
+
+
+def inspect_writes(state_file: Path = STATE_FILE, url: str = HOME_URL) -> None:
+    """Discovery: list the requests that CHANGE something (POST/PUT/PATCH/DELETE) while the owner plays.
+
+    The owner performs the action by hand in the window; this only watches. Prints
+    method, URL without query string, status, header NAMES, and the body shape
+    (field names and types, never values) of request and response.
+    """
+    if not state_file.exists():
+        raise SystemExit("Sem sessao guardada. Corre primeiro: osmbot login")
+    found: list[str] = []
+
+    def on_response(response) -> None:
+        try:
+            request = response.request
+            host = urlsplit(response.url).hostname or ""
+            address = response.url.split("?")[0]
+            if request.method == "GET" or not host.endswith(_OSM_HOSTS) or address.endswith("/api/tokenRefresh"):
+                return
+            req_type = request.headers.get("content-type", "?")
+            try:
+                res_shape = _body_shape(response.text(), response.headers.get("content-type", ""))
+            except Exception:
+                res_shape = None
+            found.append(
+                f"{request.method} {address} -> {response.status}\n"
+                f"  cabecalhos: {sorted(request.headers)}\n"
+                f"  pedido  [{req_type}]: {_body_shape(request.post_data or '', req_type)}\n"
+                f"  resposta: {res_shape}"
+            )
+        except Exception:
+            pass  # never let a bad event break the session
+
+    _run_session(
+        state_file,
+        url,
+        "Faz as acoes que queres que o bot aprenda (recolher UM treino, pôr UM jogador a treinar). Depois FECHA a janela.",
+        on_context=lambda context: context.on("response", on_response),
+    )
+    print("\n== Pedidos que escrevem (por ordem) ==")
+    print("\n".join(found) or "(nenhum pedido de escrita observado)")

@@ -73,3 +73,21 @@ def test_missing_client_codes_needs_browser(tmp_path):
     state, codes = make(tmp_path, time.time() - 10, time.time() + 86400, with_codes=False)
     with pytest.raises(NeedsBrowserLogin):
         OsmClient(state, codes, Fake()).get("x")
+
+
+def test_stale_app_version_is_reported_clearly(tmp_path):
+    state, codes = make(tmp_path, time.time() - 10, time.time() + 86400)
+    fake = Fake((400, b'{"modelState":{"AppVersion":["You must update the app"]}}'))
+    with pytest.raises(NeedsBrowserLogin, match="atualizou"):
+        OsmClient(state, codes, fake).get("x")
+
+
+def test_refresh_sends_saved_site_headers(tmp_path):
+    state, codes = make(tmp_path, time.time() - 10, time.time() + 86400)
+    data = json.loads(codes.read_text())
+    data["headers"] = {"appversion": "1.2.3"}
+    codes.write_text(json.dumps(data))
+    answer, _ = renewal(tmp_path)
+    fake = Fake(answer, (200, b"{}"))
+    OsmClient(state, codes, fake).get("x")
+    assert fake.requests[0].get_header("Appversion") == "1.2.3"

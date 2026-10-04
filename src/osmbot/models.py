@@ -53,5 +53,5 @@ class Player:
             stat_att=int(data.get("statAtt") or 0),
             stat_ovr=int(data.get("statOvr") or 0),
             stat_def=int(data.get("statDef") or 0),
-            injured=int(data.get("injuryId") or 0) > 0,
+            injured=int(data.get("unavailable") or 0) > 0,  # games out; injuryId is NOT a reliable flag
         )

@@ -98,4 +98,6 @@ def test_from_api_maps_reported_fields():
     )
     assert p == Player(7, "Test", Position.DEF, 28, 10, 20, 30, False)
     assert p.rating == 30
-    assert Player.from_api({**{"id": 1, "position": 1, "age": 20}, "injuryId": 4}).injured
+    assert Player.from_api({**{"id": 1, "position": 1, "age": 20}, "unavailable": 2}).injured
+    # injuryId alone does not mean injured (observed 2026-10-04)
+    assert not Player.from_api({"id": 1, "position": 1, "age": 20, "injuryId": 27, "unavailable": 0}).injured

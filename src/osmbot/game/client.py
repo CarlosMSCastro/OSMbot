@@ -6,8 +6,8 @@ see DISCOVERY.md) and writes the new tokens back. The two OAuth client codes the
 renewal needs are captured from the site's own request by ``browser.py`` and kept
 in ``~/.osmbot/client.json`` (owner-only, never in the repo).
 
-Read-only: only GET requests are exposed. The ``Authorization: Bearer`` header
-is a hypothesis until a probe returns 200 (CLAUDE.md rule 7).
+Reads are plain GETs. Writes (``put``/``post``) exist for the training commands only and
+are never called without the owner's explicit ``--confirmar``.
 """
 from __future__ import annotations
 
@@ -28,6 +28,8 @@ CLIENT_FILE = Path.home() / ".osmbot" / "client.json"
 API_HOST = "https://web-api.onlinesoccermanager.com"
 REFRESH_URL = f"{API_HOST}/api/tokenRefresh"
 API_BASE = f"{API_HOST}/api/v1"
+# Headers the HTTP library sets itself, or that carry the session (never copied)
+SKIPPED_HEADERS = {"cookie", "authorization", "content-length", "content-type", "host", "connection", "accept-encoding"}
 EXPIRY_MARGIN = 120  # seconds: renew a little before the 20 min access_token ends
 
 
@@ -101,9 +103,17 @@ class OsmClient:
             REFRESH_URL,
             data=body,
             method="POST",
-            headers={"Content-Type": "application/x-www-form-urlencoded; charset=utf-8"},
+            headers={
+                **codes.get("headers", {}),  # app version etc., as the site sends them
+                "Content-Type": "application/x-www-form-urlencoded; charset=utf-8",
+            },
         )
         status, raw = self._transport(request)
+        if status == 400 and b"AppVersion" in raw:
+            raise NeedsBrowserLogin(
+                "O jogo atualizou e o bot ficou com a versao antiga. Corre 'osmbot dashboard', "
+                "espera uns 30s e fecha a janela (o bot apanha a versao nova)."
+            )
         if status != 200:
             raise NeedsBrowserLogin(f"Renovacao recusada (estado {status}). Corre: osmbot login")
         data = json.loads(raw)
@@ -113,14 +123,35 @@ class OsmClient:
                 cookie["value"] = data[name]
         save_private(self.state_file, self._state)
 
-    def get(self, path: str) -> tuple[int, object]:
-        """GET ``path`` (relative to /api/v1, or a full /api/... path); returns (status, parsed JSON or text)."""
+    def _site_headers(self) -> dict:
+        """Headers the site itself sends (app version etc.), saved by the browser step."""
+        if not self.client_file.exists():
+            return {}
+        return json.loads(self.client_file.read_text(encoding="utf-8")).get("headers", {})
+
+    def request(self, method: str, path: str, form: dict | None = None) -> tuple[int, object]:
+        """Send ``method`` to ``path`` (relative to /api/v1, or a full URL); returns (status, parsed JSON or text).
+
+        Writes (PUT/POST) repeat the site's own headers and send a form-encoded body, as observed.
+        """
         if not self._access_is_fresh():
             self.refresh()
         url = path if path.startswith("http") else f"{API_BASE}/{path.lstrip('/')}"
+        data, headers = None, {}
+        if method != "GET":
+            headers = dict(self._site_headers())
+            if form is not None:
+                data = urllib.parse.urlencode(form).encode()
+                headers["Content-Type"] = "application/x-www-form-urlencoded; charset=utf-8"
+            else:
+                data = b""
+                headers["Content-Type"] = "application/json; charset=utf-8"
         for attempt in (1, 2):
             request = urllib.request.Request(
-                url, headers={"Authorization": f"Bearer {self._token('access_token')}"}
+                url,
+                data=data,
+                method=method,
+                headers={**headers, "Authorization": f"Bearer {self._token('access_token')}"},
             )
             status, raw = self._transport(request)
             if status == 401 and attempt == 1:
@@ -132,13 +163,28 @@ class OsmClient:
         except ValueError:
             return status, raw.decode("utf-8", "replace")
 
+    def get(self, path: str) -> tuple[int, object]:
+        return self.request("GET", path)
 
-def run_probe(path: str) -> None:
+    def put(self, path: str) -> tuple[int, object]:
+        return self.request("PUT", path)
+
+    def post(self, path: str, form: dict) -> tuple[int, object]:
+        return self.request("POST", path, form)
+
+def run_probe(path: str, slot: str = "0") -> None:
     """Discovery: GET one path and print status plus the shape of the answer (field names and types, never values)."""
     from osmbot.game.browser import _shape
 
     try:
-        status, body = OsmClient().get(path)
+        client = OsmClient()
+        if "{L}" in path or "{T}" in path:  # fill in the ids of one of the owner's teams
+            _, account = client.get("user/accounts")
+            team = ((account.get("teamSlots") or {}).get(slot) or {}).get("team")
+            if not team:
+                raise SystemExit(f"Slot {slot} vazio.")
+            path = path.replace("{L}", str(team["leagueId"])).replace("{T}", str(team["id"]))
+        status, body = client.get(path)
     except NeedsBrowserLogin as error:
         raise SystemExit(str(error))
     print(f"GET {path} -> {status}")

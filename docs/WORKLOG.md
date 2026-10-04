@@ -2,13 +2,25 @@
 
 Entradas mais recentes primeiro. Cada sessão: o que se fez · o que ficou por fazer · próximo passo.
 
+## 2026-10-04 — Renovação real corrigida (AppVersion)
+
+- A 1.ª renovação a sério falhou (400, "must update the app"): faltava o cabeçalho `AppVersion`. Agora `browser.py` guarda os cabeçalhos do pedido real em `~/.osmbot/client.json` e o cliente repete-os; aviso claro se a versão ficar velha. Renovação sem browser confirmada. 53 testes.
+- Códigos do plantel confirmados pelo dono (posições, `unavailable` = jogos de ausência, `lineup`); timers têm título legível. Ver `DISCOVERY.md`.
+- Dono confirmou: treinos terminados = tempo negativo no timer (pronto a recolher). Criado `osmbot treinos` (só leitura): por clube, cada sessão (jogador, posição, pronto/faltam) e próximo jogo. 55 testes.
+- Tentativa de verificar o ecrã sem janela (Firefox headless, só leitura): funciona para ver a página inicial; navegar pelos menus (hover) falhou. Chrome extension não estava ligada. O dono carregou-se uma vez em *Continue* do jogo (autorizado); nada foi recolhido nem alterado.
+- **Feito:** `osmbot inspect-writes` (observador de pedidos de escrita, sem valores). O dono recolheu 1 treino e pôs 1 a treinar com o browser aberto: pedidos de *claim* e de *start* observados e registados em `DISCOVERY.md` §3. `trainer` = posição do jogador.
+- **Construído (ainda não executado em real):** `osmbot recolher` e `osmbot treinar`, ambos com pré-visualização por omissão e `--confirmar` / `--max N` para escrever. `treinar` usa `plan_training` (THEORY §5), exclui listados para venda (lidos de `transferplayers/0`) e procura o id da duração em `gamesettings` pelo nome. Corrigido `Player.from_api`: lesionado = `unavailable > 0` (não `injuryId`). 57 testes.
+- **Primeiro uso real (2026-10-04, dono correu):** `recolher --confirmar --max 1` → 200 (Donnarumma recolhido); `treinar --confirmar --max 1` → 200 (Donnarumma a treinar, ~8h). `timerGameSettingId` confirmado. Dono não quer escrever `--confirmar` sempre; inverter o padrão foi bloqueado pelo sistema de permissões → fica `--confirmar` até haver modo automático (decisão do dono pendente).
+- **Próximo passo (antigo):** primeiro uso real com `--max 1` (dono corre); confirmar que o `timerGameSettingId` está certo e que o jogo aceita os pedidos do bot; depois alargar. Pendente: rever o caso do GR do FC Van (política escolhe um GR de rating 50 porque o melhor tem 30+).
+
 ## 2026-10-03 — Formato do `tokenRefresh` observado (Mac)
 
 - Dono deu OK explícito para contacto real nesta sessão (regra 5). Correu `osmbot inspect-network` com a sessão de 3 dias: o site renovou os tokens sozinho. Formato registado em `DISCOVERY.md` §3 (OAuth2 `refresh_token`, pedido form-urlencoded, resposta JSON). Só leitura; nada foi escrito na conta por nós.
 - **Cuidado:** o pedido leva `client_id`/`client_secret`; tratar como segredo, nunca versionar.
 - **Feito (cont.):** `src/osmbot/game/client.py` (cliente sem browser, renova o token, só GET, `urllib` + `certifi`), `osmbot probe <caminho>` (mostra só a estrutura da resposta) e `osmbot status` (clubes + boss coins). Códigos do cliente apanhados do browser para `~/.osmbot/client.json`. 51 testes a passar. Bearer confirmado (200).
 - **Pendente:** testar no Windows (sessão + `certifi`); confirmar que `ranking` é a posição na liga; testar se login numa máquina desliga a outra.
-- **Próximo passo:** ver a estrutura de `players`, `teamtrainings`, `trainingsessions/ongoing` e `timers` (probe) para desenhar a automação de treinos.
+- **Feito (cont. 2):** `probe` aceita `{L}`/`{T}` (preenche com a equipa do slot, `--slot`). Estrutura de `players`, `trainingsessions/ongoing`, `timers`, `teamtrainings` registada em `DISCOVERY.md` §3.
+- **Próximo passo:** decifrar os códigos numéricos (posição, estado, tipo de timer) cruzando com o ecrã do jogo, só valores, sem nomes; depois desenhar o leitor de treinos (sessões a acabar, slots livres).
 
 ## 2026-09-30 — Sessão persistente: causa encontrada e solução (Mac)
 

@@ -6,6 +6,30 @@ Este ficheiro é o **histórico de versões, para quem lê o repo**. O diário i
 
 ## [Por lançar]
 
+## [0.4.0] — 2026-10-04
+
+Primeira automação com escrita na conta: recolher treinos e pôr a treinar. **Testado em real no Mac** (2 clubes, 8 treinos, tudo 200).
+
+### Adicionado
+- `osmbot recolher`: recolhe os treinos prontos. Só escreve com `--confirmar`; sem isso mostra o que faria.
+- `osmbot treinar`: põe a treinar os slots livres pela política do dono (THEORY §5): melhor da posição, sem lesionados, sem listados para venda, sem 30+ nos jogadores de campo. Também só escreve com `--confirmar`. `--max N` limita as ações (para primeiros testes).
+- `osmbot treinos` (só leitura): sessões de treino por clube (prontas / faltam) e próximo jogo.
+- `osmbot inspect-writes`: observa os pedidos de escrita do site (nomes de campos, nunca valores).
+- `probe` aceita `{L}`/`{T}` e `--slot`.
+- Cliente: `put`/`post` além de `get`; repete os cabeçalhos do site nas escritas.
+- 8 testes novos; 59 no total.
+
+### Alterado
+- Política de treino: **guarda-redes treinam sempre o melhor, independentemente da idade** (decisão do dono; `THEORY.md` §5).
+
+### Corrigido
+- `Player.from_api`: lesionado passa a ser `unavailable > 0` (o `injuryId` não é fiável).
+- A renovação sem browser falhava (400): o jogo exige o cabeçalho `AppVersion`. O bot copia agora os cabeçalhos do pedido real do site e avisa quando a versão fica desatualizada.
+
+### Descoberto (ver `docs/DISCOVERY.md`)
+- Pedidos de *claim* e de *start* de treino; `trainer` = posição do jogador; `timerGameSettingId` = definição `TrainingSession` (8h), confirmado.
+- Códigos de `players` (posição, `lineup`, `unavailable` = jogos de ausência); estrutura de `timers`, `trainingsessions` e `transferplayers`.
+
 ## [0.3.0] — 2026-10-03
 
 Sessão persistente e primeiro cliente sem browser (só leitura).

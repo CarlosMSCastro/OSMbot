@@ -3,6 +3,7 @@
 Owner's policy: train the best player of each position, except players aged
 ``max_age`` or more (then the best of the rest). Because the owner rotates the
 whole squad through transfers, "the best player" is almost always the right one.
+Goalkeepers are exempt from the age limit (owner, 2026-10-04).
 
 Trainers 1-4 are position-bound (ATT, MID, DEF, GK), matching the API's
 ``trainer`` field as reported by third parties. The universal trainer (5) is not
@@ -41,7 +42,7 @@ def pick_trainee(
     for p in players:
         if p.position is not position or p.injured or p.id in unavailable_ids:
             continue
-        if p.age >= max_age:
+        if p.age >= max_age and position is not Position.GK:  # owner: goalkeepers train regardless of age
             continue
         forecast = forecasts.get(p.id, 0) if forecasts is not None else 0
         if forecasts is not None and forecast <= 0:
