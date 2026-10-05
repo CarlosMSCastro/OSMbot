@@ -7,7 +7,7 @@ renewal needs are captured from the site's own request by ``browser.py`` and kep
 in ``~/.osmbot/client.json`` (owner-only, never in the repo).
 
 Reads are plain GETs. Writes (``put``/``post``) exist for the training commands only and
-are never called without the owner's explicit ``--confirmar``.
+are only called by the owner-approved write commands (see D-014).
 """
 from __future__ import annotations
 

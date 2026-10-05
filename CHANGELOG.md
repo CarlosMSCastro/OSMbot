@@ -6,6 +6,44 @@ Este ficheiro é o **histórico de versões, para quem lê o repo**. O diário i
 
 ## [Por lançar]
 
+## [0.5.0] — 2026-10-06
+
+O bot passa a **trabalhar sozinho**: recolhe e treina, vê vídeos (loja e treino), avisa de slots de venda livres, tudo num quadro de consola em tempo real. Distribuição para Windows (pasta portátil e instalador). **Testado em real no Windows**; o Mac continua pelo ambiente de desenvolvimento.
+
+### Adicionado
+- **Modo ativo** (`osmbot ativo`, D-014): ciclo que recolhe e treina quando os treinos acabam. Acorda no mais próximo de: fim do próximo treino, reposição dos vídeos da loja, reposição dos vídeos de treino (máx. 30 min; mín. 30 s; +5–60 s aleatórios), por isso acompanha treinos curtos de eventos sem configuração. Pára e avisa à primeira falha de escrita, sessão perdida ou 3 erros de rede seguidos. `--simular` faz uma passagem sem escrever.
+- **Anúncios** (`src/osmbot/game/ads.py`, D-012), num Firefox **sem janela**, só quando o limite do jogo está aberto, saltando ~35% das janelas e com pausas de 20–75 s. Nunca chama `videos/watched`: é a própria página que o faz, como quando o dono vê o vídeo.
+  - **Loja** (1 boss coin por vídeo): até 9 seguidos.
+  - **Treino (−2h):** cada vídeo vai para a sessão com **mais tempo em falta** (entre os clubes), para os treinos acabarem por volta da mesma hora; ignora sessões com menos de 2h; clica sempre em "- 2h", nunca em "Train instantly" (custa boss coins); confirma que o tempo baixou.
+  - Se falharem 2 vezes seguidas, desligam-se nessa execução e os treinos continuam. `--sem-anuncios` desliga-os.
+- **Aviso de slots de venda livres** (`osmbot slots`, só leitura, e verificação a cada despertar do modo ativo): avisa na consola e no registo quando passa a haver mais slots livres do que antes. O limite vem do jogo (`MaxPlayersOnTransferlist`).
+- **Quadro de consola** (D-015): ecrã fixo que se redesenha de segundo a segundo, com estado, contagem decrescente, os clubes com os treinos e barras de progresso, boss coins, estado dos anúncios, aviso de slot livre, resumo desde o arranque (saldo, vídeos, treinos) e as últimas linhas do registo. Só aparece num terminal; `--sem-quadro` (ou saída redirecionada) dá linhas simples.
+- **Menu na consola:** `osmbot` sem argumentos abre um menu (1 iniciar o bot, 2 sem anúncios, 3 estado, 4 ensaio, 5 login, 0 sair). Os comandos diretos continuam.
+- **Registo** em `~/.osmbot/bot.log` e resumo ao parar.
+- **Distribuição para Windows** (D-016), com `python tools/build_portable.py [--zip] [--installer]`:
+  - **Pasta portátil** (`OSMbot.exe` na raiz: um `python.exe` oficial renomeado que abre o menu; ~500 MB, .zip ~180 MB) com Python embutido, dependências e o Firefox do Playwright.
+  - **Instalador `OSMbot-Setup.exe`** (Inno Setup; ~130 MB): assistente em português, instala por utilizador sem administrador, atalhos com ícone, desinstalador; não toca na sessão.
+  - **Ícone original** (`tools/make_icon.py`); `--icone` para uma cópia pessoal.
+- 38 testes novos; **97 no total**. Os testes ficam isolados do jogo real, da sessão e do registo (`tests/conftest.py`).
+
+### Alterado
+- `recolher` e `treinar` escrevem por omissão; `--simular` mostra o plano sem escrever (`--confirmar` fica como alias sem efeito).
+- Autonomia do Claude por níveis (D-014): leitura livre; recolher/treinar autónomos com o bot ativo; escritas novas pedem OK.
+- A saída do Windows passa a UTF-8.
+- **Documentação** em termos genéricos: clubes, ligas, jogadores e nomes de utilizador de terceiros substituídos em `docs/` e `tests/`, para o repo poder ser público.
+
+### Corrigido
+- O quadro ficava parado enquanto o bot trabalhava (o desenho ia para a saída redirecionada para o registo e sujava-o com códigos de ecrã).
+- Os vídeos eram contados só no fim da série (parar a meio perdia a contagem): contam-se no momento em que são vistos.
+
+### Descoberto (ver `docs/DISCOVERY.md`)
+- Fluxo dos vídeos: `start` → anúncio → `watched` → recolha, com `actionId` `BusinessClub` (loja), `TrainingTimer` (treino) e `Multistep1–3` (dinheiro). O vídeo da loja e o de treino funcionam num Firefox controlado, também sem janela.
+- Limite de slots de venda em `gamesettings`; limites dos vídeos em `user/caps/actions/{actionId}/0`.
+- Página de treino: colunas por treinador, botões "- 2h" e "Train instantly".
+
+### Por fazer
+- Os 3 vídeos de dinheiro diários; transferências automáticas; tolerância a falhas por concorrência com o dono; histórico de estatísticas entre máquinas; teste no PC da empresa.
+
 ## [0.4.0] — 2026-10-04
 
 Primeira automação com escrita na conta: recolher treinos e pôr a treinar. **Testado em real no Mac** (2 clubes, 8 treinos, tudo 200).

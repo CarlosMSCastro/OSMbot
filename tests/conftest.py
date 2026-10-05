@@ -35,3 +35,23 @@ def make_player():
         )
 
     return _make
+
+
+@pytest.fixture(autouse=True)
+def _isolated_from_the_game(monkeypatch, tmp_path):
+    """No test may touch the real game, the real session or the real log."""
+    from osmbot.game import loop
+
+    monkeypatch.setattr(loop, "LOG_FILE", tmp_path / "bot.log")
+    monkeypatch.setattr(loop, "read_slots", lambda client: [])
+    monkeypatch.setattr(loop, "_shop_ads", lambda dry_run: 0)
+    monkeypatch.setattr(loop, "_training_ads", lambda dry_run: 0)
+    monkeypatch.setattr(loop, "collect", lambda client: None)
+
+    class _NoClient:
+        def __init__(self, *args, **kwargs):
+            raise AssertionError("a test tried to open a real game client")
+
+    import osmbot.game.client as client_module
+
+    monkeypatch.setattr(client_module, "OsmClient", _NoClient)

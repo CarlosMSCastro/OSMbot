@@ -10,18 +10,31 @@ Um bot para o **Online Soccer Manager (OSM)** — o jogo de gestão de futebol d
 
 ## Estado atual
 
-**Fase: construção offline.** Decidido: construir de raiz (D-011), Python (D-001), contacto com o jogo adiado (D-013). Existe lógica pura + testes; **ainda não há cliente de API nem login**. Alcance (D-002) e postura de risco (D-004) por decidir — ver `docs/DECISIONS.md`. Não escolher arquitetura de acesso ao jogo até haver decisão registada.
+**Fase: automação em uso — versão 0.5.0.** O bot faz login (Firefox/Playwright), lê o jogo por HTTP sem browser (token renovado sozinho) e **escreve na conta**: recolhe e põe a treinar, vê vídeos da loja e de treino (Firefox sem janela) e avisa de slots de venda livres. Corre em **modo ativo** (`osmbot ativo`) com quadro de consola, e há um menu (`osmbot` sem argumentos). Distribuição Windows: pasta portátil e instalador (D-016). Decisões D-001 a D-016 em `docs/DECISIONS.md`; alcance A3/A4 (D-002), risco aceite na conta principal (D-004), autonomia por níveis (D-014).
+
+**Por fazer:** os 3 vídeos de dinheiro diários; transferências automáticas (escritas novas: pedem OK); tolerância a falhas quando o dono mexe ao mesmo tempo; histórico de estatísticas entre máquinas; teste no PC da empresa. O repo é **público** (D-016): sem nomes de clubes, ligas, jogadores ou utilizadores de terceiros em ficheiros versionados.
 
 ## Código
 
-Python ≥ 3.11, layout `src/`. Toda a lógica atual é **pura** (sem I/O, sem rede).
+Python ≥ 3.11, layout `src/`. A lógica de decisão (`theory/`, `training/`, políticas) é **pura** (sem I/O, sem rede) e testada com dados sintéticos; o contacto com o jogo está só em `src/osmbot/game/`.
 
 ```
-src/osmbot/models.py            Player, Position
-src/osmbot/theory/tactics.py    formação, sliders, desarme      (THEORY.md §1-3)
+src/osmbot/models.py             Player, Position
+src/osmbot/theory/tactics.py     formação, sliders, desarme      (THEORY.md §1-3)
 src/osmbot/theory/specialists.py capitão, penáltis, livres, cantos (§4)
-src/osmbot/training/policy.py   quem treinar em cada slot        (§5)
-tests/                          pytest, dados sintéticos
+src/osmbot/training/policy.py    quem treinar em cada slot        (§5)
+src/osmbot/game/browser.py       login, sessão (cookies), ferramentas inspect-*
+src/osmbot/game/client.py        cliente HTTP sem browser; renova o token
+src/osmbot/game/status.py        clubes e boss coins (leitura)
+src/osmbot/game/trainings.py     ler treinos; recolher e treinar (escrita)
+src/osmbot/game/slots.py         slots de venda livres (leitura)
+src/osmbot/game/ads.py           vídeos da loja e de treino (Firefox sem janela)
+src/osmbot/game/loop.py          modo ativo: ciclo, despertar, resumo, registo
+src/osmbot/game/dashboard.py     quadro de consola
+src/osmbot/menu.py               menu na consola
+src/osmbot/cli.py                comandos (login, status, treinos, slots, recolher, treinar, ativo, probe, inspect-*)
+tools/                           build_portable.py (pasta, .zip, instalador), installer.iss, make_icon.py
+tests/                           pytest; isolados do jogo real (conftest.py)
 ```
 
 Correr testes (com o venv ativado, igual em Windows e macOS): `python -m pytest`. Criar o venv e ativá-lo: ver `README.md`. O projeto corre em Windows e macOS (o dono desenvolve nos dois): código com `pathlib`, `encoding="utf-8"` explícito, sem comandos específicos de um SO; a sessão do browser (`~/.osmbot/`) é por máquina e nunca se sincroniza.
@@ -48,7 +61,11 @@ Regra: **cada regra do código tem de estar em `THEORY.md`**. Se o código preci
 2. **Não re-litigar** decisões já registadas como "Aceite". Se houver razão para as rever, propor uma nova entrada que a substitua.
 3. **Fim de sessão:** atualizar `docs/WORKLOG.md`; se surgiu ou se fechou uma decisão, atualizar `docs/DECISIONS.md`; se se apurou um facto novo, `docs/DISCOVERY.md`.
 4. **Factos vs. hipóteses:** em `DISCOVERY.md` marcar cada afirmação como *Verificado* (visto por nós), *Reportado* (fonte de terceiros) ou *Hipótese*. Não promover sem verificar.
-5. **Sem contacto com o jogo real sem OK explícito:** nada de login, pedidos HTTP, scraping ou automação de browser contra a conta do utilizador sem este o confirmar nessa sessão. Ver `RISKS_AND_COMPLIANCE.md`.
+5. **Contacto com o jogo real, por níveis (D-014, 2026-10-05).** Ver `RISKS_AND_COMPLIANCE.md`.
+   - **Livre (só leitura):** `status`, `treinos`, `probe`, GETs. Posso correr sem perguntar, desde que a sessão já exista. O login é sempre feito pelo dono (interativo).
+   - **Autónomo, só com o bot "ativo":** `recolher` e `treinar` (escritas já observadas e testadas), sem `--max`, sem pedir confirmação. "Ativo" = o dono disse nessa sessão que o bot está a trabalhar. **Em modo de desenvolvimento (por omissão) não executo escritas na conta**; só simulação ou testes.
+   - **Pede OK sempre:** qualquer escrita nova, nunca observada (vender, comprar, anúncios) e tudo o que o jogo possa tratar como abuso. Nunca exceder os limites do próprio jogo; nunca forjar recompensas (regra 8).
+   - Segredos continuam a ser regra 6, sem exceção.
 6. **Segredos:** nunca escrever credenciais, cookies, tokens, HARs ou dumps de sessão em ficheiros versionados. Vão para `.env*` / pastas ignoradas (ver `.gitignore`). O repo vai ser público no GitHub.
 7. **Não inventar endpoints ou comportamento da API do OSM.** Se não foi observado, é hipótese.
 8. **Código de terceiros:** não copiar código de outros repos (sem licença = todos os direitos reservados). Usar como referência e reescrever. Não implementar falsificação de recompensas de anúncios (ver `PRIOR_ART.md`).

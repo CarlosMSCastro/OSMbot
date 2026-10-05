@@ -3,7 +3,7 @@
 Fields come from ``trainingsessions/ongoing`` and ``timers`` (see DISCOVERY.md).
 A session whose ``finishedTimestamp`` has passed and is not claimed is ready to
 collect (confirmed by the owner on 2026-10-04). ``run_claim`` and ``run_train`` write to
-the game, but only with ``--confirmar`` (requests observed 2026-10-04, see DISCOVERY.md).
+the game, by default (``--simular`` makes them a dry run) (requests observed 2026-10-04, see DISCOVERY.md).
 """
 from __future__ import annotations
 
@@ -13,6 +13,7 @@ from osmbot.models import Player
 from osmbot.training.policy import plan_training
 
 POSITIONS = {1: "ATA", 2: "MED", 3: "DEF", 4: "GR"}
+COUNTS = {"claimed": 0, "started": 0}  # successful writes in this run, for the board summary
 NEXT_MATCH_TIMER = 14
 
 
@@ -75,10 +76,11 @@ def _teams(client):
             yield slot, team, f"leagues/{team['leagueId']}/teams/{team['id']}"
 
 
-def run_claim(confirm: bool, limit: int | None = None) -> None:
-    """Collect every finished training. Without ``confirm`` only shows what it would do."""
+def run_claim(confirm: bool, limit: int | None = None) -> int:
+    """Collect every finished training. Without ``confirm`` only shows what it would do. Returns the failures."""
     from osmbot.game.client import NeedsBrowserLogin, OsmClient
 
+    failed = 0
     try:
         client = OsmClient()
         done = 0
@@ -97,18 +99,23 @@ def run_claim(confirm: bool, limit: int | None = None) -> None:
                 status, body = client.put(f"https://web-api.onlinesoccermanager.com/api/v1.1/{base}/trainingsessions/{session['id']}/claim")
                 gain = body.get("progressImprovement") if isinstance(body, dict) else None
                 print(f"  {name}: {'recolhido' if status == 200 else 'FALHOU'} (estado {status}, progresso {gain})")
+                failed += status != 200
+                COUNTS["claimed"] += status == 200
                 done += 1
                 time.sleep(PAUSE_BETWEEN_WRITES)
     except NeedsBrowserLogin as error:
         raise SystemExit(str(error))
     if not confirm:
-        print("\nNada foi feito. Para executar: osmbot recolher --confirmar")
+        print("\nSimulacao: nada foi feito. Para executar: osmbot recolher")
+    return failed
 
 
-def run_train(confirm: bool, limit: int | None = None) -> None:
-    """Put the owner's policy choices to train in every free slot. Without ``confirm`` only shows the plan."""
+def run_train(confirm: bool, limit: int | None = None) -> int:
+    """Put the owner's policy choices to train in every free slot. Without ``confirm`` only shows the plan.
+    Returns the failures."""
     from osmbot.game.client import NeedsBrowserLogin, OsmClient
 
+    failed = 0
     try:
         client = OsmClient()
         done = 0
@@ -144,12 +151,24 @@ def run_train(confirm: bool, limit: int | None = None) -> None:
                     {"playerId": player.id, "trainer": trainer, "timerGameSettingId": setting},
                 )
                 print(f"  {label}: {'a treinar' if status == 200 else 'FALHOU'} (estado {status})")
+                failed += status != 200
+                COUNTS["started"] += status == 200
                 done += 1
                 time.sleep(PAUSE_BETWEEN_WRITES)
     except NeedsBrowserLogin as error:
         raise SystemExit(str(error))
     if not confirm:
-        print("\nNada foi feito. Para executar: osmbot treinar --confirmar")
+        print("\nSimulacao: nada foi feito. Para executar: osmbot treinar")
+    return failed
+
+
+def pending_finish_times(client) -> list[float]:
+    """When each unclaimed training of every club finishes (a past time means ready now)."""
+    times = []
+    for _, _, base in _teams(client):
+        _, sessions = client.get(f"{base}/trainingsessions/ongoing")
+        times += [s["countdownTimer"]["finishedTimestamp"] for s in sessions if not s["countdownTimer"]["isClaimed"]]
+    return times
 
 
 def run_trainings() -> None:

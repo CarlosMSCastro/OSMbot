@@ -232,12 +232,15 @@ def _shape(value, depth: int = 3):
     return type(value).__name__
 
 
+SHOWN_VALUE_FIELDS = {"actionId", "capVariation", "rewardVariation"}  # game configuration names, not personal data
+
+
 def _body_shape(text: str, content_type: str):
-    """Field names of a JSON or form-encoded body, no values; None if unreadable."""
+    """Field names of a JSON or form-encoded body, no values (except SHOWN_VALUE_FIELDS); None if unreadable."""
     try:
         if "json" in content_type or text.lstrip().startswith(("{", "[")):
             return _shape(json.loads(text))
-        return {k: "str" for k in parse_qs(text, keep_blank_values=True)}
+        return {k: (v[0] if k in SHOWN_VALUE_FIELDS else "str") for k, v in parse_qs(text, keep_blank_values=True).items()}
     except ValueError:
         return None
 

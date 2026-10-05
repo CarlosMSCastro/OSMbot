@@ -1,8 +1,9 @@
 Metadata-Version: 2.4
 Name: osmbot
-Version: 0.2.0
+Version: 0.4.0
 Summary: Automation helpers for Online Soccer Manager (independent project).
 Requires-Python: >=3.11
 Requires-Dist: playwright>=1.45
+Requires-Dist: certifi
 Provides-Extra: dev
 Requires-Dist: pytest>=8; extra == "dev"

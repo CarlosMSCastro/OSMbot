@@ -2,6 +2,36 @@
 
 Entradas mais recentes primeiro. Cada sessão: o que se fez · o que ficou por fazer · próximo passo.
 
+## 2026-10-05 — Windows operacional; D-014 (autonomia); `--simular`
+
+- **Autonomia (D-014):** regra 5 reescrita em 3 níveis (leitura livre; `recolher`/`treinar` autónomos só com o bot "ativo", sem teto; escritas novas pedem OK). Em desenvolvimento o Claude não escreve na conta. Criado `.claude/settings.json` (permissões do projeto) — a inversão do padrão foi bloqueada antes dele e passou depois.
+- **Código:** `recolher`/`treinar` escrevem por omissão; `--simular` = ensaio (`--confirmar` alias escondido). Saída UTF-8 no Windows. `*.egg-info/` no `.gitignore`. 59 testes.
+- **Windows:** venv sem `certifi` (corrigido com `pip install -e ".[dev]"`); `osmbot login` feito; `status`/`treinos`/`--simular` OK. **Sessões Windows e Mac independentes** (testado nos dois sentidos, `DISCOVERY.md` §3).
+- **Estado do jogo:** 8 treinos prontos há ~15h (nada recolhido nesta sessão); GR de 31 anos treina (regra nova, caso do Clube B fechado).
+- **Modo ativo construído:** `src/osmbot/game/loop.py`, `osmbot ativo` (`--simular` = 1 passagem). Dorme até ao fim do próximo treino (+jitter), por isso se adapta a treinos curtos. Pára à 1.ª falha de escrita / sessão perdida / 3 erros de rede; log em `~/.osmbot/bot.log`. 66 testes. Ensaio em simulação OK; **ainda não ligado em real**.
+- **Treinos tratados em real (dono: "bot ativo", 1 passagem):** `recolher` + `treinar`, 8/8 com estado 200, ciclo não ficou ligado.
+- **Aviso de slots de venda livres:** `osmbot slots` + verificação no modo ativo; aviso só na consola e no `bot.log` (escolha do dono, por agora). Limite lido de `gamesettings` (`DISCOVERY.md` §3). 71 testes.
+- **Anúncios (A4), prioridades do dono:** 1.º **loja** (boss coins), 2.º **treino** "quando der" (encurta o treino, o bot de treino volta a agir mais cedo), 3.º os **3 de dinheiro diários**, "eventualmente". Passo seguinte: observar os pedidos (`inspect-writes`) com o dono a ver um anúncio de cada tipo; só depois construir. Regras: limites do jogo respeitados, janelas saltadas ao acaso, nunca forjar recompensas (D-012, regra 8).
+- **Anúncios da loja (A4) feitos:** observação dos 3 tipos de vídeo (loja `BusinessClub`, treino `TrainingTimer`, dinheiro `Multistep1-3`); teste com browser controlado (visível e sem janela) OK; `ads.py` integrado no `osmbot ativo`. Dono aceitou que ~metade dos anúncios nem carregam e a recompensa vem na mesma (comportamento do site). Permissões: o dono acrescentou `Bash(.venv/Scripts/python.exe:*)` por `/permissions`; o sistema continua a pedir ao dono para testes que ganham coins. 78 testes. **Falta:** vídeo de treino (−2h, `TrainingTimer`) e os 3 de dinheiro; ligar o `ativo` em contínuo.
+- **Vídeo de treino construído (`ads.py`, `loop.py`):** regra "uniformizar" do dono (THEORY §12.1); ensaio sem clicar, sem janela, no Clube B: encontrou o botão "- 2h" da coluna certa. Clique real feito pelo dono: GR do Clube B 5h58 → 3h06 (−2h). OK. 82 testes. **Falta:** os 3 vídeos de dinheiro e ligar o `ativo` em contínuo.
+- **UI de consola (D-015):** desenho em browser feito e descartado a pedido do dono ("pode ser de consola"); construído `dashboard.py` + integração no `loop.py` (quadro que se redesenha por segundo, `--sem-quadro`). Despertar mais fino: acorda também quando a loja / o vídeo de treino reabrem. Verificado em real com `ativo --simular` (só leitura). 88 testes. **Ainda não corrido em contínuo.** Nota: a ferramenta de publicar Artifacts falhou por regra de leitura (mesmo com a regra do dono), por isso o desenho foi gerado como HTML local e apagado depois.
+- **Versão portátil Windows (D-016):** `tools/build_portable.py`; pasta de 495 MB / zip de 183 MB em `dist/` (fora do git). Verificada em local com o Python dela (status, slots, ativo --simular, Firefox 155). **Ainda não testada noutro PC.** Mac fica como está.
+- **Menu na consola (pedido do dono: "tudo na consola, com as opções"):** `src/osmbot/menu.py`; `osmbot` sem argumentos abre o menu; o portable passou a ter só `OSMbot.bat`. Testado com o Python do portable (opção 3). 93 testes. **Falta o primeiro teste no PC da empresa.**
+- **Resumo de ganhos:** o quadro mostra, desde o arranque: variação do saldo de boss coins, vídeos (loja/treino) e treinos recolhidos/postos; o mesmo no registo ao parar. O saldo conta também o que o dono gastar à mão. 94 testes. Dono perguntou se o bot corre sem o VS Code: sim, via `OSMbot.bat` ou o terminal normal; fechar a consola pára o bot.
+- **Primeiro arranque real do `ativo` (2026-10-05 23:40, dono, janela própria):** recolher/treinar (0 prontos) e 1.º vídeo da loja OK. Defeito visto na captura do dono: o quadro ficava parado e sem dados durante a passagem (que pode durar minutos com os vídeos). Corrigido: estado inicial lido logo ao arrancar e redesenho durante as pausas e a cada linha de registo. 95 testes. Portable ainda por reconstruir com isto (não se pode enquanto o bot corre da pasta dist).
+- **2.º defeito (visto no registo do 1.º arranque):** o bot viu 2 vídeos da loja (saldo 2452 → 2454) mas o resumo dizia 0, porque contava no fim da série e o dono parou a meio. Corrigido (`_counted`); portable reconstruído (183 MB). 96 testes.
+- **`OSMbot.exe` em vez de `.bat` (pedido do dono):** `python.exe` oficial renomeado + `sitecustomize` que abre o menu / passa os comandos; testado de outra pasta (menu, `slots`, `status`, `ativo --simular`). Portable reconstruído (183 MB). **Falta testar no PC da empresa e o arranque real com o quadro novo.**
+- **3.º defeito do quadro (captura do dono, 23:49):** o redesenho ia para o stdout redirecionado enquanto o bot trabalhava, por isso o ecrã ficava parado e o registo ficava com lixo (`[90m…`). Corrigido (`Screen` guarda o terminal real) + teste de regressão; 97 testes.
+- **Instalador:** Inno Setup 6.7.3 instalado por `winget` (só para o utilizador); `tools/installer.iss`; ícone do OSM convertido para `tools/local/osmbot.ico` (fora do git). `dist/OSMbot-Setup.exe` 134 MB; instalar/correr/desinstalar testado numa pasta temporária.
+- **Publicação (dono: "C", repo e Release públicos):** varredura de segredos limpa (nenhum token, ID, email ou nome de manager). Substituídos por termos genéricos os clubes, ligas, o plantel do dono e os **nomes de utilizador de outros jogadores** (dados de terceiros que estavam em `THEORY.md`). Ícone original; instalador reconstruído sem arte do jogo (127 MB). **Aviso dado ao dono:** o histórico já enviado ainda contém os nomes antigos (2 commits); reescrevê-lo (filter-repo + force push) é dele.
+- **Próximo passo (antigo):** o dono diz "bot ativo" e corre-se `osmbot ativo` (começa por recolher os 8 treinos parados). Depois: notificação de SALE (só leitura); D-006 a reescrever. Duas máquinas ativas ao mesmo tempo não é suportado.
+
+## 2026-10-06 — Versão 0.5.0 e documentação em dia
+
+- **Versão 0.5.0** fechada (`pyproject.toml`, `CHANGELOG.md`): modo ativo, vídeos da loja e de treino, aviso de slots, quadro de consola, menu, pasta portátil e instalador para Windows. 97 testes. Mensagem de commit entregue ao dono (git é dele).
+- **Documentação revista de ponta a ponta:** `CLAUDE.md` (estado, mapa do código), `README.md` (utilização, Windows), `PROJECT_BRIEF.md` (estado de cada automação), `RISKS_AND_COMPLIANCE.md` (postura decidida e publicação pública), `OPTIONS.md`, `GLOSSARY.md`, `DISCOVERY.md` §7, `DECISIONS.md` (D-017 a D-019 em aberto).
+- **Pendente:** teste no PC da empresa e arranque real prolongado com o quadro novo; vídeos de dinheiro; transferências; D-017 (histórico do git), D-018 (estatísticas), D-019 (concorrência com o dono).
+
 ## 2026-10-04 — Renovação real corrigida (AppVersion)
 
 - A 1.ª renovação a sério falhou (400, "must update the app"): faltava o cabeçalho `AppVersion`. Agora `browser.py` guarda os cabeçalhos do pedido real em `~/.osmbot/client.json` e o cliente repete-os; aviso claro se a versão ficar velha. Renovação sem browser confirmada. 53 testes.
@@ -10,8 +40,8 @@ Entradas mais recentes primeiro. Cada sessão: o que se fez · o que ficou por f
 - Tentativa de verificar o ecrã sem janela (Firefox headless, só leitura): funciona para ver a página inicial; navegar pelos menus (hover) falhou. Chrome extension não estava ligada. O dono carregou-se uma vez em *Continue* do jogo (autorizado); nada foi recolhido nem alterado.
 - **Feito:** `osmbot inspect-writes` (observador de pedidos de escrita, sem valores). O dono recolheu 1 treino e pôs 1 a treinar com o browser aberto: pedidos de *claim* e de *start* observados e registados em `DISCOVERY.md` §3. `trainer` = posição do jogador.
 - **Construído (ainda não executado em real):** `osmbot recolher` e `osmbot treinar`, ambos com pré-visualização por omissão e `--confirmar` / `--max N` para escrever. `treinar` usa `plan_training` (THEORY §5), exclui listados para venda (lidos de `transferplayers/0`) e procura o id da duração em `gamesettings` pelo nome. Corrigido `Player.from_api`: lesionado = `unavailable > 0` (não `injuryId`). 57 testes.
-- **Primeiro uso real (2026-10-04, dono correu):** `recolher --confirmar --max 1` → 200 (Donnarumma recolhido); `treinar --confirmar --max 1` → 200 (Donnarumma a treinar, ~8h). `timerGameSettingId` confirmado. Dono não quer escrever `--confirmar` sempre; inverter o padrão foi bloqueado pelo sistema de permissões → fica `--confirmar` até haver modo automático (decisão do dono pendente).
-- **Próximo passo (antigo):** primeiro uso real com `--max 1` (dono corre); confirmar que o `timerGameSettingId` está certo e que o jogo aceita os pedidos do bot; depois alargar. Pendente: rever o caso do GR do FC Van (política escolhe um GR de rating 50 porque o melhor tem 30+).
+- **Primeiro uso real (2026-10-04, dono correu):** `recolher --confirmar --max 1` → 200 (Jogador 24 recolhido); `treinar --confirmar --max 1` → 200 (Jogador 24 a treinar, ~8h). `timerGameSettingId` confirmado. Dono não quer escrever `--confirmar` sempre; inverter o padrão foi bloqueado pelo sistema de permissões → fica `--confirmar` até haver modo automático (decisão do dono pendente).
+- **Próximo passo (antigo):** primeiro uso real com `--max 1` (dono corre); confirmar que o `timerGameSettingId` está certo e que o jogo aceita os pedidos do bot; depois alargar. Pendente: rever o caso do GR do Clube B (política escolhe um GR de rating 50 porque o melhor tem 30+).
 
 ## 2026-10-03 — Formato do `tokenRefresh` observado (Mac)
 
@@ -55,7 +85,7 @@ Entradas mais recentes primeiro. Cada sessão: o que se fez · o que ficou por f
 
 ## 2026-09-27 (cont. 23) — Taxa de juro confirmada (2%); lista de dúvidas observáveis esgotada
 
-- Dono deu mais 2 exemplos (Betis 26,6M→534k = 2,01%; FC Van 3,8M→76k = 2,00%), juntando ao exemplo anterior (2,00%) para **3 pontos de dados, todos ~2%** → taxa de juro confirmada em `THEORY.md` §13.
+- Dono deu mais 2 exemplos (Clube A 26,6M→534k = 2,01%; Clube B 3,8M→76k = 2,00%), juntando ao exemplo anterior (2,00%) para **3 pontos de dados, todos ~2%** → taxa de juro confirmada em `THEORY.md` §13.
 - **Isto fecha toda a lista de dúvidas observáveis** que vínhamos a trabalhar desde cont. 14: formação/titular fraco (teoria), mínimos por posição (ATT/MID/DEF/GK), multiplicador de preço máximo, estádio, moedas de patrocinadores/médico/advogado, vídeos de treino e da loja, e agora o juro.
 - **Ficam só 4 pontos menores em `[?]`, sem urgência:** (1) nome do campo `statAtt`/preço máximo na API — precisa de inspeção de rede, fica para quando houver OK de contacto com o jogo (regra 5); (2) valor exato do skip do médico/advogado em boss coins; (3) se os 9 vídeos da loja ainda dão recompensa extra (era descrito para o antigo "10").
 - **Próximo passo:** não há mais dúvidas teóricas bloqueadoras. O dono decide se quer resolver os 4 pontos menores, ou avançar para código (treinos/transferências, A3).
@@ -90,14 +120,14 @@ Entradas mais recentes primeiro. Cada sessão: o que se fez · o que ficou por f
 
 ## 2026-09-27 (cont. 17) — Estádio: 0→1 confirmado (1 melhoramento); número por nível varia por clube, sem fonte online fiável
 
-- Dono deu 2 exemplos de 2→3: Betis 11 melhoramentos, clube pequeno na liga da Arménia 7 — logo **não é fixo**, varia por clube/liga.
+- Dono deu 2 exemplos de 2→3: Clube A 11 melhoramentos, clube pequeno na outra liga 7 — logo **não é fixo**, varia por clube/liga.
 - Pesquisa web (`DISCOVERY.md` §6): fórum oficial bloqueado pelo Anubis (mesmo problema já conhecido); outras fontes arriscavam confundir com o jogo diferente "Soccer Manager" (`soccermanager.com`, não é o nosso `onlinesoccermanager.com`) — não usámos esses números. Sem resposta fiável online.
 - `THEORY.md` §8 atualizado: 0→1 = 1 melhoramento (confirmado); 1→2 sem exemplo; 2→3 varia (11 vs 7), padrão desconhecido.
 - **Próximo passo:** se o dono conseguir mais exemplos (clube, liga, nível de transição, número de melhoramentos), tentamos ver o padrão. Continuar as outras dúvidas: moeda dos patrocinadores/médico/advogado, renovação de vídeos, taxa de juro, e o teste do mínimo de DEF.
 
 ## 2026-09-27 (cont. 16) — Multiplicador de preço máximo confirmado (~2,5×)
 
-- Dono deu 3 exemplos novos (L. Martínez, Iwobi, Kvaratskhelia) que, com o Haaland já registado, dão 4 pontos de dados entre 2,51× e 2,53× → **multiplicador = 2,5×** confirmado em `THEORY.md` §7.5. Sem código a alterar (ainda não há lógica de transferências implementada).
+- Dono deu 3 exemplos novos (Jogador 18, Jogador 5, Jogador 2) que, com o Jogador 1 já registado, dão 4 pontos de dados entre 2,51× e 2,53× → **multiplicador = 2,5×** confirmado em `THEORY.md` §7.5. Sem código a alterar (ainda não há lógica de transferências implementada).
 - **Próximo passo:** continuar a lista de dúvidas — melhoramentos por nível do estádio, moedas dos patrocinadores/médico/advogado, renovação de vídeos, taxa de juro; e o teste do mínimo de DEF quando o dono vender um defesa.
 
 ## 2026-09-27 (cont. 15) — Mínimos por posição: ATT, MID e GK confirmados no jogo

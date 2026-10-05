@@ -11,11 +11,17 @@ src/osmbot.egg-info/requires.txt
 src/osmbot.egg-info/top_level.txt
 src/osmbot/game/__init__.py
 src/osmbot/game/browser.py
+src/osmbot/game/client.py
+src/osmbot/game/status.py
+src/osmbot/game/trainings.py
 src/osmbot/theory/__init__.py
 src/osmbot/theory/specialists.py
 src/osmbot/theory/tactics.py
 src/osmbot/training/__init__.py
 src/osmbot/training/policy.py
+tests/test_client.py
 tests/test_specialists.py
+tests/test_status.py
 tests/test_tactics.py
 tests/test_training_policy.py
+tests/test_trainings.py

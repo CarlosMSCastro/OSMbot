@@ -1,6 +1,6 @@
 # Opções em aberto
 
-*Nada aqui está decidido. Quando se decidir, mover para `DECISIONS.md`.*
+*Estado em 0.5.0: o essencial está decidido (ver `DECISIONS.md`): alcance **A3/A4** (D-002), abordagem **híbrida** (browser só para login e vídeos; HTTP para o resto), interface **consola** com quadro e menu (D-015), stack **Python** (D-001), distribuição Windows em pasta portátil e instalador (D-016). O texto abaixo fica como registo das opções consideradas.*
 
 ## A. Alcance — o que faz o bot?
 
@@ -30,7 +30,7 @@ CLI · bot Discord/Telegram · dashboard web · biblioteca importável. (Se for 
 
 Não decidido. Python e TypeScript têm ambos Playwright e ecossistema de bots (discord.py / discord.js, python-telegram-bot / grammY). A escolha deve seguir o alcance (A) e a interface (C), não o contrário.
 
-## E. Perguntas para o utilizador (fechar antes de decidir)
+## E. Perguntas para o utilizador (respondidas: poupar tempo; conta principal; uso pessoal com repo público; risco aceite)
 
 1. Que problema queres resolver no jogo? (poupar tempo, ganhar vantagem, analisar dados, aprender)
 2. Conta própria "a sério" ou conta de teste descartável?

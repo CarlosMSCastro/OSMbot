@@ -29,4 +29,14 @@
 - **Patrocinadores** — 4 slots, contratos de 2–3 jogos, ~200k por jogo por slot.
 - **Médico / advogado** — curam lesões / reduzem suspensões (mínimo 1 jogo); custos residuais.
 
+## Termos do bot
+
+- **Modo ativo** — `osmbot ativo`: o bot fica a correr e trabalha sozinho (treinos, vídeos, avisos) até se parar com Ctrl+C.
+- **Quadro** — o ecrã de consola do modo ativo, que se redesenha sozinho (estado, contagens, treinos, resumo, registo).
+- **Janela de anúncios / limite (cap)** — o jogo limita quantos vídeos de cada tipo se podem ver por período (loja ~9 por hora, treino 4 por 3 horas, dinheiro 3 por dia). Lê-se em `user/caps/actions/{actionId}/0`.
+- **actionId** — nome interno de cada tipo de vídeo: `BusinessClub` (loja), `TrainingTimer` (treino), `Multistep1` a `3` (dinheiro).
+- **Despertar** — o momento em que o bot volta a verificar tudo: o mais próximo entre o fim do próximo treino e a reposição dos vídeos (máx. 30 min).
+- **Ensaio / `--simular`** — executar uma passagem sem escrever nada na conta.
+- **Portátil / instalador** — as duas versões para Windows (`OSMbot.exe` numa pasta, ou `OSMbot-Setup.exe`).
+
 *Acrescentar termos à medida que forem verificados.*

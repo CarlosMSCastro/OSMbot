@@ -41,3 +41,9 @@ Thumbs.db
 
 # Claude Code (local)
 .claude/settings.local.json
+
+# Gerado pelo pip install -e (por máquina)
+*.egg-info/
+
+# Ícone e ficheiros locais de construção (arte do jogo: não vai para o repo público)
+tools/local/

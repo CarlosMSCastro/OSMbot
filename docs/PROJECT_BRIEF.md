@@ -1,39 +1,38 @@
 # Project Brief
 
-*Última atualização: 2026-09-27*
+*Última atualização: 2026-10-06*
 
-## Objetivo (provisório)
+## Objetivo
 
-**Poupar tempo ao dono automatizando tarefas repetitivas** no Online Soccer Manager (D-010):
+**Poupar tempo ao dono automatizando tarefas repetitivas** no Online Soccer Manager (D-010). Estado em 0.5.0:
 
-1. Obter coins através de vídeos promocionais. **Motivo (dono):** os jogos amigáveis custam 4 boss coins cada, sobem stats de jogadores, e o dono faz sempre pelo menos 1 por dia, às vezes mais; precisa de coins para os sustentar. Ver `THEORY.md` §6.
-2. **Treinos (prioridade confirmada, não urgente):** sempre que um treino acaba, recolhê-lo e voltar a pôr um jogador a treinar, sem o dono ter de o fazer. A escolha do jogador segue `THEORY.md` §5 (melhor da posição, sem 30+, nunca listados para venda). Não é para agora; fica na lista do que se vai automatizar.
-3. Cortar tudo o que dependa de ver vídeos promocionais. Os 3 usos de vídeos que o jogo oferece (detalhe em `THEORY.md` §12):
-   - **Treinos:** cada vídeo tira 2 h; máx. 4 por hora (8 h).
-   - **Loja:** 1 boss coin por vídeo; ~10 por ciclo de 1 h; recompensa extra ao 10.º (treinador universal, troca de posição, etc.).
-   - **Finanças:** 3 vídeos por dia (~300k, ~600k, 3 boss coins).
-   Todos com limites impostos pelo servidor; os anúncios continuam a ser a parte de maior risco (D-012).
-4. Possivelmente parte da gestão de transferências (por especificar).
-5. **Notificação de jogadores novos na lista de transferências** (pedido do dono, não urgente): em ligas com muitos jogadores os novos são comprados logo, por isso quer ser avisado quando aparecem. Ver `THEORY.md` §7.7.
+| # | Automação | Estado |
+|---|---|---|
+| 1 | **Treinos**: recolher e voltar a pôr a treinar quando acabam (política em `THEORY.md` §5) | **Feito e em uso** (`osmbot ativo`) |
+| 2 | **Vídeos da loja** (1 boss coin cada, até 9 por hora): pagam os amigáveis (4 boss coins cada) | **Feito** |
+| 3 | **Vídeos de treino** (−2h cada, 4 por 3h): o treino acaba mais cedo e o ciclo volta a treinar mais cedo; regra "uniformizar" | **Feito** |
+| 4 | **Vídeos de dinheiro** (3 por dia: ~300k, ~600k, 3 boss coins) | Por fazer (fluxo já observado) |
+| 5 | **Aviso de slots de venda livres** (4 normalmente, 6 em eventos) | **Feito** (consola e registo) |
+| 6 | Transferências automáticas | Por especificar; escritas novas pedem OK |
+| 7 | Aviso de jogadores novos "SALE" no mercado (`THEORY.md` §7.7) | Por fazer |
 
-Fora do alcance inicial: táticas. O dono tem uma teoria de jogo própria, com bons resultados, que aplica ele mesmo (ver histórico em `WORKLOG.md`); não há nada a codificar ou testar aí para já.
+Os vídeos têm limites impostos pelo servidor (detalhe em `THEORY.md` §12); o bot respeita-os sempre, salta algumas janelas de propósito e nunca forja a recompensa (D-012, regra 8).
 
-**Consequência:** isto é automação com escrita na conta (A3/A4 em `OPTIONS.md`) — o cenário de maior risco face aos ToS. A conta em risco é a conta principal do dono, onde estão os resultados que ele quer proteger.
+Fora do alcance: táticas. O dono aplica a sua teoria de jogo ele mesmo; está registada em `THEORY.md` mas não se automatiza.
 
-## Não-objetivos (por agora)
+**Consequência:** é automação com escrita na conta (A3/A4 em `OPTIONS.md`), o cenário de maior risco face aos ToS, na **conta principal** do dono (D-004). O repo é público (D-016) e por isso não leva nomes de clubes, ligas, jogadores nem segredos.
 
-- Escolher linguagem/framework.
-- Escrever código.
-- Contornar mecanismos anti-abuso do jogo de forma agressiva.
+## Critérios de sucesso
 
-## Critérios para sair da fase de descoberta
-
-- [ ] Escolhido o **alcance** (D-002 em `DECISIONS.md`).
-- [ ] Definida a **postura de risco** face aos ToS (D-004).
-- [ ] Verificada, com o utilizador presente, a forma como o jogo comunica (web app, chamadas de rede) — só se a postura de risco o permitir.
-- [ ] Escolhida a stack (D-001 reservado; ver DECISIONS).
+- [x] Alcance escolhido (D-002) e postura de risco definida (D-004).
+- [x] Forma como o jogo comunica verificada com o dono presente (`DISCOVERY.md`).
+- [x] Stack escolhida: Python (D-001); Firefox/Playwright só para login e vídeos, HTTP para o resto.
+- [x] O bot recolhe e treina sozinho, e vê vídeos dentro dos limites do jogo.
+- [x] Funciona em Windows sem instalar o ambiente de desenvolvimento (D-016).
+- [ ] Corre vários dias seguidos sem intervenção (por validar).
+- [ ] Funciona no PC da empresa (por testar).
 
 ## Quem
 
-- Dono do projeto: o autor do repositório (contactos no perfil do GitHub).
-- Destino provável: repositório público no GitHub → os docs têm de ser legíveis para terceiros e sem segredos.
+- Dono do projeto: o autor do repositório (contactos no perfil do GitHub). Git e GitHub são dele (regra 9 do `CLAUDE.md`).
+- Uso pessoal (D-002), com repositório público e sem licença (D-007).

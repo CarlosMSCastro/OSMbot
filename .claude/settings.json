@@ -1,0 +1,21 @@
+{
+  "permissions": {
+    "allow": [
+      "Edit(src/osmbot/cli.py)",
+      "Edit(src/osmbot/game/trainings.py)",
+      "Edit(src/osmbot/game/client.py)",
+      "Edit(tests/**)",
+      "Edit(docs/**)",
+      "Edit(CLAUDE.md)",
+      "Edit(CHANGELOG.md)",
+      "Bash(python -m pytest:*)",
+      "Bash(.venv/Scripts/python.exe -m pytest:*)",
+      "Bash(osmbot status:*)",
+      "Bash(osmbot treinos:*)",
+      "Bash(osmbot probe:*)",
+      "Bash(osmbot token-info:*)",
+      "Bash(osmbot recolher --simular:*)",
+      "Bash(osmbot treinar --simular:*)"
+    ]
+  }
+}

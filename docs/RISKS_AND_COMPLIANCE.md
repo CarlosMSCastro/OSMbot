@@ -33,9 +33,23 @@ Consequência para o utilizador: **conta banida e itens/moedas perdidos.** Um re
 
 **Mitigação proposta pelo dono para D-012:** em vez de tentar apanhar 100% das janelas de anúncio, capar a uma fração (ex. 60-70%, valor **[H]** por afinar) com timings aleatórios entre cliques, e correr só durante as horas em que o PC normalmente está ligado (não 24/7) — aproxima o padrão de um jogador muito dedicado em vez de disponibilidade perfeita, e evita precisar de servidor/Raspberry Pi dedicado.
 
-## Postura de risco — **por decidir (D-004)**
+## Postura de risco — **decidida (D-004, emendada)**
 
-O Claude não assume nenhuma. Antes de qualquer contacto com o jogo real, o utilizador confirma o nível de risco que aceita e em que conta.
+O dono aceita o risco de ban em A3 (treinos, transferências) e A4 (anúncios) **na conta principal**, sem conta descartável. O contacto com o jogo segue a regra 5 do `CLAUDE.md` por níveis (D-014): leitura livre; `recolher`/`treinar` e os vídeos autónomos só com o bot ativo; escritas novas (vender, comprar, outros) pedem OK sempre.
+
+Medidas em vigor no código: nunca exceder os limites do jogo (lidos de `user/caps/actions/...`), saltar ~35% das janelas de vídeo, pausas e despertares com aleatoriedade, parar à primeira falha de escrita, nunca chamar `videos/watched` (é a página que o faz), nunca clicar em botões que gastam boss coins.
+
+## Publicação pública do repo e dos instaladores (D-016, 2026-10-05)
+
+O dono escolheu repo **e** Release públicos, ciente dos riscos:
+
+| Risco | Medida / estado |
+|---|---|
+| Identidade do dono ligada ao bot (nome no GitHub + clubes no jogo) | Nomes de clubes, ligas, jogadores e utilizadores de terceiros removidos de `docs/` e `tests/`. **O histórico do git já enviado ainda os contém** (2 commits): reescrevê-lo é decisão do dono |
+| Deteção por popularidade (muitos a usar o mesmo padrão de pedidos) | Sem mitigação técnica; é o argumento principal contra um Release público |
+| ToS proíbem bots; pedido de remoção do repo/Release | Aceite pelo dono; o aviso no `README.md` mantém-se |
+| Arte do jogo (ícone) | O instalador usa um ícone original (`tools/make_icon.py`); o oficial fica só em `tools/local/` (ignorado pelo git) |
+| Segredos | Varredura limpa (nenhum token, ID, email ou nome de manager); a sessão fica em `~/.osmbot`, fora do pacote |
 
 ## Segredos (obrigatório, repo público)
 

@@ -184,19 +184,19 @@ O dono pode pôr **4 jogadores de cada vez** na lista de transferências. No pla
 
 | Pos | Titulares | Suplentes a vender ➜ | "Enchimento" (rating mais baixo) |
 |---|---|---|---|
-| **ATT** (6) | Haaland PL 26a **103** · Kvaratskhelia EE 25a 90 · Salah ED 34a 91 | ➜ Antony ED 26a 85 (13,5M) · ➜ Iwobi EE 30a 84 (12,0M) | Losada PL 25a **69** (2,6M) |
-| **MID** (5) | Rice MC 27a **96** · Anderson MC 23a 91 · Kimmich MCD 31a 88 | ➜ Fernández MC 25a 90 (18,4M) | Roca MCD 29a **73** (3,8M) |
-| **DEF** (8) | Gabriel DC 28a 95 · R. James DD 26a 92 · M. Nunes DE 28a 86 · van Dijk DC 35a 90 | ➜ Marquinhos DC 32a 89 (10,5M) · ➜ Guéhi DC 26a 87 (10,1M) · ➜ L. Martínez DC 28a 84 (7,9M) | Bartra DC 35a **69** (1,5M) |
+| **ATT** (6) | Jogador 1 PL 26a **103** · Jogador 2 EE 25a 90 · Jogador 3 ED 34a 91 | ➜ Jogador 4 ED 26a 85 (13,5M) · ➜ Jogador 5 EE 30a 84 (12,0M) | Jogador 6 PL 25a **69** (2,6M) |
+| **MID** (5) | Jogador 7 MC 27a **96** · Jogador 8 MC 23a 91 · Jogador 9 MCD 31a 88 | ➜ Jogador 10 MC 25a 90 (18,4M) | Jogador 11 MCD 29a **73** (3,8M) |
+| **DEF** (8) | Jogador 12 DC 28a 95 · Jogador 13 DD 26a 92 · Jogador 14 DE 28a 86 · Jogador 15 DC 35a 90 | ➜ Jogador 16 DC 32a 89 (10,5M) · ➜ Jogador 17 DC 26a 87 (10,1M) · ➜ Jogador 18 DC 28a 84 (7,9M) | Jogador 19 DC 35a **69** (1,5M) |
 | **GK** | *(não mostrado nas capturas)* | | |
 
 Observações:
-- **Cada posição tem exatamente um "enchimento"** (o mais barato e de menor rating), tal como o dono descreveu: 3 titulares + 2 suplentes à venda + 1 jogador fraco = **6 atacantes**. Nos médios, um dos dois suplentes é o enchimento (Roca) e o outro é o que se vende (Fernández).
+- **Cada posição tem exatamente um "enchimento"** (o mais barato e de menor rating), tal como o dono descreveu: 3 titulares + 2 suplentes à venda + 1 jogador fraco = **6 atacantes**. Nos médios, um dos dois suplentes é o enchimento (Jogador 11) e o outro é o que se vende (Jogador 10).
 - Depois das vendas ficariam: **ATT 4** (mínimo palpitado: 3) · **MID 4** (mínimo: 4) · **DEF 5** (mínimo: 4). Nos médios ficaria **exatamente no mínimo palpitado (4)**, o que é coerente com o palpite do dono.
 - Os jogadores a vender são os **não titulares de maior valor** de cada posição.
 - **Motivo de manter o jogador fraco:** o dono **já não se lembra bem**, mas "fazia muito sentido na altura". Fica em aberto. Hipóteses (nossas, não confirmadas): cobre a vaga do banco e o mínimo por posição enquanto os suplentes reais estão à venda, sem perder dinheiro (vale quase nada).
 - **Ícone de setas verde/vermelha = já está na lista de transferências** (confirmado pelo dono). Os 6 jogadores marcados já estão à venda, o que corresponde a **6 slots neste momento** (evento; confirmado pelo dono, voltam a 4 dentro de umas horas).
 - **Ordem de venda (resolvido):** vende os suplentes **sem ordem particular** (§7.5).
-- **Discos vermelho/amarelo = jogador em treino** (confirmado). Em treino nas capturas: **Haaland (ATT), Rice (MID), Anderson (MID), Gabriel (DEF)** = 4 treinos. Dois médios só é possível porque o dono usou o **treinador universal** (normalmente cada treinador é de uma posição). Nenhum jogador em treino está à venda, coerente com a regra "nunca treinar listados" (§5).
+- **Discos vermelho/amarelo = jogador em treino** (confirmado). Em treino nas capturas: **Jogador 1 (ATT), Jogador 7 (MID), Jogador 8 (MID), Jogador 12 (DEF)** = 4 treinos. Dois médios só é possível porque o dono usou o **treinador universal** (normalmente cada treinador é de uma posição). Nenhum jogador em treino está à venda, coerente com a regra "nunca treinar listados" (§5).
 
 **O que as capturas confirmam sobre os dados** (visto no ecrã do jogo, ainda não na API):
 - O número a **negrito** de cada jogador é o do seu papel: **Ata** nos avançados, **Med** nos médios, **Def** nos defesas. Confirma a suposição [S] de que o "rating" é a stat principal da posição.
@@ -211,13 +211,13 @@ Observações:
   - Se o **preço máximo** do jogador for **acima de 100 M€**, pede só **75% do seu valor**.
   - Se for **abaixo de 100 M€**, pede **SEMPRE o máximo**, por cada jogador.
 - **O jogo acaba por vender os jogadores a bots, independentemente do preço** (afirmação do dono). Por isso pedir o máximo não atrasa a venda.
-- **Os 75% são do preço máximo permitido** (não do valor de mercado). Exemplo do dono: o preço máximo do Haaland é **111 M€** (o dono foi ver ao jogo), por isso pediria 75% disso ≈ **83,25 M€**.
+- **Os 75% são do preço máximo permitido** (não do valor de mercado). Exemplo do dono: o preço máximo do Jogador 1 é **111 M€** (o dono foi ver ao jogo), por isso pediria 75% disso ≈ **83,25 M€**.
 - **Motivo (experiência do dono):** acima de 100 M€ fica **muito mais difícil vender pelo preço máximo**.
 - **Multiplicador confirmado (2026-09-27): ≈2,5×.** Pontos de dados (valor → preço máximo):
-  - Haaland: 44,0 M€ → 111 M€ = **2,52×**
-  - L. Martínez: 7,9 M€ → 20,0 M€ = **2,53×**
-  - Iwobi: 12,0 M€ → 30,2 M€ = **2,52×**
-  - Kvaratskhelia: 19,2 M€ → 48,1 M€ = **2,51×**
+  - Jogador 1: 44,0 M€ → 111 M€ = **2,52×**
+  - Jogador 18: 7,9 M€ → 20,0 M€ = **2,53×**
+  - Jogador 5: 12,0 M€ → 30,2 M€ = **2,52×**
+  - Jogador 2: 19,2 M€ → 48,1 M€ = **2,51×**
   - 4 exemplos, todos entre 2,51× e 2,53× — coerente com o prior art (`PRIOR_ART.md`, que reporta ~2,5× noutra liga). Multiplicador = **2,5×** para efeitos práticos.
   - Consequência: o limiar de 100 M€ de preço máximo (§7.5, regra dos 75%) corresponde a valor de mercado ≈ **40 M€**.
 - O preço máximo é um valor que o jogo mostra ao listar o jogador; onde se lê na API é desconhecido.
@@ -238,9 +238,9 @@ Leitura nossa: na prática, só se compra o que tem a etiqueta "SALE".
 - **Escolha entre "SALE":** depende do **plantel e do dinheiro**. **Às vezes compra vários "SALE" diretamente como suplentes e põe-nos logo na lista de transferências ao preço máximo.**
 
 **Como se distingue, na lista do mercado** (captura do dono, 2026-09-27):
-- **Jogador de utilizador:** o **nome do clube aparece a azul** (ligação) e por baixo, em cinzento itálico, o **nome do vendedor**. Ex.: Schick (Real Madrid, vendedor "Rusescuxxx") e Gordon (Barcelona, vendedor "akramhammad").
+- **Jogador de utilizador:** o **nome do clube aparece a azul** (ligação) e por baixo, em cinzento itálico, o **nome do vendedor**. Ex.: Jogador 21 (Clube C, vendedor "utilizador A") e Jogador 22 (Clube D, vendedor "utilizador B").
 - **Jogador do jogo/bots:** clube em texto normal, **sem nome de vendedor**.
-- **"SALE":** fita azul no canto superior direito da célula do preço (Doué 47,2 M€ e Semenyo 37,6 M€ na captura).
+- **"SALE":** fita azul no canto superior direito da célula do preço (Doué 47,2 M€ e Jogador 23 37,6 M€ na captura).
 - **Jogadores "World Legends":** linhas douradas com distintivo; não são o foco da estratégia do dono (dado nosso, não dito por ele).
 - Colunas do mercado: bandeira, nome, Pos, Idade, Clube, **Ata / Def / Med**, preço.
 
@@ -248,10 +248,10 @@ Leitura nossa: na prática, só se compra o que tem a etiqueta "SALE".
 
 | Jogador | Vendedor | Pos | Ata | Preço |
 |---|---|---|---|---|
-| Schick | **utilizador** (Rusescuxxx) | PL | **88** | 39,1 M€ |
-| Gyökeres | jogo | PL | **94** | 39,0 M€ |
-| Gordon | **utilizador** (akramhammad) | EE | **90** | 37,0 M€ |
-| Semenyo (SALE) | jogo | ED | **96** | 37,6 M€ |
+| Jogador 21 | **utilizador** (utilizador A) | PL | **88** | 39,1 M€ |
+| Jogador 20 | jogo | PL | **94** | 39,0 M€ |
+| Jogador 22 | **utilizador** (utilizador B) | EE | **90** | 37,0 M€ |
+| Jogador 23 (SALE) | jogo | ED | **96** | 37,6 M€ |
 
 Pelo mesmo preço, o do jogo tem **+6 de rating** que o de utilizador (PL) e o "SALE" **+6** (EE/ED).
 - **Com necessidade e sem "SALE" (confirmado):** compra um jogador **da posição, do jogo, sem etiqueta "SALE"**. **Nunca** de utilizador.
@@ -274,7 +274,7 @@ Pelo mesmo preço, o do jogo tem **+6 de rating** que o de utilizador (PL) e o "
 
 **Esclarecimentos do dono (2026-09-27):**
 - **Guarda-redes:** o "fraco" é o **2.º GK**. Exemplo dele: tem um GK de 100 e um de 60; aparece um de 105 → compra-o, e fica com 3; **põe o de 100 à venda** ao ter os 3; quando vende, **volta a ficar com 2** (105 + 60). Ou seja, nos GK são sempre **2** (titular + o fraco), com 3 só de passagem.
-- **Prints:** eram do plantel do Betis, onde os jogadores mais baixos já tinham esses ratings (69, 73, 69), por isso não são "60". O ~60 é uma ordem de grandeza.
+- **Prints:** eram do plantel do Clube A, onde os jogadores mais baixos já tinham esses ratings (69, 73, 69), por isso não são "60". O ~60 é uma ordem de grandeza.
 - **Duas moedas** (confirmado): **dinheiro do clube (M€)** para transferências; **boss coins** para amigáveis, treino secreto, estágio e olheiro.
 - **Slots:** neste momento **6**, e vão voltar a **4** dentro de umas horas.
 - Camisola laranja ou azul = titular (laranja = titular em treino); cinzenta/branca = não titular (confirmado).
@@ -290,7 +290,7 @@ Pelo mesmo preço, o do jogo tem **+6 de rating** que o de utilizador (PL) e o "
 
 Razões plausíveis:
 1. **Mínimo por posição:** nos MID e GK, sem o fraco não se cumpre o mínimo palpitado; nos ATT e DEF fica-se exatamente no limite, sem margem.
-2. **Cobertura de lesões e suspensões:** sem reserva na posição, uma baixa obriga a jogar fora de posição. Nas capturas há 3 titulares com cartão amarelo (Anderson, Gabriel, van Dijk).
+2. **Cobertura de lesões e suspensões:** sem reserva na posição, uma baixa obriga a jogar fora de posição. Nas capturas há 3 titulares com cartão amarelo (Jogador 8, Jogador 12, Jogador 15).
 3. **Custo quase nulo:** vale 1,5–3,8 M€ nas capturas. Um suplente bom parado prende dinheiro que pode estar em compras.
 
 **Palpite do dono (mais provável, ainda sem certeza): o motivo é não ter dinheiro parado** (razão 3). Ou seja, o jogador fraco é a forma mais barata de preencher o plantel sem prender capital em jogadores que não estão a render.
@@ -312,7 +312,7 @@ Há **3 componentes** a melhorar, cada um com **níveis 0, 1, 2 e 3**:
 
 - **Ordem do dono:** melhora **sempre primeiro os Treinos**, até ao máximo (nível 3); **depois o Campo**; **por fim a Capacidade**.
 - **Custo:** cada melhoramento custa cerca de **200k** em **dinheiro do clube** (confirmado; não são boss coins).
-- **Melhoramentos por nível (fechado, 2026-09-27, número exato não é necessário):** do nível 0 para o 1 é **só 1 melhoramento**. Do 1 para 2 e do 2 para 3 são mais, e o número **varia por clube/liga** (Betis 2→3: 11; clube pequeno na Arménia 2→3: 7), provavelmente pelo nível da liga — mas o dono considera **irrelevante para a automação**: a regra que importa é a **ordem de prioridade** (Treinos ao máximo → depois Campo → depois Capacidade, ver acima), que já não depende de saber quantos melhoramentos cada passo leva.
+- **Melhoramentos por nível (fechado, 2026-09-27, número exato não é necessário):** do nível 0 para o 1 é **só 1 melhoramento**. Do 1 para 2 e do 2 para 3 são mais, e o número **varia por clube/liga** (Clube A 2→3: 11; clube pequeno na outra liga 2→3: 7), provavelmente pelo nível da liga — mas o dono considera **irrelevante para a automação**: a regra que importa é a **ordem de prioridade** (Treinos ao máximo → depois Campo → depois Capacidade, ver acima), que já não depende de saber quantos melhoramentos cada passo leva.
 - **Duração total:** normalmente leva **quase uma época** a levar os 3 componentes ao máximo.
 - Liga-se à automação de treinos (§5): o nível de Treinos aumenta o ganho de cada sessão.
 
@@ -364,6 +364,7 @@ Há **3 componentes** a melhorar, cada um com **níveis 0, 1, 2 e 3**:
 - **Máximo de 4 vídeos por ciclo de 3 horas** (não por hora — ver confirmação abaixo) → dá para retirar **8 horas** (4 × 2 h), **distribuídas** por vários jogadores ou **todas ao mesmo jogador**.
 - Na prática, 4 vídeos num jogador **acabam-lhe a sessão de treino**, que dura **8 horas**.
 - **A duração varia com o momento do jogo.** Normalmente 8 h, mas **em certas alturas os treinos baixam para 2 h por jogador**: as mesmas alturas em que as transferências permitem **6 slots em vez de 4** (§7.8). É provavelmente o que o prior art (`PRIOR_ART.md`) observou (7200 s = 2 h). **Ler a duração real no jogo, nunca fixá-la no código.** O dono diz que é **por isso que automatizar vai ser bom**: com sessões de 2 h há muito mais recolhas e recolocações a fazer.
+- **Regra do bot para os vídeos de treino (dono, 2026-10-05): uniformizar.** Cada vídeo vai para a sessão com mais tempo em falta (entre os 4 treinos de cada clube, e entre os clubes), para todos acabarem por volta da mesma hora.
 - Liga-se à checklist (§6): as **4 sessões de treino têm de estar concluídas no dia do jogo**; os vídeos são o que permite encurtá-las.
 - **Limites separados** (confirmado): o teto dos vídeos de treino é **independente** do teto dos vídeos da loja (boss coins).
 - **Renovação (resolvido, 2026-09-27): não é de hora a hora.** Depois dos 4 vídeos, o próprio jogo diz: *"Atingiste o número máximo de vídeos que podes ver aqui. Regressa dentro de **3 horas** para veres um novo vídeo!"* Ou seja, o ciclo de treino é **4 vídeos por 3 horas**, não 4 por 1h como os vídeos da loja (§12.2). Confirmado por captura de ecrã do dono.
@@ -395,9 +396,9 @@ Há **3 componentes** a melhorar, cada um com **níveis 0, 1, 2 e 3**:
 - Notas nossas (não ditas pelo dono): como é tudo ou nada, **qualquer compra obriga a tirar todo o dinheiro da poupança**; convém voltar a depositar o que sobra o mais depressa possível, sobretudo antes do jogo do dia (é aí que o juro conta). O prior art reporta um endpoint que devolve saldo e poupança em separado (`PRIOR_ART.md`).
 - **Enviar e depositar** na poupança funcionam **da mesma forma: sempre tudo** (confirmado).
 - **Taxa do juro (confirmada, 2026-09-27): 2% por dia de jogo.** Três exemplos do dono, em dois clubes/ligas diferentes:
-  - Betis: 5,45 M€ → 109k (2,00%)
-  - Betis (outro dia): 26,6 M€ → 534k (2,01%)
-  - FC Van (Arménia): 3,8 M€ → 76k (2,00%)
+  - Clube A: 5,45 M€ → 109k (2,00%)
+  - Clube A (outro dia): 26,6 M€ → 534k (2,01%)
+  - Clube B (outra liga): 3,8 M€ → 76k (2,00%)
 - Consequência (nossa): a 2% por dia, dinheiro nos fundos do clube "custa" 2% por dia em juro perdido (50 M parados = 1 M/dia). Reforça o palpite do dono sobre o jogador fraco (§7.8): dinheiro preso num suplente valioso também não rende juro.
 
 ## 14. Notas de implementação (nossas)
