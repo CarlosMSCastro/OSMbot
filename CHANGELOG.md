@@ -6,6 +6,23 @@ Este ficheiro é o **histórico de versões, para quem lê o repo**. O diário i
 
 ## [Por lançar]
 
+## [0.7.1] — 2026-10-07
+
+Acabamento do menu e do quadro da consola.
+
+### Alterado
+- **Menu com setas:** escolhe-se com ↑ ↓ e Enter (a opção escolhida fica a verde, com `»`); escrever o número ou Esc continua a funcionar.
+- **Barras sempre visíveis, uma linha por jogador:** os treinos mostram a barra de 8 h e a parte que um vídeo encurtou (2 h) aparece a azul. O estádio mostra a barra (18 h) na mesma linha da peça em obras.
+- **Primeira linha de cada clube a verde** (nome, classificação e liga); "Lista de Transf. 3/4" a branco, com os números a amarelo só quando há vaga. Estádio: "Treinos", "Campo", "Capacidade".
+- **Cores com significado fixo:** verde = feito/bom, amarelo = pede atenção, azul = tempo que falta ou encurtado, cinzento = etiquetas e barras vazias, vermelho = erros.
+- **Boss coins:** `Boss coins 2515  +18` (o ganho desde o arranque a verde). Saiu a linha dos vídeos com vistos; o resumo fica numa linha com os vídeos.
+- **Mais instantâneo:** o quadro volta a ler o jogo logo a seguir a recolher/pôr a treinar, a subir o estádio, a assinar patrocinadores e a cada vídeo de dinheiro; um vídeo de treino atualiza logo a hora do treino.
+- **Janela pequena:** o quadro encurta o registo e as linhas em branco, mas mantém as barras. A largura ajusta-se à janela (até 100 colunas).
+- Aviso no topo: "Para parar: Ctrl+C".
+
+### Corrigido
+- **Ctrl+C não parava o bot** quando se clicava na janela do Windows: a consola entrava em modo "Selecionar" (QuickEdit), congelava o bot e o Ctrl+C só copiava. Esse modo fica desligado enquanto o quadro corre.
+
 ## [0.7.0] — 2026-10-07
 
 Menu e quadro da consola redesenhados.

@@ -1,4 +1,4 @@
-from osmbot.game.dashboard import bar, render, span, wake_events
+﻿from osmbot.game.dashboard import bar, render, span, wake_events
 
 NOW = 1_000_000.0
 
@@ -23,8 +23,8 @@ def test_span_and_bar():
     assert span(3 * 3600 + 6 * 60) == "3h06"
     assert span(-5) == "0h00"
     assert bar(8 * 3600).count("█") == 0
-    assert bar(0).count("█") == 18
-    assert len(bar(4 * 3600)) == 18
+    assert bar(0).count("█") == 20
+    assert len(bar(4 * 3600)) == 20
 
 
 def test_wake_events_are_sorted_and_labelled():
@@ -50,8 +50,11 @@ def test_render_shows_clubs_trainings_and_log():
 def test_render_flags_a_free_slot():
     snap = snapshot()
     snap["clubs"][0]["slots"] = (3, 4)
-    assert "LIVRE: 1" in render(snap, NOW, "ATIVO", [], "Windows", colour=False)
-    assert "LIVRE" not in render(snapshot(), NOW, "ATIVO", [], "Windows", colour=False)
+    free = render(snap, NOW, "ATIVO", [], "Windows", colour=True)
+    full = render(snapshot(), NOW, "ATIVO", [], "Windows", colour=True)
+    assert "\x1b[1m\x1b[33m3/4\x1b[0m" in free  # only the numbers turn yellow
+    club_line = next(line for line in full.split("\n") if "Lista de Transf." in line)
+    assert "\x1b[33m" not in club_line  # a full list stays plain
 
 
 def test_render_without_data_and_without_colour_codes():
@@ -80,15 +83,12 @@ def test_money_switches_to_millions_at_a_thousand_k():
 
 def test_board_has_no_next_line_and_says_transfer_list():
     text = render(snapshot(), NOW, "ATIVO", [], "Windows", colour=False)
-    assert "A seguir" not in text and "Lista de transferências 4/4" in text and "Slots" not in text
+    assert "A seguir" not in text and "Lista de Transf. 4/4" in text and "Slots" not in text and "LIVRE" not in text
 
 
-def test_shop_shows_a_bar_while_closed_and_a_tick_when_open():
-    closed = snapshot()
-    closed["ads"]["shop"] = {"open": False, "reopen": NOW + 3600}
-    text = render(closed, NOW, "ATIVO", [], "Windows", colour=False)
-    assert "loja █" in text and "1h00" in text
-    assert "loja √" in render(snapshot(), NOW, "ATIVO", [], "Windows", colour=False)
+def test_there_is_no_videos_line_any_more():
+    text = render(snapshot(), NOW, "ATIVO", [], "Windows", colour=False)
+    assert "Vídeos:" not in text and "loja" not in text
 
 
 def test_tired_starters_take_one_line_for_the_club():
@@ -102,7 +102,7 @@ def test_stadium_building_part_gets_a_bar_and_done_parts_a_tick():
     snap = snapshot()
     snap["clubs"][0]["stadium"] = {"parts": [("campo", 3, 3, None), ("capacidade", 1, 3, NOW + 3600 * 9)], "until": NOW + 3600 * 9}
     text = render(snap, NOW, "ATIVO", [], "Windows", colour=False)
-    assert "campo 3/3 √" in text and "a construir capacidade 1/3" in text and "9h00" in text
+    assert "campo 3/3 √" in text and "capacidade 1/3 █" in text and "9h00" in text and "█" in text
 
 
 def test_sponsors_say_chosen_and_use_millions():
@@ -112,10 +112,67 @@ def test_sponsors_say_chosen_and_use_millions():
     assert "4/4 escolhidos" in text and "1 M/ronda" in text
 
 
-def test_board_summary_has_the_jump_and_hours_saved_but_not_trainings():
+def test_board_summary_is_one_line_with_the_videos_and_the_hours_saved():
     from osmbot.game.dashboard import summary_lines
 
     stats = {"start": NOW - 3600, "coins0": 2450, "shop": 1, "training": 3, "money": 0, "claimed": 8, "started": 8}
-    board = " ".join(summary_lines(snapshot(), stats, NOW))
-    assert "salto +2 boss coins" in board and "encurtadas 6 h" in board and "recolhidos" not in board
-    assert "\x1b[32m" in "".join(summary_lines(snapshot(), stats, NOW, colour=True))
+    board = summary_lines(snapshot(), stats, NOW)
+    assert len(board) == 1 and "encurtadas 6 h" in board[0] and "loja 1" in board[0]
+    assert "salto" not in board[0] and "recolhidos" not in board[0]
+    full = " ".join(summary_lines(snapshot(), stats, NOW, full=True))
+    assert "salto +2 boss coins" in full and "8 recolhidos" in full
+
+
+def test_boss_coins_line_shows_the_jump_right_after_the_balance():
+    stats = {"start": NOW - 3600, "coins0": 2449}
+    text = render(snapshot(), NOW, "ATIVO", [], "Windows", colour=False, stats=stats)
+    assert "Boss coins 2452  +3" in text
+    lines = text.split("\n")
+    assert not any(line.startswith(" Vídeos:") for line in lines)
+
+
+def test_top_line_says_how_to_stop():
+    assert "Para parar: Ctrl+C" in render(snapshot(), NOW, "ATIVO", [], "Windows", colour=False).split("\n")[0]
+
+
+def test_club_line_is_green_for_every_club_whatever_its_slots():
+    snap = snapshot()
+    snap["clubs"][0]["slots"] = (3, 4)
+    snap["clubs"].append(dict(snap["clubs"][0], name="Clube B", slots=(4, 4)))
+    text = render(snap, NOW, "ATIVO", [], "Windows", colour=True)
+    assert text.count("\x1b[1m\x1b[32mCLUBE ") == 2
+    lines = text.split("\n")
+    assert lines[[i for i, line in enumerate(lines) if "CLUBE B" in line][0] - 1] == ""  # a blank line above the second club
+
+
+def test_a_training_bar_shows_the_time_a_video_skipped_in_blue():
+    snap = snapshot()
+    snap["clubs"][0]["trainings"] = [{"id": 7, "name": "Jogador 1", "pos": "ATA", "finish": NOW + 4 * 3600, "claimed": False}]
+    text = render(snap, NOW, "ATIVO", [], "Windows", colour=True, stats={"shortened": {7: 2 * 3600}})
+    blue = "\x1b[36m" + "█" * 5 + "\x1b[0m"  # 2h of 8h on a 20-cell bar
+    assert blue in text and "\x1b[32m" + "█" * 5 + "\x1b[0m" in text  # 4h gone by: 5 cells green + 5 blue
+    assert blue not in render(snap, NOW, "ATIVO", [], "Windows", colour=True)
+
+
+
+
+def test_board_fits_a_narrow_window():
+    text = render(snapshot(), NOW, "ATIVO", ["12:00:00 olá"], "Windows", colour=False, cols=60)
+    assert max(len(line) for line in text.split("\n")) <= 59
+def test_every_trainer_keeps_a_line_and_a_bar_at_every_compaction_level():
+    from osmbot.game.dashboard import _render
+
+    snap = snapshot()
+    snap["clubs"][0]["trainings"] = [{"id": i, "name": f"Jogador {i}", "pos": "ATA", "finish": NOW + 3600 * i, "claimed": False} for i in range(1, 5)]
+    for level in range(4):
+        lines = [line for line in _render(snap, NOW, "ATIVO", [], "Windows", False, None, level, 100).split("\n") if "Jogador" in line]
+        assert len(lines) == 4 and all("█" in line or "░" in line for line in lines)
+
+
+def test_stadium_bar_is_on_the_same_line_as_the_parts():
+    snap = snapshot()
+    snap["clubs"][0]["stadium"] = {"parts": [("Treinos", 3, 3, None), ("Campo", 0, 3, NOW + 9 * 3600), ("Capacidade", 0, 3, None)], "until": NOW + 9 * 3600}
+    text = render(snap, NOW, "ATIVO", [], "Windows", colour=False)
+    line = next(line for line in text.split("\n") if "estádio" in line)
+    assert "Treinos 3/3 √" in line and "Campo 0/3 " in line and "█" in line and "9h00" in line and "Capacidade 0/3" in line
+    assert "a construir" not in text

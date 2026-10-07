@@ -10,32 +10,11 @@ Um bot para o **Online Soccer Manager (OSM)** — o jogo de gestão de futebol d
 
 ## Estado atual
 
-**Fase: automação em uso — versão 0.5.0.** O bot faz login (Firefox/Playwright), lê o jogo por HTTP sem browser (token renovado sozinho) e **escreve na conta**: recolhe e põe a treinar, vê vídeos da loja e de treino (Firefox sem janela) e avisa de slots de venda livres. Corre em **modo ativo** (`osmbot ativo`) com quadro de consola, e há um menu (`osmbot` sem argumentos). Distribuição Windows: pasta portátil e instalador (D-016). Decisões D-001 a D-016 em `docs/DECISIONS.md`; alcance A3/A4 (D-002), risco aceite na conta principal (D-004), autonomia por níveis (D-014).
-
-**Por fazer:** os 3 vídeos de dinheiro diários; transferências automáticas (escritas novas: pedem OK); tolerância a falhas quando o dono mexe ao mesmo tempo; histórico de estatísticas entre máquinas; teste no PC da empresa. O repo é **público** (D-016): sem nomes de clubes, ligas, jogadores ou utilizadores de terceiros em ficheiros versionados.
+O bot já **escreve na conta** (modo ativo). Versão atual em `pyproject.toml` e `CHANGELOG.md`; o que falta fazer em `docs/WORKLOG.md`; decisões (alcance A3/A4, risco aceite, autonomia por níveis) em `docs/DECISIONS.md`. O repo é **público** (D-016): sem nomes de clubes, ligas, jogadores ou utilizadores de terceiros em ficheiros versionados.
 
 ## Código
 
 Python ≥ 3.11, layout `src/`. A lógica de decisão (`theory/`, `training/`, políticas) é **pura** (sem I/O, sem rede) e testada com dados sintéticos; o contacto com o jogo está só em `src/osmbot/game/`.
-
-```
-src/osmbot/models.py             Player, Position
-src/osmbot/theory/tactics.py     formação, sliders, desarme      (THEORY.md §1-3)
-src/osmbot/theory/specialists.py capitão, penáltis, livres, cantos (§4)
-src/osmbot/training/policy.py    quem treinar em cada slot        (§5)
-src/osmbot/game/browser.py       login, sessão (cookies), ferramentas inspect-*
-src/osmbot/game/client.py        cliente HTTP sem browser; renova o token
-src/osmbot/game/status.py        clubes e boss coins (leitura)
-src/osmbot/game/trainings.py     ler treinos; recolher e treinar (escrita)
-src/osmbot/game/slots.py         slots de venda livres (leitura)
-src/osmbot/game/ads.py           vídeos da loja e de treino (Firefox sem janela)
-src/osmbot/game/loop.py          modo ativo: ciclo, despertar, resumo, registo
-src/osmbot/game/dashboard.py     quadro de consola
-src/osmbot/menu.py               menu na consola
-src/osmbot/cli.py                comandos (login, status, treinos, slots, recolher, treinar, ativo, probe, inspect-*)
-tools/                           build_portable.py (pasta, .zip, instalador), installer.iss, make_icon.py
-tests/                           pytest; isolados do jogo real (conftest.py)
-```
 
 Correr testes (com o venv ativado, igual em Windows e macOS): `python -m pytest`. Criar o venv e ativá-lo: ver `README.md`. O projeto corre em Windows e macOS (o dono desenvolve nos dois): código com `pathlib`, `encoding="utf-8"` explícito, sem comandos específicos de um SO; a sessão do browser (`~/.osmbot/`) é por máquina e nunca se sincroniza.
 

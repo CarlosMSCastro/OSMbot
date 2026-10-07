@@ -148,3 +148,38 @@ def test_board_keeps_drawing_while_the_bot_works_and_the_log_stays_clean(capsys)
     out = capsys.readouterr().out
     assert "Anuncios: video 2 visto." in out  # appeared on the real screen while the ads were running
     assert "\x1b" not in loop.LOG_FILE.read_text(encoding="utf-8")  # drawing never leaked into the log file
+
+
+def test_board_is_refreshed_as_soon_as_trainings_start_not_only_at_the_end_of_the_pass(capsys):
+    state = {"t": 1_000_000.0, "passes": 0, "snapshots": 0, "at_ads": None}
+
+    def train(confirm):
+        state["passes"] += 1
+        if state["passes"] == 1:
+            loop.COUNTS["started"] += 1  # a training was started
+            return 0
+        return 1  # second pass: stop the loop
+
+    def ads(dry_run):
+        state["at_ads"] = state["snapshots"]
+
+    def snap():
+        state["snapshots"] += 1
+        return {"coins": 1, "clubs": [], "ads": {"shop": {"open": False, "reopen": None}, "training": {"open": False, "reopen": None}}}
+
+    with pytest.raises(SystemExit):
+        loop.run_active(claim=lambda c: 0, train=train, finish_times=lambda: [], ads=ads, snapshot=snap, stadium=None, sponsors=None,
+                        use_screen=True, sleep=lambda s: state.__setitem__("t", state["t"] + s), clock=lambda: state["t"], rng=FixedRng())
+    assert state["at_ads"] == 2  # the first look plus the refresh after the training, both before the videos
+
+
+def test_a_training_video_shortens_the_shown_finish_time_at_once():
+    loop._live.clear()
+    loop._stats.clear()
+    snapshot = {"coins": 5, "ads": {}, "clubs": [{"trainings": [{"id": 7, "finish": 50_000.0}, {"id": 8, "finish": 60_000.0}]}]}
+    loop._note_shortened(7)
+    shown = loop._shown(snapshot)
+    assert [t["finish"] for t in shown["clubs"][0]["trainings"]] == [50_000.0 - 7200, 60_000.0]
+    assert snapshot["clubs"][0]["trainings"][0]["finish"] == 50_000.0  # the snapshot itself is untouched
+    assert loop._stats["shortened"] == {7: 7200}
+    loop._live.clear()

@@ -17,7 +17,7 @@ from collections import deque
 from datetime import datetime
 from pathlib import Path
 
-from osmbot.game.ads import (TRAINING_ACTION, AdsError, is_claimable, money_state, pick_money_club, run_money_ads,
+from osmbot.game.ads import (TRAINING_ACTION, VIDEO_SAVES, AdsError, is_claimable, money_state, pick_money_club, run_money_ads,
                              run_shop_ads, run_training_ads, watch_money_video, watch_shop_video, watch_training_video)
 from osmbot.game.dashboard import Screen, collect, machine_name, render, span, summary_text, wake_events
 from osmbot.game.slots import describe, newly_free, read_slots
@@ -48,6 +48,7 @@ _stats: dict = {}  # this run: start time, first coin balance, videos watched
 _live: dict = {}  # values fresher than the last snapshot (boss coins after a video)
 _screen_on = False  # while the board is drawn, nothing else may print to the terminal
 _redraw = None  # set by run_active while the board is on: redraws it after each new log line
+_refresh = None  # set by run_active while the board is on: re-reads the game and redraws (after a change)
 
 
 def _log(message: str) -> None:
@@ -74,6 +75,27 @@ def _quiet(function, *args):
         for line in buffer.getvalue().splitlines():
             if line.strip():
                 _log(line.strip())
+
+
+def _note_shortened(session_id: int) -> None:
+    """A training video took 2h off this session: remember it for the blue part of the bar, and show the
+    new finish time at once (``_live`` is cleared when a fresh snapshot, which already has it, arrives)."""
+    for store in (_stats.setdefault("shortened", {}), _live.setdefault("shift", {})):
+        store[session_id] = store.get(session_id, 0) + VIDEO_SAVES
+
+
+def _shown(snapshot: dict | None) -> dict | None:
+    """The last snapshot with the values read since then (coins after a video, trainings shortened by a video)."""
+    if not snapshot or not _live:
+        return snapshot
+    shown = dict(snapshot)
+    if "coins" in _live:
+        shown["coins"] = _live["coins"]
+    shift = _live.get("shift")
+    if shift:
+        shown["clubs"] = [{**club, "trainings": [{**t, "finish": t["finish"] - shift.get(t.get("id"), 0)} for t in club["trainings"]]}
+                          for club in snapshot["clubs"]]
+    return shown
 
 
 def _counted(key: str, function, refresh=None):
@@ -161,8 +183,12 @@ def _training_ads(dry_run: bool) -> int:
             found += [(club, s) for s in sessions]
         return found
 
+    def watch(club, session):
+        watch_training_video(client, club, session, clubs[club])
+        _note_shortened(session["id"])
+
     return run_training_ads(lambda: is_claimable(client, TRAINING_ACTION), load,
-                            _counted("training", lambda club, session: watch_training_video(client, club, session, clubs[club])),
+                            _counted("training", watch),
                             dry_run=dry_run, log=_log, sleep=_tick_sleep)
 
 
@@ -176,7 +202,7 @@ def _money_ads(dry_run: bool) -> int:
         return {team["name"]: client.get(f"{base}/finances")[1]["savings"] for _, team, base in _teams(client)}
 
     return run_money_ads(lambda: money_state(client)["open"], lambda: pick_money_club(savings()),
-                         _counted("money", lambda club: watch_money_video(client, club)),
+                         _counted("money", lambda club: watch_money_video(client, club), lambda: _refresh and _refresh()),
                          dry_run=dry_run, log=_log, sleep=_tick_sleep)
 
 
@@ -201,7 +227,7 @@ def run_active(dry_run: bool = False, *, claim=run_claim, train=run_train, finis
     """Loop until Ctrl+C or the first failure. With ``dry_run`` do one simulated pass and show the board once.
 
     ``use_screen``: None = draw the board when the output is a terminal (and not a dry run)."""
-    global _screen_on, _redraw
+    global _screen_on, _redraw, _refresh
     from osmbot.game.client import OsmClient
 
     finish_times = finish_times or (lambda: pending_finish_times(OsmClient()))
@@ -224,11 +250,31 @@ def run_active(dry_run: bool = False, *, claim=run_claim, train=run_train, finis
     def draw(status: str) -> None:
         current["status"] = status
         if screen:
-            shown = {**last_snapshot, "coins": _live["coins"]} if last_snapshot and "coins" in _live else last_snapshot
-            screen.draw(render(shown, clock(), status, list(_recent), machine, stats=_summary_data(),
-                                 rows=shutil.get_terminal_size((100, 40)).lines))
+            size = shutil.get_terminal_size((100, 40))
+            screen.draw(render(_shown(last_snapshot), clock(), status, list(_recent), machine, stats=_summary_data(),
+                               rows=size.lines, cols=size.columns))
 
     _redraw = (lambda: draw(current["status"])) if screen else None
+
+    def refresh_board() -> None:
+        """Re-read the game and redraw now, so a change (trainings started, upgrade begun...) shows at once and
+        not only when the whole pass, videos included, is over."""
+        nonlocal last_snapshot
+        try:
+            last_snapshot = snapshot()
+            _live.clear()
+        except Exception:  # the snapshot at the end of the pass reports the problem
+            pass
+        draw(current["status"])
+
+    _refresh = refresh_board if screen else None
+
+    def changed(before: tuple) -> bool:
+        return bool(screen) and (COUNTS["claimed"], COUNTS["started"], stadium_module.COUNTS["upgrades"],
+                                 sponsors_module.COUNTS["signed"]) != before
+
+    def counts() -> tuple:
+        return (COUNTS["claimed"], COUNTS["started"], stadium_module.COUNTS["upgrades"], sponsors_module.COUNTS["signed"])
 
     try:
         _log("Simulação (uma passagem)" if dry_run else "Bot ligado")
@@ -244,11 +290,15 @@ def run_active(dry_run: bool = False, *, claim=run_claim, train=run_train, finis
             try:
                 draw("A TRABALHAR")
                 ads_failed = False
+                before = counts()
                 failed = _quiet(claim, not dry_run) + _quiet(train, not dry_run)
+                if changed(before):
+                    refresh_board()
                 if failed:
                     _log(f"Parou: {failed} falha(s) ao escrever. Ver bot.log")
                     raise SystemExit(1)
                 _check_slots(slots, free_before)
+                before = counts()
                 stadium_times: list[float] = []
                 if stadium:
                     try:  # an extra too: a failure here never stops the trainings
@@ -268,6 +318,8 @@ def run_active(dry_run: bool = False, *, claim=run_claim, train=run_train, finis
                         raise
                     except Exception as error:
                         _log(f"Patrocinadores: erro ({error}); volto a tentar")
+                if changed(before):
+                    refresh_board()
                 if ads:
                     try:
                         _quiet(ads, dry_run)
@@ -327,5 +379,6 @@ def run_active(dry_run: bool = False, *, claim=run_claim, train=run_train, finis
             screen.close()
             _screen_on = False
             _redraw = None
+            _refresh = None
             print(chr(10).join(_recent))
         _screen_on = False

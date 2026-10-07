@@ -56,3 +56,48 @@ def test_default_menu_only_has_start_login_and_exit():
     text = "\n".join(shown)
     assert "1  Iniciar" in text and "2  Login" in text and "0  Sair" in text and "Estado" not in text
     assert all(line.startswith(" ") for line in shown if line)  # centred, not stuck to the left edge
+
+
+def run_with_keys(keys, calls, inputs=()):
+    """The arrow-key menu: ``keys`` are the key presses, ``inputs`` the answers to "Enter para continuar"."""
+    pressed, answers = iter(keys), iter(inputs)
+
+    def key():
+        try:
+            return next(pressed)
+        except StopIteration:
+            raise KeyboardInterrupt
+
+    def ask(prompt):
+        try:
+            return next(answers)
+        except StopIteration:
+            raise EOFError
+
+    menu.run_menu(make(calls), ask=ask, show=lambda text: None, clear=False, key=key)
+
+
+def test_arrows_move_the_choice_and_enter_runs_it(capsys):
+    calls = []
+    run_with_keys(["down", "enter"], calls, inputs=[""])  # 2nd option = "Estado"
+    assert calls == ["3"]
+
+
+def test_the_choice_wraps_around_and_the_last_option_is_leave():
+    calls = []
+    run_with_keys(["up", "enter"], calls)  # up from the first option lands on "Sair"
+    assert calls == []
+
+
+def test_typing_the_number_or_pressing_escape_still_works():
+    calls = []
+    run_with_keys(["1", "", "esc"], calls, inputs=[""])
+    assert calls == ["1"]
+
+
+def test_selected_option_is_marked_and_the_hint_is_shown():
+    actions = {"1": ("Iniciar", None), "2": ("Login", None)}
+    lines = menu.build_screen(actions, "Sessão: ok", 100, selected=1)
+    text = "\n".join(lines)
+    assert "» 2  Login" in text and "» 1  Iniciar" not in text and "↑ ↓ para escolher" in text
+    assert "»" not in "\n".join(menu.build_screen(actions, "Sessão: ok", 100))  # typed mode has no marker

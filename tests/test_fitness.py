@@ -41,7 +41,7 @@ def test_board_shows_money_stadium_and_sponsors():
                             stadium={"parts": [("campo de treinos", 3, 3, None), ("campo", 1, 3, 9000), ("capacidade", 0, 3, None)], "until": 9000},
                             sponsors={"slots": 3, "revenue": 454_000})
     text = render(snap, 0, "ATIVO", [], "Windows", colour=False)
-    assert "poupança 30,39 M" in text and "campo de treinos 3/3 √" in text and "a construir campo 1/3" in text
+    assert "poupança 30,39 M" in text and "campo de treinos 3/3 √" in text and "campo 1/3" in text
     assert "3/4 escolhidos" in text and "454 k/ronda" in text
 
 

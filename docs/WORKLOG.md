@@ -2,6 +2,16 @@
 
 Entradas mais recentes primeiro. Cada sessão: o que se fez · o que ficou por fazer · próximo passo.
 
+## 2026-10-07 (cont. 2) — Acabamento do menu e do quadro (0.7.1, por testar em real)
+
+- **Pedidos do dono (2 rondas):** menu com setas; barra no estádio (na mesma linha) e nos treinos (2 h encurtadas a azul), 1 jogador por linha; clube a verde; "Lista de Transf." a branco com números amarelos só se houver vaga; linha dos vídeos apagada; `Boss coins N +X`; aviso de como parar; mais atualizações instantâneas.
+- **Cores (regra fixa, no topo de `dashboard.py`):** verde feito/bom · amarelo atenção · azul tempo que falta/encurtado · cinzento etiquetas e vazio · vermelho erros. O segundo clube aparecia a verde porque o nome mudava de cor consoante as vagas; agora todos os clubes têm a mesma cor.
+- **Janela pequena:** em vez de tirar barras ou juntar treinos, o quadro encurta o registo e as linhas em branco. Largura até 100 colunas, ajustada à janela.
+- **Instantâneo:** `loop.py` volta a ler o jogo (`refresh_board`) depois de recolher/treinar, estádio, patrocinadores e cada vídeo de dinheiro (antes só no fim da passagem, que inclui os vídeos); um vídeo de treino atualiza logo a hora e a parte azul da barra.
+- **Menu:** setas ↑ ↓ + Enter (`read_key`: `msvcrt` no Windows, `termios` no macOS/Linux); fora de um terminal (testes, pipes) continua a pedir o número.
+- **Ctrl+C:** a causa provável era o modo "Selecionar" (QuickEdit) da consola do Windows, que congela o bot quando se clica na janela. Fica desligado enquanto o quadro corre. **[S]** Se continuar a falhar durante um vídeo (Firefox aberto), falta uma tecla alternativa para parar.
+- **Testes:** 141 a passar (Python temporário fora do repo).
+
 ## 2026-10-07 (cont.) — Menu novo e quadro redesenhado (por testar)
 
 - **Menu:** só Iniciar, Login e Sair; centrado, com arte ANSI, título e introdução. Estado, simulação e "sem vídeos" saem do menu e ficam só como comandos (`status`, `treinos`, `slots`, `ativo --simular`, `ativo --sem-anuncios`).

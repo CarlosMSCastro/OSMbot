@@ -2,6 +2,11 @@
 
 ``collect`` reads the game (GET only); ``render`` is a pure function from that snapshot to text,
 so the countdowns can be redrawn every second without touching the game.
+
+Colours always mean the same thing:
+  green  = done / good / progress made      yellow = needs attention (free slot, tired, incomplete)
+  blue   = time still to run, work in progress, time saved by a video
+  grey   = labels, empty bars, nothing going on   red = errors     (names and plain data have no colour)
 """
 from __future__ import annotations
 
@@ -19,15 +24,16 @@ from osmbot.theory.fitness import YELLOW_BELOW, tired_starters
 POSITIONS = {1: "ATA", 2: "MED", 3: "DEF", 4: "GR"}
 NEXT_MATCH_TIMER = 14
 BAR_SECONDS = 8 * 3600  # the bar is drawn against a normal 8h training
-BAR_WIDTH = 18
+BAR_WIDTH = 20  # 2h (one video) = 5 cells
 STADIUM_BAR_SECONDS = 18 * 3600  # a stadium upgrade takes 18h (gamesettings StadiumUpgrade, DISCOVERY.md)
-SHOP_BAR_SECONDS = 3 * 3600  # [S] assumed length of the wait before the shop videos come back
-SHOP_BAR_WIDTH = 10
-WIDTH = 76
+WIDTH = 100  # the widest the board gets; it shrinks to the window
+LABEL = 11  # width of the row labels ("dinheiro", "estádio"...)
 GREEN, YELLOW, GREY, RESET = "\x1b[32m", "\x1b[33m", "\x1b[90m", "\x1b[0m"
-RED, CYAN, BOLD = "[31m", "[36m", "[1m"
+RED, BLUE, BOLD = "\x1b[31m", "\x1b[36m", "\x1b[1m"  # the console's "cyan" is the blue we want
 SPONSOR_SLOTS = 4
-STADIUM_NAMES = {2: "campo de treinos", 1: "campo", 0: "capacidade"}
+STADIUM_NAMES = {2: "Treinos", 1: "Campo", 0: "Capacidade"}
+STADIUM_BAR_WIDTH = 14
+ANSI = re.compile(r"(\x1b\[[0-9;]*m)")
 
 
 def span(seconds: float) -> str:
@@ -80,7 +86,7 @@ def collect(client) -> dict:
                         "until": max(running) if running else None},
             "sponsors": {"slots": len(live), "revenue": sum(c["sponsorRevenueForTeam"] for c in live)}, "slots": (slot.listed, slot.maximum) if slot else None,
             "trainings": [
-                {"name": s["player"]["name"], "pos": POSITIONS.get(s["player"]["position"], "?"),
+                {"id": s["id"], "name": s["player"]["name"], "pos": POSITIONS.get(s["player"]["position"], "?"),
                  "finish": s["countdownTimer"]["finishedTimestamp"], "claimed": s["countdownTimer"]["isClaimed"]}
                 for s in sorted(sessions, key=lambda s: s["trainer"])
             ],
@@ -112,24 +118,29 @@ def wake_events(snapshot: dict | None, now: float) -> list[tuple[str, float]]:
     return sorted(events, key=lambda e: e[1])
 
 
-def summary_lines(snapshot: dict | None, stats: dict | None, now: float, colour: bool = False,
-                  full: bool = False) -> list[str]:
-    """What the bot did since it started, on two short lines: the boss-coin jump and the videos.
-    ``full`` (for the log) adds trainings, stadium and sponsors; the board leaves those out."""
+def coin_jump(snapshot: dict | None, stats: dict | None) -> int | None:
+    """Boss coins gained since the bot started (None while unknown)."""
+    if snapshot and stats and stats.get("coins0") is not None:
+        return snapshot["coins"] - stats["coins0"]
+    return None
+
+
+def summary_lines(snapshot: dict | None, stats: dict | None, now: float, full: bool = False) -> list[str]:
+    """What the bot did since it started. The board shows one line (the videos); ``full`` (for the log)
+    adds the coin jump, trainings, stadium and sponsors."""
     if not stats or stats.get("start") is None:
         return []
-    first = f"Desde o arranque ({span(now - stats['start'])})"
-    if snapshot and stats.get("coins0") is not None:
-        jump = snapshot["coins"] - stats["coins0"]
-        paint = (lambda text: f"{BOLD}{GREEN if jump >= 0 else RED}{text}{RESET}") if colour else (lambda text: text)
-        first += f": salto {paint(f'{jump:+d}')} boss coins"
+    head = f"Desde o arranque ({span(now - stats['start'])})"
     shortened = stats.get("training", 0) * VIDEO_SAVES // 3600
-    second = (f"  vídeos: loja {stats.get('shop', 0)} · treino {stats.get('training', 0)} (encurtadas {shortened} h)"
+    videos = (f"vídeos: loja {stats.get('shop', 0)} · treino {stats.get('training', 0)} (encurtadas {shortened} h)"
               f" · dinheiro {stats.get('money', 0)}")
-    if full:
-        second += (f" · treinos: {stats.get('claimed', 0)} recolhidos, {stats.get('started', 0)} postos"
-                   f" · estádio {stats.get('upgrades', 0)} · patrocinadores {stats.get('signed', 0)}")
-    return [first, second]
+    if not full:
+        return [f"{head} · {videos}"]
+    jump = coin_jump(snapshot, stats)
+    if jump is not None:
+        head += f": salto {jump:+d} boss coins"
+    return [head, f"  {videos} · treinos: {stats.get('claimed', 0)} recolhidos, {stats.get('started', 0)} postos"
+                  f" · estádio {stats.get('upgrades', 0)} · patrocinadores {stats.get('signed', 0)}"]
 
 
 def summary_text(snapshot: dict | None, stats: dict | None, now: float) -> str:
@@ -137,135 +148,128 @@ def summary_text(snapshot: dict | None, stats: dict | None, now: float) -> str:
 
 
 def render(snapshot: dict | None, now: float, status: str, recent: list[str], machine: str, colour: bool = True,
-           stats: dict | None = None, rows: int | None = None) -> str:
-    """The board as text. With ``rows`` (the terminal height) it is shortened step by step until it fits:
-    a board taller than the window would scroll and pile up copies of itself."""
+           stats: dict | None = None, rows: int | None = None, cols: int | None = None) -> str:
+    """The board as text. With ``rows``/``cols`` (the terminal size) it is shortened step by step until it fits:
+    a board taller than the window would scroll and pile up copies of itself, a wider one would wrap."""
+    width = max(40, min(WIDTH, cols - 1)) if cols else WIDTH
     for level in range(4):
-        text = _render(snapshot, now, status, recent, machine, colour, stats, level)
+        text = _render(snapshot, now, status, recent, machine, colour, stats, level, width)
         if rows is None or text.count("\n") + 1 <= rows - 1:
             return text
     return "\n".join(text.split("\n")[:max(1, rows - 1)])
 
 
-ANSI = re.compile(r"(\x1b\[[0-9;]*m)")
-
-
-def _clip(text: str) -> str:
+def _clip(text: str, width: int) -> str:
     """Cut to the board width counting only what is visible (colour codes take no space)."""
-    if len(ANSI.sub("", text)) <= WIDTH - 1:
+    if len(ANSI.sub("", text)) <= width - 1:
         return text
     out, visible = [], 0
     for piece in ANSI.split(text):
         if ANSI.fullmatch(piece):
             out.append(piece)
             continue
-        room = WIDTH - 2 - visible
+        room = width - 2 - visible
         out.append(piece[:max(room, 0)])
         visible += min(len(piece), max(room, 0))
-    return "".join(out) + RESET + "…"
+    return "".join(out) + (RESET if ANSI.search(text) else "") + "…"
 
 
 def _render(snapshot: dict | None, now: float, status: str, recent: list[str], machine: str, colour: bool,
-            stats: dict | None, level: int) -> str:
-    """level 0 = everything; 1 = trainings on one line; 2 = no stadium bar line; 3 = no blank lines, short log."""
-    gap = [] if level >= 3 else [""]
+            stats: dict | None, level: int, width: int) -> str:
+    """level 0 = everything; 1 = shorter log; 2 = also no blank lines before the totals;
+    3 = no blank lines at all, shortest log, stadium time without its bar."""
+    club_gap = [] if level >= 3 else [""]
+    foot_gap = [] if level >= 2 else [""]
 
     def paint(text: str, code: str) -> str:
-        return f"{code}{text}{RESET}" if colour else text
+        return f"{code}{text}{RESET}" if colour and code else text
 
-    def painted_bar(left: float, total: float, width: int, code: str) -> str:
-        drawn = bar(left, total, width)
-        filled = drawn.count("█")
-        return paint(drawn[:filled], code) + paint(drawn[filled:], GREY)
+    def painted_bar(left: float, total: float, size: int, shortened: float = 0) -> str:
+        """Green = time gone by, blue = the part of it a video skipped, grey = still to go."""
+        filled = round((1 - min(max(left, 0), total) / total) * size)
+        skipped = min(filled, round(max(shortened, 0) / total * size))
+        return paint("█" * (filled - skipped), GREEN) + paint("█" * skipped, BLUE) + paint("░" * (size - filled), GREY)
 
-    rule = "─" * WIDTH
-    lines = [f" OSMbot · {status} · {machine}".ljust(WIDTH - 8) + datetime.fromtimestamp(now).strftime("%H:%M:%S"), " " + rule]
+    def row(label: str, text: str) -> str:
+        return _clip("   " + paint(label.ljust(LABEL), GREY) + text, width)
+
+    def timer(left: float, ready: bool) -> str:
+        return paint("pronto", BOLD + GREEN) if ready else paint(span(left), BLUE)
+
+    skipped = (stats or {}).get("shortened") or {}
+    rule = "─" * (width - 2)
+    base = f" OSMbot · {status} · {machine}"
+    hint = "   Para parar: Ctrl+C"
+    gap_to_clock = " " * max(1, width - 9 - len(base) - len(hint))
+    lines = [base + paint(hint, GREY) + gap_to_clock + datetime.fromtimestamp(now).strftime("%H:%M:%S"), " " + rule]
     if snapshot is None:
         lines.append(" (a carregar…)")
     else:
         for club in snapshot["clubs"]:
             free = club["slots"][1] - club["slots"][0] if club["slots"] else 0
-            head = f" {club['name'].upper()}   {club['ranking']}.º {club['league']}"
+            head = " " + paint(f"{club['name'].upper()}   {club['ranking']}.º {club['league']}", BOLD + GREEN)
             if club["match"]:
-                head += f"   jogo em {span(club['match'] - now)}"
-            lines += [*gap, paint(head, BOLD + (GREEN if not free else YELLOW))]
+                head += "   jogo em " + paint(span(club["match"] - now), BLUE)
             if club["slots"]:
-                transfers = f"Lista de transferências {club['slots'][0]}/{club['slots'][1]}"
-                lines.append("   " + paint(transfers, YELLOW if free else GREEN) + (paint(f"  ← LIVRE: {free}", YELLOW) if free else ""))
+                head += "   Lista de Transf. " + paint(f"{club['slots'][0]}/{club['slots'][1]}", BOLD + YELLOW if free else "")
             else:
-                lines.append("   " + paint("Lista de transferências ?", GREY))
+                head += "   Lista de Transf. ?"
+            lines += [*club_gap, _clip(head, width)]
             if club.get("money"):
                 funds, savings = club["money"]
-                lines.append(f"   {paint('dinheiro', CYAN)}   fundos {paint(money(funds), GREEN if funds else GREY)}"
-                             f" · poupança {paint(money(savings), GREEN if savings else GREY)}")
+                lines.append(row("dinheiro", f"fundos {paint(money(funds), '' if funds else GREY)}"
+                                             f" · poupança {paint(money(savings), '' if savings else GREY)}"))
             stadium = club.get("stadium")
             if stadium:
-                bits, building = [], []
+                bits = []
                 for name, part_level, top, ends in stadium["parts"]:
+                    text = f"{name} {part_level}/{top}"
                     if ends and ends > now:
-                        building.append((name, part_level, top, ends - now))
-                        bits.append(paint(f"{name} {part_level}/{top}" + (f" » {span(ends - now)}" if level >= 2 else ""), CYAN))
+                        left = ends - now
+                        bits.append(paint(text, BLUE) + " " + (painted_bar(left, STADIUM_BAR_SECONDS, STADIUM_BAR_WIDTH) + " " if level < 3 else "» ")
+                                    + paint(span(left), BLUE))
                     elif part_level >= top:
-                        bits.append(paint(f"{name} {part_level}/{top} √", GREEN))
+                        bits.append(paint(text + " √", GREEN))
                     else:
-                        bits.append(f"{name} {part_level}/{top}")
-                lines.append(_clip(f"   {paint('estádio', CYAN)}    " + " · ".join(bits)))
-                if level < 2:
-                    for name, part_level, top, left in building:
-                        lines.append(f"   {paint('a construir', CYAN)} {name} {part_level}/{top}  "
-                                     + painted_bar(left, STADIUM_BAR_SECONDS, BAR_WIDTH, CYAN) + f"  {span(left)}")
+                        bits.append(text)
+                lines.append(row("estádio", " · ".join(bits)))
             sponsors = club.get("sponsors")
             if sponsors:
                 full = sponsors["slots"] >= SPONSOR_SLOTS
-                lines.append(f"   {paint('patroc.', CYAN)}    "
-                             + paint(f"{sponsors['slots']}/{SPONSOR_SLOTS} escolhidos", GREEN if full else YELLOW)
-                             + f" · {paint(money(sponsors['revenue']), GREEN)}/ronda")
-            if level >= 1:
-                short = " · ".join(f"{t['name'].split()[-1][:10]} {'pronto' if t['finish'] <= now and not t['claimed'] else span(t['finish'] - now)}"
-                                   for t in club["trainings"])
-                lines.append(_clip(f"   {paint('treinos', CYAN)}    {short}"))
-            else:
-                for t in club["trainings"]:
-                    left = t["finish"] - now
-                    ready = left <= 0 and not t["claimed"]
-                    state = paint("pronto", BOLD + GREEN) if ready else paint(span(left), CYAN)
-                    lines.append(f"   {t['name'][:14]:<14} {t['pos']:<4} {state}{' ' * (6 - len('pronto' if ready else span(left)))}  "
-                                 + painted_bar(left, BAR_SECONDS, BAR_WIDTH, GREEN))
+                lines.append(row("patroc.", paint(f"{sponsors['slots']}/{SPONSOR_SLOTS} escolhidos", GREEN if full else YELLOW)
+                                 + f" · {money(sponsors['revenue'])}/ronda"))
+            for t in club["trainings"]:
+                left = t["finish"] - now
+                ready = left <= 0 and not t["claimed"]
+                state = timer(left, ready) + " " * (6 - len("pronto" if ready else span(left)))
+                lines.append(f"   {t['name'][:14]:<14} {t['pos']:<4} {state} "
+                             + painted_bar(left, BAR_SECONDS, BAR_WIDTH, skipped.get(t.get("id"), 0)))
             tired = club.get("tired") or []
             if tired:
                 prefix, names = "   ! cansados: ", [f"{p['name'].split()[-1]} {p['fitness']}%" for p in tired]
                 text = prefix + ", ".join(names)
-                while len(text) > WIDTH - 1 and len(names) > 1:
+                while len(text) > width - 1 and len(names) > 1:
                     names.pop()
                     text = prefix + ", ".join(names) + f" +{len(tired) - len(names)}"
-                lines.append(paint(_clip(text), YELLOW))
-        shop, train = snapshot["ads"]["shop"], snapshot["ads"]["training"]
-        money_ads = snapshot["ads"].get("money") or {}
-
-        def flag(open_now: bool) -> str:
-            return paint("√", GREEN) if open_now else paint("-", GREY)
-
-        shop_reopen = shop.get("reopen")
-        if shop["open"]:
-            shop_text = flag(True)
-        elif shop_reopen and shop_reopen > now:
-            shop_text = painted_bar(shop_reopen - now, SHOP_BAR_SECONDS, SHOP_BAR_WIDTH, GREEN) + f" {span(shop_reopen - now)}"
-        else:
-            shop_text = flag(False)
-        lines += [*gap, f" Boss coins {paint(str(snapshot['coins']), BOLD + YELLOW)}    Vídeos: loja {shop_text}"
-                  f"  treino {flag(train['open'])}  dinheiro {flag(money_ads.get('open'))}"]
-    summary = summary_lines(snapshot, stats, now, colour=colour)
+                lines.append(paint(_clip(text, width), YELLOW))
+        coins = " Boss coins " + paint(str(snapshot["coins"]), BOLD + YELLOW)
+        jump = coin_jump(snapshot, stats)
+        if jump is not None:
+            coins += "  " + paint(f"{jump:+d}", BOLD + (GREEN if jump > 0 else RED if jump < 0 else GREY))
+        lines += [*foot_gap, coins]
+    summary = summary_lines(snapshot, stats, now)
     if summary:
-        lines += [*gap, *[" " + line for line in summary]]
+        lines += [*foot_gap, *[paint(_clip(" " + line, width), GREY) for line in summary]]
     lines.append(" " + rule)
+
     def log_colour(line: str) -> str:
         body = line[9:].lstrip()
         if body.startswith(("Parou", "Vídeos:", "Estádio:", "Patrocinadores:")) and "erro" in body or body.startswith("Parou"):
             return paint(line, RED)
         return paint(line, YELLOW if body.startswith(("!", "AVISO")) else GREY)
 
-    lines += [" " + log_colour(line) for line in recent[-(2 if level >= 3 else 5):]] or [" (sem eventos)"]
-    lines.append(" " * (WIDTH - 20) + "Ctrl+C para parar")
+    keep = {0: 5, 1: 3, 2: 3}.get(level, 2)
+    lines += [_clip(" " + log_colour(line), width) for line in recent[-keep:]] or [paint(" (sem eventos)", GREY)]
     return "\n".join(lines)
 
 
@@ -275,6 +279,7 @@ class Screen:
     def __init__(self) -> None:
         if platform.system() == "Windows":
             os.system("")  # switches on ANSI escape codes in the Windows console
+        self._restore = _disable_quick_edit()
         self._out = sys.stdout  # the real terminal: stdout is redirected to the log while the bot works
         self._out.write("\x1b[?1049h\x1b[?25l")  # hide the cursor
 
@@ -285,6 +290,28 @@ class Screen:
     def close(self) -> None:
         self._out.write("\x1b[?25h\x1b[?1049l")
         self._out.flush()
+        if self._restore:
+            self._restore()
+
+
+def _disable_quick_edit():
+    """Windows consoles freeze the program while text is selected with the mouse (the title says "Selecionar")
+    and Ctrl+C then copies instead of stopping. Switch that off while the board runs; returns the undo."""
+    if platform.system() != "Windows":
+        return None
+    try:
+        import ctypes
+
+        kernel = ctypes.windll.kernel32
+        handle = kernel.GetStdHandle(-10)  # standard input
+        mode = ctypes.c_uint32()
+        if not kernel.GetConsoleMode(handle, ctypes.byref(mode)):
+            return None
+        old = mode.value
+        kernel.SetConsoleMode(handle, (old | 0x80) & ~0x40)  # ENABLE_EXTENDED_FLAGS on, ENABLE_QUICK_EDIT_MODE off
+        return lambda: kernel.SetConsoleMode(handle, old)
+    except Exception:
+        return None
 
 
 def machine_name() -> str:
