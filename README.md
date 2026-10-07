@@ -31,7 +31,7 @@ O comando `login` abre uma janela de Firefox a sério (não Chromium — o popup
 
 ## Utilização
 
-`osmbot` sem argumentos abre um **menu**: iniciar o bot (com ou sem anúncios), estado (clubes, treinos, slots), ensaio (mostra o que faria, sem escrever) e login. Comandos diretos:
+`osmbot` sem argumentos abre um **menu** com Iniciar, Login e Sair. O resto (estado, simulação, sem vídeos) é por comandos:
 
 | Comando | O que faz |
 |---|---|

@@ -20,7 +20,7 @@ def _snap(tired):
 
 def test_board_shows_the_tired_starters():
     text = render(_snap(tired_starters([player(3, 2, 71, position=3)])), 0, "ATIVO", [], "Windows", colour=False)
-    assert "⚠ P3" in text and "71%" in text and "DEF" in text
+    assert "! cansados: P3 71%" in text
 
 
 def test_log_warns_once_until_the_player_recovers(monkeypatch):
@@ -41,8 +41,8 @@ def test_board_shows_money_stadium_and_sponsors():
                             stadium={"parts": [("campo de treinos", 3, 3, None), ("campo", 1, 3, 9000), ("capacidade", 0, 3, None)], "until": 9000},
                             sponsors={"slots": 3, "revenue": 454_000})
     text = render(snap, 0, "ATIVO", [], "Windows", colour=False)
-    assert "poupança 30,39 M" in text and "campo de treinos 3/3 ✓" in text and "campo 1/3 ▶" in text
-    assert "3/4 espaços" in text and "454 k/ronda" in text
+    assert "poupança 30,39 M" in text and "campo de treinos 3/3 √" in text and "a construir campo 1/3" in text
+    assert "3/4 escolhidos" in text and "454 k/ronda" in text
 
 
 def test_board_never_taller_than_the_window():

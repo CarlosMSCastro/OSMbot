@@ -45,6 +45,7 @@ def next_wait(finish_times: list[float], now: float, jitter: float = 0.0) -> flo
 
 _recent: deque[str] = deque(maxlen=8)  # last log lines, for the board
 _stats: dict = {}  # this run: start time, first coin balance, videos watched
+_live: dict = {}  # values fresher than the last snapshot (boss coins after a video)
 _screen_on = False  # while the board is drawn, nothing else may print to the terminal
 _redraw = None  # set by run_active while the board is on: redraws it after each new log line
 
@@ -75,11 +76,17 @@ def _quiet(function, *args):
                 _log(line.strip())
 
 
-def _counted(key: str, function):
-    """Wrap a "watch one video" call so it is counted the moment it succeeds (a stop mid-burst loses nothing)."""
+def _counted(key: str, function, refresh=None):
+    """Wrap a "watch one video" call so it is counted the moment it succeeds (a stop mid-burst loses nothing).
+    ``refresh`` (optional) reads fresh values for the board, e.g. the boss coins; its failure is ignored."""
     def wrapper(*args):
         result = function(*args)
         _stats[key] = _stats.get(key, 0) + 1
+        if refresh:
+            try:
+                refresh()
+            except Exception:
+                pass
         if _redraw:
             _redraw()
         return result
@@ -132,7 +139,11 @@ def _shop_ads(dry_run: bool) -> int:
     from osmbot.game.client import OsmClient
 
     client = OsmClient()
-    return run_shop_ads(lambda: is_claimable(client), _counted("shop", lambda: watch_shop_video(client)),
+
+    def refresh_coins() -> None:
+        _live["coins"] = client.get("user/bosscoinwallet")[1]["amount"]
+
+    return run_shop_ads(lambda: is_claimable(client), _counted("shop", lambda: watch_shop_video(client), refresh_coins),
                         dry_run=dry_run, log=_log, sleep=_tick_sleep)
 
 
@@ -200,6 +211,7 @@ def run_active(dry_run: bool = False, *, claim=run_claim, train=run_train, finis
     tired_before: set[int] = set()
     last_snapshot = None
     _stats.clear()
+    _live.clear()
     _stats["start"] = clock()
     COUNTS.update(claimed=0, started=0)
     stadium_module.COUNTS["upgrades"] = sponsors_module.COUNTS["signed"] = 0
@@ -212,7 +224,8 @@ def run_active(dry_run: bool = False, *, claim=run_claim, train=run_train, finis
     def draw(status: str) -> None:
         current["status"] = status
         if screen:
-            screen.draw(render(last_snapshot, clock(), status, list(_recent), machine, stats=_summary_data(),
+            shown = {**last_snapshot, "coins": _live["coins"]} if last_snapshot and "coins" in _live else last_snapshot
+            screen.draw(render(shown, clock(), status, list(_recent), machine, stats=_summary_data(),
                                  rows=shutil.get_terminal_size((100, 40)).lines))
 
     _redraw = (lambda: draw(current["status"])) if screen else None
@@ -223,6 +236,7 @@ def run_active(dry_run: bool = False, *, claim=run_claim, train=run_train, finis
             try:
                 last_snapshot = snapshot()
                 _stats["coins0"] = last_snapshot["coins"]
+                _live.clear()
             except Exception as error:
                 _log(f"Estado inicial: erro ({error})")
         retries = 0
@@ -262,6 +276,7 @@ def run_active(dry_run: bool = False, *, claim=run_claim, train=run_train, finis
                         _log(f"Vídeos: erro ({error}); volto a tentar")
                 try:
                     last_snapshot = snapshot()
+                    _live.clear()  # the snapshot is fresher than anything read before it
                 except Exception as error:  # the board is an extra too
                     _log(f"Quadro: erro ao atualizar ({error})")
                 tired_before = _check_fitness(last_snapshot, tired_before)

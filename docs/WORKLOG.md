@@ -2,6 +2,14 @@
 
 Entradas mais recentes primeiro. Cada sessão: o que se fez · o que ficou por fazer · próximo passo.
 
+## 2026-10-07 (cont.) — Menu novo e quadro redesenhado (por testar)
+
+- **Menu:** só Iniciar, Login e Sair; centrado, com arte ANSI, título e introdução. Estado, simulação e "sem vídeos" saem do menu e ficam só como comandos (`status`, `treinos`, `slots`, `ativo --simular`, `ativo --sem-anuncios`).
+- **Quadro:** sai a linha "A seguir"; "Lista de transferências 4/4"; estádio com ✓ verde (feito) e azul + barra (a construir, 18 h); patrocinadores "4/4 escolhidos"; dinheiro de 1000 k para cima passa a "1 M"; cansados numa linha por clube; `▶`, `⚠` e `✓` trocados por `»`, `!` e `√` (causa do `[?]`: a fonte da consola não os tem); loja com barra no fundo; resumo só com "salto +X" (verde) e vídeos (treino com "encurtadas X h", 2 h por vídeo); boss coins atualizam logo após cada vídeo da loja. Largura 66 → 76.
+- **Bug corrigido:** a variável `level` do estádio sobrescrevia o nível de compactação do quadro.
+- **Suposição [S]:** a barra da loja usa 3 h como duração da espera (`SHOP_BAR_SECONDS`); falta confirmar com os dados reais.
+- **Por testar:** nesta máquina não há Python (só o atalho da Loja), por isso os testes **não foram corridos**.
+
 ## 2026-10-05 — Windows operacional; D-014 (autonomia); `--simular`
 
 - **Autonomia (D-014):** regra 5 reescrita em 3 níveis (leitura livre; `recolher`/`treinar` autónomos só com o bot "ativo", sem teto; escritas novas pedem OK). Em desenvolvimento o Claude não escreve na conta. Criado `.claude/settings.json` (permissões do projeto) — a inversão do padrão foi bloqueada antes dele e passou depois.

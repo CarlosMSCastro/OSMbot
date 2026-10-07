@@ -107,7 +107,7 @@ def test_board_mode_shows_data_at_once_and_keeps_redrawing(capsys):
         loop.run_active(claim=lambda c: 0, train=train, finish_times=lambda: [], ads=None, snapshot=lambda: snap,
                         use_screen=True, sleep=sleep, clock=lambda: clock_state["t"], rng=FixedRng())
     out = capsys.readouterr().out
-    assert "CLUBE A" in out and "A seguir" in out and "ATIVO" in out
+    assert "CLUBE A" in out and "A seguir" not in out and "ATIVO" in out
     assert out.count("Jogador 1") > 5  # redrawn many times while waiting
     assert "Resumo" in out
 

@@ -1,10 +1,21 @@
-# Changelog
+﻿# Changelog
 
 Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-PT/1.1.0/); versões segundo [SemVer](https://semver.org/lang/pt-BR/) (`0.x` até haver automação estável).
 
 Este ficheiro é o **histórico de versões, para quem lê o repo**. O diário interno de cada sessão de trabalho está em [`docs/WORKLOG.md`](docs/WORKLOG.md).
 
 ## [Por lançar]
+
+## [0.7.0] — 2026-10-07
+
+Menu e quadro da consola redesenhados.
+
+### Alterado
+- **Menu** só com Iniciar, Login e Sair, centrado e com arte; o resto fica como comandos.
+- **Quadro:** sem a linha "A seguir"; "Lista de transferências"; estádio com visto verde e barra (o visto é √, a fonte da consola não tem ✓); patrocinadores "n/4 escolhidos"; dinheiro em M a partir de 1000 k; cansados numa linha; barra da loja; resumo com "salto" e horas encurtadas; boss coins atualizam logo após cada vídeo.
+
+### Corrigido
+- Variável do estádio que sobrescrevia o nível de compactação do quadro.
 
 ## [0.6.1] — 2026-10-07
 

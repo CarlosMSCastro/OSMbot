@@ -49,3 +49,10 @@ def test_menu_lists_every_action_and_exit():
     text = run(["0"], [])
     for expected in ("Iniciar", "Estado", "0  Sair", "Sessão"):
         assert expected in text
+
+
+def test_default_menu_only_has_start_login_and_exit():
+    shown = menu.build_screen({"1": ("Iniciar", None), "2": ("Login", None)}, "Sessão: ok", 100)
+    text = "\n".join(shown)
+    assert "1  Iniciar" in text and "2  Login" in text and "0  Sair" in text and "Estado" not in text
+    assert all(line.startswith(" ") for line in shown if line)  # centred, not stuck to the left edge

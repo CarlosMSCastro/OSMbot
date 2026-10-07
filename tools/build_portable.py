@@ -69,14 +69,11 @@ Nao instala nada. Copia esta pasta para onde quiseres.
 
 Abre o  OSMbot.exe  (duplo clique). Aparece um menu na consola:
 
-  1  Iniciar o bot   (treinos, videos, avisos de slots)   Ctrl+C para parar
-  2  Iniciar o bot, sem anuncios
-  3  Estado: clubes, treinos e slots de venda
-  4  Ensaio: ve o que faria, sem escrever nada
-  5  Login: abre o Firefox. Entra com o Facebook e FECHA a janela.
+  1  Iniciar   (treinos, estadio, patrocinadores, videos, avisos)   Ctrl+C para parar
+  2  Login: abre o Firefox. Entra com o Facebook e FECHA a janela.
   0  Sair
 
-Num PC novo, comeca pela opcao 5 (login). A sessao fica em %USERPROFILE%\\.osmbot
+Num PC novo, comeca pela opcao 2 (login). A sessao fica em %USERPROFILE%\\.osmbot
 (por PC; nunca copiar para outro PC).
 
 Regra: so uma maquina com o bot ligado de cada vez.
@@ -84,7 +81,7 @@ Regra: so uma maquina com o bot ligado de cada vez.
 Nao mexer nos outros ficheiros e pastas (sao o Python, as bibliotecas e o Firefox).
 Se o Windows avisar ("SmartScreen"): Mais informacoes -> Executar mesmo assim.
 
-Comandos diretos (para quem quiser): OSMbot.exe ativo --simular | status | treinos | slots
+Comandos diretos (para quem quiser): OSMbot.exe ativo --simular | ativo --sem-anuncios | status | treinos | slots
 """
 
 
