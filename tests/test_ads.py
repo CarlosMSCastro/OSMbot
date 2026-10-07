@@ -57,7 +57,7 @@ def test_a_failed_video_stops_the_burst():
         run_shop_ads(lambda: True, watch, log=lambda m: None, rng=Rng(), sleep=lambda s: None)
 
 
-def test_loop_turns_ads_off_after_two_failures_but_keeps_training(monkeypatch):
+def test_loop_keeps_retrying_ads_and_training_after_failures(monkeypatch):
     attempts, trains = [], []
 
     def broken(dry_run):
@@ -71,7 +71,7 @@ def test_loop_turns_ads_off_after_two_failures_but_keeps_training(monkeypatch):
     with pytest.raises(SystemExit):
         loop.run_active(claim=lambda c: 0, train=train, finish_times=lambda: [], ads=broken,
                         sleep=lambda s: None, rng=Rng())
-    assert len(attempts) == 2 and len(trains) == 4
+    assert len(attempts) == 3 and len(trains) == 4
 
 
 def _session(trainer, finishes, claimed=False):
@@ -112,3 +112,36 @@ def test_training_videos_dry_run_clicks_nothing():
     ads.run_training_ads(lambda: True, lambda: [("A", _session(1, 9 * 3600))], lambda c, s: watched.append(1),
                          dry_run=True, log=lambda m: None, rng=Rng(), clock=lambda: 0)
     assert watched == []
+
+
+def test_money_videos_go_to_the_club_with_most_savings():
+    assert ads.pick_money_club({"A": 28_000_000, "B": 4_900_000}) == "A"
+    assert ads.pick_money_club({}) is None
+
+
+def test_money_state_open_and_reopen_time():
+    class Client:
+        def __init__(self, caps):
+            self.caps = caps
+
+        def get(self, path):
+            return 200, self.caps[path.split("/")[-2]]
+
+    free = {"isClaimable": True, "isCapReached": False}
+    capped = lambda t: {"isClaimable": False, "isCapReached": True, "timestampUntilUnreached": t}  # noqa: E731
+    assert ads.money_state(Client({"Multistep1": capped(500), "Multistep2": free, "Multistep3": free})) == {"open": True, "reopen": None}
+    assert ads.money_state(Client({"Multistep1": capped(900), "Multistep2": capped(700), "Multistep3": capped(800)})) == {"open": False, "reopen": 700}
+
+
+def test_money_videos_stop_when_the_game_closes_the_limit():
+    left = {"n": 2}
+    seen = []
+
+    def watch(club):
+        seen.append(club)
+        left["n"] -= 1
+
+    count = ads.run_money_ads(lambda: left["n"] > 0, lambda: "A", watch, log=lambda m: None, rng=Rng(), sleep=lambda s: None)
+    assert count == 2 and seen == ["A", "A"]
+    assert ads.run_money_ads(lambda: True, lambda: "A", watch, dry_run=True, log=lambda m: None, rng=Rng()) == 0
+    assert ads.run_money_ads(lambda: True, lambda: "A", watch, log=lambda m: None, rng=Rng(roll=0.99)) == 0

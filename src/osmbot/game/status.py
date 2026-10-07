@@ -32,8 +32,8 @@ def run_status() -> None:
     except NeedsBrowserLogin as error:
         raise SystemExit(str(error))
     if status != 200 or not isinstance(account, dict):
-        raise SystemExit(f"Resposta inesperada do jogo (estado {status}).")
+        raise SystemExit(f"Resposta inesperada do jogo ({status})")
     coins = wallet.get("amount", "?") if wallet_status == 200 and isinstance(wallet, dict) else "?"
-    print(f"Manager: {account.get('name', '?')} | boss coins: {coins}")
+    print(f"{account.get('name', '?')} · boss coins {coins}")
     lines = summarize(account)
-    print("\n".join(lines) or "Nenhuma equipa ativa.")
+    print("\n".join(lines) or "Sem equipas ativas")

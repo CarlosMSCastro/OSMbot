@@ -29,7 +29,7 @@ def test_span_and_bar():
 
 def test_wake_events_are_sorted_and_labelled():
     events = wake_events(snapshot(), NOW)
-    assert [label for label, _ in events] == ["video de treino reabre", "treino acaba"]
+    assert [label for label, _ in events] == ["vídeo de treino reabre", "treino acaba"]
     assert events[0][1] == NOW + 3600 and events[1][1] == NOW + 3 * 3600
 
 
@@ -56,7 +56,7 @@ def test_render_flags_a_free_slot():
 
 def test_render_without_data_and_without_colour_codes():
     text = render(None, NOW, "ATIVO", [], "Windows", colour=False)
-    assert "sem dados" in text and "\x1b" not in text
+    assert "a carregar" in text and "\x1b" not in text
 
 
 def test_summary_shows_coin_change_videos_and_trainings():

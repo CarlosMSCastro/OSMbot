@@ -25,11 +25,11 @@ def _default_actions() -> dict[str, tuple[str, Callable[[], None]]]:
         run_slots()
 
     return {
-        "1": ("Iniciar o bot  (treinos, anúncios, avisos)", lambda: run_active(False)),
-        "2": ("Iniciar o bot, sem anúncios", lambda: run_active(False, ads=None)),
-        "3": ("Estado: clubes, treinos e slots de venda", status),
-        "4": ("Ensaio: ver o que faria, sem escrever nada", lambda: run_active(True)),
-        "5": ("Login: fazer ou refazer (abre o Firefox)", open_login_session),
+        "1": ("Iniciar bot", lambda: run_active(False)),
+        "2": ("Iniciar bot (sem vídeos)", lambda: run_active(False, ads=None)),
+        "3": ("Estado", status),
+        "4": ("Simular (não altera nada)", lambda: run_active(True)),
+        "5": ("Login", open_login_session),
     }
 
 
@@ -37,8 +37,8 @@ def session_line() -> str:
     from osmbot.game.browser import STATE_FILE
 
     if STATE_FILE.exists():
-        return "Sessão: guardada neste PC"
-    return "Sessão: NENHUMA neste PC. Escolhe 5 para fazer o login primeiro."
+        return "Sessão: ok"
+    return "Sessão: em falta. Faz o login (5)"
 
 
 def run_menu(actions=None, ask: Callable[[str], str] = input, show: Callable[[str], None] = print,
@@ -54,14 +54,14 @@ def run_menu(actions=None, ask: Callable[[str], str] = input, show: Callable[[st
         show("  0  Sair")
         show(f" {RULE}\n {session_line()}")
         try:
-            choice = ask("\n Escolha: ").strip()
+            choice = ask("\n Opção: ").strip()
         except (EOFError, KeyboardInterrupt):
             show("")
             return
         if choice in ("0", "q", "Q", "sair"):
             return
         if choice not in actions:
-            show(" Opção inválida.")
+            show(" Opção inválida")
             continue
         try:
             actions[choice][1]()
@@ -69,8 +69,8 @@ def run_menu(actions=None, ask: Callable[[str], str] = input, show: Callable[[st
             if stop.code not in (None, 0):
                 show(f"\n {stop.code}")
         except KeyboardInterrupt:
-            show("\n Interrompido.")
+            show("\n Interrompido")
         try:
-            ask("\n Enter para voltar ao menu...")
+            ask("\n Enter para continuar")
         except (EOFError, KeyboardInterrupt):
             return

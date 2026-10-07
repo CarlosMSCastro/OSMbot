@@ -50,7 +50,7 @@ def newly_free(statuses: list[SlotStatus], previous: dict[str, int]) -> list[Slo
 
 
 def describe(status: SlotStatus) -> str:
-    return f"{status.team}: {status.free} slot(s) de venda livre(s) ({status.listed}/{status.maximum} ocupados)"
+    return f"{status.team}: {status.free} slot(s) de venda livre(s) ({status.listed}/{status.maximum})"
 
 
 def run_slots() -> None:

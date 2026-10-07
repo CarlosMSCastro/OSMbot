@@ -7,6 +7,8 @@ import sys
 from osmbot.game.client import run_probe
 from osmbot.game.loop import run_active
 from osmbot.game.slots import run_slots
+from osmbot.game.sponsors import run_sponsors
+from osmbot.game.stadium import run_stadium
 from osmbot.game.status import run_status
 from osmbot.game.trainings import run_claim, run_train, run_trainings
 from osmbot.game.browser import inspect_network, inspect_writes, inspect_session, open_dashboard, open_login_session, token_info
@@ -38,6 +40,8 @@ def main(argv: list[str] | None = None) -> None:
     subparsers.add_parser("status", help="Read-only: list your active clubs (no browser needed).")
     for name, text in (
         ("recolher", "Collect finished trainings. Writes to the game; add --simular to only show what it would do."),
+        ("estadio", "Start the next stadium upgrade where a club is free. Writes to the game; add --simular to only show what it would do."),
+        ("patrocinadores", "Fill free sponsor slots with the best-paying offers. Writes to the game; add --simular to only show what it would do."),
         ("treinar", "Start trainings in free slots by the owner's policy. Writes to the game; add --simular to only show the plan."),
     ):
         writer = subparsers.add_parser(name, help=text)
@@ -87,6 +91,14 @@ def main(argv: list[str] | None = None) -> None:
         run_claim(not args.simular, args.max)
     elif args.command == "treinar":
         run_train(not args.simular, args.max)
+    elif args.command == "estadio":
+        failed, _ = run_stadium(not args.simular)
+        if failed:
+            raise SystemExit(1)
+    elif args.command == "patrocinadores":
+        failed, _ = run_sponsors(not args.simular)
+        if failed:
+            raise SystemExit(1)
     elif args.command == "ativo":
         run_active(
             args.simular,

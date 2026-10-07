@@ -406,3 +406,29 @@ Há **3 componentes** a melhorar, cada um com **níveis 0, 1, 2 e 3**:
 - Tudo é **determinístico** → funções puras `(estado do jogo) → decisão`, testáveis sem tocar no jogo (44 testes).
 - Os especialistas mudam sempre que o plantel muda (compras, vendas, lesões, aniversários) → boa candidata a automatizar mesmo com tática manual.
 - Os endpoints para **ler/escrever** tática e especialistas são **desconhecidos** (o prior art só viu chaves `TeamTactic_{liga}_{equipa}` no localStorage). Ver `PRIOR_ART.md` §"Por verificar".
+
+## 15. Estádio e patrocinadores
+
+*Fonte: o dono, 2026-10-07.*
+
+**Estádio**
+- Não há "recolher": uma melhoria acaba e a seguinte **põe-se a correr**, nada mais.
+- **Ordem das partes:** campo de treinos → campo → capacidade.
+- **Em todas as equipas**, sempre que houver dinheiro.
+- Se não houver dinheiro nos fundos, ver a **poupança**: se tiver, tirar tudo (§13: é tudo ou nada), pagar a melhoria e **voltar a depositar o que sobra** o mais depressa possível.
+- Se **nem com a poupança** chega, **não faz nada** (nem tira a poupança).
+- O dinheiro pode aparecer de repente (p. ex. **um jogador vendido**): por isso o bot **volta a verificar o saldo e a poupança** regularmente, não só quando um temporizador acaba.
+- Cada melhoria é um temporizador (`DISCOVERY.md` §3): o bot acorda quando acaba.
+
+**Patrocinadores**
+- Quatro espaços (slots). Cada espaço livre recebe a proposta que paga **mais por ronda** (`sponsorRevenueForTeam`, que já inclui o bónus); em empate, o contrato mais curto.
+- **Sempre a melhor para cada espaço** (dono, 2026-10-07): o mesmo patrocinador pode repetir-se; se o jogo recusar uma proposta nesse espaço, usa-se a seguinte melhor. Não há espaços bloqueados, só preenchidos ou vazios. O ecrã mostra 4 propostas por espaço; a API devolve 12.
+
+## 16. Condição física dos titulares
+
+*Fonte: o dono, 2026-10-07.*
+
+- A condição (`fitness`, %) mostra-se a **amarelo abaixo de 80** (79 amarelo, 80 verde).
+- Um **titular** (onze) com a condição a amarelo **convém ser trocado 1 jogo para descansar**.
+- O bot **só avisa** (quadro e registo, uma vez por jogador até recuperar); não troca ninguém, porque o onze e a tática são do dono.
+- Só contam os titulares (`lineup` 1 a 11) e não lesionados; o banco não interessa. O limiar do vermelho está por apurar.

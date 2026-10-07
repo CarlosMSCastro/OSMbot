@@ -42,6 +42,10 @@ Versão **portátil** para Windows: uma pasta (ou .zip) com o Python embutido of
 **Publicação (2026-10-05):** o dono escolheu repo **e** Release públicos, ciente dos riscos (identidade ligada ao bot, deteção por popularidade, termos do jogo, pedidos de remoção). Medidas tomadas: documentos, testes e código sem nomes de clubes, ligas, jogadores ou utilizadores de terceiros (termos genéricos); instalador sem arte do jogo; nenhum segredo nem sessão no pacote. **Limite:** o histórico do git já enviado contém os nomes antigos (2 commits); reescrevê-lo é uma decisão do dono (git é dele, regra 9).
 **Sessão:** continua por máquina (`~/.osmbot`), nunca vai no pacote; em cada PC faz-se a opção *Login* do menu uma vez.
 
+### D-017 · Histórico do git com os nomes antigos · Aceite · 2026-10-06
+O repo é público e 2 commits antigos do histórico contêm nomes de clubes e jogadores do dono (o estado atual do repo está limpo, verificado com `git grep` em `origin/main`). O dono **aceita** deixar o histórico como está, sem o reescrever nem recriar o repo.
+**Porquê:** o dono pesou o risco (identidade ligada ao bot, D-016) e preferiu a simplicidade; reescrever o histórico mexeria em commits já enviados e quem já clonou ficaria com a versão antiga.
+
 ### D-001 · Linguagem: Python · Aceite · 2026-09-27
 Python ≥ 3.11 (testado em 3.12), layout `src/`, testes com pytest. Sem dependências de runtime por agora; `httpx` entra quando houver cliente de API.
 **Porquê:** recomendação aceite pelo dono; prior art em Python; Playwright disponível se um dia se avançar para anúncios.
@@ -76,6 +80,5 @@ Sem ficheiro `LICENSE`. O repo fica público e visível, mas sem autorização l
 | ID | Decisão | Depende de | Notas |
 |---|---|---|---|
 | D-008 | Git / repo no GitHub | — | **Do dono.** Ele faz commits, pulls e tudo o que é git/GitHub. O Claude só ajuda com mensagens de commit e versões quando pedido |
-| D-017 | Histórico do git com os nomes antigos (clubes, jogadores) | D-008 | O repo já foi enviado e 2 commits contêm nomes que agora foram generalizados. Reescrever o histórico (`git filter-repo` + `push --force`) ou recriar o repo é decisão do dono |
 | D-018 | Histórico de estatísticas unificado entre as 3 máquinas | — | Pedido em 2026-09-28 (boss coins, vídeos, horas); por desenhar. O resumo atual é só por execução |
 | D-019 | Tolerância a falhas quando o dono mexe ao mesmo tempo | — | Hoje o bot pára à primeira falha de escrita. Proposta: reler o estado e continuar se já estiver feito |

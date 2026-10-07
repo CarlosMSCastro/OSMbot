@@ -11,8 +11,9 @@ import sys
 import time
 from datetime import datetime
 
-from osmbot.game.ads import SHOP_ACTION, TRAINING_ACTION
+from osmbot.game.ads import SHOP_ACTION, TRAINING_ACTION, money_state
 from osmbot.game.slots import read_slots
+from osmbot.theory.fitness import YELLOW_BELOW, tired_starters
 
 POSITIONS = {1: "ATA", 2: "MED", 3: "DEF", 4: "GR"}
 NEXT_MATCH_TIMER = 14
@@ -20,11 +21,21 @@ BAR_SECONDS = 8 * 3600  # the bar is drawn against a normal 8h training
 BAR_WIDTH = 18
 WIDTH = 66
 GREEN, YELLOW, GREY, RESET = "\x1b[32m", "\x1b[33m", "\x1b[90m", "\x1b[0m"
+RED, CYAN, BOLD = "[31m", "[36m", "[1m"
+SPONSOR_SLOTS = 4
+STADIUM_NAMES = {2: "campo de treinos", 1: "campo", 0: "capacidade"}
 
 
 def span(seconds: float) -> str:
     minutes = int(max(0, seconds) // 60)
     return f"{minutes // 60}h{minutes % 60:02d}"
+
+
+def money(amount: int) -> str:
+    """12 345 678 -> "12,35 M"; 450 000 -> "450 k"."""
+    if abs(amount) >= 1_000_000:
+        return f"{amount / 1_000_000:.2f} M".replace(".", ",")
+    return f"{amount / 1000:.0f} k"
 
 
 def bar(left: float) -> str:
@@ -47,9 +58,23 @@ def collect(client) -> dict:
         _, timers = client.get(f"{base}/timers")
         match = next((t["finishedTimestamp"] for t in timers if t["type"] == NEXT_MATCH_TIMER), None)
         slot = slots.get(team["name"])
+        _, players = client.get(f"{base}/players")
+        _, funds = client.get(f"{base}/finances/balanceandsavings")
+        _, stadium = client.get(f"{base}/stadium")
+        _, contracts = client.get(f"{base}/sponsors")
+        running = [p["countdownTimer"]["finishedTimestamp"] for p in stadium["stadiumParts"]
+                   if p.get("countdownTimer") and p["countdownTimer"]["finishedTimestamp"] > time.time()]
+        live = [c for c in contracts if c.get("weeksLeft", 0) > 0]
         clubs.append({
             "name": team["name"], "ranking": team.get("ranking"), "league": leagues.get(team["name"], {}).get("name", "?"),
-            "match": match, "slots": (slot.listed, slot.maximum) if slot else None,
+            "tired": tired_starters(players), "match": match,
+            "money": (funds["balance"], funds["savings"]),
+            "stadium": {"parts": [(STADIUM_NAMES.get(p["stadiumPartType"], "?"), p["level"],
+                                   max((lv["level"] for lv in p["stadiumPartLevels"]), default=0),
+                                   (p.get("countdownTimer") or {}).get("finishedTimestamp"))
+                                  for p in sorted(stadium["stadiumParts"], key=lambda p: -p["stadiumPartType"])],
+                        "until": max(running) if running else None},
+            "sponsors": {"slots": len(live), "revenue": sum(c["sponsorRevenueForTeam"] for c in live)}, "slots": (slot.listed, slot.maximum) if slot else None,
             "trainings": [
                 {"name": s["player"]["name"], "pos": POSITIONS.get(s["player"]["position"], "?"),
                  "finish": s["countdownTimer"]["finishedTimestamp"], "claimed": s["countdownTimer"]["isClaimed"]}
@@ -61,6 +86,7 @@ def collect(client) -> dict:
         _, cap = client.get(f"user/caps/actions/{action}/0")
         ads[key] = {"open": bool(cap.get("isClaimable")) and not cap.get("isCapReached"),
                     "reopen": cap.get("timestampUntilUnreached") if cap.get("isCapReached") else None}
+    ads["money"] = money_state(client)
     return {"coins": wallet.get("amount"), "clubs": clubs, "ads": ads}
 
 
@@ -72,8 +98,11 @@ def wake_events(snapshot: dict | None, now: float) -> list[tuple[str, float]]:
     finishes = [t["finish"] for c in snapshot["clubs"] for t in c["trainings"] if not t["claimed"] and t["finish"] > now]
     if finishes:
         events.append(("treino acaba", min(finishes)))
-    for key, label in (("shop", "loja reabre"), ("training", "video de treino reabre")):
-        reopen = snapshot["ads"][key]["reopen"]
+    ends = [c["stadium"]["until"] for c in snapshot["clubs"] if (c.get("stadium") or {}).get("until")]
+    if ends and min(ends) > now:
+        events.append(("estádio acaba", min(ends)))
+    for key, label in (("shop", "loja reabre"), ("training", "vídeo de treino reabre"), ("money", "dinheiro reabre")):
+        reopen = (snapshot["ads"].get(key) or {}).get("reopen")
         if reopen and reopen > now:
             events.append((label, reopen))
     return sorted(events, key=lambda e: e[1])
@@ -90,8 +119,9 @@ def summary_lines(snapshot: dict | None, stats: dict | None, now: float) -> list
     first = f"Desde o arranque ({span(now - stats['start'])})"
     if snapshot and stats.get("coins0") is not None:
         first += f": saldo {snapshot['coins'] - stats['coins0']:+d} boss coins"
-    second = (f"  vídeos: loja {stats.get('shop', 0)}, treino {stats.get('training', 0)}"
-              f" · treinos: {stats.get('claimed', 0)} recolhidos, {stats.get('started', 0)} postos")
+    second = (f"  vídeos: loja {stats.get('shop', 0)}, treino {stats.get('training', 0)}, dinheiro {stats.get('money', 0)}"
+              f" · treinos: {stats.get('claimed', 0)} recolhidos, {stats.get('started', 0)} postos"
+              f" · estádio {stats.get('upgrades', 0)} · patrocinadores {stats.get('signed', 0)}")
     return [first, second]
 
 
@@ -107,11 +137,11 @@ def render(snapshot: dict | None, now: float, status: str, recent: list[str], ma
     rule = "─" * WIDTH
     lines = [f" OSMbot · {status} · {machine}".ljust(WIDTH - 8) + datetime.fromtimestamp(now).strftime("%H:%M:%S"), " " + rule]
     if snapshot is None:
-        lines.append(" (ainda sem dados do jogo)")
+        lines.append(" (a carregar…)")
     else:
         events = wake_events(snapshot, now)
         if events:
-            lines.append(" À espera  " + " · ".join(f"{label} {_clock(ts)} (em {span(ts - now)})" for label, ts in events))
+            lines.append(" A seguir  " + " · ".join(f"{label} {_clock(ts)} (em {span(ts - now)})" for label, ts in events))
         for club in snapshot["clubs"]:
             used = f"slots {club['slots'][0]}/{club['slots'][1]}" if club["slots"] else "slots ?"
             free = club["slots"][1] - club["slots"][0] if club["slots"] else 0
@@ -119,22 +149,57 @@ def render(snapshot: dict | None, now: float, status: str, recent: list[str], ma
             if club["match"]:
                 head += f"   jogo em {span(club['match'] - now)}"
             head += f"   {used}"
-            lines += ["", paint(head, GREEN if not free else YELLOW) + (paint(f"  ← LIVRE: {free}", YELLOW) if free else "")]
+            lines += ["", paint(head, BOLD + (GREEN if not free else YELLOW)) + (paint(f"  ← LIVRE: {free}", YELLOW) if free else "")]
+            if club.get("money"):
+                funds, savings = club["money"]
+                lines.append(f"   {paint('dinheiro', CYAN)}   fundos {paint(money(funds), GREEN if funds else GREY)}"
+                             f" · poupança {paint(money(savings), GREEN if savings else GREY)}")
+            stadium = club.get("stadium")
+            if stadium:
+                bits = []
+                for name, level, top, ends in stadium["parts"]:
+                    if ends and ends > now:
+                        bits.append(paint(f"{name} {level}/{top} ▶ {span(ends - now)}", CYAN))
+                    else:
+                        bits.append(paint(f"{name} {level}/{top} ✓", GREY) if level >= top else f"{name} {level}/{top}")
+                lines.append(f"   {paint('estádio', CYAN)}    " + " · ".join(bits))
+            sponsors = club.get("sponsors")
+            if sponsors:
+                full = sponsors["slots"] >= SPONSOR_SLOTS
+                lines.append(f"   {paint('patroc.', CYAN)}    "
+                             + paint(f"{sponsors['slots']}/{SPONSOR_SLOTS} espaços", GREEN if full else YELLOW)
+                             + f" · {paint(money(sponsors['revenue']), GREEN)}/ronda")
             for t in club["trainings"]:
                 left = t["finish"] - now
-                state = "pronto" if left <= 0 and not t["claimed"] else span(left)
+                ready = left <= 0 and not t["claimed"]
+                state = paint("pronto", BOLD + GREEN) if ready else paint(span(left), CYAN)
                 drawn = bar(left)
                 filled = drawn.count("█")
-                lines.append(f"   {t['name'][:14]:<14} {t['pos']:<4} {state:>6}  "
+                lines.append(f"   {t['name'][:14]:<14} {t['pos']:<4} {state}{' ' * (6 - len('pronto' if ready else span(left)))}  "
                              + paint(drawn[:filled], GREEN) + paint(drawn[filled:], GREY))
+            tired = club.get("tired") or []
+            for p in tired[:5]:
+                lines.append(paint(f"   ⚠ {p['name'][:14]:<14} {p['pos']:<4} cond. {p['fitness']}%  convém descansar 1 jogo", YELLOW))
+            if len(tired) > 5:
+                lines.append(paint(f"   ⚠ +{len(tired) - 5} titulares abaixo de {YELLOW_BELOW}%", YELLOW))
         shop, train = snapshot["ads"]["shop"], snapshot["ads"]["training"]
-        lines += ["", " Boss coins " + str(snapshot["coins"]) + "    Anúncios: loja " + ("✓" if shop["open"] else "esperar")
-                  + "  treino " + ("✓" if train["open"] else "esperar")]
+        money_ads = snapshot["ads"].get("money") or {}
+        def flag(open_now: bool) -> str:
+            return paint("✓", GREEN) if open_now else paint("-", GREY)
+
+        lines += ["", f" Boss coins {paint(str(snapshot['coins']), BOLD + YELLOW)}    Vídeos: loja {flag(shop['open'])}"
+                  f"  treino {flag(train['open'])}  dinheiro {flag(money_ads.get('open'))}"]
     summary = summary_lines(snapshot, stats, now)
     if summary:
         lines += ["", *[" " + line for line in summary]]
     lines.append(" " + rule)
-    lines += [" " + paint(line, GREY) for line in recent[-5:]] or [" (sem registo ainda)"]
+    def log_colour(line: str) -> str:
+        body = line[9:].lstrip()
+        if body.startswith(("Parou", "Vídeos:", "Estádio:", "Patrocinadores:")) and "erro" in body or body.startswith("Parou"):
+            return paint(line, RED)
+        return paint(line, YELLOW if body.startswith(("!", "AVISO")) else GREY)
+
+    lines += [" " + log_colour(line) for line in recent[-5:]] or [" (sem eventos)"]
     lines.append(" " * (WIDTH - 20) + "Ctrl+C para parar")
     return "\n".join(lines)
 

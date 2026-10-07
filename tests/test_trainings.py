@@ -14,10 +14,10 @@ def test_ready_waiting_and_claimed():
         now,
     )
     assert lines == [
-        "  A (ATA): PRONTO (ha 1h00)",
-        "  C (MED): ja recolhido",
+        "  A (ATA): pronto (há 1h00)",
+        "  C (MED): recolhido",
         "  B (GR): faltam 1h30",
-        "  Proximo jogo: em 2h00",
+        "  Próximo jogo: em 2h00",
     ]
 
 

@@ -26,11 +26,28 @@ Entradas mais recentes primeiro. Cada sessão: o que se fez · o que ficou por f
 - **Publicação (dono: "C", repo e Release públicos):** varredura de segredos limpa (nenhum token, ID, email ou nome de manager). Substituídos por termos genéricos os clubes, ligas, o plantel do dono e os **nomes de utilizador de outros jogadores** (dados de terceiros que estavam em `THEORY.md`). Ícone original; instalador reconstruído sem arte do jogo (127 MB). **Aviso dado ao dono:** o histórico já enviado ainda contém os nomes antigos (2 commits); reescrevê-lo (filter-repo + force push) é dele.
 - **Próximo passo (antigo):** o dono diz "bot ativo" e corre-se `osmbot ativo` (começa por recolher os 8 treinos parados). Depois: notificação de SALE (só leitura); D-006 a reescrever. Duas máquinas ativas ao mesmo tempo não é suportado.
 
+## 2026-10-07 — Estádio, vídeos persistentes
+
+- **Vídeos de dinheiro/loja/treino:** o dono teve o bot um dia inteiro no PC da empresa e só recolheu 20 coins: causa provável = os vídeos desligavam-se de vez após 2 falhas. Agora nunca se desligam (tentam de novo em ≤10 min), `ENGAGE_CHANCE` 0.85, capturas de ecrã das falhas, limite de página 60 s.
+- **Observado com o dono (`inspect-writes`/`inspect-network`):** escolher patrocinador (`POST sponsors`), melhorar estádio (`POST stadiumparts`), poupança (`PUT savings/transfer`, sem corpo, mesmo pedido nos dois sentidos), propostas de patrocinador (`GET sponsors/offers`). Ver `DISCOVERY.md` §3. Regras do dono em `THEORY.md` §15.
+- **Construído:** `stadium/policy.py` (puro) e `game/stadium.py`, comando `osmbot estadio`, integrado no modo ativo (acorda no fim da melhoria). 108 testes; `estadio --simular` lido em real. **Escritas não executadas na conta** (regra 5: escrita nova pede OK).
+- **Patrocinadores construídos** (`sponsors/policy.py`, `game/sponsors.py`, `osmbot patrocinadores`, no modo ativo). 114 testes; `--simular` em real propõe preencher 2 espaços livres num clube e 3 no outro. Escrita não executada.
+- **Aviso de condição física** (`theory/fitness.py`, quadro e registo): amarelo = abaixo de 80 (dono: Mendes 79 amarelo, Koné 80 verde); titulares = `lineup` 1-11 (`THEORY.md` §16, `DISCOVERY.md`). 118 testes; lido em real. Médico/advogado: ainda sem pedidos observados.
+- Dono: "sempre a melhor para cada espaço" (repetir permitido; recusa → a seguinte). 115 testes.
+- **Por fazer:** 1.ª execução real do estádio pelo dono; o que o jogo responde ao recusar por falta de dinheiro (assumido 4xx).
+
+## 2026-10-06 (cont.) — Linguagem da interface e vídeos de dinheiro
+
+- Dono quer ritmo mais rápido e menos testes ("vou depurando entre versões"), e que a interface não soe a assistente. Reescritos todos os textos visíveis (menu, quadro, registo, comandos).
+- **Vídeos de dinheiro** implementados (`ads.py`, `loop.py`, `dashboard.py`): janela Savings > "Free rewards" (`.clubfunds-wallet` abre; `.multistep-block-container.step-available` é o cartão por ver; `.step-reached` os vistos); clube com mais `savings` (`GET .../finances`). Não testado em real. 100 testes.
+- **Para a recolha de recompensas eventuais, médico, advogado e outros timers** é preciso ver os pedidos reais (os endpoints que tentei dão 404; regra 7): o dono faz cada ação uma vez com `osmbot inspect-writes`. Timers vistos em `timers`: tipo 7 *Stadium training*, tipo 8 *Data Analyst*.
+
 ## 2026-10-06 — Versão 0.5.0 e documentação em dia
 
 - **Versão 0.5.0** fechada (`pyproject.toml`, `CHANGELOG.md`): modo ativo, vídeos da loja e de treino, aviso de slots, quadro de consola, menu, pasta portátil e instalador para Windows. 97 testes. Mensagem de commit entregue ao dono (git é dele).
 - **Documentação revista de ponta a ponta:** `CLAUDE.md` (estado, mapa do código), `README.md` (utilização, Windows), `PROJECT_BRIEF.md` (estado de cada automação), `RISKS_AND_COMPLIANCE.md` (postura decidida e publicação pública), `OPTIONS.md`, `GLOSSARY.md`, `DISCOVERY.md` §7, `DECISIONS.md` (D-017 a D-019 em aberto).
-- **Pendente:** teste no PC da empresa e arranque real prolongado com o quadro novo; vídeos de dinheiro; transferências; D-017 (histórico do git), D-018 (estatísticas), D-019 (concorrência com o dono).
+- **Publicada (2026-10-06):** o dono fez o commit e o push (`462de4d`); o Claude, com a autorização dele, instalou o `gh` e criou o Release **v0.5.0** público (`OSMbot-Setup.exe` e `osmbot-portable.zip`) com as notas do CHANGELOG. **D-017 aceite:** o histórico fica como está.
+- **Pendente:** teste no PC da empresa e arranque real prolongado com o quadro novo; vídeos de dinheiro; transferências; D-018 (estatísticas), D-019 (concorrência com o dono).
 
 ## 2026-10-04 — Renovação real corrigida (AppVersion)
 

@@ -30,16 +30,16 @@ def summarize_trainings(sessions: list[dict], timers: list[dict], now: float | N
         player = session["player"]
         left = timer["finishedTimestamp"] - now
         if timer["isClaimed"]:
-            state = "ja recolhido"
+            state = "recolhido"
         elif left <= 0:
-            state = f"PRONTO (ha {_span(left)})"
+            state = f"pronto (há {_span(left)})"
         else:
             state = f"faltam {_span(left)}"
         lines.append(f"  {player['name']} ({POSITIONS.get(player['position'], '?')}): {state}")
     nxt = next((t for t in timers if t["type"] == NEXT_MATCH_TIMER), None)
     if nxt:
         left = nxt["finishedTimestamp"] - now
-        lines.append(f"  Proximo jogo: {'em ' + _span(left) if left > 0 else 'ja devia ter comecado'}")
+        lines.append(f"  Próximo jogo: {'em ' + _span(left) if left > 0 else 'a decorrer'}")
     return lines
 
 
@@ -87,10 +87,10 @@ def run_claim(confirm: bool, limit: int | None = None) -> int:
         for slot, team, base in _teams(client):
             _, sessions = client.get(f"{base}/trainingsessions/ongoing")
             ready = ready_sessions(sessions, time.time())
-            print(f"[{slot}] {team['name']}: {len(ready)} pronto(s) a recolher")
+            print(f"{team['name']}: {len(ready)} para recolher")
             for session in ready:
                 if limit is not None and done >= limit:
-                    print("  (limite atingido)")
+                    print("  (limite)")
                     break
                 name = session["player"]["name"]
                 if not confirm:
@@ -98,7 +98,7 @@ def run_claim(confirm: bool, limit: int | None = None) -> int:
                     continue
                 status, body = client.put(f"https://web-api.onlinesoccermanager.com/api/v1.1/{base}/trainingsessions/{session['id']}/claim")
                 gain = body.get("progressImprovement") if isinstance(body, dict) else None
-                print(f"  {name}: {'recolhido' if status == 200 else 'FALHOU'} (estado {status}, progresso {gain})")
+                print(f"  {name}: {'recolhido' if status == 200 else 'falhou'} ({status}{f', +{gain}' if status == 200 and gain is not None else ''})")
                 failed += status != 200
                 COUNTS["claimed"] += status == 200
                 done += 1
@@ -106,7 +106,7 @@ def run_claim(confirm: bool, limit: int | None = None) -> int:
     except NeedsBrowserLogin as error:
         raise SystemExit(str(error))
     if not confirm:
-        print("\nSimulacao: nada foi feito. Para executar: osmbot recolher")
+        print("\nSimulação: nada alterado")
     return failed
 
 
@@ -135,22 +135,22 @@ def run_train(confirm: bool, limit: int | None = None) -> int:
             if ready:
                 note = (" (ainda ha %d treino(s) por recolher: corre 'osmbot recolher' primeiro)" if confirm
                         else " (assumindo que recolhes os %d pronto(s) primeiro)") % len(ready)
-            print(f"[{slot}] {team['name']}: {len(plan)} treino(s) a pôr{note}")
+            print(f"{team['name']}: {len(plan)} treino(s) a iniciar{note}")
             for trainer, player in sorted(plan.items()):
                 if limit is not None and done >= limit:
-                    print("  (limite atingido)")
+                    print("  (limite)")
                     break
                 label = f"{player.name} ({POSITIONS[int(player.position)]}, {player.age} anos, rating {player.rating})"
                 if not confirm:
-                    print(f"  treinaria: {label}")
+                    print(f"  iniciaria: {label}")
                     continue
                 if setting is None:
-                    raise SystemExit("Nao encontrei a duracao do treino nas definicoes do jogo; nada foi feito.")
+                    raise SystemExit("Duração do treino não encontrada nas definições do jogo; nada alterado")
                 status, _ = client.post(
                     f"{base}/trainingsessions",
                     {"playerId": player.id, "trainer": trainer, "timerGameSettingId": setting},
                 )
-                print(f"  {label}: {'a treinar' if status == 200 else 'FALHOU'} (estado {status})")
+                print(f"  {label}: {'a treinar' if status == 200 else 'falhou'} ({status})")
                 failed += status != 200
                 COUNTS["started"] += status == 200
                 done += 1
@@ -158,7 +158,7 @@ def run_train(confirm: bool, limit: int | None = None) -> int:
     except NeedsBrowserLogin as error:
         raise SystemExit(str(error))
     if not confirm:
-        print("\nSimulacao: nada foi feito. Para executar: osmbot treinar")
+        print("\nSimulação: nada alterado")
     return failed
 
 
@@ -185,6 +185,6 @@ def run_trainings() -> None:
             _, sessions = client.get(f"{base}/trainingsessions/ongoing")
             _, timers = client.get(f"{base}/timers")
             print(f"[{slot}] {team['name']}")
-            print("\n".join(summarize_trainings(sessions, timers)) or "  (sem sessoes)")
+            print("\n".join(summarize_trainings(sessions, timers)) or "  (sem sessões)")
     except NeedsBrowserLogin as error:
         raise SystemExit(str(error))

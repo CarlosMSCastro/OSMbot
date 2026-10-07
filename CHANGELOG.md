@@ -6,6 +6,22 @@ Este ficheiro é o **histórico de versões, para quem lê o repo**. O diário i
 
 ## [Por lançar]
 
+## [0.6.0] — 2026-10-07
+
+O bot passa a **gerir o clube além dos treinos**: estádio, patrocinadores e vídeos de dinheiro, com avisos de condição física e um quadro de consola mais completo. Tudo o que é novo foi escrito com os pedidos observados com o dono, mas **ainda não foi corrido em real** (o dono testa a seguir).
+
+### Adicionado
+- **Vídeos de dinheiro** (3 por dia) no modo ativo: o bot abre o clube, a barra do dinheiro e o cartão "Free rewards" seguinte, no clube com **mais poupança** (a recompensa é uma percentagem dela). Mesmas regras dos outros vídeos (limite do jogo, janelas saltadas, pausas). O quadro mostra "dinheiro" e o bot acorda quando os cartões reabrem. Não foi testado em real.
+
+- **Estádio automático** (`osmbot estadio`, e no modo ativo): quando o clube está livre, começa a melhoria seguinte (campo de treinos, campo, capacidade; todos os clubes). Sem dinheiro nos fundos, traz a poupança, tenta e volta a depositar o que sobra; sem dinheiro nem assim, não faz nada e só tenta de novo quando o dinheiro total sobe. Acorda quando a melhoria acaba. Não testado em real.
+- **Quadro com mais informação e cor:** por clube, dinheiro (fundos e poupança), estádio (nível de cada parte, a que está a melhorar e o tempo que falta) e patrocinadores (espaços e receita por ronda); "estádio acaba" em "A seguir"; cores para valores, avisos e erros do registo.
+- **Aviso de condição física:** titulares (onze) com a condição a amarelo (abaixo de 80%) aparecem no quadro (`⚠ nome posição cond. N%`) e no registo, uma vez por jogador até recuperar. Só avisa; não troca ninguém.
+- **Patrocinadores automáticos** (`osmbot patrocinadores`, e no modo ativo): cada espaço livre recebe a proposta que paga mais por ronda (empate: contrato mais curto; pode repetir-se; se o jogo recusar, usa a seguinte). Não testado em real.
+- **Vídeos nunca se desligam**: falham, registam e tentam de novo (10 min); só param quando o jogo diz que não há mais. Captura de ecrã em `~/.osmbot/failures/` quando um vídeo falha. Janelas saltadas: 15%.
+
+### Alterado
+- **Todos os textos da interface reescritos** (menu, quadro, registo, comandos): curtos e diretos, com acentos, sem frases de assistente. Ex.: `Loja: janela saltada`, `Treino: vídeo 2 (Clube A, GR)`, `! Clube B: 1 slot(s) de venda livre(s) (3/4)`.
+
 ## [0.5.0] — 2026-10-06
 
 O bot passa a **trabalhar sozinho**: recolhe e treina, vê vídeos (loja e treino), avisa de slots de venda livres, tudo num quadro de consola em tempo real. Distribuição para Windows (pasta portátil e instalador). **Testado em real no Windows**; o Mac continua pelo ambiente de desenvolvimento.

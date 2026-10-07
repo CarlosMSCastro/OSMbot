@@ -46,6 +46,9 @@ def _isolated_from_the_game(monkeypatch, tmp_path):
     monkeypatch.setattr(loop, "read_slots", lambda client: [])
     monkeypatch.setattr(loop, "_shop_ads", lambda dry_run: 0)
     monkeypatch.setattr(loop, "_training_ads", lambda dry_run: 0)
+    monkeypatch.setattr(loop, "_money_ads", lambda dry_run: 0)
+    monkeypatch.setattr(loop, "run_stadium", lambda confirm: (0, []))
+    monkeypatch.setattr(loop, "run_sponsors", lambda confirm: (0, []))
     monkeypatch.setattr(loop, "collect", lambda client: None)
 
     class _NoClient:

@@ -77,7 +77,7 @@ def test_slot_warning_only_when_free_slots_increase(capsys):
     loop._check_slots(lambda: [one_free], previous)  # still 1 free: no repeat
     loop._check_slots(lambda: [full], previous)
     loop._check_slots(lambda: [one_free], previous)  # went full and free again: warn again
-    assert capsys.readouterr().out.count("AVISO") == 2
+    assert capsys.readouterr().out.count("slot(s) de venda livre") == 2
 
 
 def test_slot_check_failure_does_not_stop_the_loop(capsys):
@@ -85,7 +85,7 @@ def test_slot_check_failure_does_not_stop_the_loop(capsys):
         raise RuntimeError("boom")
 
     loop._check_slots(broken, {})
-    assert "Nao consegui verificar" in capsys.readouterr().out
+    assert "Slots: erro ao ler" in capsys.readouterr().out
 
 
 def test_board_mode_shows_data_at_once_and_keeps_redrawing(capsys):
@@ -107,7 +107,7 @@ def test_board_mode_shows_data_at_once_and_keeps_redrawing(capsys):
         loop.run_active(claim=lambda c: 0, train=train, finish_times=lambda: [], ads=None, snapshot=lambda: snap,
                         use_screen=True, sleep=sleep, clock=lambda: clock_state["t"], rng=FixedRng())
     out = capsys.readouterr().out
-    assert "CLUBE A" in out and "À espera" in out and "ATIVO" in out
+    assert "CLUBE A" in out and "A seguir" in out and "ATIVO" in out
     assert out.count("Jogador 1") > 5  # redrawn many times while waiting
     assert "Resumo" in out
 
