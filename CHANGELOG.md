@@ -6,6 +6,13 @@ Este ficheiro é o **histórico de versões, para quem lê o repo**. O diário i
 
 ## [Por lançar]
 
+## [0.6.1] — 2026-10-07
+
+Correção do quadro da consola, que com a informação nova da 0.6.0 ficava mais alto do que a janela. A 0.6.0 não chegou a ser lançada como Release: o Release é esta versão e inclui tudo o que a 0.6.0 trouxe.
+
+### Corrigido
+- **Quadro da consola a empilhar cópias de si próprio:** com a informação nova o quadro ficou mais alto do que a janela, e cada redesenho deslizava o ecrã e deixava milhares de linhas no histórico. Agora o quadro encurta-se sozinho até caber na janela (avisos de condição numa linha, treinos numa linha, sem linhas em branco), usa o seu próprio ecrã (sem histórico) e escreve por cima de si próprio.
+
 ## [0.6.0] — 2026-10-07
 
 O bot passa a **gerir o clube além dos treinos**: estádio, patrocinadores e vídeos de dinheiro, com avisos de condição física e um quadro de consola mais completo. Tudo o que é novo foi escrito com os pedidos observados com o dono, mas **ainda não foi corrido em real** (o dono testa a seguir).

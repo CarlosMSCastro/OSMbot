@@ -130,7 +130,25 @@ def summary_text(snapshot: dict | None, stats: dict | None, now: float) -> str:
 
 
 def render(snapshot: dict | None, now: float, status: str, recent: list[str], machine: str, colour: bool = True,
-           stats: dict | None = None) -> str:
+           stats: dict | None = None, rows: int | None = None) -> str:
+    """The board as text. With ``rows`` (the terminal height) it is shortened step by step until it fits:
+    a board taller than the window would scroll and pile up copies of itself."""
+    for level in range(4):
+        text = _render(snapshot, now, status, recent, machine, colour, stats, level)
+        if rows is None or text.count("\n") + 1 <= rows - 1:
+            return text
+    return "\n".join(text.split("\n")[:max(1, rows - 1)])
+
+
+def _clip(text: str) -> str:
+    return text if len(text) <= WIDTH - 1 else text[:WIDTH - 2] + "…"
+
+
+def _render(snapshot: dict | None, now: float, status: str, recent: list[str], machine: str, colour: bool,
+            stats: dict | None, level: int) -> str:
+    """level 0 = everything; 1 = tired players on one line; 2 = trainings on one line; 3 = no blank lines, short log."""
+    gap = [] if level >= 3 else [""]
+
     def paint(text: str, code: str) -> str:
         return f"{code}{text}{RESET}" if colour else text
 
@@ -149,7 +167,7 @@ def render(snapshot: dict | None, now: float, status: str, recent: list[str], ma
             if club["match"]:
                 head += f"   jogo em {span(club['match'] - now)}"
             head += f"   {used}"
-            lines += ["", paint(head, BOLD + (GREEN if not free else YELLOW)) + (paint(f"  ← LIVRE: {free}", YELLOW) if free else "")]
+            lines += [*gap, paint(head, BOLD + (GREEN if not free else YELLOW)) + (paint(f"  ← LIVRE: {free}", YELLOW) if free else "")]
             if club.get("money"):
                 funds, savings = club["money"]
                 lines.append(f"   {paint('dinheiro', CYAN)}   fundos {paint(money(funds), GREEN if funds else GREY)}"
@@ -169,29 +187,39 @@ def render(snapshot: dict | None, now: float, status: str, recent: list[str], ma
                 lines.append(f"   {paint('patroc.', CYAN)}    "
                              + paint(f"{sponsors['slots']}/{SPONSOR_SLOTS} espaços", GREEN if full else YELLOW)
                              + f" · {paint(money(sponsors['revenue']), GREEN)}/ronda")
-            for t in club["trainings"]:
-                left = t["finish"] - now
-                ready = left <= 0 and not t["claimed"]
-                state = paint("pronto", BOLD + GREEN) if ready else paint(span(left), CYAN)
-                drawn = bar(left)
-                filled = drawn.count("█")
-                lines.append(f"   {t['name'][:14]:<14} {t['pos']:<4} {state}{' ' * (6 - len('pronto' if ready else span(left)))}  "
-                             + paint(drawn[:filled], GREEN) + paint(drawn[filled:], GREY))
+            if level >= 2:
+                short = " · ".join(f"{t['name'].split()[-1][:10]} {'pronto' if t['finish'] <= now and not t['claimed'] else span(t['finish'] - now)}"
+                                   for t in club["trainings"])
+                lines.append(_clip(f"   {paint('treinos', CYAN)}    {short}"))
+            else:
+                for t in club["trainings"]:
+                    left = t["finish"] - now
+                    ready = left <= 0 and not t["claimed"]
+                    state = paint("pronto", BOLD + GREEN) if ready else paint(span(left), CYAN)
+                    drawn = bar(left)
+                    filled = drawn.count("█")
+                    lines.append(f"   {t['name'][:14]:<14} {t['pos']:<4} {state}{' ' * (6 - len('pronto' if ready else span(left)))}  "
+                                 + paint(drawn[:filled], GREEN) + paint(drawn[filled:], GREY))
             tired = club.get("tired") or []
-            for p in tired[:5]:
-                lines.append(paint(f"   ⚠ {p['name'][:14]:<14} {p['pos']:<4} cond. {p['fitness']}%  convém descansar 1 jogo", YELLOW))
-            if len(tired) > 5:
-                lines.append(paint(f"   ⚠ +{len(tired) - 5} titulares abaixo de {YELLOW_BELOW}%", YELLOW))
+            if level >= 1 and tired:
+                names = ", ".join(f"{p['name'].split()[-1]} {p['fitness']}%" for p in tired)
+                lines.append(paint(_clip(f"   ⚠ cansados: {names}"), YELLOW))
+            else:
+                for p in tired[:5]:
+                    lines.append(paint(f"   ⚠ {p['name'][:14]:<14} {p['pos']:<4} cond. {p['fitness']}%  convém descansar 1 jogo", YELLOW))
+                if len(tired) > 5:
+                    lines.append(paint(f"   ⚠ +{len(tired) - 5} titulares abaixo de {YELLOW_BELOW}%", YELLOW))
         shop, train = snapshot["ads"]["shop"], snapshot["ads"]["training"]
         money_ads = snapshot["ads"].get("money") or {}
+
         def flag(open_now: bool) -> str:
             return paint("✓", GREEN) if open_now else paint("-", GREY)
 
-        lines += ["", f" Boss coins {paint(str(snapshot['coins']), BOLD + YELLOW)}    Vídeos: loja {flag(shop['open'])}"
+        lines += [*gap, f" Boss coins {paint(str(snapshot['coins']), BOLD + YELLOW)}    Vídeos: loja {flag(shop['open'])}"
                   f"  treino {flag(train['open'])}  dinheiro {flag(money_ads.get('open'))}"]
     summary = summary_lines(snapshot, stats, now)
     if summary:
-        lines += ["", *[" " + line for line in summary]]
+        lines += [*gap, *[" " + line for line in summary]]
     lines.append(" " + rule)
     def log_colour(line: str) -> str:
         body = line[9:].lstrip()
@@ -199,7 +227,7 @@ def render(snapshot: dict | None, now: float, status: str, recent: list[str], ma
             return paint(line, RED)
         return paint(line, YELLOW if body.startswith(("!", "AVISO")) else GREY)
 
-    lines += [" " + log_colour(line) for line in recent[-5:]] or [" (sem eventos)"]
+    lines += [" " + log_colour(line) for line in recent[-(2 if level >= 3 else 5):]] or [" (sem eventos)"]
     lines.append(" " * (WIDTH - 20) + "Ctrl+C para parar")
     return "\n".join(lines)
 
@@ -211,14 +239,14 @@ class Screen:
         if platform.system() == "Windows":
             os.system("")  # switches on ANSI escape codes in the Windows console
         self._out = sys.stdout  # the real terminal: stdout is redirected to the log while the bot works
-        self._out.write("\x1b[?25l")  # hide the cursor
+        self._out.write("\x1b[?1049h\x1b[?25l")  # hide the cursor
 
     def draw(self, text: str) -> None:
-        self._out.write("\x1b[H\x1b[J" + text + "\n")
+        self._out.write("\x1b[H" + ("\x1b[K\n").join(text.split("\n")) + "\x1b[K\x1b[J")
         self._out.flush()
 
     def close(self) -> None:
-        self._out.write("\x1b[?25h")
+        self._out.write("\x1b[?25h\x1b[?1049l")
         self._out.flush()
 
 

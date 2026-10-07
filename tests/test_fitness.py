@@ -43,3 +43,17 @@ def test_board_shows_money_stadium_and_sponsors():
     text = render(snap, 0, "ATIVO", [], "Windows", colour=False)
     assert "poupança 30,39 M" in text and "campo de treinos 3/3 ✓" in text and "campo 1/3 ▶" in text
     assert "3/4 espaços" in text and "454 k/ronda" in text
+
+
+def test_board_never_taller_than_the_window():
+    tired = [{"id": i, "name": f"Jogador {i}", "pos": "MED", "fitness": 70 + i} for i in range(8)]
+    snap = _snap(tired)
+    snap["clubs"][0].update(trainings=[{"name": f"T{i}", "pos": "ATA", "finish": 9999, "claimed": False} for i in range(4)],
+                            money=(1, 2), stadium={"parts": [("campo", 1, 3, None)], "until": None},
+                            sponsors={"slots": 4, "revenue": 1})
+    snap["clubs"].append(dict(snap["clubs"][0], name="Outro"))
+    full = render(snap, 0, "ATIVO", ["a", "b", "c", "d", "e"], "Windows", colour=False)
+    assert full.count("\n") + 1 > 26  # taller than a small window
+    for rows in (40, 30, 26, 20, 12):
+        text = render(snap, 0, "ATIVO", ["a", "b", "c", "d", "e"], "Windows", colour=False, rows=rows)
+        assert text.count("\n") + 1 <= rows - 1

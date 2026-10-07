@@ -8,6 +8,7 @@ Any failure stops the loop and says why: it never keeps hammering the game.
 from __future__ import annotations
 
 import contextlib
+import shutil
 import io
 import random
 import sys
@@ -211,7 +212,8 @@ def run_active(dry_run: bool = False, *, claim=run_claim, train=run_train, finis
     def draw(status: str) -> None:
         current["status"] = status
         if screen:
-            screen.draw(render(last_snapshot, clock(), status, list(_recent), machine, stats=_summary_data()))
+            screen.draw(render(last_snapshot, clock(), status, list(_recent), machine, stats=_summary_data(),
+                                 rows=shutil.get_terminal_size((100, 40)).lines))
 
     _redraw = (lambda: draw(current["status"])) if screen else None
 
