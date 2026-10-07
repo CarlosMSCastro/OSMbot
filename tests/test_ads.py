@@ -66,7 +66,9 @@ def test_loop_keeps_retrying_ads_and_training_after_failures(monkeypatch):
 
     def train(confirm):
         trains.append(1)
-        return 0 if len(trains) < 4 else 1
+        if len(trains) >= 4:
+            raise SystemExit(1)
+        return 0
 
     with pytest.raises(SystemExit):
         loop.run_active(claim=lambda c: 0, train=train, finish_times=lambda: [], ads=broken,
@@ -148,30 +150,66 @@ def test_money_videos_stop_when_the_game_closes_the_limit():
 
 
 class _Locator:
-    def __init__(self, page):
-        self.page = page
+    def __init__(self, page, shows):
+        self.page, self.shows = page, shows
         self.first = self
 
     def filter(self, **kwargs):
         return self
 
     def count(self):
-        return 1 if self.page.screens else 0
+        return 1 if self.shows() else 0
 
     def click(self, timeout=None):
-        self.page.screens -= 1
-        self.page.clicks += 1
+        self.page.advance()
+
+
+class _Mouse:
+    def __init__(self, page):
+        self.page = page
+
+    def click(self, x, y):
+        assert self.page.top() == "xp"  # only ever clicks beside the XP window
+        self.page.advance()
 
 
 class _Page:
-    """A page that shows `screens` "Continue" screens one after the other."""
+    """A page that shows the screens after a round one after the other: "continue", "skip" (the match,
+    under a "Matchday" header) and "xp" (the manager-XP window). A plain int = that many "continue"."""
+
+    viewport_size = {"width": 1280, "height": 900}
 
     def __init__(self, screens):
-        self.screens, self.clicks = screens, 0
+        self.screens = ["continue"] * screens if isinstance(screens, int) else list(screens)
+        self.clicks = 0
+        self.mouse = _Mouse(self)
+
+    @property
+    def remaining(self):
+        return len(self.screens)
+
+    def top(self):
+        return self.screens[0] if self.screens else None
+
+    def advance(self):
+        self.clicks += 1
+        if self.screens and not (len(self.screens) == 1 and self.endless):
+            self.screens.pop(0)
+
+    endless = False
 
     def get_by_text(self, pattern):
-        assert pattern.match("Continue") and not pattern.match("Continue training")
-        return _Locator(self)
+        if pattern.match("Continue"):
+            assert not pattern.match("Continue training")
+            return _Locator(self, lambda: self.top() == "continue")
+        if pattern.match("Skip"):
+            return _Locator(self, lambda: self.top() == "skip")
+        assert pattern.match("Matchday 12/26")
+        return _Locator(self, lambda: self.top() in ("continue", "skip"))
+
+    def locator(self, selector):
+        assert selector == "#skillRatingUpdate-modal-content"
+        return _Locator(self, lambda: self.top() == "xp")
 
     def wait_for_timeout(self, ms):
         pass
@@ -182,7 +220,15 @@ def test_the_matchday_screen_is_dismissed_before_the_club_is_used():
 
     page = _Page(screens=1)
     _dismiss_matchday(page)
-    assert page.clicks == 1 and page.screens == 0
+    assert page.clicks == 1 and page.remaining == 0
+
+
+def test_the_whole_chain_after_a_round_is_dismissed_skip_and_xp_window_included():
+    from osmbot.game.ads import _dismiss_matchday
+
+    page = _Page(["continue", "skip", "continue", "xp"])  # seen in the game on 2026-10-07
+    _dismiss_matchday(page)
+    assert page.clicks == 4 and page.remaining == 0
 
 
 def test_nothing_is_clicked_when_there_is_no_matchday_screen():
@@ -196,7 +242,8 @@ def test_nothing_is_clicked_when_there_is_no_matchday_screen():
 def test_it_never_clicks_continue_forever():
     from osmbot.game.ads import MAX_CONTINUES, _dismiss_matchday
 
-    page = _Page(screens=50)
+    page = _Page(screens=1)
+    page.endless = True
     _dismiss_matchday(page)
     assert page.clicks == MAX_CONTINUES
 

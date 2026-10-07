@@ -79,10 +79,16 @@ Sem ficheiro `LICENSE`. O repo fica público e visível, mas sem autorização l
 O bot reclama sozinho, no modo ativo: a recompensa de início de sessão, as 3 missões diárias e a recompensa do dia (**sempre "guardar"**, nunca gasta), e a recompensa dos vídeos acumulados (também para o inventário). Regras em `THEORY.md` §17. Passam para o nível "autónomo com o bot ativo" da regra 5 (D-014), juntamente com `recolher` e `treinar`. Nunca se usam itens do inventário.
 **Porquê:** pedido do dono, depois de ver os pedidos reais (`inspect-writes`, 2026-10-07) e de aceitar o risco (D-004). São cliques que o dono já dá à mão, dentro dos limites do jogo.
 
+### D-019 · O bot não pára à primeira falha · Aceite · 2026-10-08
+- **Escrita dos treinos falhou** (p. ex. o dono recolheu o mesmo treino à mão): o bot regista, volta a ver 10 min depois (lê o jogo de novo) e só pára se falhar em **3 passagens seguidas**.
+- **Sem rede:** novas tentativas com pausas cada vez maiores (1, 2, 5, 10 e depois 15 min); só pára ao fim de **6 h** sem rede.
+- **Vídeos de um tipo que falham sempre** (loja, treino, dinheiro): esse tipo espera cada vez mais (10, 20, 40 e depois 60 min); os outros continuam.
+- Sessão perdida (`osmbot login`) continua a parar logo, porque só o dono resolve.
+**Porquê:** o dono deixa o bot sozinho na fábrica o dia todo; uma falha pontual ou 3 min sem rede deixavam-no parado até voltar ao PC.
+
 ## Em aberto
 
 | ID | Decisão | Depende de | Notas |
 |---|---|---|---|
 | D-008 | Git / repo no GitHub | — | **Do dono.** Ele faz commits, pulls e tudo o que é git/GitHub. O Claude só ajuda com mensagens de commit e versões quando pedido |
 | D-018 | Histórico de estatísticas unificado entre as 3 máquinas | — | Pedido em 2026-09-28 (boss coins, vídeos, horas); por desenhar. O resumo atual é só por execução |
-| D-019 | Tolerância a falhas quando o dono mexe ao mesmo tempo | — | Hoje o bot pára à primeira falha de escrita. Proposta: reler o estado e continuar se já estiver feito |

@@ -39,7 +39,7 @@ def save_failure(page, tag: str) -> None:
 
 
 class AdsError(Exception):
-    """The ad flow did not work (button missing, coins did not arrive...). The loop turns ads off after two."""
+    """The ad flow did not work (button missing, coins did not arrive...). The loop tries again later."""
 
 
 def is_claimable(client, action_id: str = SHOP_ACTION) -> bool:
@@ -79,10 +79,10 @@ def watch_shop_video(client, headless: bool = True) -> None:
     from playwright.sync_api import sync_playwright
 
     from osmbot.game.browser import STATE_FILE
-    from osmbot.game.client import save_private
+    from osmbot.game.client import save_browser_session
 
     before = _wallet_amount(client)
-    state = None
+    cookies = None
     with sync_playwright() as playwright:
         browser = playwright.firefox.launch(headless=headless)
         try:
@@ -104,12 +104,10 @@ def watch_shop_video(client, headless: bool = True) -> None:
                 save_failure(page, "loja")
                 raise AdsError("os boss coins não subiram")
             cookies = context.cookies()
-            if any(c["name"] == "access_token" for c in cookies):
-                state = {"cookies": cookies, "origins": []}
         finally:
             browser.close()
-    if state:  # the site may have renewed the tokens: keep the saved session in step with it
-        save_private(STATE_FILE, state)
+    if cookies:  # the site may have renewed the tokens: keep the saved session in step with it (if newer)
+        save_browser_session(cookies)
 
 
 def pick_session(candidates: list[tuple[str, dict]], now: float) -> tuple[str, dict] | None:
@@ -151,17 +149,25 @@ def run_training_ads(claimable: Callable[[], bool], load_sessions: Callable[[], 
     return watched
 
 
-MAX_CONTINUES = 3  # the game can show a few of these screens in a row
+MAX_CONTINUES = 6  # screens in a row after a round: Continue, the match (Skip), Continue, manager XP
 
 
 def _dismiss_matchday(page) -> None:
-    """After a round the game puts its "Matchday ... Continue" screen over the club's home, hiding the
-    menus (seen in the failure screenshots of 2026-10-07). Press "Continue", as the owner does by hand."""
+    """After a round the game shows, over the club's home, a chain of screens that hide the menus (seen
+    2026-10-07): "Matchday ... Continue", then the match itself ("Skip"), "Continue" again, and the
+    manager-XP window, which only closes with a click outside it. Go through them as the owner does by
+    hand. "Skip" is only pressed on the matchday screen; nothing in the XP window is clicked."""
     for _ in range(MAX_CONTINUES):
         button = page.get_by_text(re.compile(r"^\s*continue\s*$", re.I)).filter(visible=True)
-        if not button.count():
+        if not button.count() and page.get_by_text(re.compile(r"^\s*matchday\b", re.I)).filter(visible=True).count():
+            button = page.get_by_text(re.compile(r"^\s*skip\s*$", re.I)).filter(visible=True)
+        if button.count():
+            button.first.click(timeout=PAGE_TIMEOUT)
+        elif page.locator("#skillRatingUpdate-modal-content").filter(visible=True).count():
+            size = page.viewport_size or {"width": 1280, "height": 900}
+            page.mouse.click(size["width"] - 40, size["height"] // 2)  # the dark backdrop, beside the window
+        else:
             return
-        button.first.click(timeout=PAGE_TIMEOUT)
         page.wait_for_timeout(3000)
 
 
@@ -211,14 +217,14 @@ def watch_training_video(client, club: str, session: dict, base: str, headless: 
     from playwright.sync_api import sync_playwright
 
     from osmbot.game.browser import STATE_FILE
-    from osmbot.game.client import save_private
+    from osmbot.game.client import save_browser_session
 
     def finishes() -> float:
         _, sessions = client.get(f"{base}/trainingsessions/ongoing")
         return next(s["countdownTimer"]["finishedTimestamp"] for s in sessions if s["id"] == session["id"])
 
     before = finishes()
-    state = None
+    cookies = None
     with sync_playwright() as playwright:
         browser = playwright.firefox.launch(headless=headless)
         try:
@@ -244,12 +250,10 @@ def watch_training_video(client, club: str, session: dict, base: str, headless: 
                 save_failure(page, "treino")
                 raise AdsError("o tempo do treino não baixou")
             cookies = context.cookies()
-            if any(c["name"] == "access_token" for c in cookies):
-                state = {"cookies": cookies, "origins": []}
         finally:
             browser.close()
-    if state:
-        save_private(STATE_FILE, state)
+    if cookies:
+        save_browser_session(cookies)
 
 
 MONEY_ACTIONS = ("Multistep1", "Multistep2", "Multistep3")
@@ -306,9 +310,9 @@ def watch_money_video(client, club: str, headless: bool = True) -> None:
     from playwright.sync_api import sync_playwright
 
     from osmbot.game.browser import STATE_FILE
-    from osmbot.game.client import save_private
+    from osmbot.game.client import save_browser_session
 
-    state = None
+    cookies = None
     with sync_playwright() as playwright:
         browser = playwright.firefox.launch(headless=headless)
         try:
@@ -338,9 +342,7 @@ def watch_money_video(client, club: str, headless: bool = True) -> None:
                 save_failure(page, "dinheiro")
                 raise AdsError("o cartão de dinheiro não passou a visto")
             cookies = context.cookies()
-            if any(c["name"] == "access_token" for c in cookies):
-                state = {"cookies": cookies, "origins": []}
         finally:
             browser.close()
-    if state:
-        save_private(STATE_FILE, state)
+    if cookies:
+        save_browser_session(cookies)

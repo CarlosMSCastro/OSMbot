@@ -30,11 +30,63 @@ def test_wait_has_a_floor_and_a_ceiling():
     assert next_wait([], now=1000) == MAX_WAIT
 
 
-def test_loop_stops_on_failed_action():
+def test_a_failed_training_write_is_looked_at_again_and_stops_only_after_three_passes_in_a_row():
     sleeps = []
     with pytest.raises(SystemExit) as stop:
         run_active(claim=lambda c: 0, train=lambda c: 1, finish_times=lambda: [], sleep=sleeps.append, rng=FixedRng())
-    assert stop.value.code == 1 and sleeps == []
+    assert stop.value.code == 1 and sleeps == [loop.WRITE_RETRY] * (loop.MAX_WRITE_FAILURES - 1)
+
+
+def test_a_pass_without_failures_resets_the_count_of_failed_writes():
+    results = iter([1, 1, 0, 1, 1, 1])
+    calls = []
+
+    def train(confirm):
+        calls.append(1)
+        return next(results)
+
+    with pytest.raises(SystemExit):
+        run_active(claim=lambda c: 0, train=train, finish_times=lambda: [], sleep=lambda s: None, rng=FixedRng())
+    assert len(calls) == 6
+
+
+def test_network_pauses_grow_and_the_loop_only_gives_up_after_hours():
+    assert [loop.network_pause(n) for n in (1, 2, 3, 4, 5, 9)] == [60, 120, 300, 600, 900, 900]
+    now = {"t": 0.0}
+    sleeps = []
+
+    def claim(confirm):
+        raise OSError("sem rede")
+
+    def sleep(seconds):
+        sleeps.append(seconds)
+        now["t"] += seconds
+
+    with pytest.raises(SystemExit):
+        run_active(claim=claim, train=lambda c: 0, finish_times=lambda: [], sleep=sleep, clock=lambda: now["t"],
+                   rng=FixedRng())
+    assert sleeps[:5] == [60, 120, 300, 600, 900] and sum(sleeps) >= loop.MAX_NETWORK_DOWN
+
+
+def test_a_kind_of_video_that_keeps_failing_waits_longer_each_time(monkeypatch):
+    now = {"t": 0.0}
+    tries = []
+
+    def broken(dry_run):
+        tries.append(now["t"])
+        raise RuntimeError("botão não encontrado")
+
+    monkeypatch.setattr(loop, "_training_ads", broken)
+    monkeypatch.setattr(loop, "_money_ads", lambda dry_run: 0)
+    loop._ads_backoff.clear()
+    for t in range(0, 4 * 3600, 60):  # a pass every minute for 4 hours
+        now["t"] = float(t)
+        try:
+            loop._all_ads(False, clock=lambda: now["t"])
+        except Exception:
+            pass
+    assert [loop.ads_retry(n) for n in (1, 2, 3, 4, 5)] == [600, 1200, 2400, 3600, 3600]
+    assert tries[:4] == [0, 600, 1800, 4200] and len(tries) < 10
 
 
 def test_loop_sleeps_then_repeats_and_stops_on_error():
@@ -48,7 +100,7 @@ def test_loop_sleeps_then_repeats_and_stops_on_error():
     with pytest.raises(SystemExit):
         run_active(claim=lambda c: 0, train=train, finish_times=lambda: [1000 + 600], sleep=sleeps.append,
                    clock=lambda: 1000, rng=FixedRng())
-    assert calls == [True, True, True] and sleeps == [605, 605]
+    assert calls == [True] * 5 and sleeps[:2] == [605, 605] and sleeps[2:] == [loop.WRITE_RETRY] * 2
 
 
 def test_dry_run_does_one_pass_and_never_writes():
@@ -138,7 +190,9 @@ def test_board_keeps_drawing_while_the_bot_works_and_the_log_stays_clean(capsys)
 
     def train(confirm):
         state["passes"] += 1
-        return 0 if state["passes"] < 2 else 1
+        if state["passes"] >= 2:
+            raise SystemExit(1)
+        return 0
 
     snap = {"coins": 2452, "clubs": [], "ads": {"shop": {"open": True, "reopen": None}, "training": {"open": True, "reopen": None}}}
     with pytest.raises(SystemExit):
@@ -158,7 +212,7 @@ def test_board_is_refreshed_as_soon_as_trainings_start_not_only_at_the_end_of_th
         if state["passes"] == 1:
             loop.COUNTS["started"] += 1  # a training was started
             return 0
-        return 1  # second pass: stop the loop
+        raise SystemExit(1)  # second pass: stop the loop
 
     def ads(dry_run):
         state["at_ads"] = state["snapshots"]
@@ -200,7 +254,9 @@ def _quick_loop(**kwargs):
 
     def train(confirm):
         state["passes"] += 1
-        return 0 if state["passes"] < 3 else 1  # third pass: stop the loop
+        if state["passes"] >= 3:
+            raise SystemExit(1)  # third pass: stop the loop
+        return 0
 
     with pytest.raises(SystemExit):
         loop.run_active(claim=lambda c: 0, train=train, finish_times=lambda: [], ads=None, stadium=None, sponsors=None,
@@ -245,7 +301,9 @@ def test_the_board_is_refreshed_right_after_a_reward_is_claimed():
 
     def train(confirm):
         clock["passes"] += 1
-        return 0 if clock["passes"] < 2 else 1
+        if clock["passes"] >= 2:
+            raise SystemExit(1)
+        return 0
 
     with pytest.raises(SystemExit):
         loop.run_active(claim=lambda c: 0, train=train, finish_times=lambda: [], ads=ads, snapshot=snap, stadium=None, sponsors=None,

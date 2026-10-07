@@ -47,6 +47,27 @@ def save_private(path: Path, data: dict) -> None:
     os.replace(tmp, path)
 
 
+def _expiry(cookies: list[dict], name: str = "access_token") -> float:
+    token = next((c["value"] for c in cookies if c["name"] == name), None)
+    return ((_jwt_times(token) if token else None) or {}).get("exp", 0)
+
+
+def save_browser_session(cookies: list[dict], state_file: Path = STATE_FILE) -> bool:
+    """Keep the tokens a video's browser ended with, but only if they are newer than the saved ones: the
+    HTTP client may have renewed the session while the video played, and an older refresh_token may no
+    longer work (DISCOVERY.md, rotation). Returns True if saved."""
+    if not any(c["name"] == "access_token" for c in cookies):
+        return False
+    try:
+        saved = json.loads(state_file.read_text(encoding="utf-8"))["cookies"]
+    except (OSError, ValueError, KeyError):
+        saved = []
+    if _expiry(cookies) <= _expiry(saved):
+        return False
+    save_private(state_file, {"cookies": cookies, "origins": []})
+    return True
+
+
 def _http(request: urllib.request.Request) -> tuple[int, bytes]:
     """Default transport; tests replace it. Returns (status, body) without raising on 4xx/5xx."""
     try:
@@ -67,6 +88,16 @@ class OsmClient:
             raise NeedsBrowserLogin("Sem sessao guardada. Corre primeiro: osmbot login")
         self._state = json.loads(state_file.read_text(encoding="utf-8"))
 
+    def _reload(self) -> None:
+        """Take the saved session if it is newer than the one in memory: another client of the bot, or a
+        video's browser, may have renewed it since (several clients live at the same time)."""
+        try:
+            saved = json.loads(self.state_file.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            return
+        if _expiry(saved.get("cookies", [])) > _expiry(self._state["cookies"]):
+            self._state = saved
+
     def _cookie(self, name: str) -> dict | None:
         return next((c for c in self._state["cookies"] if c["name"] == name), None)
 
@@ -79,8 +110,13 @@ class OsmClient:
         info = _jwt_times(token) if token else None
         return bool(info and info.get("exp", 0) - time.time() > EXPIRY_MARGIN)
 
-    def refresh(self) -> None:
-        """Renew both tokens and save them. The old refresh_token stops working (hypothesis), so save at once."""
+    def refresh(self, force: bool = False) -> None:
+        """Renew both tokens and save them. The old refresh_token stops working (hypothesis), so save at once.
+        The saved file is read first: if someone else already renewed, their tokens are used instead
+        (``force``: renew anyway, e.g. after the game rejected a token that looked fresh)."""
+        self._reload()
+        if self._access_is_fresh() and not force:
+            return
         refresh_token = self._token("refresh_token")
         info = _jwt_times(refresh_token) if refresh_token else None
         if not info or info.get("exp", 0) <= time.time():
@@ -155,7 +191,7 @@ class OsmClient:
             )
             status, raw = self._transport(request)
             if status == 401 and attempt == 1:
-                self.refresh()  # token rejected despite looking fresh: renew once and retry
+                self.refresh(force=True)  # token rejected despite looking fresh: renew once and retry
                 continue
             break
         try:

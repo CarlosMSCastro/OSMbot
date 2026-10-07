@@ -159,6 +159,8 @@ class FakeGame:
 @pytest.fixture(autouse=True)
 def _quick(monkeypatch):
     monkeypatch.setattr(rewards.time, "sleep", lambda seconds: None)
+    rewards._missions_read[:] = [0.0, None]
+    rewards._unspent.clear()
 
 
 def test_login_energy_is_claimed_and_spent_like_the_site_does():
@@ -240,3 +242,40 @@ def test_daily_state_for_the_board():
     assert state["login"] == {"claimable": True, "day": 15, "renews": 2_000_000_000}
     assert state["missions"] == {"claimed": 3, "total": 3, "day_pending": True}
     assert state["videos"]["count"] == 7 and not state["videos"]["claimable"]
+
+
+def test_the_board_reuses_a_recent_missions_read_but_claims_always_read_anew():
+    game = FakeGame(claimed={10, 11, 12, 20})
+    now = {"t": DAY3}
+    rewards.daily_state(game, clock=lambda: now["t"])
+    rewards.daily_state(game, clock=lambda: now["t"] + 60)
+    assert game.calls.count(("POST", "usermissions/weeklytrack")) == 1
+    rewards.claim_missions(game, True, print, clock=lambda: now["t"] + 60)
+    assert game.calls.count(("POST", "usermissions/weeklytrack")) == 2
+
+
+def test_a_login_reward_that_could_not_be_spent_is_tried_again_on_the_next_pass():
+    game, said = FakeGame(), []
+
+    def refuse_once(path, form, original=game.post):
+        if not said or "falha" not in said[-1]:
+            game.calls.append(("POST", path, form))
+            said.append("falha simulada")
+            return 500, {}
+        return original(path, form)
+
+    game.post = refuse_once
+    assert rewards.claim_login(game, True, said.append) == 1
+    assert rewards._unspent == {"new-1": "DailyLoginEnergy_1"}
+    assert rewards.claim_login(game, True, said.append) == 0  # login already claimed: only the leftover is spent
+    assert rewards._unspent == {} and "gasto" in said[-1]
+
+
+def test_the_video_counter_has_no_reopen_time_while_its_cap_is_not_reached():
+    class Open(FakeGame):
+        def get(self, path):
+            if path.startswith("user/caps/actions/"):
+                return 200, {"isClaimable": True, "isCapReached": False, "timestampUntilUnreached": 2_000_000_000}
+            return super().get(path)
+
+    assert rewards.daily_state(Open(counter=(3, 10)), clock=lambda: DAY3)["videos"]["reopen"] is None

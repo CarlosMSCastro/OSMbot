@@ -2,6 +2,16 @@
 
 Entradas mais recentes primeiro. Cada sessão: o que se fez · o que ficou por fazer · próximo passo.
 
+## 2026-10-08 — Vídeo de treino preso, bot que não pára à 1.ª falha (0.8.1)
+
+- **Análise do repo a pedido do dono** (fábrica: "dá erro dos treinos… fica a bloquear tudo"). Achados: bot parava à 1.ª falha de escrita / 3 min sem rede; sessão em memória podia ficar velha; `THEORY` §17 desatualizado; estádio vs §15; `POST weeklytrack` repetido; "reabre" da troca de posição sem verificar o limite; início de sessão não gasto nunca se repetia.
+- **Causa do vídeo de treino (reproduzida aqui, sem janela):** depois do "Continue" vêm "Skip", outro "Continue" e a janela da experiência (fecha com clique fora). Registado em `DISCOVERY.md` §3. `_dismiss_matchday` passa a cadeia toda; ensaio real `watch_training_video(dry_run=True)` encontrou o "-2h" em 33 s. Nota: as sondagens fecharam a cadeia do FC Van, por isso o ensaio final já não a viu; a cadeia está coberta pelos testes.
+- **D-019 aceite** (pedido do dono): falhas nos treinos → volta a ver em 10 min, pára só ao fim de 3 passagens seguidas; rede: pausas de 1 a 15 min até 6 h; vídeos que falham sempre: 10/20/40/60 min por tipo.
+- **Sessão:** `OsmClient` relê `session.json` antes de renovar (e com `force` depois de um 401); o browser dos vídeos só grava tokens mais recentes (`save_browser_session`).
+- **Estádio (ponto 3):** comportamento **não mudado**; o jogo não dá o preço. O dono confirmou: fundos a 0 nunca são problema. Registado em `THEORY.md` §15.
+- **Testes:** 189 a passar. Versão **0.8.1**; `dist` reconstruído.
+- **Próximo passo:** o dono corre a 0.8.1 na fábrica e vê o vídeo de treino depois de uma ronda. (Os treinos do FC Van postos a 2026-10-07 ~13h30 foram o dono, à mão; o PC da fábrica estava desligado.)
+
 ## 2026-10-07 (cont. 5) — Recompensas diárias automáticas (0.8.0, por testar em real)
 
 - **Observação feita pelo dono** (`inspect-writes`, 6 reclamações à mão) → pedidos exatos em `DISCOVERY.md` §3. Regras do dono em `THEORY.md` §17; decisão **D-020** (reclamar e guardar; nunca usar itens). Energia do início de sessão: o bot gasta-a (o site também o faz; o inventário tem limite); boss coins: para a carteira ("não há nada a ver", dono).

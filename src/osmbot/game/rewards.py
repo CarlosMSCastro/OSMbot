@@ -20,13 +20,22 @@ _refused: set[int] = set()  # user mission ids the game refused: not asked again
 _day_done: set[frozenset] = set()  # days whose day reward was already asked for (one per day)
 _said: set[str] = set()  # "inventory full" notes already given
 _catalogue: list[dict] = []  # the mission catalogue: it hardly ever changes, read once per run
+_unspent: dict[int, str] = {}  # login rewards the bot claimed but failed to spend: reward id -> action (tried again)
+_missions_read: list = [0.0, None]  # [when, body] of the last missions read
+MISSIONS_FRESH = 5 * 60.0  # the board may reuse a missions read this recent (the claims always read anew)
 
 
-def read_missions(client) -> list[dict]:
-    """The user's missions: the site itself asks with a body-less POST every time it opens (observed)."""
+def read_missions(client, max_age: float = 0.0, clock=time.time) -> list[dict]:
+    """The user's missions: the site itself asks with a body-less POST every time it opens (observed).
+    ``max_age``: reuse the last answer if it is at most this old (the board), so the POST is not repeated
+    after every video or claim."""
+    when, body = _missions_read
+    if body is not None and max_age > 0 and clock() - when <= max_age:
+        return body
     status, body = client.request("POST", "usermissions/weeklytrack")
     if status != 200 or not isinstance(body, list):
         raise RuntimeError(f"estado das missões ilegível ({status})")
+    _missions_read[:] = [clock(), body]
     return body
 
 
@@ -48,11 +57,43 @@ def _full_note(key: str, text: str, log) -> None:
         log(text)
 
 
+def _spend(client, reward_id: int, action: str, coins_before: int | None, value: int, log) -> int:
+    """Spend one login reward into its wallet, as the site does. Returns the failures (0 or 1)."""
+    path = wallet_path(action)
+    status, _ = client.post(path, {"rewardId": reward_id})
+    if status != 200:
+        _unspent[reward_id] = action
+        log(f"Início de sessão: falha ao gastar {action} ({status}); volto a tentar")
+        return 1
+    _unspent.pop(reward_id, None)
+    log(f"Início de sessão: {action} reclamado e gasto")
+    if coins_before is not None and path.startswith("user/bosscoinwallet") and             client.get("user/bosscoinwallet")[1]["amount"] < coins_before + value:
+        log(f"Início de sessão: erro, os boss coins não subiram depois de gastar {action}")
+        return 1
+    return 0
+
+
+def spend_leftovers(client, confirm: bool, log=print) -> int:
+    """Login rewards the bot claimed earlier but could not spend: try again (only those, never other items)."""
+    if not (_unspent and confirm):
+        return 0
+    owned = {r["id"]: r for r in client.get("user/userrewards")[1]}
+    failures = 0
+    for reward_id, action in list(_unspent.items()):
+        if reward_id not in owned:  # spent meanwhile (by hand, or the game): nothing to do
+            _unspent.pop(reward_id)
+            continue
+        failures += _spend(client, reward_id, action, None, 0, log)
+        time.sleep(PAUSE_BETWEEN_WRITES)
+    return failures
+
+
 def claim_login(client, confirm: bool, log=print) -> int:
     """The login reward, when ``isClaimable``. Returns the failures."""
+    failures = spend_leftovers(client, confirm, log)
     _, state = client.get("user/dailylogin")
     if not isinstance(state, dict) or not state.get("isClaimable"):
-        return 0
+        return failures
     today = next((d for d in state.get("rewardTrackDays", []) if d.get("isClaimable")), {})
     if not confirm:
         log(f"Simulação: reclamaria o início de sessão ({today.get('actionId', '?')})")
@@ -62,25 +103,15 @@ def claim_login(client, confirm: bool, log=print) -> int:
     status, _ = client.put("user/dailylogin/claim")
     if status != 200:
         log(f"Início de sessão: falha ao reclamar ({status})")
-        return 1
+        return failures + 1
     COUNTS["login"] += 1
     time.sleep(PAUSE_BETWEEN_WRITES)
-    failures = 0
     for item in (r for r in client.get("user/userrewards")[1] if r["id"] not in known):
         action = item["action"]["id"]
-        path = wallet_path(action)
-        if path is None:
+        if wallet_path(action) is None:
             log(f"Início de sessão: {action} reclamado; fica no inventário")
             continue
-        status, _ = client.post(path, {"rewardId": item["id"]})
-        if status != 200:
-            log(f"Início de sessão: falha ao gastar {action} ({status})")
-            failures += 1
-            continue
-        log(f"Início de sessão: {action} reclamado e gasto")
-        if path.startswith("user/bosscoinwallet") and client.get("user/bosscoinwallet")[1]["amount"] < coins_before + item["reward"]["value"]:
-            log(f"Início de sessão: erro, os boss coins não subiram depois de gastar {action}")
-            failures += 1
+        failures += _spend(client, item["id"], action, coins_before, item["reward"]["value"], log)
     return failures
 
 
@@ -148,7 +179,8 @@ def daily_state(client, clock=time.time) -> dict:
     except Exception:
         pass
     try:
-        out["missions"] = mission_summary(read_missions(client), catalogue(client), _refused, _day_done, clock())
+        out["missions"] = mission_summary(read_missions(client, MISSIONS_FRESH, clock), catalogue(client), _refused,
+                                          _day_done, clock())
     except Exception:
         pass
     try:
@@ -156,7 +188,7 @@ def daily_state(client, clock=time.time) -> dict:
         counter = client.get(f"user/caps/counters/{VIDEO_COUNTER_ACTION}")[1]
         out["videos"] = {"count": counter["currentCount"], "threshold": counter["threshold"],
                          "claimable": bool(cap.get("isClaimable")) and counter["currentCount"] >= counter["threshold"],
-                         "reopen": cap.get("timestampUntilUnreached") or None}
+                         "reopen": (cap.get("timestampUntilUnreached") or None) if cap.get("isCapReached") else None}
     except Exception:
         pass
     return out

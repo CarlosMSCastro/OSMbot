@@ -417,6 +417,7 @@ Há **3 componentes** a melhorar, cada um com **níveis 0, 1, 2 e 3**:
 - **Em todas as equipas**, sempre que houver dinheiro.
 - Se não houver dinheiro nos fundos, ver a **poupança**: se tiver, tirar tudo (§13: é tudo ou nada), pagar a melhoria e **voltar a depositar o que sobra** o mais depressa possível.
 - Se **nem com a poupança** chega, **não faz nada** (nem tira a poupança).
+  - **Como o bot faz (aceite pelo dono, 2026-10-08):** o jogo não dá o preço da melhoria (`GET stadium` não o tem), por isso o bot não sabe de antemão se chega. Faz assim: tenta com os fundos; se o jogo recusar, tira a poupança e tenta outra vez; se recusar de novo, **deposita tudo** (a poupança é tudo ou nada, por isso o dinheiro que já estava nos fundos também vai) e só volta a tentar quando o total (fundos + poupança) subir. O dono: **fundos a 0 nunca são problema.**
 - O dinheiro pode aparecer de repente (p. ex. **um jogador vendido**): por isso o bot **volta a verificar o saldo e a poupança** regularmente, não só quando um temporizador acaba.
 - Cada melhoria é um temporizador (`DISCOVERY.md` §3): o bot acorda quando acaba.
 
@@ -443,7 +444,7 @@ Há **3 componentes** a melhorar, cada um com **níveis 0, 1, 2 e 3**:
 
 **Missões**
 - As **3 missões diárias** (as que têm `order`) reclamam-se quando o progresso chega ao objetivo (`threshold`, do catálogo `missions`). O bot já treina jogadores, por isso são as que se cumprem sozinhas.
-- Depois de reclamar as 3, abre-se a **recompensa do dia** (a missão sem `order` com o `sourceType` mais baixo). O jogo pergunta "guardar" ou "usar já": o bot escolhe **sempre guardar**, ou seja, reclama e **nunca gasta** o prémio (fica no inventário). Se o jogo recusar o pedido, o bot não insiste nesse prémio até ser reiniciado.
+- Depois de reclamar as 3, abre-se a **recompensa do dia**: a missão sem `order` cujo `sourceType` é **o dia de hoje** da semana (calculado a partir de `endDateTime`: semana de 7 dias, que mudam às 04:00 UTC). As dos dias seguintes também aparecem na lista, mas **nunca se reclamam antes do dia delas**; no máximo uma por dia. O jogo pergunta "guardar" ou "usar já": o bot escolhe **sempre guardar**, ou seja, reclama e **nunca gasta** o prémio (fica no inventário). Se o jogo recusar o pedido, o bot não insiste nesse prémio até ser reiniciado.
 - Só se reclama o que o próprio quadro de missões do jogo mostra como disponível.
 
 **Vídeos acumulados (troca de posição)**

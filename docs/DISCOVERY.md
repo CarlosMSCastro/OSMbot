@@ -83,6 +83,11 @@ Legenda: **[V]** verificado por nós · **[R]** reportado por fonte de terceiros
 - **[V]** `POST usermissions/weeklytrack` (sem corpo, feito pelo site ao abrir) devolve o estado das 8 missões do utilizador. As 3 diárias têm `order` e `sourceType` 3; as recompensas dos dias 3 a 7 não têm `order` e o `sourceType` é o número do dia. O progresso das diárias bate certo com o objetivo do catálogo (`threshold`). **A semana tem 7 dias de 24 h e acaba em `endDateTime`; os dias mudam às 04:00 UTC** (dia 3 em 2026-10-07).
 - **[V]** `GET user/userrewards` é o inventário; cada tipo de item tem `inventoryLimit` (`GET v1.1/rewards`) e `GET v1.1/actionrewards` liga cada `actionId` ao item.
 
+### Ecrãs depois de uma ronda (2026-10-08, *Verificado* no browser do bot, sem janela)
+
+- **[V]** Ao entrar num clube com um jogo por ver, o jogo mostra por esta ordem: "Matchday … **Continue**" → o jogo a decorrer (minuto, "1st half") com **Skip** → "**Continue**" → a janela da experiência de manager (`#skillRatingUpdate-modal-content`, "Won against manager…", barra de nível), **sem botão**: fecha com um clique fora dela. Só depois aparece o ecrã do clube (com o mosaico "TRAINING"). Enquanto não se passa a cadeia toda, ela volta a aparecer da próxima vez. Era isto que fazia falhar o vídeo de treino na fábrica (o bot carregava em "Continue" e ficava no "Skip").
+- **[V]** A janela da experiência tem um botão de "reclamar" escondido (`showClaimRewardButton`, p. ex. ao subir de divisão). O bot **não** lhe toca (escrita nunca observada); só fecha a janela.
+
 ## 4. Regras do jogo/ToS relevantes
 
 Resumo (detalhe e citações em `RISKS_AND_COMPLIANCE.md`): bots e software de terceiros são tratados como *cheating*; scraping/uso das APIs sem autorização escrita é proibido; sanções vão de aviso a ban permanente com perda de itens virtuais sem reembolso.

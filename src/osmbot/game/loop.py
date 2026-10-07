@@ -3,7 +3,9 @@ warn when a club has a free transfer-list slot, and watch the shop videos when t
 
 Instead of a fixed interval, the bot wakes up when the next training finishes (plus a random
 few seconds), so short-training periods (2h events) are handled as fast as the normal 8h ones.
-Any failure stops the loop and says why: it never keeps hammering the game.
+A failure never makes it hammer the game: a failed training write is looked at again 10 min later (re-reading
+the game) and stops the loop after 3 passes in a row; the network is retried with longer and longer pauses;
+extras (stadium, sponsors, rewards, videos) just try again later. A lost session stops it, saying why.
 """
 from __future__ import annotations
 
@@ -33,8 +35,15 @@ LOG_FILE = Path.home() / ".osmbot" / "bot.log"
 JITTER = (5.0, 60.0)  # seconds added after a training finishes, so timing is never exact
 MIN_WAIT = 30.0
 MAX_WAIT = 30 * 60.0  # also re-check now and then, in case timers changed (e.g. a skip with boss coins)
-MAX_NETWORK_RETRIES = 3
-RETRY_PAUSE = 60.0
+MAX_WRITE_FAILURES = 3  # passes in a row with a failed training write before stopping (D-019)
+WRITE_RETRY = 10 * 60.0  # after a failed training write, look again (re-reading the game) this far ahead
+NETWORK_PAUSES = (60.0, 120.0, 300.0, 600.0, 900.0)  # waits between attempts while the network is down
+MAX_NETWORK_DOWN = 6 * 3600.0  # stop only after this long without network (office Wi-Fi, PC asleep...)
+
+
+def network_pause(attempt: int) -> float:
+    """Seconds to wait before network attempt ``attempt`` (1, 2...): longer and longer, up to 15 min."""
+    return NETWORK_PAUSES[min(attempt, len(NETWORK_PAUSES)) - 1]
 
 
 def next_wait(finish_times: list[float], now: float, jitter: float = 0.0) -> float:
@@ -167,6 +176,13 @@ def _check_slots(read, previous: dict[str, int]) -> None:
 
 
 ADS_RETRY = 10 * 60.0  # after a failed video attempt, try again at most this far ahead
+ADS_RETRY_MAX = 60 * 60.0  # the same kind failing again and again: wait longer each time, up to this
+_ads_backoff: dict[str, tuple[int, float]] = {}  # kind of video -> (failures in a row, not before this time)
+
+
+def ads_retry(failures: int) -> float:
+    """Wait after the ``failures``-th failure in a row of one kind of video: 10, 20, 40, then 60 min."""
+    return min(ADS_RETRY_MAX, ADS_RETRY * 2 ** (failures - 1))
 
 
 def _shop_ads(dry_run: bool) -> int:
@@ -221,18 +237,31 @@ def _money_ads(dry_run: bool) -> int:
                          dry_run=dry_run, log=_log, sleep=_tick_sleep)
 
 
-def _all_ads(dry_run: bool) -> int:
+def _all_ads(dry_run: bool, clock=time.time) -> int:
     """Shop, training and money videos. Each kind is independent: one failing does not stop the others
-    (the failure is reported after). Nothing is ever switched off: the next pass simply tries again."""
+    (the failure is reported after). Nothing is ever switched off, but a kind that keeps failing is left
+    alone for longer each time (10, 20, 40, 60 min), so a broken page does not hold up every pass."""
     watched, errors = 0, []
     for step in (_shop_ads, _training_ads, _money_ads):
+        name = step.__name__.strip("_")
+        failures, not_before = _ads_backoff.get(name, (0, 0.0))
+        if clock() < not_before:
+            continue
         try:
             watched += step(dry_run)
+            _ads_backoff.pop(name, None)
         except Exception as error:
-            errors.append(f"{step.__name__.strip('_')}: {error}")
+            _ads_backoff[name] = (failures + 1, clock() + ads_retry(failures + 1))
+            errors.append(f"{name}: {error}")
     if errors:
         raise AdsError("; ".join(errors))
     return watched
+
+
+def ads_wake(now: float) -> float | None:
+    """The earliest time a kind of video that failed may be tried again (None if none failed)."""
+    times = [t for _, t in _ads_backoff.values() if t > now]
+    return min(times) if times else None
 
 
 def run_active(dry_run: bool = False, *, claim=run_claim, train=run_train, finish_times=None, slots=None,
@@ -254,6 +283,7 @@ def run_active(dry_run: bool = False, *, claim=run_claim, train=run_train, finis
     _stats.clear()
     _live.clear()
     _errors.clear()
+    _ads_backoff.clear()
     _stats["start"] = clock()
     COUNTS.update(claimed=0, started=0)
     stadium_module.COUNTS["upgrades"] = sponsors_module.COUNTS["signed"] = 0
@@ -303,7 +333,7 @@ def run_active(dry_run: bool = False, *, claim=run_claim, train=run_train, finis
                 _live.clear()
             except Exception as error:
                 _log(f"Estado inicial: erro ({error})")
-        retries = 0
+        retries, offline_since, write_failures = 0, None, 0
         while True:
             try:
                 draw("A TRABALHAR")
@@ -312,9 +342,15 @@ def run_active(dry_run: bool = False, *, claim=run_claim, train=run_train, finis
                 failed = _quiet(claim, not dry_run) + _quiet(train, not dry_run)
                 if changed(before):
                     refresh_board()
-                if failed:
-                    _log(f"Parou: {failed} falha(s) ao escrever. Ver bot.log")
-                    raise SystemExit(1)
+                if failed:  # e.g. the owner collected the same training by hand: the next pass re-reads the game
+                    write_failures += 1
+                    if write_failures >= MAX_WRITE_FAILURES:
+                        _log(f"Parou: falhas ao escrever nos treinos em {write_failures} passagens seguidas. Ver bot.log")
+                        raise SystemExit(1)
+                    _log(f"Treinos: {failed} falha(s) ao escrever; volto a ver em {span(WRITE_RETRY)}"
+                         f" ({write_failures}/{MAX_WRITE_FAILURES})")
+                else:
+                    write_failures = 0
                 _check_slots(slots, free_before)
                 before = counts()
                 stadium_times: list[float] = []
@@ -367,8 +403,11 @@ def run_active(dry_run: bool = False, *, claim=run_claim, train=run_train, finis
                 times = times + [t for t in stadium_times + reward_times if t > clock()]
                 wait = next_wait(times, clock(), rng.uniform(*JITTER))
                 if ads_failed:
-                    wait = min(wait, ADS_RETRY)
-                retries = 0
+                    again = ads_wake(clock())
+                    wait = min(wait, max(MIN_WAIT, again - clock()) if again else ADS_RETRY)
+                if failed:
+                    wait = min(wait, WRITE_RETRY)
+                retries, offline_since = 0, None
             except SystemExit as error:  # NeedsBrowserLogin is turned into SystemExit by the commands
                 if error.code in (0, None, 1):
                     raise
@@ -377,13 +416,15 @@ def run_active(dry_run: bool = False, *, claim=run_claim, train=run_train, finis
             except KeyboardInterrupt:
                 _log("Parado")
                 return
-            except OSError as error:  # network trouble: a few patient retries, then stop
+            except OSError as error:  # network trouble: patient retries, longer and longer, before giving up
                 retries += 1
-                if retries > MAX_NETWORK_RETRIES:
-                    _log(f"Parou: sem rede depois de {MAX_NETWORK_RETRIES} tentativas ({error})")
+                offline_since = offline_since or clock()
+                if clock() - offline_since > MAX_NETWORK_DOWN:
+                    _log(f"Parou: sem rede há {span(clock() - offline_since)} ({error})")
                     raise SystemExit(1)
-                _log(f"Rede: erro ({error}); nova tentativa em {RETRY_PAUSE:.0f}s ({retries}/{MAX_NETWORK_RETRIES})")
-                events, wait = [], RETRY_PAUSE
+                wait = network_pause(retries)
+                _log(f"Rede: erro ({error}); nova tentativa em {span(wait)} ({retries}.ª)")
+                events = []
             if dry_run:
                 if last_snapshot:
                     print(render(last_snapshot, clock(), "SIMULAÇÃO", list(_recent), machine, colour=sys.stdout.isatty()))

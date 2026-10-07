@@ -6,6 +6,20 @@ Este ficheiro é o **histórico de versões, para quem lê o repo**. O diário i
 
 ## [Por lançar]
 
+## [0.8.1] — 2026-10-08
+
+O bot passa a aguentar sozinho um dia inteiro: já não fica preso no vídeo de treino nem pára à primeira falha.
+
+### Corrigido
+- **Vídeo de treino "não encontrado" na fábrica:** depois do "Continue" o jogo mostra o jogo da ronda (botão **Skip**), outro "Continue" e a janela da experiência de manager (fecha com um clique fora). O bot só passava o primeiro ecrã e ficava ali até esgotar o tempo, em todas as tentativas. Agora passa a cadeia toda (também nos vídeos de dinheiro). Ensaio real sem clicar no "-2h": botão encontrado.
+- **Sessão:** com vários pedidos e vídeos a correr, o bot podia renovar a sessão com tokens antigos que tinha em memória, ou o Firefox de um vídeo podia gravar tokens mais velhos por cima dos novos. Agora relê a sessão gravada antes de renovar e o browser só grava tokens mais recentes.
+- **Início de sessão:** se a recompensa foi reclamada mas não foi possível gastá-la na carteira, o bot volta a tentar nas passagens seguintes (só essa, nunca outros itens).
+- **Troca de posição (vídeos acumulados):** o quadro já não mostra "reabre em…" quando o limite não foi atingido.
+
+### Alterado
+- **Não pára à primeira falha (D-019):** uma escrita falhada nos treinos volta a ser vista 10 min depois, e o bot só pára ao fim de 3 passagens seguidas com falhas. Sem rede, tenta com pausas cada vez maiores (até 15 min) durante até 6 h. Um tipo de vídeo que falha sempre espera cada vez mais (10, 20, 40, 60 min) sem atrasar os outros.
+- **Menos pedidos de missões:** o quadro reaproveita a leitura das missões durante 5 min, em vez de repetir o `POST weeklytrack` depois de cada vídeo ou reclamação.
+
 ## [0.8.0] — 2026-10-07
 
 O bot passa a reclamar sozinho as **recompensas diárias**, no modo ativo (D-020), e o quadro e o menu ficam mais completos. Pedidos das recompensas observados com o dono (`inspect-writes`); **as recompensas ainda não foram corridas em real** (primeiro teste: o início de sessão e o prémio de amanhã).
