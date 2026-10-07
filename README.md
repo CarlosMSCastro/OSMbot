@@ -2,7 +2,7 @@
 
 Exploração de um bot para o **Online Soccer Manager** (Gamebasics).
 
-> **Estado (0.5.0):** o bot trabalha sozinho no Windows (treinos, vídeos da loja e de treino, aviso de slots de venda), com quadro de consola em tempo real. Ver [`CHANGELOG.md`](CHANGELOG.md) e [`docs/`](docs/).
+> **Estado (0.8.0):** o bot trabalha sozinho no Windows (treinos, estádio, patrocinadores, vídeos da loja, de treino e de dinheiro, recompensas diárias, aviso de vagas na lista de transferências), com quadro de consola em tempo real. Ver [`CHANGELOG.md`](CHANGELOG.md) e [`docs/`](docs/).
 
 ## Aviso
 
@@ -36,11 +36,12 @@ O comando `login` abre uma janela de Firefox a sério (não Chromium — o popup
 | Comando | O que faz |
 |---|---|
 | `osmbot login` | Abre o Firefox para entrares; fecha a janela para guardar a sessão |
-| `osmbot ativo` | **Modo ativo**: recolhe e treina quando os treinos acabam, vê vídeos da loja e de treino, avisa de slots livres; quadro em tempo real. Ctrl+C para parar |
+| `osmbot ativo` | **Modo ativo**: recolhe e treina quando os treinos acabam, sobe o estádio, assina patrocinadores, vê os vídeos (loja, treino, dinheiro), reclama as recompensas diárias e avisa de vagas na lista de transferências; quadro em tempo real. Ctrl+C para parar |
 | `osmbot ativo --simular` | Uma passagem sem escrever nada |
 | `osmbot ativo --sem-anuncios` / `--sem-quadro` | Sem vídeos / linhas simples em vez do quadro |
 | `osmbot status`, `treinos`, `slots` | Só leitura |
 | `osmbot recolher`, `treinar` | Escrevem na conta; `--simular` mostra o plano |
+| `osmbot recompensas` | Reclama as recompensas diárias (início de sessão, missões, vídeos acumulados); ficam no inventário; `--simular` mostra o plano |
 
 Só **uma máquina com o bot ligado de cada vez**. O registo fica em `~/.osmbot/bot.log`.
 

@@ -72,6 +72,17 @@ Legenda: **[V]** verificado por nós · **[R]** reportado por fonte de terceiros
 - O dono viu as 4 propostas de patrocinador e escolheu a que paga mais (comparou-as à mão; as propostas vêm de pedidos de leitura, ainda por mapear).
 - **Não apareceu nenhum pedido de "recolher"** do estádio. Por apurar: a melhoria acabada recolhe-se com um pedido que não foi feito, ou o jogo aplica-a sozinho.
 
+### Início de sessão, missões e vídeos acumulados (2026-10-07, *Verificado*, só leitura; ensaio do `inspect-writes` sem reclamar nada)
+
+- **[V]** `GET user/dailylogin` → `consecutiveLoginCount`, `isClaimable`, `countdownTimer` (tipo 19, reinício diário), `matchBoost`, `rewardTrackDays` (5 dias com `dayNumber`, `actionId` do tipo `DailyLoginEnergy_1` / `DailyLoginBossCoin_5`, `isClaimable`, `isMilestone`). O pedido que **reclama** ainda não foi observado.
+- **[V]** `GET missions` é o **catálogo** (324 definições: `id`, `progressType`, `threshold`, `actionId`). O **estado do utilizador** vem na resposta de `POST usermissions/weeklytrack` (sem corpo, feito pelo próprio site ao abrir o jogo): lista de 8 itens `{id, missionId, progress, endDateTime, isClaimed, sourceType}`. O pedido que reclama uma missão ainda não foi observado.
+- **[V]** `GET user/userrewards` → inventário de recompensas ganhas (`id` uuid, `reward` {`name`, `type`, `value`}, `action` {`id`, `type`}), por exemplo `DailyMissionsRewardTP_Boost25`. `GET randomrewards/configurations` e `randomrewards/actionpools` descrevem os "sacos" aleatórios (as probabilidades de cada `actionId`, como `DailyMissionsRewardCF_1M`). `GET v1.1/rewards` (483) e `v1.1/actionrewards` (836) são catálogos.
+- **[V]** **Vídeos acumulados:** `GET user/caps/counters/RewardedVideoCounterPositionModifier` → `{currentCount: 10, threshold: 10}` e `GET user/caps/actions/RewardedVideoCounterPositionModifier/0` → `{isClaimable: true, isCapReached: true}`. Ou seja: há uma recompensa grátis ("position modifier", ver `GET positionmodifier/rewardconfigurations`, 25 itens) por acumulação de vídeos, já disponível (10/10). Aparece no ecrã da loja. O pedido que a reclama e a escolha que exige (jogador? posição?) ainda não foram observados.
+
+- **[V]** (2026-10-07, `inspect-writes`, o dono reclamou à mão) **Pedidos de reclamar:** início de sessão = `PUT user/dailylogin/claim` (sem corpo; devolve o estado novo) e, a seguir, o site gasta a recompensa de energia com `POST user/wallets/energy/consumereward` (form `rewardId` = o `id` do item novo em `GET user/userrewards`). Missão = `PUT usermissions/{id da missão do utilizador}/claim` (sem corpo; as 3 diárias devolvem `[]`). Recompensa do dia = o mesmo `PUT`, que devolve o item (`userreward`); com "guardar" o site **não faz mais nada** (o item fica no inventário); "usar já" seria um `consumereward`. Vídeos acumulados = `POST user/actions/RewardedVideoCounterPositionModifier` (sem corpo; devolve o item "Switch" no inventário; o contador volta a 0 e o limite só reabre ~12 h depois).
+- **[V]** `POST usermissions/weeklytrack` (sem corpo, feito pelo site ao abrir) devolve o estado das 8 missões do utilizador. As 3 diárias têm `order` e `sourceType` 3; as recompensas dos dias 3 a 7 não têm `order` e o `sourceType` é o número do dia. O progresso das diárias bate certo com o objetivo do catálogo (`threshold`). **A semana tem 7 dias de 24 h e acaba em `endDateTime`; os dias mudam às 04:00 UTC** (dia 3 em 2026-10-07).
+- **[V]** `GET user/userrewards` é o inventário; cada tipo de item tem `inventoryLimit` (`GET v1.1/rewards`) e `GET v1.1/actionrewards` liga cada `actionId` ao item.
+
 ## 4. Regras do jogo/ToS relevantes
 
 Resumo (detalhe e citações em `RISKS_AND_COMPLIANCE.md`): bots e software de terceiros são tratados como *cheating*; scraping/uso das APIs sem autorização escrita é proibido; sanções vão de aviso a ban permanente com perda de itens virtuais sem reembolso.
@@ -95,10 +106,10 @@ Resumo (detalhe e citações em `RISKS_AND_COMPLIANCE.md`): bots e software de t
 
 ## 7. Próximos passos de descoberta
 
-Já feito (ver §3): mapa dos endpoints de leitura e de escrita dos treinos, dos vídeos e dos slots, formato do `tokenRefresh`, páginas da loja e do treino.
+Já feito (ver §3): mapa dos endpoints de leitura e de escrita dos treinos, dos vídeos (loja, treino, dinheiro), dos slots, do estádio, dos patrocinadores, do início de sessão, das missões e dos vídeos acumulados; formato do `tokenRefresh`; páginas da loja e do treino.
 
 Por fazer:
-1. **Vídeos de dinheiro** (3 por dia): observar o `actionId` e o caminho de cada um (`Multistep1` a `3`) e a recolha em `finances/consumereward`.
+1. **Gastar a recompensa de início de sessão em boss coins** (dias 17, 18 e 20 da sequência) e **abrir o saco do dia 21**: ver o pedido do site (`inspect-writes`) quando o dono reclamar à mão. Hoje o bot assume `user/bosscoinwallet/consumereward` (como nos vídeos) e verifica que o saldo sobe.
 2. **Escritas de transferências** (listar/retirar da lista, comprar): ainda por observar; pedem OK do dono.
 3. Confirmar que nos eventos de 6 slots o `MaxPlayersOnTransferlist` sobe para 6 (hipótese).
 4. Ler o tópico do fórum "Osm API" e o artigo do suporte "What's considered cheating in OSM?" (manualmente, por causa do Anubis / 403).

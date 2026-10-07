@@ -1,4 +1,4 @@
-import itertools
+﻿import itertools
 
 import pytest
 
@@ -49,7 +49,16 @@ def _isolated_from_the_game(monkeypatch, tmp_path):
     monkeypatch.setattr(loop, "_money_ads", lambda dry_run: 0)
     monkeypatch.setattr(loop, "run_stadium", lambda confirm: (0, []))
     monkeypatch.setattr(loop, "run_sponsors", lambda confirm: (0, []))
+    monkeypatch.setattr(loop, "run_rewards", lambda confirm: (0, []))
     monkeypatch.setattr(loop, "collect", lambda client: None)
+
+    from osmbot.game import rewards
+
+    monkeypatch.setattr(rewards, "_refused", set())
+    monkeypatch.setattr(rewards, "_said", set())
+    monkeypatch.setattr(rewards, "_day_done", set())
+    monkeypatch.setattr(rewards, "COUNTS", {"login": 0, "missions": 0, "videos": 0})
+    monkeypatch.setattr(rewards, "_catalogue", [])
 
     class _NoClient:
         def __init__(self, *args, **kwargs):

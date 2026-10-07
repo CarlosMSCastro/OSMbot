@@ -4,17 +4,21 @@
 
 ## Objetivo
 
-**Poupar tempo ao dono automatizando tarefas repetitivas** no Online Soccer Manager (D-010). Estado em 0.5.0:
+**Poupar tempo ao dono automatizando tarefas repetitivas** no Online Soccer Manager (D-010). Estado em 0.8.0:
 
 | # | Automação | Estado |
 |---|---|---|
 | 1 | **Treinos**: recolher e voltar a pôr a treinar quando acabam (política em `THEORY.md` §5) | **Feito e em uso** (`osmbot ativo`) |
 | 2 | **Vídeos da loja** (1 boss coin cada, até 9 por hora): pagam os amigáveis (4 boss coins cada) | **Feito** |
 | 3 | **Vídeos de treino** (−2h cada, 4 por 3h): o treino acaba mais cedo e o ciclo volta a treinar mais cedo; regra "uniformizar" | **Feito** |
-| 4 | **Vídeos de dinheiro** (3 por dia: ~300k, ~600k, 3 boss coins) | Por fazer (fluxo já observado) |
+| 4 | **Vídeos de dinheiro** (3 por dia: ~300k, ~600k, 3 boss coins) | **Feito** (no clube com mais poupança) |
 | 5 | **Aviso de slots de venda livres** (4 normalmente, 6 em eventos) | **Feito** (consola e registo) |
-| 6 | Transferências automáticas | Por especificar; escritas novas pedem OK |
-| 7 | Aviso de jogadores novos "SALE" no mercado (`THEORY.md` §7.7) | Por fazer |
+| 6 | **Estádio**: começar a melhoria seguinte quando há dinheiro (`THEORY.md` §15) | **Feito** |
+| 7 | **Patrocinadores**: a melhor proposta em cada espaço livre (`THEORY.md` §15) | **Feito** |
+| 8 | **Recompensas diárias**: início de sessão, 3 missões, prémio do dia e vídeos acumulados; ficam no inventário, nunca se usam itens (`THEORY.md` §17, D-020) | **Feito** (0.8.0, por validar em real) |
+| 9 | **Aviso de condição física** dos titulares (`THEORY.md` §16) | **Feito** (quadro) |
+| 10 | Transferências automáticas | Por especificar; escritas novas pedem OK |
+| 11 | Aviso de jogadores novos "SALE" no mercado (`THEORY.md` §7.7) | Por fazer |
 
 Os vídeos têm limites impostos pelo servidor (detalhe em `THEORY.md` §12); o bot respeita-os sempre, salta algumas janelas de propósito e nunca forja a recompensa (D-012, regra 8).
 
@@ -27,7 +31,7 @@ Fora do alcance: táticas. O dono aplica a sua teoria de jogo ele mesmo; está r
 - [x] Alcance escolhido (D-002) e postura de risco definida (D-004).
 - [x] Forma como o jogo comunica verificada com o dono presente (`DISCOVERY.md`).
 - [x] Stack escolhida: Python (D-001); Firefox/Playwright só para login e vídeos, HTTP para o resto.
-- [x] O bot recolhe e treina sozinho, e vê vídeos dentro dos limites do jogo.
+- [x] O bot recolhe e treina sozinho, vê vídeos dentro dos limites do jogo, trata do estádio, dos patrocinadores e das recompensas diárias.
 - [x] Funciona em Windows sem instalar o ambiente de desenvolvimento (D-016).
 - [ ] Corre vários dias seguidos sem intervenção (por validar).
 - [ ] Funciona no PC da empresa (por testar).

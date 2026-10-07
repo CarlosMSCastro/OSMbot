@@ -432,3 +432,24 @@ Há **3 componentes** a melhorar, cada um com **níveis 0, 1, 2 e 3**:
 - Um **titular** (onze) com a condição a amarelo **convém ser trocado 1 jogo para descansar**.
 - O bot **só avisa** (quadro e registo, uma vez por jogador até recuperar); não troca ninguém, porque o onze e a tática são do dono.
 - Só contam os titulares (`lineup` 1 a 11) e não lesionados; o banco não interessa. O limiar do vermelho está por apurar.
+
+## 17. Recompensas diárias: início de sessão, missões e vídeos acumulados
+
+*Fonte: o dono, 2026-10-07. Pedidos observados com `inspect-writes` (`DISCOVERY.md` §3).*
+
+**Início de sessão** (uma vez por dia, quando `user/dailylogin` diz `isClaimable`)
+- Reclamar. O site gasta a recompensa logo na carteira certa; o bot faz o mesmo: **energia** → carteira de energia; **boss coins** → carteira de boss coins (o dono: "vão para a carteira, não há nada a ver").
+- Qualquer outra recompensa (p. ex. o saco do dia 21): reclamar e **deixar no inventário**, sem gastar. **[S]** O pedido que a gasta nunca foi observado.
+
+**Missões**
+- As **3 missões diárias** (as que têm `order`) reclamam-se quando o progresso chega ao objetivo (`threshold`, do catálogo `missions`). O bot já treina jogadores, por isso são as que se cumprem sozinhas.
+- Depois de reclamar as 3, abre-se a **recompensa do dia** (a missão sem `order` com o `sourceType` mais baixo). O jogo pergunta "guardar" ou "usar já": o bot escolhe **sempre guardar**, ou seja, reclama e **nunca gasta** o prémio (fica no inventário). Se o jogo recusar o pedido, o bot não insiste nesse prémio até ser reiniciado.
+- Só se reclama o que o próprio quadro de missões do jogo mostra como disponível.
+
+**Vídeos acumulados (troca de posição)**
+- A cada 10 vídeos (contador `RewardedVideoCounterPositionModifier`), quando `isClaimable`, reclamar: o item ("Switch") vai para o **inventário** e **não se usa**. O contador é alimentado pelos vídeos que o bot já vê.
+
+**Limites do jogo (regra geral)**
+- O inventário tem um limite por item (`inventoryLimit`, catálogos `actionrewards` e `rewards`). O bot **não reclama** se o item ficasse acima do limite.
+- Nunca se usam os itens do inventário (isso exige escolhas: jogador, posição...). É decisão do dono.
+- O bot respeita o jogo: sem pedidos repetidos para o que o jogo recusou.

@@ -2,6 +2,30 @@
 
 Entradas mais recentes primeiro. Cada sessão: o que se fez · o que ficou por fazer · próximo passo.
 
+## 2026-10-07 (cont. 5) — Recompensas diárias automáticas (0.8.0, por testar em real)
+
+- **Observação feita pelo dono** (`inspect-writes`, 6 reclamações à mão) → pedidos exatos em `DISCOVERY.md` §3. Regras do dono em `THEORY.md` §17; decisão **D-020** (reclamar e guardar; nunca usar itens). Energia do início de sessão: o bot gasta-a (o site também o faz; o inventário tem limite); boss coins: para a carteira ("não há nada a ver", dono).
+- **Código:** `src/osmbot/rewards/policy.py` (puro: o que reclamar, dia da semana, limites do inventário) e `src/osmbot/game/rewards.py` (pedidos). `loop.py`: passo novo "extra" no ciclo (falha não pára os treinos), acorda no novo dia e quando os vídeos reabrem, atualiza o quadro após reclamar. `osmbot recompensas [--simular]`. Quadro: linhas `diárias` e `extra`.
+- **Risco apanhado em simulação real:** o bot ia reclamar o prémio do **dia 4** hoje (a lista mostra os prémios de todos os dias). Corrigido: só se reclama o prémio cujo `sourceType` é o dia de hoje, calculado a partir de `endDateTime` (semana de 7 dias, mudança às 04:00 UTC), e no máximo um por dia.
+- **[S]** Dias com boss coins: o pedido que as gasta depois do login nunca foi observado (usa-se o `bosscoinwallet/consumereward` dos vídeos, com verificação de que o saldo sobe). Saco do dia 21: reclamado e deixado no inventário. Prémios de recompensa de dias 4 a 7 (boss coins, energia, cone, pack 85+): reclamados com "guardar".
+- **Testes:** 179 a passar. Simulação contra a conta real (só leituras + `POST weeklytrack`): hoje não há nada por reclamar.
+
+## 2026-10-07 (cont. 4) — Início de sessão e missões: o que se sabe e preparação da observação
+
+- **Pedido do dono:** automatizar (1) a recompensa de início de sessão e (2) as recompensas das missões (3 cartões de treino + a recompensa do "dia" da faixa semanal, que só abre depois de reclamar os 3).
+- **Lido (GET, só leitura):** `user/dailylogin` → `consecutiveLoginCount`, `isClaimable`, `countdownTimer` (tipo 19, ~16,5 h até ao reinício), `matchBoost`, `rewardTrackDays` (5 dias: `dayNumber`, `actionId` como `DailyLoginEnergy_1` / `DailyLoginBossCoin_5`, `isClaimable`, `isMilestone`). `missions` → **catálogo** de 324 definições (`id`, `threshold`, `progressType`, `actionId`), **sem** o progresso do utilizador. `POST usermissions/weeklytrack` é só o site a registar progresso.
+- **Por saber [?]:** os pedidos de "Reclamar" (início de sessão, cartões, recompensa do dia) e o endpoint do estado das missões do utilizador. Nunca observados (regra 7).
+- **Preparado:** `inspect-writes` grava em `~/.osmbot/inspect-writes.log` em tempo real, com valores curtos e as leituras. A observação é de uma só tentativa (depois de reclamar não se repete hoje; renova-se amanhã), por isso primeiro faz-se um ensaio sem reclamar nada.
+- **Nota:** a espera da loja depois de esgotar é de **1 h, confirmada pelo dono** (acima); `SHOP_BAR_SECONDS` não é suposição.
+- **Testes:** 151 a passar.
+
+## 2026-10-07 (cont. 3) — Vídeo de treino que falhava e quadro só com erros (0.7.2, por testar em real)
+
+- **Falha do vídeo de treino:** `bot.log` mostrava "botão do vídeo de treino não encontrado (TimeoutError)" a cada passagem. As capturas de `~/.osmbot/failures` mostram a causa: o ecrã "Matchday … Continue" fica por cima do clube e esconde o menu e o botão. Todas as tarefas do browser (loja, treino, dinheiro) passam por `_open_game`, que carrega em "Continue" (máx. 3) depois de abrir o jogo; `_open_club` volta a fazê-lo depois de entrar no clube. O dono confirmou que o ecrã aparece muitas vezes depois de um jogo, seja qual for a tarefa. **[S]** Clique novo, não observado antes em real; o dono testa.
+- **Quadro:** linha das Boss coins com a loja (barra pequena + tempo, só quando a loja esgota; com vídeos disponíveis não mostra nada), atualizada após cada vídeo da loja; registo só com erros (30 min).
+- **[S]** Barra da loja assume 1 h (`SHOP_BAR_SECONDS`); a API só dá o tempo que falta (visto: máx. 49 min no `bot.log`).
+- **Testes:** 147 a passar.
+
 ## 2026-10-07 (cont. 2) — Acabamento do menu e do quadro (0.7.1, por testar em real)
 
 - **Pedidos do dono (2 rondas):** menu com setas; barra no estádio (na mesma linha) e nos treinos (2 h encurtadas a azul), 1 jogador por linha; clube a verde; "Lista de Transf." a branco com números amarelos só se houver vaga; linha dos vídeos apagada; `Boss coins N +X`; aviso de como parar; mais atualizações instantâneas.

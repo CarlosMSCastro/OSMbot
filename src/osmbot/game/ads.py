@@ -88,7 +88,7 @@ def watch_shop_video(client, headless: bool = True) -> None:
         try:
             context = browser.new_context(storage_state=str(STATE_FILE), viewport={"width": 1280, "height": 900})
             page = context.new_page()
-            page.goto("https://en.onlinesoccermanager.com/")
+            _open_game(page)
             try:
                 page.locator("a:visible", has_text="Shop").first.click(timeout=PAGE_TIMEOUT)
                 page.get_by_text("Watch ad", exact=False).first.click(timeout=PAGE_TIMEOUT)
@@ -151,11 +151,34 @@ def run_training_ads(claimable: Callable[[], bool], load_sessions: Callable[[], 
     return watched
 
 
+MAX_CONTINUES = 3  # the game can show a few of these screens in a row
+
+
+def _dismiss_matchday(page) -> None:
+    """After a round the game puts its "Matchday ... Continue" screen over the club's home, hiding the
+    menus (seen in the failure screenshots of 2026-10-07). Press "Continue", as the owner does by hand."""
+    for _ in range(MAX_CONTINUES):
+        button = page.get_by_text(re.compile(r"^\s*continue\s*$", re.I)).filter(visible=True)
+        if not button.count():
+            return
+        button.first.click(timeout=PAGE_TIMEOUT)
+        page.wait_for_timeout(3000)
+
+
+def _open_game(page) -> None:
+    """Open the game (the career page) and get past the "Continue" screen the game often shows after a
+    match, whatever the task: every browser job starts here."""
+    page.goto("https://en.onlinesoccermanager.com/")
+    page.wait_for_timeout(4000)
+    _dismiss_matchday(page)
+
+
 def _open_club(page, club: str) -> None:
     """Career page -> the club's card (opens the club's home screen)."""
-    page.goto("https://en.onlinesoccermanager.com/")
+    _open_game(page)
     page.locator(".clubslot-main-title", has_text=club).first.click(force=True, timeout=PAGE_TIMEOUT)
     page.wait_for_timeout(6000)
+    _dismiss_matchday(page)
 
 
 def _open_training_page(page, club: str) -> None:

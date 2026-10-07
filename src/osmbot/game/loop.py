@@ -17,12 +17,14 @@ from collections import deque
 from datetime import datetime
 from pathlib import Path
 
-from osmbot.game.ads import (TRAINING_ACTION, VIDEO_SAVES, AdsError, is_claimable, money_state, pick_money_club, run_money_ads,
+from osmbot.game.ads import (SHOP_ACTION, TRAINING_ACTION, VIDEO_SAVES, AdsError, is_claimable, money_state, pick_money_club, run_money_ads,
                              run_shop_ads, run_training_ads, watch_money_video, watch_shop_video, watch_training_video)
 from osmbot.game.dashboard import Screen, collect, machine_name, render, span, summary_text, wake_events
 from osmbot.game.slots import describe, newly_free, read_slots
 from osmbot.game import sponsors as sponsors_module
+from osmbot.game import rewards as rewards_module
 from osmbot.game import stadium as stadium_module
+from osmbot.game.rewards import run_rewards
 from osmbot.game.sponsors import run_sponsors
 from osmbot.game.stadium import run_stadium
 from osmbot.game.trainings import COUNTS, pending_finish_times, run_claim, run_train
@@ -43,7 +45,10 @@ def next_wait(finish_times: list[float], now: float, jitter: float = 0.0) -> flo
     return max(MIN_WAIT, min(MAX_WAIT, wait))
 
 
-_recent: deque[str] = deque(maxlen=8)  # last log lines, for the board
+_recent: deque[str] = deque(maxlen=8)  # last log lines (printed when the board closes)
+_errors: deque[tuple[float, str]] = deque(maxlen=5)  # (when, line) of the last problems: the only log lines the board shows
+ERRORS_SHOWN_FOR = 30 * 60.0  # a problem stays on the board this long
+ERROR_WORDS = ("erro", "falha", "parou")
 _stats: dict = {}  # this run: start time, first coin balance, videos watched
 _live: dict = {}  # values fresher than the last snapshot (boss coins after a video)
 _screen_on = False  # while the board is drawn, nothing else may print to the terminal
@@ -56,7 +61,10 @@ def _log(message: str) -> None:
     LOG_FILE.parent.mkdir(parents=True, exist_ok=True)
     with LOG_FILE.open("a", encoding="utf-8") as handle:
         handle.write(f"{now:%Y-%m-%d %H:%M:%S}  {message}" + chr(10))
-    _recent.append(f"{now:%H:%M:%S} {message.lstrip(chr(7))}")
+    line = f"{now:%H:%M:%S} {message.lstrip(chr(7))}"
+    _recent.append(line)
+    if any(word in message.lower() for word in ERROR_WORDS):
+        _errors.append((time.time(), line))
     if not _screen_on:
         print(f"{now:%Y-%m-%d %H:%M:%S}  {message}", flush=True)
     elif _redraw:
@@ -91,6 +99,8 @@ def _shown(snapshot: dict | None) -> dict | None:
     shown = dict(snapshot)
     if "coins" in _live:
         shown["coins"] = _live["coins"]
+    if "shop" in _live:
+        shown["ads"] = {**snapshot["ads"], "shop": _live["shop"]}
     shift = _live.get("shift")
     if shift:
         shown["clubs"] = [{**club, "trainings": [{**t, "finish": t["finish"] - shift.get(t.get("id"), 0)} for t in club["trainings"]]}
@@ -128,7 +138,9 @@ def _tick_sleep(seconds: float) -> None:
 
 def _summary_data() -> dict:
     return {**_stats, "claimed": COUNTS["claimed"], "started": COUNTS["started"],
-            "upgrades": stadium_module.COUNTS["upgrades"], "signed": sponsors_module.COUNTS["signed"]}
+            "upgrades": stadium_module.COUNTS["upgrades"], "signed": sponsors_module.COUNTS["signed"],
+            "r_login": rewards_module.COUNTS["login"], "r_missions": rewards_module.COUNTS["missions"],
+            "r_videos": rewards_module.COUNTS["videos"]}
 
 
 def _check_fitness(snapshot: dict | None, previous: set[int]) -> set[int]:
@@ -164,6 +176,9 @@ def _shop_ads(dry_run: bool) -> int:
 
     def refresh_coins() -> None:
         _live["coins"] = client.get("user/bosscoinwallet")[1]["amount"]
+        cap = client.get(f"user/caps/actions/{SHOP_ACTION}/0")[1]  # the shop window may have just closed
+        _live["shop"] = {"open": bool(cap.get("isClaimable")) and not cap.get("isCapReached"),
+                         "reopen": cap.get("timestampUntilUnreached") if cap.get("isCapReached") else None}
 
     return run_shop_ads(lambda: is_claimable(client), _counted("shop", lambda: watch_shop_video(client), refresh_coins),
                         dry_run=dry_run, log=_log, sleep=_tick_sleep)
@@ -222,7 +237,7 @@ def _all_ads(dry_run: bool) -> int:
 
 def run_active(dry_run: bool = False, *, claim=run_claim, train=run_train, finish_times=None, slots=None,
                ads=lambda dry_run: _all_ads(dry_run), stadium=lambda confirm: run_stadium(confirm),
-               sponsors=lambda confirm: run_sponsors(confirm), snapshot=None, use_screen: bool | None = None,
+               sponsors=lambda confirm: run_sponsors(confirm), rewards=lambda confirm: run_rewards(confirm), snapshot=None, use_screen: bool | None = None,
                sleep=time.sleep, clock=time.time, rng=random) -> None:
     """Loop until Ctrl+C or the first failure. With ``dry_run`` do one simulated pass and show the board once.
 
@@ -238,9 +253,11 @@ def run_active(dry_run: bool = False, *, claim=run_claim, train=run_train, finis
     last_snapshot = None
     _stats.clear()
     _live.clear()
+    _errors.clear()
     _stats["start"] = clock()
     COUNTS.update(claimed=0, started=0)
     stadium_module.COUNTS["upgrades"] = sponsors_module.COUNTS["signed"] = 0
+    rewards_module.COUNTS.update(login=0, missions=0, videos=0)
     machine = machine_name()
     screen = Screen() if (sys.stdout.isatty() and not dry_run if use_screen is None else use_screen) else None
     _screen_on = screen is not None
@@ -251,7 +268,8 @@ def run_active(dry_run: bool = False, *, claim=run_claim, train=run_train, finis
         current["status"] = status
         if screen:
             size = shutil.get_terminal_size((100, 40))
-            screen.draw(render(_shown(last_snapshot), clock(), status, list(_recent), machine, stats=_summary_data(),
+            problems = [line for when, line in _errors if time.time() - when < ERRORS_SHOWN_FOR]
+            screen.draw(render(_shown(last_snapshot), clock(), status, problems, machine, stats=_summary_data(),
                                rows=size.lines, cols=size.columns))
 
     _redraw = (lambda: draw(current["status"])) if screen else None
@@ -270,11 +288,11 @@ def run_active(dry_run: bool = False, *, claim=run_claim, train=run_train, finis
     _refresh = refresh_board if screen else None
 
     def changed(before: tuple) -> bool:
-        return bool(screen) and (COUNTS["claimed"], COUNTS["started"], stadium_module.COUNTS["upgrades"],
-                                 sponsors_module.COUNTS["signed"]) != before
+        return bool(screen) and counts() != before
 
     def counts() -> tuple:
-        return (COUNTS["claimed"], COUNTS["started"], stadium_module.COUNTS["upgrades"], sponsors_module.COUNTS["signed"])
+        return (COUNTS["claimed"], COUNTS["started"], stadium_module.COUNTS["upgrades"], sponsors_module.COUNTS["signed"],
+                *rewards_module.COUNTS.values())
 
     try:
         _log("Simulação (uma passagem)" if dry_run else "Bot ligado")
@@ -318,6 +336,16 @@ def run_active(dry_run: bool = False, *, claim=run_claim, train=run_train, finis
                         raise
                     except Exception as error:
                         _log(f"Patrocinadores: erro ({error}); volto a tentar")
+                reward_times: list[float] = []
+                if rewards:
+                    try:  # an extra as well: the daily rewards never stop the trainings
+                        rewards_failed, reward_times = _quiet(rewards, not dry_run)
+                        if rewards_failed:
+                            _log(f"Recompensas: {rewards_failed} falha(s); volto a tentar")
+                    except OSError:
+                        raise
+                    except Exception as error:
+                        _log(f"Recompensas: erro ({error}); volto a tentar")
                 if changed(before):
                     refresh_board()
                 if ads:
@@ -336,7 +364,7 @@ def run_active(dry_run: bool = False, *, claim=run_claim, train=run_train, finis
                     _stats["coins0"] = last_snapshot["coins"]
                 events = wake_events(last_snapshot, clock())
                 times = [ts for _, ts in events] or finish_times()
-                times = times + [t for t in stadium_times if t > clock()]
+                times = times + [t for t in stadium_times + reward_times if t > clock()]
                 wait = next_wait(times, clock(), rng.uniform(*JITTER))
                 if ads_failed:
                     wait = min(wait, ADS_RETRY)

@@ -1,4 +1,4 @@
-"""Real browser session for OSM, saved between runs.
+﻿"""Real browser session for OSM, saved between runs.
 
 The session cookies are exported to a file under the owner's home directory
 (never inside the repo, never committed) and loaded again on the next run. A
@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import base64
 import json
+import re
 import time
 from datetime import datetime, timezone
 from pathlib import Path
@@ -300,34 +301,93 @@ def inspect_network(state_file: Path = STATE_FILE, url: str = HOME_URL) -> None:
     print(f"\n(+ {len(others)} hosts de terceiros ignorados: anuncios/analytics)")
 
 
-def inspect_writes(state_file: Path = STATE_FILE, url: str = HOME_URL) -> None:
+INSPECT_LOG = STATE_FILE.parent / "inspect-writes.log"  # outside the repo, next to the session
+SENSITIVE_NAMES = re.compile(r"token|pass|secret|auth|cookie|session|key|mail|phone|birth", re.I)
+STATE_PATHS = re.compile(r"mission|login|reward|streak|track", re.I)  # GETs worth a look at (shape + short values)
+
+
+def _view(value, name: str = "", depth: int = 4):
+    """Like ``_shape`` but SHOWS short scalar values (at most 40 characters), except for fields whose name
+    looks personal or secret (token, password, cookie, e-mail...). For discovery of reward/claim requests."""
+    if isinstance(value, dict):
+        return {k: _view(v, k, depth - 1) if depth > 0 else "..." for k, v in value.items()}
+    if isinstance(value, list):
+        if not value or depth <= 0:
+            return []
+        if len(value) <= 12:  # short lists (the 8 weekly missions...) are shown in full
+            return [_view(item, name, depth - 1) for item in value]
+        return [f"{len(value)} items", _view(value[0], name, depth - 1)]
+    if SENSITIVE_NAMES.search(name) or isinstance(value, str) and len(value) > 40:
+        return type(value).__name__
+    return value
+
+
+def _body_view(text: str, content_type: str):
+    """``_view`` of a JSON or form-encoded body; None if unreadable."""
+    try:
+        if "json" in content_type or text.lstrip().startswith(("{", "[")):
+            return _view(json.loads(text))
+        return {k: ("str" if SENSITIVE_NAMES.search(k) or len(v[0]) > 40 else v[0])
+                for k, v in parse_qs(text, keep_blank_values=True).items()}
+    except ValueError:
+        return None
+
+
+def inspect_writes(state_file: Path = STATE_FILE, url: str = HOME_URL, log_file: Path = INSPECT_LOG) -> None:
     """Discovery: list the requests that CHANGE something (POST/PUT/PATCH/DELETE) while the owner plays.
 
-    The owner performs the action by hand in the window; this only watches. Prints
-    method, URL without query string, status, header NAMES, and the body shape
-    (field names and types, never values) of request and response.
+    The owner performs the action by hand in the window; this only watches. For each write it shows
+    the time, method, URL without query string, status, header NAMES, and the request and response
+    bodies with short values visible (never for token/password/cookie-like fields). It also notes the
+    reads (GET) in between, with the body of the ones about missions/login/rewards, so the state
+    endpoints show up too. Everything is appended to ``log_file`` AS IT HAPPENS, so nothing is lost if
+    the window is closed in a hurry; the whole list is printed again at the end.
     """
     if not state_file.exists():
         raise SystemExit("Sem sessao guardada. Corre primeiro: osmbot login")
     found: list[str] = []
+    last_get: list[str] = [""]
+    log_file.parent.mkdir(parents=True, exist_ok=True)
+    with log_file.open("a", encoding="utf-8") as handle:
+        handle.write(f"\n### {datetime.now():%Y-%m-%d %H:%M:%S} inspect-writes\n")
+
+    def record(entry: str) -> None:
+        stamped = f"[{datetime.now():%H:%M:%S}] {entry}"
+        found.append(stamped)
+        with log_file.open("a", encoding="utf-8") as handle:
+            handle.write(stamped + "\n")
+            handle.flush()
 
     def on_response(response) -> None:
         try:
             request = response.request
             host = urlsplit(response.url).hostname or ""
             address = response.url.split("?")[0]
-            if request.method == "GET" or not host.endswith(_OSM_HOSTS) or address.endswith("/api/tokenRefresh"):
+            if not host.endswith(_OSM_HOSTS) or address.endswith("/api/tokenRefresh"):
+                return
+            res_type = response.headers.get("content-type", "")
+            if request.method == "GET":
+                if "/api/" not in address or address == last_get[0]:
+                    return
+                last_get[0] = address
+                detail = ""
+                if STATE_PATHS.search(address):
+                    try:
+                        detail = f"\n  resposta: {_body_view(response.text(), res_type)}"
+                    except Exception:
+                        pass
+                record(f"(leitura) GET {address} -> {response.status}{detail}")
                 return
             req_type = request.headers.get("content-type", "?")
             try:
-                res_shape = _body_shape(response.text(), response.headers.get("content-type", ""))
+                res_view = _body_view(response.text(), res_type)
             except Exception:
-                res_shape = None
-            found.append(
-                f"{request.method} {address} -> {response.status}\n"
+                res_view = None
+            record(
+                f"ESCRITA {request.method} {address} -> {response.status}\n"
                 f"  cabecalhos: {sorted(request.headers)}\n"
-                f"  pedido  [{req_type}]: {_body_shape(request.post_data or '', req_type)}\n"
-                f"  resposta: {res_shape}"
+                f"  pedido  [{req_type}]: {_body_view(request.post_data or '', req_type)}\n"
+                f"  resposta: {res_view}"
             )
         except Exception:
             pass  # never let a bad event break the session
@@ -335,8 +395,9 @@ def inspect_writes(state_file: Path = STATE_FILE, url: str = HOME_URL) -> None:
     _run_session(
         state_file,
         url,
-        "Faz as acoes que queres que o bot aprenda (recolher UM treino, pôr UM jogador a treinar). Depois FECHA a janela.",
+        f"Faz as acoes que queres que o bot aprenda, UMA A UMA e por ordem. Depois FECHA a janela.\n(Tudo fica gravado em {log_file} enquanto fazes.)",
         on_context=lambda context: context.on("response", on_response),
     )
-    print("\n== Pedidos que escrevem (por ordem) ==")
-    print("\n".join(found) or "(nenhum pedido de escrita observado)")
+    print("\n== Pedidos observados (por ordem) ==")
+    print("\n".join(found) or "(nenhum pedido observado)")
+    print(f"\nGravado em {log_file}")

@@ -29,6 +29,11 @@
 - **Patrocinadores** — 4 slots, contratos de 2–3 jogos, ~200k por jogo por slot.
 - **Médico / advogado** — curam lesões / reduzem suspensões (mínimo 1 jogo); custos residuais.
 
+- **Inventário** — onde ficam os itens ganhos (recompensas de missões, de vídeos acumulados, etc.), cada tipo com um limite do jogo (`inventoryLimit`). O bot só os guarda: usá-los (escolher jogador ou posição) é decisão do dono.
+- **Recompensa de início de sessão** — uma por dia, com sequência de dias seguidos (energia, boss coins, e um saco no dia 21). A **energia** parece ser de outro modo de jogo (o dono não a usa).
+- **Missões diárias e prémio do dia** — 3 missões por dia (p. ex. treinar um jogador, um médio, um guarda-redes); reclamadas as 3, abre-se o prémio do dia da faixa semanal de 7 dias. O jogo pergunta "guardar" (inventário) ou "usar já"; o bot escolhe sempre guardar. Os dias mudam às 04:00 UTC.
+- **Troca de posição (Switch)** — item que se ganha a cada 10 vídeos (contador de vídeos acumulados); fica no inventário.
+
 ## Termos do bot
 
 - **Modo ativo** — `osmbot ativo`: o bot fica a correr e trabalha sozinho (treinos, vídeos, avisos) até se parar com Ctrl+C.

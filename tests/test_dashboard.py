@@ -87,8 +87,23 @@ def test_board_has_no_next_line_and_says_transfer_list():
 
 
 def test_there_is_no_videos_line_any_more():
-    text = render(snapshot(), NOW, "ATIVO", [], "Windows", colour=False)
-    assert "Vídeos:" not in text and "loja" not in text
+    assert "Vídeos:" not in render(snapshot(), NOW, "ATIVO", [], "Windows", colour=False)
+
+
+def test_boss_coins_line_shows_when_the_shop_videos_come_back():
+    closed = snapshot()
+    closed["ads"]["shop"] = {"open": False, "reopen": NOW + 1800}
+    line = next(l for l in render(closed, NOW, "ATIVO", [], "Windows", colour=False).split("\n") if "Boss coins" in l)
+    assert "loja █" in line and "0h30" in line  # half of the hour gone: a half-full little bar
+    open_line = next(l for l in render(snapshot(), NOW, "ATIVO", [], "Windows", colour=False).split("\n") if "Boss coins" in l)
+    assert "loja" not in open_line  # videos available: nothing to count down
+
+
+def test_board_shows_no_log_area_unless_there_are_problems():
+    quiet = render(snapshot(), NOW, "ATIVO", [], "Windows", colour=False)
+    assert "(sem eventos)" not in quiet and not quiet.rstrip().endswith("─")
+    loud = render(snapshot(), NOW, "ATIVO", ["12:00:00 Vídeos: erro (x)"], "Windows", colour=True)
+    assert "Vídeos: erro (x)" in loud and "\x1b[31m12:00:00 Vídeos: erro (x)" in loud  # in red
 
 
 def test_tired_starters_take_one_line_for_the_club():
@@ -176,3 +191,59 @@ def test_stadium_bar_is_on_the_same_line_as_the_parts():
     line = next(line for line in text.split("\n") if "estádio" in line)
     assert "Treinos 3/3 √" in line and "Campo 0/3 " in line and "█" in line and "9h00" in line and "Capacidade 0/3" in line
     assert "a construir" not in text
+
+
+def daily(**changes):
+    base = {"login": {"claimable": False, "day": 16, "renews": NOW + 3600 * 16.5},
+            "missions": {"claimed": 3, "total": 3, "day_pending": False},
+            "videos": {"count": 7, "threshold": 10, "claimable": False, "reopen": None}}
+    base.update(changes)
+    return base
+
+
+def below_coins(text, count):
+    lines = text.split("\n")
+    first = next(i for i, line in enumerate(lines) if "Boss coins" in line)
+    return lines[first + 1:first + 1 + count]
+
+
+def test_daily_rewards_take_two_lines_under_the_boss_coins():
+    text = render(snapshot(daily=daily()), NOW, "ATIVO", [], "Windows", colour=False)
+    first, second = below_coins(text, 2)
+    for expected in ("início de sessão √ (dia 16)", "missões 3/3 √", "prémio do dia √", "novo dia em 16h30"):
+        assert expected in first
+    assert "troca de posição" in second and "7/10" in second and "█" in second and "reabre" not in second
+
+
+def test_daily_rewards_say_what_is_still_to_claim():
+    pending = daily(login={"claimable": True, "day": 16, "renews": NOW + 3600},
+                    missions={"claimed": 3, "total": 3, "day_pending": True},
+                    videos={"count": 10, "threshold": 10, "claimable": True, "reopen": None})
+    first, second = below_coins(render(snapshot(daily=pending), NOW, "ATIVO", [], "Windows", colour=False), 2)
+    assert "início de sessão por reclamar" in first and "prémio do dia por reclamar" in first
+    assert "troca de posição por reclamar" in second
+
+
+def test_daily_rewards_wait_for_the_dailies_and_show_when_the_videos_come_back():
+    waiting = daily(missions={"claimed": 1, "total": 3, "day_pending": False},
+                    videos={"count": 0, "threshold": 10, "claimable": False, "reopen": NOW + 3600 * 11.7})
+    first, second = below_coins(render(snapshot(daily=waiting), NOW, "ATIVO", [], "Windows", colour=False), 2)
+    assert "missões 1/3" in first and "√" not in first.split("missões")[1].split("·")[0] and "prémio do dia -" in first
+    assert "0/10" in second and "reabre em 11h42" in second
+
+
+def test_daily_rewards_collapse_to_one_line_when_space_is_short_and_vanish_without_data():
+    from osmbot.game.dashboard import _render
+
+    short = _render(snapshot(daily=daily()), NOW, "ATIVO", [], "Windows", False, None, 2, 100)
+    line = below_coins(short, 1)[0]
+    assert "início √" in line and "posição" in line and "novo dia 16h30" in line
+    assert len(line) < 100
+    plain = render(snapshot(), NOW, "ATIVO", [], "Windows", colour=False)
+    assert "diárias" not in plain and "troca de posição" not in plain
+
+
+def test_the_bot_wakes_when_a_new_day_starts_and_when_the_videos_reopen():
+    snap = snapshot(daily=daily(videos={"count": 0, "threshold": 10, "claimable": False, "reopen": NOW + 5000}))
+    events = dict(wake_events(snap, NOW))
+    assert events["novo dia"] == NOW + 3600 * 16.5 and events["vídeos acumulados reabrem"] == NOW + 5000

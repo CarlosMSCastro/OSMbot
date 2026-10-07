@@ -33,6 +33,9 @@ RED, BLUE, BOLD = "\x1b[31m", "\x1b[36m", "\x1b[1m"  # the console's "cyan" is t
 SPONSOR_SLOTS = 4
 STADIUM_NAMES = {2: "Treinos", 1: "Campo", 0: "Capacidade"}
 STADIUM_BAR_WIDTH = 14
+VIDEOS_BAR_WIDTH = 10
+SHOP_BAR_SECONDS = 3600  # the wait after the shop videos run out is 1h (confirmed by the owner, WORKLOG)
+SHOP_BAR_WIDTH = 10
 ANSI = re.compile(r"(\x1b\[[0-9;]*m)")
 
 
@@ -97,7 +100,9 @@ def collect(client) -> dict:
         ads[key] = {"open": bool(cap.get("isClaimable")) and not cap.get("isCapReached"),
                     "reopen": cap.get("timestampUntilUnreached") if cap.get("isCapReached") else None}
     ads["money"] = money_state(client)
-    return {"coins": wallet.get("amount"), "clubs": clubs, "ads": ads}
+    from osmbot.game.rewards import daily_state
+
+    return {"coins": wallet.get("amount"), "clubs": clubs, "ads": ads, "daily": daily_state(client)}
 
 
 def wake_events(snapshot: dict | None, now: float) -> list[tuple[str, float]]:
@@ -115,6 +120,13 @@ def wake_events(snapshot: dict | None, now: float) -> list[tuple[str, float]]:
         reopen = (snapshot["ads"].get(key) or {}).get("reopen")
         if reopen and reopen > now:
             events.append((label, reopen))
+    daily = snapshot.get("daily") or {}
+    renews = (daily.get("login") or {}).get("renews")
+    if renews and renews > now:
+        events.append(("novo dia", renews))
+    reopen = (daily.get("videos") or {}).get("reopen")
+    if reopen and reopen > now:
+        events.append(("vídeos acumulados reabrem", reopen))
     return sorted(events, key=lambda e: e[1])
 
 
@@ -140,7 +152,8 @@ def summary_lines(snapshot: dict | None, stats: dict | None, now: float, full: b
     if jump is not None:
         head += f": salto {jump:+d} boss coins"
     return [head, f"  {videos} · treinos: {stats.get('claimed', 0)} recolhidos, {stats.get('started', 0)} postos"
-                  f" · estádio {stats.get('upgrades', 0)} · patrocinadores {stats.get('signed', 0)}"]
+                  f" · estádio {stats.get('upgrades', 0)} · patrocinadores {stats.get('signed', 0)}"
+                  f" · recompensas: início {stats.get('r_login', 0)}, missões {stats.get('r_missions', 0)}, vídeos acumulados {stats.get('r_videos', 0)}"]
 
 
 def summary_text(snapshot: dict | None, stats: dict | None, now: float) -> str:
@@ -172,6 +185,46 @@ def _clip(text: str, width: int) -> str:
         out.append(piece[:max(room, 0)])
         visible += min(len(piece), max(room, 0))
     return "".join(out) + (RESET if ANSI.search(text) else "") + "…"
+
+
+def daily_lines(daily: dict | None, now: float, level: int, paint, painted_bar, width: int = WIDTH) -> list[str]:
+    """The daily rewards (login, missions, day reward, accumulated videos): two lines, one shorter line when space is short."""
+    if not daily:
+        return []
+    short = level >= 2
+    done, todo, wait = (lambda text: paint(text, GREEN)), (lambda text: paint(text, YELLOW)), (lambda text: paint(text, GREY))
+    parts = []
+    login = daily.get("login")
+    name = "início" if short else "início de sessão"
+    if login:
+        parts.append(todo(f"{name} por reclamar") if login["claimable"] else done(f"{name} √" + ("" if short else f" (dia {login['day']})")))
+    missions = daily.get("missions")
+    if missions and missions["total"]:
+        finished = missions["claimed"] >= missions["total"]
+        parts.append((done if finished else todo)(f"missões {missions['claimed']}/{missions['total']}" + (" √" if finished else "")))
+        prize = "prémio" if short else "prémio do dia"
+        parts.append(todo(f"{prize} por reclamar") if missions["day_pending"] else (done(f"{prize} √") if finished else wait(f"{prize} -")))
+    renews = (login or {}).get("renews")
+    new_day = paint(("novo dia " if short else "novo dia em ") + span(renews - now), BLUE) if renews and renews > now else ""
+    videos = daily.get("videos")
+    video = ""
+    if videos:
+        label = "posição" if short else "troca de posição"
+        total = max(1, videos["threshold"])
+        video = f"{label} " + painted_bar(total - videos["count"], total, VIDEOS_BAR_WIDTH) + f" {videos['count']}/{videos['threshold']}"
+        if videos["claimable"]:
+            video = todo(f"{label} por reclamar")
+        elif videos.get("reopen") and videos["reopen"] > now and not short:
+            video += " " + paint(f"reabre em {span(videos['reopen'] - now)}", BLUE)
+    if short:
+        joined = " · ".join(x for x in (" · ".join(parts), video, new_day) if x)
+        return [_clip(" " + joined, width)] if joined else []
+    rows = []
+    if parts:
+        rows.append(_clip(" " + paint("diárias".ljust(LABEL), GREY) + " · ".join(parts) + ("  " + new_day if new_day else ""), width))
+    if video:
+        rows.append(_clip(" " + paint("extra".ljust(LABEL), GREY) + video, width))
+    return rows
 
 
 def _render(snapshot: dict | None, now: float, status: str, recent: list[str], machine: str, colour: bool,
@@ -256,20 +309,24 @@ def _render(snapshot: dict | None, now: float, status: str, recent: list[str], m
         jump = coin_jump(snapshot, stats)
         if jump is not None:
             coins += "  " + paint(f"{jump:+d}", BOLD + (GREEN if jump > 0 else RED if jump < 0 else GREY))
-        lines += [*foot_gap, coins]
+        shop = snapshot["ads"].get("shop") or {}
+        reopen = shop.get("reopen")
+        if not shop.get("open") and reopen and reopen > now:  # videos available: the bot is watching them, no bar
+            coins += ("    " + paint("loja", GREY) + " " + painted_bar(reopen - now, SHOP_BAR_SECONDS, SHOP_BAR_WIDTH)
+                      + " " + paint(span(reopen - now), BLUE))
+        lines += [*foot_gap, coins, *daily_lines(snapshot.get("daily"), now, level, paint, painted_bar, width)]
     summary = summary_lines(snapshot, stats, now)
     if summary:
         lines += [*foot_gap, *[paint(_clip(" " + line, width), GREY) for line in summary]]
-    lines.append(" " + rule)
+    if recent:  # the board only shows problems; everything else is in the log file
+        def log_colour(line: str) -> str:
+            body = line[9:].lstrip().lower()
+            if "erro" in body or "falha" in body or body.startswith("parou"):
+                return paint(line, RED)
+            return paint(line, YELLOW if body.startswith(("!", "aviso")) else GREY)
 
-    def log_colour(line: str) -> str:
-        body = line[9:].lstrip()
-        if body.startswith(("Parou", "Vídeos:", "Estádio:", "Patrocinadores:")) and "erro" in body or body.startswith("Parou"):
-            return paint(line, RED)
-        return paint(line, YELLOW if body.startswith(("!", "AVISO")) else GREY)
-
-    keep = {0: 5, 1: 3, 2: 3}.get(level, 2)
-    lines += [_clip(" " + log_colour(line), width) for line in recent[-keep:]] or [paint(" (sem eventos)", GREY)]
+        keep = {0: 5, 1: 3, 2: 3}.get(level, 2)
+        lines += [" " + rule, *[_clip(" " + log_colour(line), width) for line in recent[-keep:]]]
     return "\n".join(lines)
 
 

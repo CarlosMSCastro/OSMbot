@@ -6,6 +6,27 @@ Este ficheiro é o **histórico de versões, para quem lê o repo**. O diário i
 
 ## [Por lançar]
 
+## [0.8.0] — 2026-10-07
+
+O bot passa a reclamar sozinho as **recompensas diárias**, no modo ativo (D-020), e o quadro e o menu ficam mais completos. Pedidos das recompensas observados com o dono (`inspect-writes`); **as recompensas ainda não foram corridas em real** (primeiro teste: o início de sessão e o prémio de amanhã).
+
+### Adicionado
+- **Início de sessão:** reclama quando disponível e gasta a recompensa na carteira certa, como o site faz (energia, boss coins). O saco do dia 21 fica no inventário.
+- **Missões:** reclama as 3 diárias quando chegam ao objetivo e depois **o prémio do dia de hoje**, sempre **"guardar"** (fica no inventário; o bot nunca usa itens). No máximo um prémio do dia por dia; nunca o de amanhã.
+- **Vídeos acumulados:** reclama a "troca de posição" (10 vídeos) para o inventário.
+- Respeita os limites do inventário do jogo; o que o jogo recusar não se repete.
+- **Quadro:** duas linhas novas por baixo das Boss coins (`diárias`: início de sessão, missões, prémio do dia, novo dia em…; `extra`: troca de posição com barra 7/10 e quando reabre). O bot acorda quando começa um novo dia e quando os vídeos reabrem. Atualiza logo a seguir a cada reclamação.
+- Comando `osmbot recompensas` (`--simular` mostra o plano sem escrever).
+- **`inspect-writes` (descoberta) mais seguro e completo:** grava cada pedido em `~/.osmbot/inspect-writes.log` à medida que acontece, mostra valores curtos dos campos (nunca de tokens, palavras-passe, cookies ou e-mails), a hora e também as leituras (GET) de missões/início de sessão/recompensas.
+
+### Alterado
+- **Linha das Boss coins:** mostra quando a loja reabre, com uma barra pequena (`loja ██████░░░░ 0h32`; a espera é de 1 h, confirmada). Enquanto há vídeos para ver não mostra nada (o bot vai vendo-os).
+- **Quadro sem registo:** só aparecem os erros (a vermelho, durante 30 min). Tudo o resto fica no `bot.log`.
+- `tools/build_portable.py` esvazia a pasta do dist em vez de a apagar: um terminal aberto lá dentro já não bloqueia o build.
+
+### Corrigido
+- **Vídeo de treino (e de dinheiro) "não encontrado":** depois de uma ronda o jogo mostra o ecrã "Matchday … Continue" por cima do clube, a esconder os menus; o bot não o fechava e dava erro (visto nas capturas em `~/.osmbot/failures`). Agora carrega em "Continue" (como se faz à mão; no máximo 3 vezes) assim que o jogo abre, em todas as tarefas do browser (loja, treino e dinheiro), e outra vez depois de entrar no clube. **Ainda não testado em real.**
+
 ## [0.7.1] — 2026-10-07
 
 Acabamento do menu e do quadro da consola.

@@ -75,6 +75,10 @@ O bot vê anúncios **sempre a respeitar os limites do próprio jogo** (nunca ex
 Sem ficheiro `LICENSE`. O repo fica público e visível, mas sem autorização legal para terceiros copiarem/reutilizarem/redistribuírem o código. Adicionado disclaimer de risco em `README.md`.
 **Porquê:** o dono não está preocupado com apropriação de ideias (baixa visibilidade do seu GitHub), mas o bot é para uso **só dele** (D-002); "sem licença" é mais coerente com essa intenção do que MIT, que convidaria à redistribuição como ferramenta. Diferença prática pequena — o risco de ban (D-004) depende do que o dono corre contra o OSM, não da licença do código.
 
+### D-020 · Recompensas diárias automáticas (início de sessão, missões, vídeos acumulados) · Aceite · 2026-10-07
+O bot reclama sozinho, no modo ativo: a recompensa de início de sessão, as 3 missões diárias e a recompensa do dia (**sempre "guardar"**, nunca gasta), e a recompensa dos vídeos acumulados (também para o inventário). Regras em `THEORY.md` §17. Passam para o nível "autónomo com o bot ativo" da regra 5 (D-014), juntamente com `recolher` e `treinar`. Nunca se usam itens do inventário.
+**Porquê:** pedido do dono, depois de ver os pedidos reais (`inspect-writes`, 2026-10-07) e de aceitar o risco (D-004). São cliques que o dono já dá à mão, dentro dos limites do jogo.
+
 ## Em aberto
 
 | ID | Decisão | Depende de | Notas |

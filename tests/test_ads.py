@@ -145,3 +145,69 @@ def test_money_videos_stop_when_the_game_closes_the_limit():
     assert count == 2 and seen == ["A", "A"]
     assert ads.run_money_ads(lambda: True, lambda: "A", watch, dry_run=True, log=lambda m: None, rng=Rng()) == 0
     assert ads.run_money_ads(lambda: True, lambda: "A", watch, log=lambda m: None, rng=Rng(roll=0.99)) == 0
+
+
+class _Locator:
+    def __init__(self, page):
+        self.page = page
+        self.first = self
+
+    def filter(self, **kwargs):
+        return self
+
+    def count(self):
+        return 1 if self.page.screens else 0
+
+    def click(self, timeout=None):
+        self.page.screens -= 1
+        self.page.clicks += 1
+
+
+class _Page:
+    """A page that shows `screens` "Continue" screens one after the other."""
+
+    def __init__(self, screens):
+        self.screens, self.clicks = screens, 0
+
+    def get_by_text(self, pattern):
+        assert pattern.match("Continue") and not pattern.match("Continue training")
+        return _Locator(self)
+
+    def wait_for_timeout(self, ms):
+        pass
+
+
+def test_the_matchday_screen_is_dismissed_before_the_club_is_used():
+    from osmbot.game.ads import _dismiss_matchday
+
+    page = _Page(screens=1)
+    _dismiss_matchday(page)
+    assert page.clicks == 1 and page.screens == 0
+
+
+def test_nothing_is_clicked_when_there_is_no_matchday_screen():
+    from osmbot.game.ads import _dismiss_matchday
+
+    page = _Page(screens=0)
+    _dismiss_matchday(page)
+    assert page.clicks == 0
+
+
+def test_it_never_clicks_continue_forever():
+    from osmbot.game.ads import MAX_CONTINUES, _dismiss_matchday
+
+    page = _Page(screens=50)
+    _dismiss_matchday(page)
+    assert page.clicks == MAX_CONTINUES
+
+
+def test_every_browser_job_starts_by_getting_past_the_continue_screen():
+    from osmbot.game.ads import _open_game
+
+    class Page(_Page):
+        def goto(self, url):
+            self.opened = url
+
+    page = Page(screens=2)
+    _open_game(page)
+    assert page.opened.startswith("https://en.onlinesoccermanager.com") and page.clicks == 2

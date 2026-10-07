@@ -69,7 +69,7 @@ Nao instala nada. Copia esta pasta para onde quiseres.
 
 Abre o  OSMbot.exe  (duplo clique). Aparece um menu na consola:
 
-  1  Iniciar   (treinos, estadio, patrocinadores, videos, avisos)   Ctrl+C para parar
+  1  Iniciar   (treinos, estadio, patrocinadores, videos, recompensas diarias, avisos)   Ctrl+C para parar
   2  Login: abre o Firefox. Entra com o Facebook e FECHA a janela.
   0  Sair
 
@@ -138,10 +138,11 @@ def build_installer(icon: Path) -> None:
 def build(make_zip: bool, make_installer: bool = False, icon: Path = ICON) -> None:
     if sys.platform != "win32":
         raise SystemExit("Este script constroi a versao Windows; corre-o no Windows.")
-    if OUT.exists():
-        shutil.rmtree(OUT)
+    if OUT.exists():  # empty the folder instead of deleting it: a terminal opened inside it would block the delete
+        for child in OUT.iterdir():
+            shutil.rmtree(child) if child.is_dir() else child.unlink()
     app_dir = OUT / "app"
-    OUT.mkdir(parents=True)
+    OUT.mkdir(parents=True, exist_ok=True)
 
     print("1/5 Python embutido")
     with zipfile.ZipFile(fetch_embedded_python()) as archive:

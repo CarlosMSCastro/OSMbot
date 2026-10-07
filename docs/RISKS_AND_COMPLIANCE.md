@@ -35,9 +35,9 @@ Consequência para o utilizador: **conta banida e itens/moedas perdidos.** Um re
 
 ## Postura de risco — **decidida (D-004, emendada)**
 
-O dono aceita o risco de ban em A3 (treinos, transferências) e A4 (anúncios) **na conta principal**, sem conta descartável. O contacto com o jogo segue a regra 5 do `CLAUDE.md` por níveis (D-014): leitura livre; `recolher`/`treinar` e os vídeos autónomos só com o bot ativo; escritas novas (vender, comprar, outros) pedem OK sempre.
+O dono aceita o risco de ban em A3 (treinos, transferências) e A4 (anúncios) **na conta principal**, sem conta descartável. O contacto com o jogo segue a regra 5 do `CLAUDE.md` por níveis (D-014): leitura livre; `recolher`/`treinar`, os vídeos e as recompensas diárias (D-020: só reclamam e guardam no inventário) autónomos só com o bot ativo; escritas novas (vender, comprar, outros) pedem OK sempre.
 
-Medidas em vigor no código: nunca exceder os limites do jogo (lidos de `user/caps/actions/...`), saltar ~35% das janelas de vídeo, pausas e despertares com aleatoriedade, parar à primeira falha de escrita, nunca chamar `videos/watched` (é a página que o faz), nunca clicar em botões que gastam boss coins.
+Medidas em vigor no código: nunca exceder os limites do jogo (lidos de `user/caps/actions/...`), saltar ~35% das janelas de vídeo, pausas e despertares com aleatoriedade, parar à primeira falha de escrita, nunca chamar `videos/watched` (é a página que o faz), nunca clicar em botões que gastam boss coins, nunca usar itens do inventário, só reclamar o prémio do dia de hoje (no máximo um por dia) e não reclamar o que ultrapassaria os limites do inventário.
 
 ## Publicação pública do repo e dos instaladores (D-016, 2026-10-05)
 

@@ -6,6 +6,7 @@ import sys
 
 from osmbot.game.client import run_probe
 from osmbot.game.loop import run_active
+from osmbot.game.rewards import run_rewards
 from osmbot.game.slots import run_slots
 from osmbot.game.sponsors import run_sponsors
 from osmbot.game.stadium import run_stadium
@@ -41,6 +42,7 @@ def main(argv: list[str] | None = None) -> None:
     for name, text in (
         ("recolher", "Collect finished trainings. Writes to the game; add --simular to only show what it would do."),
         ("estadio", "Start the next stadium upgrade where a club is free. Writes to the game; add --simular to only show what it would do."),
+        ("recompensas", "Claim the daily rewards (login, missions, accumulated videos; kept in the inventory). Writes to the game; add --simular to only show what it would do."),
         ("patrocinadores", "Fill free sponsor slots with the best-paying offers. Writes to the game; add --simular to only show what it would do."),
         ("treinar", "Start trainings in free slots by the owner's policy. Writes to the game; add --simular to only show the plan."),
     ):
@@ -93,6 +95,10 @@ def main(argv: list[str] | None = None) -> None:
         run_train(not args.simular, args.max)
     elif args.command == "estadio":
         failed, _ = run_stadium(not args.simular)
+        if failed:
+            raise SystemExit(1)
+    elif args.command == "recompensas":
+        failed, _ = run_rewards(not args.simular)
         if failed:
             raise SystemExit(1)
     elif args.command == "patrocinadores":

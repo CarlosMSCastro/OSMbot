@@ -183,3 +183,72 @@ def test_a_training_video_shortens_the_shown_finish_time_at_once():
     assert snapshot["clubs"][0]["trainings"][0]["finish"] == 50_000.0  # the snapshot itself is untouched
     assert loop._stats["shortened"] == {7: 7200}
     loop._live.clear()
+
+
+def test_only_problems_are_kept_for_the_board():
+    loop._errors.clear()
+    for message in ("Loja: vídeo 1", "Treino: sem sessões com 2h ou mais", "Real Betis: 4 treino(s) a iniciar",
+                    "Vídeos: erro (training_ads: x); volto a tentar", "Estádio: 2 falha(s); volto a tentar", "Parou: sem rede"):
+        loop._log(message)
+    kept = [line for _, line in loop._errors]
+    assert len(kept) == 3 and "Vídeos: erro" in kept[0] and "falha" in kept[1] and "Parou" in kept[2]
+    loop._errors.clear()
+
+
+def _quick_loop(**kwargs):
+    state = {"t": 1_000_000.0, "passes": 0}
+
+    def train(confirm):
+        state["passes"] += 1
+        return 0 if state["passes"] < 3 else 1  # third pass: stop the loop
+
+    with pytest.raises(SystemExit):
+        loop.run_active(claim=lambda c: 0, train=train, finish_times=lambda: [], ads=None, stadium=None, sponsors=None,
+                        sleep=lambda s: state.__setitem__("t", state["t"] + s), clock=lambda: state["t"], rng=FixedRng(), **kwargs)
+
+
+def test_the_daily_rewards_run_on_every_pass_and_their_failures_never_stop_the_trainings():
+    seen = []
+
+    def rewards(confirm):
+        seen.append(confirm)
+        return 2, []
+
+    _quick_loop(rewards=rewards, snapshot=lambda: {"coins": 1, "clubs": [], "ads": {}}, use_screen=False)
+    assert seen == [True, True]
+    assert "Recompensas: 2 falha(s)" in loop.LOG_FILE.read_text(encoding="utf-8")
+
+
+def test_a_crash_in_the_daily_rewards_is_logged_and_the_loop_goes_on():
+    def rewards(confirm):
+        raise ValueError("boom")
+
+    _quick_loop(rewards=rewards, snapshot=lambda: {"coins": 1, "clubs": [], "ads": {}}, use_screen=False)
+    assert "Recompensas: erro (boom)" in loop.LOG_FILE.read_text(encoding="utf-8")
+
+
+def test_the_board_is_refreshed_right_after_a_reward_is_claimed():
+    state = {"snapshots": 0, "at_ads": None}
+
+    def rewards(confirm):
+        loop.rewards_module.COUNTS["login"] += 1
+        return 0, []
+
+    def ads(dry_run):
+        state["at_ads"] = state["snapshots"]
+
+    def snap():
+        state["snapshots"] += 1
+        return {"coins": 1, "clubs": [], "ads": {}}
+
+    clock = {"t": 1_000_000.0, "passes": 0}
+
+    def train(confirm):
+        clock["passes"] += 1
+        return 0 if clock["passes"] < 2 else 1
+
+    with pytest.raises(SystemExit):
+        loop.run_active(claim=lambda c: 0, train=train, finish_times=lambda: [], ads=ads, snapshot=snap, stadium=None, sponsors=None,
+                        rewards=rewards, use_screen=True, sleep=lambda s: clock.__setitem__("t", clock["t"] + s),
+                        clock=lambda: clock["t"], rng=FixedRng())
+    assert state["at_ads"] == 2  # the first look plus the refresh after the claim, both before the videos

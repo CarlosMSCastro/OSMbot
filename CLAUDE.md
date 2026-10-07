@@ -42,7 +42,7 @@ Regra: **cada regra do código tem de estar em `THEORY.md`**. Se o código preci
 4. **Factos vs. hipóteses:** em `DISCOVERY.md` marcar cada afirmação como *Verificado* (visto por nós), *Reportado* (fonte de terceiros) ou *Hipótese*. Não promover sem verificar.
 5. **Contacto com o jogo real, por níveis (D-014, 2026-10-05).** Ver `RISKS_AND_COMPLIANCE.md`.
    - **Livre (só leitura):** `status`, `treinos`, `probe`, GETs. Posso correr sem perguntar, desde que a sessão já exista. O login é sempre feito pelo dono (interativo).
-   - **Autónomo, só com o bot "ativo":** `recolher` e `treinar` (escritas já observadas e testadas), sem `--max`, sem pedir confirmação. "Ativo" = o dono disse nessa sessão que o bot está a trabalhar. **Em modo de desenvolvimento (por omissão) não executo escritas na conta**; só simulação ou testes.
+   - **Autónomo, só com o bot "ativo":** `recolher`, `treinar` e `recompensas` (início de sessão, missões, vídeos acumulados; D-020; só reclamam e guardam no inventário, nunca usam itens) (escritas já observadas e testadas), sem `--max`, sem pedir confirmação. "Ativo" = o dono disse nessa sessão que o bot está a trabalhar. **Em modo de desenvolvimento (por omissão) não executo escritas na conta**; só simulação ou testes.
    - **Pede OK sempre:** qualquer escrita nova, nunca observada (vender, comprar, anúncios) e tudo o que o jogo possa tratar como abuso. Nunca exceder os limites do próprio jogo; nunca forjar recompensas (regra 8).
    - Segredos continuam a ser regra 6, sem exceção.
 6. **Segredos:** nunca escrever credenciais, cookies, tokens, HARs ou dumps de sessão em ficheiros versionados. Vão para `.env*` / pastas ignoradas (ver `.gitignore`). O repo vai ser público no GitHub.
