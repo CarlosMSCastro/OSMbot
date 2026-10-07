@@ -19,6 +19,7 @@ from collections import deque
 from datetime import datetime
 from pathlib import Path
 
+from osmbot import logs as repo_log
 from osmbot.game.ads import (SHOP_ACTION, TRAINING_ACTION, VIDEO_SAVES, AdsError, is_claimable, money_state, pick_money_club, run_money_ads,
                              run_shop_ads, run_training_ads, watch_money_video, watch_shop_video, watch_training_video)
 from osmbot.game.dashboard import Screen, collect, machine_name, render, span, summary_text, wake_events
@@ -70,6 +71,7 @@ def _log(message: str) -> None:
     LOG_FILE.parent.mkdir(parents=True, exist_ok=True)
     with LOG_FILE.open("a", encoding="utf-8") as handle:
         handle.write(f"{now:%Y-%m-%d %H:%M:%S}  {message}" + chr(10))
+    repo_log.write(now, message)  # the same line in the repo, to read from any machine (D-022)
     line = f"{now:%H:%M:%S} {message.lstrip(chr(7))}"
     _recent.append(line)
     if any(word in message.lower() for word in ERROR_WORDS):

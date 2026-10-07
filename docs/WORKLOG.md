@@ -2,6 +2,26 @@
 
 Entradas mais recentes primeiro. Cada sessão: o que se fez · o que ficou por fazer · próximo passo.
 
+## 2026-10-08 (cont. 3) — Registo do bot no repo (0.8.2)
+
+- **Pedido do dono:** todos os logs no repo, para analisar de qualquer máquina. Perguntado: repo público → o dono quer-os **completos** ("não estou preocupado com isso"); tem o repo clonado em todos os PCs. **D-022** aceite (exceção a D-016 só para `logs/`); `CLAUDE.md`, `README`, `RISKS_AND_COMPLIANCE` atualizados.
+- **Código:** `src/osmbot/logs.py` (`logs/<PC>/AAAA-MM-DD.log`, apaga tokens/e-mails, nunca falha), ligado ao `_log` do ciclo; menu **Pasta dos logs** e `osmbot pasta-logs`; `config.json` em `~/.osmbot`; testes nunca escrevem no repo verdadeiro (`conftest`). 198 testes.
+- **Este PC (`DESKTOP-KAM70RR`):** pasta escolhida; 4 dias do `bot.log` antigo copiados para `logs/` (nenhuma linha com aspeto de segredo). As linhas do bot que está a correr (versão antiga) só entram a partir do reinício com a 0.8.2.
+- **Ficou de fora:** capturas de ecrã das falhas (`~/.osmbot/failures`, ~1 MB cada) e o `inspect-writes.log` (é quase um dump de pedidos; regra 6).
+- **Próximo passo:** em cada PC, depois de instalar a 0.8.2, menu → Pasta dos logs (uma vez).
+
+## 2026-10-08 (cont. 2) — Diagnóstico do bot a correr; só a loja salta janelas
+
+- **Diagnóstico (00:19, só leitura):** sem falhas desde as 00:09; 9 vídeos da loja; 0 treinos porque os 8 treinadores estavam ocupados (Real Betis acaba ~01:44, FC Van ~07:48). Vídeo de treino: "janela saltada" (15% ao acaso) → os −2h do FC Van ficavam para a passagem seguinte (~00:59).
+- **Pedido do dono → D-021:** o salto ao acaso fica só na loja; treino e dinheiro vêem-se sempre. `ads.py` (`run_training_ads`, `run_money_ads`), testes: 190 a passar. Versão **0.8.2** (pedido do dono); docs revistos (`PROJECT_BRIEF`, `RISKS_AND_COMPLIANCE` também tinha "~35%" e "parar à primeira falha", anteriores a D-019/D-021; README). `dist` reconstruído. O bot instalado só apanha isto depois de reinstalar.
+
+## 2026-10-08 (cont.) — Boss coins por dia e ideia dos amigáveis
+
+- **Release v0.8.1:** notas em `dist/release-notes-v0.8.1.md`; o dono publica (regra 9).
+- **Estimativa:** `bot.log` da noite de 2026-10-07 = 55 vídeos da loja em 7 h (~8/h, 1 coin cada) → **~140 boss coins por 18 h** (máximo 162). Limite diário da loja por verificar (nunca correu 18 h seguidas).
+- **Ideia do dono:** gastar as coins em amigáveis (sobem as stats). Regras dele registadas em `THEORY.md` §6 (1 por adversário por jornada, ~25 por equipa, não cansam). **Não construir:** o dono quer ver o ganho real de coins durante uns dias primeiro.
+- **Próximo passo:** o dono corre o bot uns dias e vê `Boss coins +X` no quadro / `Resumo` no `bot.log`; depois decide os amigáveis (quantos, que clube, reserva) e faz-se a observação com `inspect-writes`.
+
 ## 2026-10-08 — Vídeo de treino preso, bot que não pára à 1.ª falha (0.8.1)
 
 - **Análise do repo a pedido do dono** (fábrica: "dá erro dos treinos… fica a bloquear tudo"). Achados: bot parava à 1.ª falha de escrita / 3 min sem rede; sessão em memória podia ficar velha; `THEORY` §17 desatualizado; estádio vs §15; `POST weeklytrack` repetido; "reabre" da troca de posição sem verificar o limite; início de sessão não gasto nunca se repetia.

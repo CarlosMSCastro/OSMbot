@@ -2,8 +2,9 @@
 
 The page itself plays the ad and tells the game it was watched; this only opens the shop and
 clicks "Watch ad", exactly like the owner does by hand. It never calls ``videos/watched``.
-Limits come from the game (``user/caps/actions/BusinessClub/0``) and are never exceeded; some
-windows are skipped and pauses are random, so the pattern is not that of a machine.
+Limits come from the game (``user/caps/actions/BusinessClub/0``) and are never exceeded; pauses are
+random and some SHOP windows are skipped, so the pattern is not that of a machine. Training and money
+videos are never skipped: training time is worth more than the coins (owner, 2026-10-08).
 """
 from __future__ import annotations
 
@@ -19,7 +20,7 @@ POSITION_NAMES = {1: "ATA", 2: "MED", 3: "DEF", 4: "GR"}
 COACH_TITLES = {1: "Attacking coach", 2: "Midfielder coach", 3: "Defending coach", 4: "Goalkeeping coach"}
 VIDEO_SAVES = 2 * 3600  # a training video takes 2h off one session
 MAX_TRAINING_VIDEOS = 4  # the game's own limit per 3 hours
-ENGAGE_CHANCE = 0.85  # share of the windows (cap open) in which it watches videos at all
+ENGAGE_CHANCE = 0.85  # share of the SHOP windows in which it watches videos at all (training and money: always, owner 2026-10-08)
 MAX_PER_BURST = 9  # the shop's own limit per window
 PAUSE = (20.0, 75.0)  # seconds between two videos
 WAIT_FOR_REWARD = 90.0  # seconds to wait for the boss coins to arrive
@@ -126,9 +127,6 @@ def run_training_ads(claimable: Callable[[], bool], load_sessions: Callable[[], 
                      log: Callable[[str], None] = print, rng=random, sleep=time.sleep, clock=time.time) -> int:
     """Use training videos (-2h) while the game allows it. Returns how many were watched."""
     if not claimable():
-        return 0
-    if rng.random() > ENGAGE_CHANCE:
-        log("Treino: janela saltada")
         return 0
     watched = 0
     while watched < MAX_TRAINING_VIDEOS:
@@ -284,9 +282,6 @@ def run_money_ads(claimable: Callable[[], bool], pick_club: Callable[[], str | N
                   log: Callable[[str], None] = print, rng=random, sleep=time.sleep) -> int:
     """Watch the free-reward (money) videos while the game allows it. Returns how many were watched."""
     if not claimable():
-        return 0
-    if rng.random() > ENGAGE_CHANCE:
-        log("Dinheiro: janela saltada")
         return 0
     club = pick_club()
     if club is None:

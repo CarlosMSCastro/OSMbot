@@ -146,7 +146,16 @@ def test_money_videos_stop_when_the_game_closes_the_limit():
     count = ads.run_money_ads(lambda: left["n"] > 0, lambda: "A", watch, log=lambda m: None, rng=Rng(), sleep=lambda s: None)
     assert count == 2 and seen == ["A", "A"]
     assert ads.run_money_ads(lambda: True, lambda: "A", watch, dry_run=True, log=lambda m: None, rng=Rng()) == 0
-    assert ads.run_money_ads(lambda: True, lambda: "A", watch, log=lambda m: None, rng=Rng(roll=0.99)) == 0
+    left["n"] = 1
+    assert ads.run_money_ads(lambda: left["n"] > 0, lambda: "A", watch, log=lambda m: None, rng=Rng(roll=0.99)) == 1  # never skipped
+
+
+def test_training_videos_are_never_skipped_only_the_shop_ones_are():
+    session = {"id": 1, "trainer": 4, "countdownTimer": {"finishedTimestamp": 10_000, "isClaimed": False}}
+    seen, said = [], []
+    count = ads.run_training_ads(lambda: len(seen) < 1, lambda: [("A", session)], lambda c, s: seen.append(c),
+                                 log=said.append, rng=Rng(roll=0.99), sleep=lambda s: None, clock=lambda: 0)
+    assert count == 1 and not [m for m in said if "saltada" in m]
 
 
 class _Locator:

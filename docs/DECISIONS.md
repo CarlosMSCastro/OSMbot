@@ -64,6 +64,7 @@ Alcance = **A3** para treinos e transferências (ações automáticas, escrita n
 **Porquê:** decorre de D-010 (propósito) e D-004 (risco aceite).
 
 ### D-012 · Anúncios (A4): incluir, sem servidor dedicado · Aceite · 2026-09-27
+*(Janelas saltadas: só na loja desde 2026-10-08, ver D-021.)*
 O bot vê anúncios **sempre a respeitar os limites do próprio jogo** (nunca exceder tetos tipo "4/hora"; nunca forjar callbacks de recompensa — isso fica excluído por completo, regra 8 do `CLAUDE.md`). Corre nas máquinas do dono conforme estiverem ligadas — **PC pessoal, MacBook, PC da empresa** (este último sob controlo do próprio dono, que é o IT da empresa, logo sem o risco de política de TI de terceiros) — **sem horário fixo codificado** e **sem servidor/Raspberry Pi/dispositivo dedicado**. Dentro das horas em que uma máquina está ligada, salta propositadamente algumas janelas de anúncio (não tenta 100%) com timings aleatórios entre cliques, para não ter uma disponibilidade "perfeita demais".
 **Porquê:** ver `DISCOVERY.md` §5 e `RISKS_AND_COMPLIANCE.md` — o único precedente de ban conhecido (jun. 2026) foi por **exceder** o teto do jogo via bug, não por automatizar dentro dos limites; essa segunda situação continua **desconhecida** (nem confirmada nem afastada), daí a mitigação de variar o padrão em vez de o maximizar. **Percentagem alvo de janelas apanhadas: por afinar quando construirmos** (ordem de grandeza 60-70%, não é definitivo).
 
@@ -85,6 +86,14 @@ O bot reclama sozinho, no modo ativo: a recompensa de início de sessão, as 3 m
 - **Vídeos de um tipo que falham sempre** (loja, treino, dinheiro): esse tipo espera cada vez mais (10, 20, 40 e depois 60 min); os outros continuam.
 - Sessão perdida (`osmbot login`) continua a parar logo, porque só o dono resolve.
 **Porquê:** o dono deixa o bot sozinho na fábrica o dia todo; uma falha pontual ou 3 min sem rede deixavam-no parado até voltar ao PC.
+
+### D-021 · Só a loja salta janelas; vídeos de treino e de dinheiro vêem-se sempre · Aceite · 2026-10-08
+Substitui D-012 **só na parte das janelas saltadas**. O salto ao acaso (15%) fica apenas nos vídeos da **loja** (boss coins). Os vídeos de **treino** (−2h) e de **dinheiro** vêem-se sempre que o jogo os deixa, na mesma passagem (com as pausas aleatórias de 20-75 s entre vídeos). O resto de D-012 mantém-se.
+**Porquê:** dono, 2026-10-08: uma janela de treino saltada atrasava os −2h até à passagem seguinte (~40 min nesse caso); "os coins da loja é que podem demorar", o tempo de treino não.
+
+### D-022 · O registo do bot vai para o repo, completo · Aceite · 2026-10-08
+Cada linha do registo do bot vai também para `logs/<nome do PC>/AAAA-MM-DD.log` no repo (um ficheiro por PC e por dia, para não haver conflitos no git). **Completo, com os nomes dos clubes e jogadores**: exceção à regra de D-016 só para `logs/`, escolhida pelo dono ("não estou preocupado com isso"). O `~/.osmbot/bot.log` mantém-se. Segredos **nunca** (regra 6): tokens e e-mails são apagados antes de escrever. O bot não mexe no git (regra 9): commit e push são do dono. Pasta do repo: encontrada sozinha a correr do código; no bot instalado escolhe-se uma vez (menu "Pasta dos logs" / `osmbot pasta-logs`), o que copia também o registo antigo desse PC.
+**Porquê:** o dono trabalha em várias máquinas (casa, fábrica, Mac) e quer analisar os logs de qualquer uma.
 
 ## Em aberto
 

@@ -51,6 +51,10 @@ def test_menu_lists_every_action_and_exit():
         assert expected in text
 
 
+def test_the_default_menu_has_start_login_logs_folder_and_exit():
+    assert [label for label, _ in menu._default_actions().values()] == ["Iniciar", "Login", "Pasta dos logs"]
+
+
 def test_default_menu_only_has_start_login_and_exit():
     shown = menu.build_screen({"1": ("Iniciar", None), "2": ("Login", None)}, "Sessão: ok", 100)
     text = "\n".join(shown)

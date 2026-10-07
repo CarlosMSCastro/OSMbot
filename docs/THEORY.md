@@ -120,6 +120,12 @@ Implementado em `plan_training` / `pick_trainee`:
 
 *Notas nossas (não são regras do dono):*
 - A exigência de **4 sessões de treino concluídas no dia do jogo** liga-se diretamente à automação de treinos (§5): a recolha e a recolocação automáticas têm de garantir que as 4 sessões terminam nesse dia. O prior art viu treinos de 2 h; o dono diz que as sessões duram 8 h (§12.1), e que se podem encurtar com vídeos.
+- **Amigáveis em quantidade (dono, 2026-10-08; ideia, não é para construir já):**
+  - Só se pode jogar **1 amigável contra cada clube da liga por jornada**; escolhe-se o adversário. Na prática ~**25 por equipa** por jornada (depende do número de clubes da liga).
+  - **Não cansam nem lesionam** jogadores.
+  - Limite diário do jogo: o dono acha que **não há** (por verificar).
+  - Por decidir: quantos por dia, que clube primeiro, reserva mínima de boss coins. O pedido que inicia um amigável **nunca foi observado** (regra 7; escrita nova, pede OK pela regra 5).
+  - Conta: 2 equipas × ~25 × 4 coins = ~200 boss coins por jornada; o bot ganha ~140 por dia com 18 h a correr (8 vídeos/h vistos no `bot.log`).
 - Treino secreto e estágio são decisões de gasto do dono (coins, limites por época); não parecem candidatos a automatizar. O **amigável** é diferente: custa só 4 boss coins e o dono **faz sempre** — se um dia se automatizar algo da checklist, é candidato (mas só se o dono o pedir).
 - Pontos onde o jogo **não valida a qualidade** (especialistas, banco) são justamente onde a regra do dono acrescenta valor: só ele sabe se estão certos.
 

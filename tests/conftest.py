@@ -1,10 +1,20 @@
-﻿import itertools
+import itertools
 
 import pytest
 
 from osmbot.models import Player, Position
 
 _ids = itertools.count(1)
+
+
+@pytest.fixture(autouse=True)
+def _no_repo_logs(monkeypatch, tmp_path):
+    """Tests never write into the real repo's logs/ nor read the owner's ~/.osmbot/config.json."""
+    from osmbot import logs
+
+    monkeypatch.setattr(logs, "CONFIG_FILE", tmp_path / "config.json")
+    monkeypatch.setattr(logs, "SOURCE_ROOT", tmp_path / "no-repo")
+    monkeypatch.delenv("OSMBOT_REPO", raising=False)
 
 
 @pytest.fixture

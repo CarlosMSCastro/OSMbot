@@ -1,10 +1,20 @@
-﻿# Changelog
+# Changelog
 
 Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-PT/1.1.0/); versões segundo [SemVer](https://semver.org/lang/pt-BR/) (`0.x` até haver automação estável).
 
 Este ficheiro é o **histórico de versões, para quem lê o repo**. O diário interno de cada sessão de trabalho está em [`docs/WORKLOG.md`](docs/WORKLOG.md).
 
 ## [Por lançar]
+
+## [0.8.2] — 2026-10-08
+
+Os vídeos de treino deixam de esperar e o registo do bot passa a ir também para o repo.
+
+### Adicionado
+- **Registo no repo** (D-022): cada linha do registo vai também para `logs/<nome do PC>/AAAA-MM-DD.log` no repo, para analisar os logs de qualquer máquina depois do commit/push (o bot não mexe no git). Tokens e e-mails nunca entram. No bot instalado escolhe-se a pasta do repo uma vez: menu **Pasta dos logs** (ou `osmbot pasta-logs <pasta>`), que copia também o registo antigo desse PC.
+
+### Alterado
+- **Vídeos de treino e de dinheiro já não saltam janelas** (D-021): vêem-se sempre que o jogo deixa, logo na passagem em que ficam disponíveis. Só a loja continua a saltar ao acaso 15% das janelas (as boss coins podem esperar; o tempo de treino não).
 
 ## [0.8.1] — 2026-10-08
 

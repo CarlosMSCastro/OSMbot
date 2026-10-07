@@ -57,6 +57,8 @@ def main(argv: list[str] | None = None) -> None:
     active.add_argument("--sem-anuncios", action="store_true", help="do not watch shop videos")
     active.add_argument("--sem-quadro", action="store_true", help="plain log lines instead of the board")
     active.add_argument("--simular", action="store_true", help="one dry pass: show the plan and when it would wake up")
+    folder = subparsers.add_parser("pasta-logs", help="Show or set the repo folder the bot's log is copied to (logs/<PC>/).")
+    folder.add_argument("caminho", nargs="?", help="the OSMbot repo folder on this PC")
     subparsers.add_parser("slots", help="Read-only: free transfer-list slots per club.")
     subparsers.add_parser("treinos", help="Read-only: training sessions (ready / time left) and next match.")
     subparsers.add_parser(
@@ -111,6 +113,10 @@ def main(argv: list[str] | None = None) -> None:
             **({"ads": None} if args.sem_anuncios else {}),
             **({"use_screen": False} if args.sem_quadro else {}),
         )
+    elif args.command == "pasta-logs":
+        from osmbot.logs import run_logs_folder
+
+        run_logs_folder(args.caminho)
     elif args.command == "slots":
         run_slots()
     elif args.command == "treinos":

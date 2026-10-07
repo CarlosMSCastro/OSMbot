@@ -10,7 +10,7 @@ Um bot para o **Online Soccer Manager (OSM)** — o jogo de gestão de futebol d
 
 ## Estado atual
 
-O bot já **escreve na conta** (modo ativo). Versão atual em `pyproject.toml` e `CHANGELOG.md`; o que falta fazer em `docs/WORKLOG.md`; decisões (alcance A3/A4, risco aceite, autonomia por níveis) em `docs/DECISIONS.md`. O repo é **público** (D-016): sem nomes de clubes, ligas, jogadores ou utilizadores de terceiros em ficheiros versionados.
+O bot já **escreve na conta** (modo ativo). Versão atual em `pyproject.toml` e `CHANGELOG.md`; o que falta fazer em `docs/WORKLOG.md`; decisões (alcance A3/A4, risco aceite, autonomia por níveis) em `docs/DECISIONS.md`. O repo é **público** (D-016): sem nomes de clubes, ligas, jogadores ou utilizadores de terceiros em ficheiros versionados, **exceto em `logs/`** (D-022: o registo do bot, completo, aceite pelo dono). Para diagnosticar o bot noutra máquina, ler `logs/<PC>/AAAA-MM-DD.log`.
 
 ## Código
 
@@ -33,6 +33,7 @@ Regra: **cada regra do código tem de estar em `THEORY.md`**. Se o código preci
 | `docs/RISKS_AND_COMPLIANCE.md` | ToS do OSM, risco de ban, gestão de segredos |
 | `docs/GLOSSARY.md` | Termos do jogo e desambiguação |
 | `docs/WORKLOG.md` | Diário por sessão: o que foi feito, o que falta, próximo passo |
+| `logs/<PC>/` | Registo do bot por máquina e por dia (D-022); o dono faz commit/push |
 
 ## Regras para o Claude neste repo
 
