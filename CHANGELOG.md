@@ -6,6 +6,19 @@ Este ficheiro é o **histórico de versões, para quem lê o repo**. O diário i
 
 ## [Por lançar]
 
+## [0.9.3] — 2026-10-09
+
+Quadro novo na janela, médico e advogado automáticos, e o analista passa a ser levantado.
+
+### Adicionado
+- **Médico e advogado** (`THEORY.md` §18): todos os lesionados vão ao médico logo que se lesionam (pode repetir-se na jornada); os suspensos vão ao advogado (1 vez por jornada). De graça, 8 h; o bot levanta-os quando acabam. Se o jogo só deixar um de cada vez, os outros esperam. O pedido do advogado e o de levantar seguem o padrão dos outros (por confirmar no primeiro uso); se o jogo recusar, o bot avisa uma vez e não insiste.
+- **Levantar o analista:** a análise só conta na checklist do jogo depois de levantada; o bot levanta-a quando a hora do analista acaba, mesmo que tenha sido o dono a enviá-lo.
+- **Vendas:** cada jogador vendido aparece junto ao dinheiro ("Fulano vendido · +X M") até o dono voltar a ocupar essa vaga da lista.
+
+### Alterado
+- **Quadro da janela** (D-026): clubes em grelha 2×2 com scroll quando não cabem; cada clube com logótipo, nome grande e faixa com a cor do logótipo; próximo jogo com adversário, (H)/(A) e aviso de confronto direto; Liga, Taça e Valor do plantel; dinheiro num só número; vaga livre na lista com destaque; estádio em 2 linhas; checklist pré-jogo; lesionados e suspensos. Em baixo: boss coins com o ganho da sessão e os contadores (loja, acelerar treinos, dinheiro, reward cumulativo, diárias). Cores simplificadas.
+- **O quadro lê o jogo em ~4 s** (antes ~15 s): vários pedidos ao mesmo tempo (no máximo 6, como um browser) e o que muda pouco fica guardado (calendário 10 min, valor dos planteis 1 h).
+
 ## [0.9.2] — 2026-10-08
 
 O bot faz o amigável e a análise do adversário 4 horas antes de cada jogo, se ainda não estiverem feitos. Os vídeos passam a correr sem som e a pasta portátil já não abre consola.

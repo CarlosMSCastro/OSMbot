@@ -63,6 +63,7 @@ def _isolated_from_the_game(monkeypatch, tmp_path):
     monkeypatch.setattr(loop, "run_sponsors", lambda confirm: (0, []))
     monkeypatch.setattr(loop, "run_rewards", lambda confirm: (0, []))
     monkeypatch.setattr(loop, "run_prematch", lambda confirm: (0, []))
+    monkeypatch.setattr(loop, "run_medical", lambda confirm: (0, []))
     monkeypatch.setattr(loop, "collect", lambda client: None)
 
     from osmbot.game import rewards
@@ -75,8 +76,15 @@ def _isolated_from_the_game(monkeypatch, tmp_path):
 
     from osmbot.game import prematch
 
-    monkeypatch.setattr(prematch, "COUNTS", {"friendlies": 0, "analyses": 0})
+    monkeypatch.setattr(prematch, "COUNTS", {"friendlies": 0, "analyses": 0, "collected": 0})
     monkeypatch.setattr(prematch, "PAUSE_BETWEEN_WRITES", 0)
+
+    from osmbot.game import medical, sales
+
+    monkeypatch.setattr(medical, "COUNTS", {"doctor": 0, "lawyer": 0, "collected": 0})
+    monkeypatch.setattr(medical, "PAUSE_BETWEEN_WRITES", 0)
+    monkeypatch.setattr(medical, "_unconfirmed", set())
+    monkeypatch.setattr(sales, "SALES_FILE", tmp_path / "sales.json")
 
     class _NoClient:
         def __init__(self, *args, **kwargs):

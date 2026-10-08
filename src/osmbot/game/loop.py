@@ -25,10 +25,12 @@ from osmbot.game.ads import (SHOP_ACTION, TRAINING_ACTION, VIDEO_SAVES, AdsError
                              run_shop_ads, run_training_ads, watch_money_video, watch_shop_video, watch_training_video)
 from osmbot.game.dashboard import Screen, collect, machine_name, render, span, summary_text, wake_events
 from osmbot.game.slots import describe, newly_free, read_slots
+from osmbot.game import medical as medical_module
 from osmbot.game import prematch as prematch_module
 from osmbot.game import sponsors as sponsors_module
 from osmbot.game import rewards as rewards_module
 from osmbot.game import stadium as stadium_module
+from osmbot.game.medical import run_medical
 from osmbot.game.prematch import run_prematch
 from osmbot.game.rewards import run_rewards
 from osmbot.game.sponsors import run_sponsors
@@ -181,7 +183,7 @@ def _summary_data() -> dict:
             "upgrades": stadium_module.COUNTS["upgrades"], "signed": sponsors_module.COUNTS["signed"],
             "r_login": rewards_module.COUNTS["login"], "r_missions": rewards_module.COUNTS["missions"],
             "r_videos": rewards_module.COUNTS["videos"], "friendlies": prematch_module.COUNTS["friendlies"],
-            "analyses": prematch_module.COUNTS["analyses"]}
+            "analyses": prematch_module.COUNTS["analyses"]}  # doctor/lawyer counts live in medical_module.COUNTS
 
 
 def _check_fitness(snapshot: dict | None, previous: set[int]) -> set[int]:
@@ -299,7 +301,7 @@ def ads_wake(now: float) -> float | None:
 def run_active(dry_run: bool = False, *, claim=run_claim, train=run_train, finish_times=None, slots=None,
                ads=lambda dry_run: _all_ads(dry_run), stadium=lambda confirm: run_stadium(confirm),
                sponsors=lambda confirm: run_sponsors(confirm), rewards=lambda confirm: run_rewards(confirm),
-               prematch=lambda confirm: run_prematch(confirm), snapshot=None, use_screen: bool | None = None,
+               prematch=lambda confirm: run_prematch(confirm), medical=lambda confirm: run_medical(confirm), snapshot=None, use_screen: bool | None = None,
                sleep=time.sleep, clock=time.time, rng=random, board=None) -> None:
     """Loop until Ctrl+C (or ``request_stop``) or the first failure. With ``dry_run`` do one simulated pass and show the board once.
 
@@ -325,7 +327,8 @@ def run_active(dry_run: bool = False, *, claim=run_claim, train=run_train, finis
     COUNTS.update(claimed=0, started=0)
     stadium_module.COUNTS["upgrades"] = sponsors_module.COUNTS["signed"] = 0
     rewards_module.COUNTS.update(login=0, missions=0, videos=0)
-    prematch_module.COUNTS.update(friendlies=0, analyses=0)
+    prematch_module.COUNTS.update(friendlies=0, analyses=0, collected=0)
+    medical_module.COUNTS.update(doctor=0, lawyer=0, collected=0)
     machine = machine_name()
     if board:
         screen = None
@@ -366,7 +369,8 @@ def run_active(dry_run: bool = False, *, claim=run_claim, train=run_train, finis
 
     def counts() -> tuple:
         return (COUNTS["claimed"], COUNTS["started"], stadium_module.COUNTS["upgrades"], sponsors_module.COUNTS["signed"],
-                *rewards_module.COUNTS.values(), *prematch_module.COUNTS.values())
+                *rewards_module.COUNTS.values(), *prematch_module.COUNTS.values(),
+                *medical_module.COUNTS.values())
 
     try:
         _log("Simulação (uma passagem)" if dry_run else "Bot ligado")
@@ -439,6 +443,19 @@ def run_active(dry_run: bool = False, *, claim=run_claim, train=run_train, finis
                         _log(f"Pré-jogo: erro ({error}); volto a tentar")
                 if changed(before):
                     refresh_board()
+                medical_times: list[float] = []
+                if medical:
+                    before = counts()
+                    try:  # an extra: doctor and lawyer (THEORY.md section 18)
+                        medical_failed, medical_times = _quiet(medical, not dry_run)
+                        if medical_failed:
+                            _log(f"Médico/advogado: {medical_failed} falha(s); volto a tentar")
+                    except OSError:
+                        raise
+                    except Exception as error:
+                        _log(f"Médico/advogado: erro ({error}); volto a tentar")
+                    if changed(before):
+                        refresh_board()
                 if ads:
                     try:
                         _quiet(ads, dry_run)
@@ -455,7 +472,7 @@ def run_active(dry_run: bool = False, *, claim=run_claim, train=run_train, finis
                     _stats["coins0"] = last_snapshot["coins"]
                 events = wake_events(last_snapshot, clock())
                 times = [ts for _, ts in events] or finish_times()
-                times = times + [t for t in stadium_times + reward_times + prematch_times if t > clock()]
+                times = times + [t for t in stadium_times + reward_times + prematch_times + medical_times if t > clock()]
                 wait = next_wait(times, clock(), rng.uniform(*JITTER))
                 if ads_failed:
                     again = ads_wake(clock())

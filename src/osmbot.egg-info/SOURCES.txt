@@ -11,14 +11,19 @@ src/osmbot.egg-info/dependency_links.txt
 src/osmbot.egg-info/entry_points.txt
 src/osmbot.egg-info/requires.txt
 src/osmbot.egg-info/top_level.txt
+src/osmbot/board/__init__.py
+src/osmbot/board/info.py
 src/osmbot/game/__init__.py
 src/osmbot/game/ads.py
 src/osmbot/game/browser.py
 src/osmbot/game/client.py
+src/osmbot/game/clubinfo.py
 src/osmbot/game/dashboard.py
 src/osmbot/game/loop.py
+src/osmbot/game/medical.py
 src/osmbot/game/prematch.py
 src/osmbot/game/rewards.py
+src/osmbot/game/sales.py
 src/osmbot/game/slots.py
 src/osmbot/game/sponsors.py
 src/osmbot/game/stadium.py
@@ -27,6 +32,8 @@ src/osmbot/game/trainings.py
 src/osmbot/gui/__init__.py
 src/osmbot/gui/view.py
 src/osmbot/gui/window.py
+src/osmbot/medical/__init__.py
+src/osmbot/medical/policy.py
 src/osmbot/prematch/__init__.py
 src/osmbot/prematch/policy.py
 src/osmbot/rewards/__init__.py
@@ -42,6 +49,7 @@ src/osmbot/theory/tactics.py
 src/osmbot/training/__init__.py
 src/osmbot/training/policy.py
 tests/test_ads.py
+tests/test_board_info.py
 tests/test_build_portable.py
 tests/test_client.py
 tests/test_dashboard.py
@@ -51,6 +59,7 @@ tests/test_gui_window.py
 tests/test_inspect_writes.py
 tests/test_logs.py
 tests/test_loop.py
+tests/test_medical.py
 tests/test_menu.py
 tests/test_prematch.py
 tests/test_rewards.py

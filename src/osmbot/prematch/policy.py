@@ -25,7 +25,7 @@ def needs_friendly(steps: list[dict]) -> bool:
 
 
 def needs_analysis(steps: list[dict], sent: list[dict], week: int) -> bool:
-    """The checklist shows the analysis only when the analyst's hour is over: one already sent this week counts."""
+    """The checklist counts the analysis only once the analyst is collected: one already sent this week counts too."""
     if step_done(steps, ANALYSIS_STEP):
         return False
     return not any(s.get("weekNr") == week for s in sent)

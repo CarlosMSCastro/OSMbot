@@ -20,6 +20,7 @@
 | 10 | Transferências automáticas | Por especificar; escritas novas pedem OK |
 | 11 | Aviso de jogadores novos "SALE" no mercado (`THEORY.md` §7.7) | Por fazer |
 | 12a | **Amigável e análise do adversário**: 4 h antes de cada jogo, se o dono ainda não os fez; amigável contra qualquer clube, analista ao próximo adversário (`THEORY.md` §6, D-025) | **Feito** (a validar em real) |
+| 12b | **Médico e advogado**: lesionados e suspensos tratados e levantados sozinhos (`THEORY.md` §18) | **Feito** (0.9.3; a validar em real) |
 | 12 | **Amigáveis em quantidade** com as boss coins dos vídeos (~25 por equipa por jornada, `THEORY.md` §6) | Ideia; o dono vê primeiro o ganho real de coins durante uns dias |
 
 Os vídeos têm limites impostos pelo servidor (detalhe em `THEORY.md` §12); o bot respeita-os sempre, salta algumas janelas da **loja** de propósito (os de treino e de dinheiro vêem-se sempre, D-021) e nunca forja a recompensa (D-012, regra 8).

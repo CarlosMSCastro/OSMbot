@@ -56,7 +56,7 @@ class FakeClient:
     def __init__(self, steps, match_in=3600, coins=100, sent=None, post_status=200):
         self.steps, self.coins, self.sent, self.post_status = steps, coins, sent, post_status
         self.match = NOW + match_in
-        self.posts = []
+        self.posts, self.puts = [], []
 
     def get(self, path):
         teams = [{"id": i, "name": f"T{i}"} for i in range(1, 5)]
@@ -71,6 +71,10 @@ class FakeClient:
         if path == f"{BASE}/spyinstructions":
             return (200, self.sent) if self.sent else (404, "")
         return 200, data[path]
+
+    def put(self, path):
+        self.puts.append(path)
+        return 200, {}
 
     def post(self, path, form):
         self.posts.append((path, form))
@@ -100,7 +104,7 @@ def test_plays_one_friendly_and_sends_the_analyst_to_the_next_opponent():
     assert failures == 0
     assert client.posts == [(f"{BASE}/matches", {"opponentId": 3, "productId": 62}),
                             (f"{BASE}/spyinstructions", {"instructionTeamId": 3, "timerGameSettingId": 60})]
-    assert prematch.COUNTS == {"friendlies": 1, "analyses": 1}
+    assert prematch.COUNTS == {"friendlies": 1, "analyses": 1, "collected": 0}
     assert "Amigável: Club 2-0 T3" in lines
 
 
@@ -130,3 +134,14 @@ def test_a_refused_friendly_tries_another_opponent_and_a_server_error_is_a_failu
     assert [form["opponentId"] for _, form in client.posts] == [3, 4]
     client = FakeClient([step(7, 0), step(5, 1)], post_status=500)
     assert prepare(client)[0] == (1, None)
+
+
+def test_the_analyst_is_collected_when_its_hour_is_over_and_waited_for_before():
+    running = [{"id": 5, "weekNr": 14, "countdownTimer": {"finishedTimestamp": NOW + 600, "isClaimed": False}}]
+    client = FakeClient([step(7, 1), step(5, 0)], sent=running)
+    assert prepare(client)[0] == (0, NOW + 600) and client.posts == []
+    over = [{"id": 5, "weekNr": 14, "countdownTimer": {"finishedTimestamp": NOW - 60, "isClaimed": False}}]
+    client = FakeClient([step(7, 1), step(5, 0)], sent=over)
+    (failures, _), lines = prepare(client)
+    assert client.puts == ["https://web-api.onlinesoccermanager.com/api/v1.1/leagues/9/teams/1/spyinstructions/5/claim"]
+    assert failures == 0 and "Análise: Club levantou o analista" in lines

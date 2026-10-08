@@ -1,4 +1,4 @@
-"""What the window shows, as plain data: texts with a colour name and bar fractions (D-024).
+"""What the window shows, as plain data: texts with a colour name and bar fractions (D-024, card layout D-026).
 
 Pure functions over the same snapshot as the console board (``dashboard.collect``), so both always agree.
 Colours mean the same as on the console: green = done/good, blue = time still to run (and, in a bar, the part
@@ -6,9 +6,7 @@ a video skipped), yellow = needs attention, grey = labels / nothing going on, re
 """
 from __future__ import annotations
 
-from osmbot.game.ads import VIDEO_SAVES
-from osmbot.game.dashboard import (BAR_SECONDS, SHOP_BAR_SECONDS, SPONSOR_SLOTS, STADIUM_BAR_SECONDS, coin_jump, money,
-                                   span, wake_events)
+from osmbot.game.dashboard import BAR_SECONDS, SPONSOR_SLOTS, coin_jump, money, span, wake_events
 
 GREEN, BLUE, YELLOW, GREY, RED = "green", "blue", "yellow", "grey", "red"
 
@@ -22,33 +20,72 @@ def _done(left: float, total: float) -> float:
     return 1 - min(max(left, 0), total) / total
 
 
-def club_view(club: dict, now: float, shortened: dict | None = None) -> dict:
-    """One club's panel: title, the five fields, the stadium rows, the training rows and the tired starters."""
-    shortened = shortened or {}
-    fields = []
-    fields.append(("Próximo jogo", span(club["match"] - now) if club.get("match") else "—", BLUE if club.get("match") else GREY))
-    if club.get("slots"):
-        listed, top = club["slots"]
-        fields.append(("Lista de transf.", f"{listed}/{top}", YELLOW if top > listed else None))
-    else:
-        fields.append(("Lista de transf.", "?", GREY))
-    funds, savings = club.get("money") or (None, None)
-    fields.append(("Fundos", _money(funds), None if funds else GREY))
-    fields.append(("Poupança", _money(savings), None if savings else GREY))
-    sponsors = club.get("sponsors")
-    if sponsors:
-        full = sponsors["slots"] >= SPONSOR_SLOTS
-        fields.append(("Patrocinadores", f"{sponsors['slots']}/{SPONSOR_SLOTS}  ·  {money(sponsors['revenue'])}/ronda",
-                       GREEN if full else YELLOW))
+def _people(people: list[dict], place: str, now: float) -> list[tuple[str, str | None]]:
+    """Injured or suspended players as coloured pieces: "Fulano (6 jogos)" and, if applicable, "-> no médico, 7h58"."""
+    pieces: list[tuple[str, str | None]] = []
+    for index, p in enumerate(people):
+        if index:
+            pieces.append((" · ", GREY))
+        pieces.append((f"{p['name']} ({p['games']} jogos)", YELLOW))
+        if p.get("ready"):
+            pieces.append((f" → {place} acabou, a levantar", GREEN))
+        elif p.get("until"):
+            pieces.append((f" → {place} · acaba em {span(p['until'] - now)}", BLUE))
+    return pieces or [("0", GREY)]
 
-    stadium = []
+
+def club_view(club: dict, now: float, shortened: dict | None = None) -> dict:
+    """One club's card (D-026): header, Liga · Taça · Valor do plantel, money and sales, sponsors, stadium,
+    pre-match checklist, trainings, tired starters, injured and suspended players."""
+    shortened = shortened or {}
+    subtitle: list[tuple[str, str | None]] = []
+    nxt = club.get("next")
+    when = f" · em {span(club['match'] - now)}" if club.get("match") else ""
+    if nxt:
+        if nxt["danger"]:
+            subtitle.append(("⚠ confronto direto · ", YELLOW))
+        rank = f" ({nxt['rank']}.º)" if nxt.get("rank") else ""
+        subtitle.append((f"vs {nxt['opponent']}{rank} ({nxt['side']})" + (" · taça" if nxt["cup"] else "") + when,
+                         YELLOW if nxt["danger"] else None))
+    else:
+        subtitle.append((f"{club.get('league') or ''}{when}".strip(" ·"), GREY))
+
+    cup, state = club.get("cup") or ("—", "none")
+    value = club.get("value")
+    facts = [("Liga", f"{club.get('ranking') or '?'}.º", None),
+             ("Taça", cup, {"out": GREY, "won": GREEN, "none": GREY}.get(state)),
+             ("Valor do plantel", f"{value[0]}.º · {money(value[1])} · média {money(round(value[2]))}" if value else "—",
+              None if value else GREY)]
+
+    free = club.get("free_slots") or 0
+    alert = f"{free} vaga{'s' if free > 1 else ''} livre{'s' if free > 1 else ''} na lista de transferências" if free else ""
+    funds, savings = club.get("money") or (None, None)
+    total = None if funds is None else funds + (savings or 0)
+    sales = [f"✓ {s['name']} vendido · +{money(s['price'])}" for s in club.get("sales") or []]
+
+    sponsors = club.get("sponsors")
+    sponsor_row = ((f"{sponsors['slots']}/{SPONSOR_SLOTS} · {money(sponsors['revenue'])}/ronda",
+                    GREEN if sponsors["slots"] >= SPONSOR_SLOTS else YELLOW) if sponsors else ("—", GREY))
+
+    still, moving = [], []
     for name, level, top, ends in (club.get("stadium") or {}).get("parts", []):
         if ends and ends > now:
-            stadium.append((name, f"{level}/{top}", f"a subir · {span(ends - now)}", BLUE, _done(ends - now, STADIUM_BAR_SECONDS)))
-        elif level >= top:
-            stadium.append((name, f"{level}/{top}", "máximo", GREEN, None))
+            moving.append((f"{name} {level}/{top} · a subir, acaba em {span(ends - now)}", BLUE))
         else:
-            stadium.append((name, f"{level}/{top}", "—", GREY, None))
+            still.append((f"{name} {level}/{top}", GREEN if level >= top else None))
+
+    prep = club.get("prep") or {}
+    steps = []
+    for name, done, analyst in prep.get("steps") or []:
+        if done:
+            steps.append((f"✓ {name}", GREEN))
+        elif analyst and analyst > now:
+            steps.append((f"⏳ {name} {span(analyst - now)}", BLUE))
+        elif analyst:
+            steps.append((f"◉ {name} por levantar", YELLOW))
+        else:
+            steps.append((f"○ {name}", GREY))
+    pct = prep.get("pct")
 
     trainings = []
     for t in club.get("trainings", []):
@@ -58,9 +95,15 @@ def club_view(club: dict, now: float, shortened: dict | None = None) -> dict:
         skipped = min(done, max(shortened.get(t.get("id"), 0), 0) / BAR_SECONDS)
         trainings.append((t["name"], t["pos"], "pronto" if ready else span(left), GREEN if ready else BLUE, done, skipped))
 
-    tired = " · ".join(f"{p['name']} {p['fitness']}%" for p in club.get("tired") or [])
-    title = f"{club['name']}  —  {club.get('ranking') or '?'}.º · {club.get('league') or '?'}"
-    return {"name": club["name"], "title": title, "fields": fields, "stadium": stadium, "trainings": trainings, "tired": tired}
+    return {"name": club["name"], "logo": club.get("logo"), "logo_key": club.get("logo_key") or club["name"],
+            "subtitle": subtitle, "facts": facts, "alert": alert,
+            "money": _money(total), "sales": sales, "sponsors": sponsor_row,
+            "stadium": {"still": still, "moving": moving},
+            "prep": {"pct": f"{pct}%" if pct is not None else "", "colour": GREEN if pct == 100 else YELLOW, "steps": steps},
+            "trainings": trainings,
+            "tired": " · ".join(f"{p['name']} {p['fitness']}%" for p in club.get("tired") or []),
+            "injured": _people(club.get("injured") or [], "no médico", now),
+            "suspended": _people(club.get("suspended") or [], "no advogado", now)}
 
 
 def daily_view(daily: dict | None, now: float) -> tuple[list[tuple[str, str]], dict | None]:
@@ -95,44 +138,38 @@ def daily_view(daily: dict | None, now: float) -> tuple[list[tuple[str, str]], d
     return parts, row
 
 
+def _timer_row(label: str, info: dict | None, open_text: str, now: float) -> tuple[str, str, str]:
+    info = info or {}
+    reopen = info.get("reopen")
+    if info.get("open"):
+        return label, f"● {open_text}", GREEN
+    if reopen and reopen > now:
+        return label, f"◷ em {span(reopen - now)}", BLUE
+    return label, "—", GREY
+
+
 def account_view(snapshot: dict, stats: dict | None, now: float) -> dict:
-    """The "Conta" box: boss coins (and what changed since the start), the shop, the daily rewards."""
+    """The bottom panel: boss coins (and the gain since the bot started) and the timers of the account."""
     jump = coin_jump(snapshot, stats)
     coins = f"{snapshot['coins']:,}".replace(",", " ") if snapshot.get("coins") is not None else "?"
-    if jump is not None:
-        coins += f"  ({jump:+d} desde o arranque)"
-    shop = (snapshot.get("ads") or {}).get("shop") or {}
-    reopen = shop.get("reopen")
-    if shop.get("open"):
-        shop_row = {"text": "vídeos disponíveis", "colour": GREEN, "done": 1.0}
-    elif reopen and reopen > now:
-        shop_row = {"text": f"reabre em {span(reopen - now)}", "colour": BLUE, "done": _done(reopen - now, SHOP_BAR_SECONDS)}
-    else:
-        shop_row = {"text": "—", "colour": GREY, "done": None}
+    ads = snapshot.get("ads") or {}
     daily, videos = daily_view(snapshot.get("daily"), now)
-    return {"coins": coins, "shop": shop_row, "daily": daily, "videos": videos}
-
-
-def session_view(stats: dict | None, now: float) -> list[tuple[str, str]]:
-    """What the bot did since it was started, as (label, number) pairs for a row of small boxes (empty while stopped)."""
-    if not stats or stats.get("start") is None:
-        return []
-    training = stats.get("training", 0)
-    rewards = stats.get("r_login", 0) + stats.get("r_missions", 0) + stats.get("r_videos", 0)
-    return [("Ligado há", span(now - stats["start"])), ("Vídeos loja", str(stats.get("shop", 0))),
-            ("Vídeos treino", f"{training}" + (f" (−{training * VIDEO_SAVES // 3600} h)" if training else "")),
-            ("Vídeos dinheiro", str(stats.get("money", 0))), ("Recolhidos", str(stats.get("claimed", 0))),
-            ("Postos a treinar", str(stats.get("started", 0))), ("Estádio", str(stats.get("upgrades", 0))),
-            ("Patrocinadores", str(stats.get("signed", 0))), ("Recompensas", str(rewards)),
-            ("Pré-jogo", f"{stats.get('friendlies', 0)} · {stats.get('analyses', 0)}")]
+    cumulative = (videos["text"], YELLOW if videos["colour"] == YELLOW else None) if videos else ("—", GREY)
+    timers = [_timer_row("Vídeos da loja", ads.get("shop"), "disponíveis", now),
+              _timer_row("Acelerar treinos", ads.get("training"), "disponível", now),
+              _timer_row("Vídeos de dinheiro", ads.get("money"), "disponíveis", now),
+              ("Reward cumulativo", *cumulative)]
+    return {"coins": coins, "jump": f"{jump:+d}" if jump is not None else "", "timers": timers, "daily": daily,
+            "since": f"desde que o bot foi ligado ({span(now - stats['start'])})" if stats and stats.get("start") else ""}
 
 
 def next_check(snapshot: dict | None, now: float) -> str:
-    """The status-bar line: what the bot is waiting for, soonest first."""
+    """The status bar: only the next thing the bot waits for."""
     events = wake_events(snapshot, now)
     if not events:
         return ""
-    return "Próxima verificação: " + " · ".join(f"{label} em {span(ts - now)}" for label, ts in events)
+    label, ts = events[0]
+    return f"próximo: {label} em {span(ts - now)}"
 
 
 def board_view(snapshot: dict | None, stats: dict | None, now: float) -> dict | None:
@@ -141,4 +178,4 @@ def board_view(snapshot: dict | None, stats: dict | None, now: float) -> dict | 
         return None
     shortened = (stats or {}).get("shortened") or {}
     return {"clubs": [club_view(c, now, shortened) for c in snapshot["clubs"]],
-            "account": account_view(snapshot, stats, now), "session": session_view(stats, now), "next": next_check(snapshot, now)}
+            "account": account_view(snapshot, stats, now), "next": next_check(snapshot, now)}

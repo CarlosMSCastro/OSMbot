@@ -12,6 +12,7 @@ are only called by the owner-approved write commands (see D-014).
 from __future__ import annotations
 
 import json
+import threading
 import os
 import ssl
 import time
@@ -87,6 +88,7 @@ class OsmClient:
         if not state_file.exists():
             raise NeedsBrowserLogin("Sem sessao guardada. Corre primeiro: osmbot login")
         self._state = json.loads(state_file.read_text(encoding="utf-8"))
+        self._lock = threading.RLock()  # the board reads clubs in parallel: only one of them renews the session
 
     def _reload(self) -> None:
         """Take the saved session if it is newer than the one in memory: another client of the bot, or a
@@ -171,7 +173,8 @@ class OsmClient:
         Writes (PUT/POST) repeat the site's own headers and send a form-encoded body, as observed.
         """
         if not self._access_is_fresh():
-            self.refresh()
+            with self._lock:
+                self.refresh()
         url = path if path.startswith("http") else f"{API_BASE}/{path.lstrip('/')}"
         data, headers = None, {}
         if method != "GET":
@@ -183,15 +186,18 @@ class OsmClient:
                 data = b""
                 headers["Content-Type"] = "application/json; charset=utf-8"
         for attempt in (1, 2):
+            used = self._token("access_token")
             request = urllib.request.Request(
                 url,
                 data=data,
                 method=method,
-                headers={**headers, "Authorization": f"Bearer {self._token('access_token')}"},
+                headers={**headers, "Authorization": f"Bearer {used}"},
             )
             status, raw = self._transport(request)
             if status == 401 and attempt == 1:
-                self.refresh(force=True)  # token rejected despite looking fresh: renew once and retry
+                with self._lock:  # token rejected despite looking fresh: renew once (unless another request just did)
+                    if self._token("access_token") == used:
+                        self.refresh(force=True)
                 continue
             break
         try:

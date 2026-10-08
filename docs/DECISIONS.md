@@ -108,6 +108,27 @@ O bot ganha uma janela de programa em **PySide6 (Qt)**, para a **0.9.0**. **Só 
 No modo ativo, para **todas as equipas** da conta: quando faltarem 4 horas ou menos para o próximo jogo, se a checklist do jogo ainda não tiver amigável, o bot faz **1** (4 boss coins, adversário indiferente); se ainda não houver análise, envia o analista ao próximo adversário. Nunca antes das 4 h e nunca por cima do que o dono já fez. Regras em `THEORY.md` §6; pedidos observados com `inspect-writes` em `DISCOVERY.md` §3. Mais amigáveis por dia (talvez 5) ficam para depois.
 **Porquê:** pedido do dono ("Podes avançar com o código"), que faz estes dois pontos sempre, mas quer as últimas horas livres para os confrontos diretos.
 
+### D-026 · Quadro da janela revisto (0.9.3) · Aceite · 2026-10-08
+Revê o aspeto de D-024; o resto de D-024 mantém-se. Respostas do dono, 2026-10-08:
+- **Clubes em grelha 2×2** (até 4). **Cabeçalho:** logótipo do jogo, nome grande, faixa com a cor tirada do logótipo.
+- **Próximo jogo:** adversário, (H) casa / (A) fora e hora. **Confronto direto** (adversário a 1 ou 2 lugares do clube na classificação): símbolo de perigo (`THEORY.md` §1).
+- **Liga:** só a posição. **Taça:** a fase ("quartos-de-final", "eliminado nos oitavos"; o mesmo antes de começar e depois de ganhar). **Valor do plantel:** posição na liga, total e média por jogador; o jogo tem uma tabela junto à classificação e à lista de treinadores (por observar); até lá, soma do valor dos jogadores.
+- **Lista de transferências:** só aparece com vaga livre ("1 vaga livre na lista de transferências", com ícone de importância).
+- **Cansados** mantêm-se. **Pré-jogo** sempre visível, como checklist a completar. **Treinos** e **patrocinadores** ficam como estão.
+- **Dinheiro:** uma linha (fundos + poupança). Por baixo, cada venda ("Jogador X vendido XX,X M") até o dono voltar a ocupar essa vaga da lista; se vender 3, mostra os 3. O valor é o preço da listagem (o dono: é o mesmo que entra no dinheiro).
+- **Estádio:** uma linha, "Treinos 3/3 · Campo 1/3 ↑12h06 · Capacidade 0/3".
+- **Parte de baixo** num só painel: boss coins em grande com o "+X" da sessão; contadores ("novos vídeos na loja", "acelerar treinos", dinheiro, troca de posição, diárias). **Sem** os números da sessão. Barra de estado só com o estado e o próximo evento.
+- **Aspeto:** tema escuro, cores mais organizadas e simples, símbolos de perigo; títulos maiores, o resto quase igual. Menu de cima mantém-se.
+- **Processo:** maquetes com os dados reais primeiro; código só depois de aprovadas. Versão 0.9.3 se ficar bom; 1.0 em breve.
+- **Correções à 2.ª maqueta (dono, 2026-10-09):**
+  - Liga, Taça e **"Valor do plantel"** centrados; o valor ocupa a metade direita do cartão.
+  - Dinheiro alinhado com os outros valores; a venda aparece **à frente** do dinheiro, não por baixo.
+  - Estádio em 2 linhas: em cima as partes paradas ("Treinos 3/3 · Capacidade 0/3"); em baixo a parte a subir, como "Campo 1/3", com o tempo que falta, sem percentagem.
+  - "Troca de posição" passa a **"Reward cumulativo"** (0/10).
+  - **Lesionados e suspensos** no cartão do clube: "Lesionados: 0", ou "Lesionados: Fulano (6 jogos) → no médico 2h10" (o mesmo para suspensos e advogado).
+- **Analista (dono, 2026-10-09):** o bot também o **levanta** quando a hora acaba, mesmo que tenha sido o dono a enviá-lo (a partir das 4 h antes do jogo). Pedido observado (`DISCOVERY.md` §3).
+- **Médico e advogado (pedido do dono, 2026-10-09):** de graça, com timer, levantam-se no fim; o bot trata dos dois. O médico está a ser observado; o advogado é igual por hipótese, até se ver (regra 7).
+
 ## Em aberto
 
 | ID | Decisão | Depende de | Notas |

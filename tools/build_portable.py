@@ -93,7 +93,8 @@ Nao instala nada. Copia esta pasta para onde quiseres.
 Abre o  OSMbot.exe  (duplo clique). Abre uma janela pequena:
 
   Abrir     carrega o jogo e o bot comeca a trabalhar (treinos, estadio, patrocinadores, videos,
-            recompensas diarias, amigavel e analise 4 h antes do jogo, avisos); a janela cresce para o quadro
+            recompensas diarias, amigavel e analise 4 h antes do jogo, medico e
+            advogado, avisos); a janela cresce para o quadro
   Login     abre o Firefox. Entra com o Facebook e FECHA a janela do Firefox.
   Sair
 

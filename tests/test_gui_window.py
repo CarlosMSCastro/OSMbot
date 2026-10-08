@@ -47,8 +47,8 @@ def test_abrir_shows_loading_then_grows_to_the_board_when_the_game_is_read(windo
     assert window.pages.currentIndex() == LOADING  # nothing read yet: still loading
     window.on_board({"snapshot": NOW_SNAPSHOT, "status": "A TRABALHAR", "notices": [("09:26:15", "Erro", "Loja: erro")]})
     assert window.pages.currentIndex() == BOARD and window.width() >= 1000
-    assert [p.title() for p in window.panels] == ["Clube A  —  1.º · Liga", "Clube B  —  1.º · Liga"]
-    assert window.panels[0].trainings.item(0, 2).text() == "pronto"
+    assert [p.name.text() for p in window.panels] == ["Clube A", "Clube B"]
+    assert "pronto" in window.panels[0].training_rows[0][2].text()
     assert window.coins.text() == "2 586"
     assert window.notices_window.table.rowCount() == 1 and window.notices_action.text() == "Avisos e erros (1)"
 
@@ -64,3 +64,21 @@ def test_closing_hides_the_window_only_while_the_bot_works(window):
     assert not window.isVisible() and not window.quitting
     hold.set()
     window.worker.join()
+
+
+def test_four_clubs_go_in_a_2_by_2_grid_and_the_logo_colour_is_its_strongest_colour(window):
+    from PySide6.QtGui import QColor, QImage
+
+    from osmbot.gui.window import BOARD, LOADING, logo_colour
+
+    window.go(LOADING)
+    window.on_board({"snapshot": {**NOW_SNAPSHOT, "clubs": NOW_SNAPSHOT["clubs"] * 2}, "status": "A TRABALHAR", "notices": []})
+    assert window.pages.currentIndex() == BOARD and len(window.panels) == 4
+    places = [window.clubs_grid.getItemPosition(window.clubs_grid.indexOf(p))[:2] for p in window.panels]
+    assert places == [(0, 0), (0, 1), (1, 0), (1, 1)]
+    image = QImage(20, 20, QImage.Format_ARGB32)
+    image.fill(QColor("#ffffff"))
+    for x in range(10):
+        for y in range(20):
+            image.setPixelColor(x, y, QColor("#1a8a3a"))
+    assert QColor(logo_colour(image)).hue() in range(120, 150)

@@ -21,6 +21,8 @@ mais forte → 5-3-2 · parecido → 4-3-3 B · mais fraco → 4-3-3 A.
 - **"Fora de casa em matchups equilibrados" (resolvido):** não alarga a margem — o local do jogo continua a não entrar na conta. **Pouco relevante na prática:** o dono faz as táticas manualmente (não é para automatizar, ver §6 do histórico/cont. 6). Nuance dele: dentro da margem de ±2, se tiver um **bom MCD** disponível nesse jogo, prefere 4-3-3 B por causa do jogador, não por o adversário ser "parecido" — isto já estava coberto pela nota existente de que a escolha entre A/B "depende do plantel".
 - **Rating da equipa (resolvido):** vem da **média do plantel de 0 a 100 em rating** que o jogo mostra **antes de cada jogo** (não é o preço). Ver §11. **[?]** O campo na API só se sabe observando o jogo.
 
+**Confronto direto (dono, 2026-10-08):** um jogo contra um clube que está **a 1 ou 2 lugares** do do dono na classificação, acima ou abaixo. São os jogos que o dono gosta de ver ele próprio nas últimas horas (§6). O quadro marca-os com um símbolo de perigo (D-026).
+
 ## 2. Instruções por formação
 
 | | **4-3-3** (A e B) | **5-3-2** |
@@ -135,7 +137,7 @@ Implementado em `plan_training` / `pick_trainee`:
   - **Todas as equipas (dono, 2026-10-08):** vale para todas as equipas da conta, em qualquer liga, de 1 a 4 (há 4 lugares). Regra geral do projeto, não só desta: nada é fixo a clubes ou ligas.
   - **Para mais tarde (dono, 2026-10-08):** se isto funcionar bem, talvez **5 amigáveis por dia**. Não construir agora.
   - **Observado e autorizado (2026-10-08, D-025):** pedidos em `DISCOVERY.md` §3. Construído em `prematch/policy.py` e `game/prematch.py`:
-    - "Feito" é o que diz a checklist do jogo (`matchpreparation`). A análise só conta lá depois da hora do analista; por isso um analista já enviado nesta jornada também conta (o dono confirma que passa a 1/1 sozinha).
+    - "Feito" é o que diz a checklist do jogo (`matchpreparation`). A análise só conta lá depois da hora do analista; por isso um analista já enviado nesta jornada também conta (o dono contava que passasse a 1/1 sozinha; **não passa**: é preciso **levantar o analista** quando acaba, `DISCOVERY.md` §3, observado a 2026-10-09).
     - **[S]** O adversário do amigável é **ao acaso** entre os clubes da liga ainda sem amigável nesta jornada (o dono diz que é indiferente; ao acaso evita um padrão de máquina). Se o jogo recusar, tenta outro (até 3).
     - **[S]** Sem boss coins para o amigável (4): só avisa. Se não for claro quem é o próximo adversário: a análise fica por fazer, com aviso. **O dono (2026-10-08): uma jornada nunca tem 2 jogos.** No calendário de uma equipa, a jornada 14 tinha um jogo de taça (`matchType` 1) no lugar do da liga. Por isso esta proteção não deve disparar; fica só para dados inesperados.
 - Treino secreto e estágio são decisões de gasto do dono (coins, limites por época); não parecem candidatos a automatizar. O **amigável** é diferente: custa só 4 boss coins e o dono **faz sempre** — se um dia se automatizar algo da checklist, é candidato (mas só se o dono o pedir).
@@ -472,3 +474,12 @@ Há **3 componentes** a melhorar, cada um com **níveis 0, 1, 2 e 3**:
 - O inventário tem um limite por item (`inventoryLimit`, catálogos `actionrewards` e `rewards`). O bot **não reclama** se o item ficasse acima do limite.
 - Nunca se usam os itens do inventário (isso exige escolhas: jogador, posição...). É decisão do dono.
 - O bot respeita o jogo: sem pedidos repetidos para o que o jogo recusou.
+
+## 18. Médico e advogado
+
+*Fonte: o dono, 2026-10-09. Pedidos em `DISCOVERY.md` §3 (médico observado; advogado e levantamentos por analogia, aceite pelo dono).*
+
+- **De graça**, com um timer de 8 h; no fim **levanta-se** (como um treino). **Sem vídeo** para encurtar no PC.
+- **Médico:** **todos** os lesionados (onze, banco ou fora), **logo** que se lesionam. Pode usar-se **várias vezes por jornada** (às vezes tira 1 jogo, às vezes 4). Com 2 lesionados ao mesmo tempo, tenta os dois; se o jogo só deixar 1, o outro espera.
+- **Advogado:** a mesma lógica para os suspensos, mas **só 1 vez por jornada** por jogador.
+- Uma falha aqui nunca encrava as outras tarefas do bot; o quadro mostra a mudança logo a seguir (D-026).

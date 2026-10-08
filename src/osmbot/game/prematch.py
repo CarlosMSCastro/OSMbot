@@ -2,7 +2,8 @@
 (writes, owner's rule in THEORY.md section 6; requests observed 2026-10-08, DISCOVERY.md section 3).
 
 The game's own pre-match checklist (``matchpreparation``) says what is done. A friendly is played at once
-(4 boss coins); the analyst takes an hour, so one sent this week also counts while it is still working.
+(4 boss coins); the analyst takes an hour, so one sent this week also counts while it is still working, and when
+the hour is over it has to be collected for the checklist to count it (observed 2026-10-09).
 """
 from __future__ import annotations
 
@@ -14,10 +15,12 @@ from osmbot.prematch.policy import LEAD, friendly_choices, in_window, needs_anal
 FRIENDLY_PRODUCT = 62  # bosscoinproducts: "Friendly"
 FRIENDLY_PRICE = 4  # boss coins
 SPY_TIMER_SETTING = 60  # gamesettings: "SpyInstructionTimer"
+ANALYST_SECONDS = 3600  # SpyInstructionTimer: 60 min
 NEXT_MATCH_TIMER = 14  # timers: "Your next match"
 PAUSE_BETWEEN_WRITES = 1.5  # seconds
 MAX_TRIES = 3  # friendly attempts per club per pass (a refused opponent moves on to another)
-COUNTS = {"friendlies": 0, "analyses": 0}
+API_V11 = "https://web-api.onlinesoccermanager.com/api/v1.1"
+COUNTS = {"friendlies": 0, "analyses": 0, "collected": 0}
 
 
 def _match_time(client, base: str) -> float | None:
@@ -78,6 +81,28 @@ def _send_analyst(client, team: dict, base: str, league: str, week: int, confirm
     return 1
 
 
+def _collect_analyst(client, team: dict, base: str, sent: list[dict], week: int, now: float, confirm: bool, log) -> tuple[int, float | None]:
+    """Collect this week's analyst once its hour is over. Returns (failures, when it ends if still working)."""
+    for entry in sent:
+        timer = entry.get("countdownTimer")
+        if entry.get("weekNr") != week or not timer or timer.get("isClaimed"):
+            continue
+        if timer["finishedTimestamp"] > now:
+            return 0, timer["finishedTimestamp"]
+        if not confirm:
+            log(f"{team['name']}: levantaria o analista")
+            return 0, None
+        status, _ = client.put(f"{API_V11}/{base}/spyinstructions/{entry['id']}/claim")
+        time.sleep(PAUSE_BETWEEN_WRITES)
+        if status == 200:
+            COUNTS["collected"] += 1
+            log(f"Análise: {team['name']} levantou o analista")
+            return 0, None
+        log(f"Análise: {team['name']} levantar o analista falhou ({status})")
+        return 1, None
+    return 0, None
+
+
 def prepare_club(client, team: dict, base: str, confirm: bool, now: float, log=print, rng=random) -> tuple[int, float | None]:
     """Friendly and analysis for one club when its match is 4 hours away or less. Returns (failures, time to wake at)."""
     match = _match_time(client, base)
@@ -92,9 +117,17 @@ def prepare_club(client, team: dict, base: str, confirm: bool, now: float, log=p
     if needs_friendly(steps):
         failures += _play_friendly(client, team, base, league, week, confirm, log, rng)
     status, sent = client.get(f"{base}/spyinstructions")  # 404 when nothing was sent
-    if needs_analysis(steps, sent if status == 200 and isinstance(sent, list) else [], week):
+    sent = sent if status == 200 and isinstance(sent, list) else []
+    wake = None
+    if needs_analysis(steps, sent, week):
+        before = COUNTS["analyses"]
         failures += _send_analyst(client, team, base, league, week, confirm, log)
-    return failures, None
+        if COUNTS["analyses"] > before:
+            wake = now + ANALYST_SECONDS  # come back when the hour is over, to collect it
+    else:
+        failed, wake = _collect_analyst(client, team, base, sent, week, now, confirm, log)
+        failures += failed
+    return failures, wake
 
 
 def run_prematch(confirm: bool) -> tuple[int, list[float]]:

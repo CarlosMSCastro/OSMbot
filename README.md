@@ -2,7 +2,7 @@
 
 Exploração de um bot para o **Online Soccer Manager** (Gamebasics).
 
-> **Estado (0.9.2):** o bot trabalha sozinho no Windows (treinos, estádio, patrocinadores, vídeos da loja, de treino e de dinheiro, recompensas diárias, amigável e análise do adversário 4 h antes de cada jogo, aviso de vagas na lista de transferências), numa **janela de programa** com ícone junto ao relógio (o quadro de consola continua disponível). Ver [`CHANGELOG.md`](CHANGELOG.md) e [`docs/`](docs/).
+> **Estado (0.9.3):** o bot trabalha sozinho no Windows (treinos, estádio, patrocinadores, vídeos da loja, de treino e de dinheiro, recompensas diárias, amigável e análise do adversário 4 h antes de cada jogo, médico e advogado, aviso de vagas e de vendas na lista de transferências), numa **janela de programa** com ícone junto ao relógio (o quadro de consola continua disponível). Ver [`CHANGELOG.md`](CHANGELOG.md) e [`docs/`](docs/).
 
 ## Aviso
 
@@ -34,7 +34,7 @@ O comando `login` abre uma janela de Firefox a sério (não Chromium — o popup
 `osmbot` sem argumentos (ou o `OSMbot.exe` da pasta portátil, que não abre consola) abre a **janela** (D-024, só Windows por agora):
 
 - abre pequena, com **Abrir**, **Login** e **Sair**. Num PC novo, começa pelo Login;
-- **Abrir** mostra "A carregar o jogo…", põe o bot a trabalhar e a janela cresce para o **quadro**: os clubes lado a lado (jogo, lista de transferências, dinheiro, patrocinadores, estádio, treinos, cansados), a conta (boss coins, loja, diárias, troca de posição) e o que o bot fez desde que foi ligado;
+- **Abrir** mostra "A carregar o jogo…", põe o bot a trabalhar e a janela cresce para o **quadro** (D-026): os clubes em grelha 2×2 (próximo jogo, liga, taça, valor do plantel, dinheiro e vendas, patrocinadores, estádio, pré-jogo, treinos, cansados, lesionados e suspensos) e, em baixo, as boss coins e os contadores da conta;
 - menu **Bot**: Iniciar, Parar (pára na pausa seguinte), Login, Sair. Menu **Ver**: Avisos e erros, Atualizar quadro, Pasta dos logs, Capturas das falhas;
 - a barra de baixo mostra o estado e a próxima verificação;
 - com o bot a trabalhar, fechar a janela (X) **só a esconde**: o **ícone junto ao relógio** (logótipo com bolinha verde a trabalhar, cinzenta parado) volta a abri-la. Para sair: Bot → Sair, ou o ícone → Sair. Sem notificações do Windows.
@@ -45,7 +45,7 @@ O resto é por comandos:
 |---|---|
 | `osmbot menu` | O menu antigo, na consola (Iniciar, Login, Sair), com o quadro em texto |
 | `osmbot login` | Abre o Firefox para entrares; fecha a janela para guardar a sessão |
-| `osmbot ativo` | **Modo ativo**: recolhe e treina quando os treinos acabam, sobe o estádio, assina patrocinadores, vê os vídeos (loja, treino, dinheiro), reclama as recompensas diárias, faz o amigável e a análise do adversário 4 h antes de cada jogo (se ainda não estiverem feitos) e avisa de vagas na lista de transferências; quadro em tempo real. Ctrl+C para parar |
+| `osmbot ativo` | **Modo ativo**: recolhe e treina quando os treinos acabam, sobe o estádio, assina patrocinadores, vê os vídeos (loja, treino, dinheiro), reclama as recompensas diárias, faz o amigável e a análise do adversário 4 h antes de cada jogo (se ainda não estiverem feitos), põe os lesionados no médico e os suspensos no advogado, e avisa de vagas na lista de transferências; quadro em tempo real. Ctrl+C para parar |
 | `osmbot ativo --simular` | Uma passagem sem escrever nada |
 | `osmbot ativo --sem-anuncios` / `--sem-quadro` | Sem vídeos / linhas simples em vez do quadro |
 | `osmbot status`, `treinos`, `slots` | Só leitura |

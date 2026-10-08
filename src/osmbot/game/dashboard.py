@@ -18,7 +18,7 @@ import time
 from datetime import datetime
 
 from osmbot.game.ads import SHOP_ACTION, TRAINING_ACTION, VIDEO_SAVES, money_state
-from osmbot.game.slots import read_slots
+from osmbot.game.slots import SlotStatus, count_listed
 from osmbot.theory.fitness import YELLOW_BELOW, tired_starters
 
 POSITIONS = {1: "ATA", 2: "MED", 3: "DEF", 4: "GR"}
@@ -57,28 +57,37 @@ def bar(left: float, total: float = BAR_SECONDS, width: int = BAR_WIDTH) -> str:
     return "█" * filled + "░" * (width - filled)
 
 
-def collect(client) -> dict:
-    """One snapshot of everything the board shows (a handful of GET requests)."""
-    from osmbot.game.trainings import _teams
+CLUBS_AT_ONCE, REQUESTS_PER_CLUB = 2, 3  # at most 6 requests at a time, like a browser
 
-    _, account = client.get("user/accounts")
-    _, wallet = client.get("user/bosscoinwallet")
+
+def get_many(client, paths: list[str]) -> list[tuple[int, object]]:
+    """GET several paths at once (a few at a time); answers in the same order."""
+    from concurrent.futures import ThreadPoolExecutor
+
+    with ThreadPoolExecutor(max_workers=REQUESTS_PER_CLUB) as pool:
+        return list(pool.map(client.get, paths))
+
+
+def collect(client) -> dict:
+    """One snapshot of everything the board shows (GET requests only, several at a time)."""
+
+    from osmbot.game.clubinfo import max_listed
+
+    (_, account), (_, wallet) = get_many(client, ["user/accounts", "user/bosscoinwallet"])
     leagues = {c["team"]["name"]: c.get("league") or {} for c in (account.get("teamSlots") or {}).values() if c and c.get("team")}
-    slots = {s.team: s for s in read_slots(client)}
-    clubs = []
-    for _, team, base in _teams(client):
-        _, sessions = client.get(f"{base}/trainingsessions/ongoing")
-        _, timers = client.get(f"{base}/timers")
+
+    def read_club(team: dict, base: str) -> dict:
+        got = get_many(client, [f"{base}/{path}" for path in ("trainingsessions/ongoing", "timers", "players",
+                                                               "finances/balanceandsavings", "stadium", "sponsors",
+                                                               "transferplayers/0")])
+        sessions, timers, players, funds, stadium, contracts, market = (body for _, body in got)
         match = next((t["finishedTimestamp"] for t in timers if t["type"] == NEXT_MATCH_TIMER), None)
-        slot = slots.get(team["name"])
-        _, players = client.get(f"{base}/players")
-        _, funds = client.get(f"{base}/finances/balanceandsavings")
-        _, stadium = client.get(f"{base}/stadium")
-        _, contracts = client.get(f"{base}/sponsors")
+        market = market if isinstance(market, list) else []
+        slot = SlotStatus(team["name"], count_listed(players, market), max_listed(client, team["leagueId"]))
         running = [p["countdownTimer"]["finishedTimestamp"] for p in stadium["stadiumParts"]
                    if p.get("countdownTimer") and p["countdownTimer"]["finishedTimestamp"] > time.time()]
         live = [c for c in contracts if c.get("weeksLeft", 0) > 0]
-        clubs.append({
+        club = {
             "name": team["name"], "ranking": team.get("ranking"), "league": leagues.get(team["name"], {}).get("name", "?"),
             "tired": tired_starters(players), "match": match,
             "money": (funds["balance"], funds["savings"]),
@@ -93,16 +102,36 @@ def collect(client) -> dict:
                  "finish": s["countdownTimer"]["finishedTimestamp"], "claimed": s["countdownTimer"]["isClaimed"]}
                 for s in sorted(sessions, key=lambda s: s["trainer"])
             ],
-        })
-    ads = {}
-    for key, action in (("shop", SHOP_ACTION), ("training", TRAINING_ACTION)):
-        _, cap = client.get(f"user/caps/actions/{action}/0")
-        ads[key] = {"open": bool(cap.get("isClaimable")) and not cap.get("isCapReached"),
-                    "reopen": cap.get("timestampUntilUnreached") if cap.get("isCapReached") else None}
-    ads["money"] = money_state(client)
-    from osmbot.game.rewards import daily_state
+        }
+        try:  # the card's extras (D-026): a problem here never hides the rest of the board
+            from osmbot.game.clubinfo import club_extra
 
-    return {"coins": wallet.get("amount"), "clubs": clubs, "ads": ads, "daily": daily_state(client)}
+            club.update(club_extra(client, team, base, players, slot, market))
+        except OSError:
+            raise
+        except Exception as error:
+            club["extra_error"] = f"{type(error).__name__}: {error}"
+        return club
+
+    from concurrent.futures import ThreadPoolExecutor
+
+    def read_account() -> tuple[dict, dict]:
+        from osmbot.game.rewards import daily_state
+
+        caps = get_many(client, [f"user/caps/actions/{action}/0" for action in (SHOP_ACTION, TRAINING_ACTION)])
+        ads = {key: {"open": bool(cap.get("isClaimable")) and not cap.get("isCapReached"),
+                     "reopen": cap.get("timestampUntilUnreached") if cap.get("isCapReached") else None}
+               for key, (_, cap) in zip(("shop", "training"), caps)}
+        ads["money"] = money_state(client)
+        return ads, daily_state(client)
+
+    teams = [(team, f"leagues/{team['leagueId']}/teams/{team['id']}") for team in
+             (c["team"] for _, c in sorted((account.get("teamSlots") or {}).items()) if c and c.get("team"))]
+    with ThreadPoolExecutor(max_workers=CLUBS_AT_ONCE + 1) as pool:  # clubs and account side by side: a few seconds
+        account_part = pool.submit(read_account)
+        clubs = list(pool.map(lambda item: read_club(*item), teams))
+        ads, daily = account_part.result()
+    return {"coins": wallet.get("amount"), "clubs": clubs, "ads": ads, "daily": daily}
 
 
 def wake_events(snapshot: dict | None, now: float) -> list[tuple[str, float]]:

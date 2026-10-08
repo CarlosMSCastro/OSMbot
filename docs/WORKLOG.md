@@ -2,6 +2,22 @@
 
 Entradas mais recentes primeiro. Cada sessão: o que se fez · o que ficou por fazer · próximo passo.
 
+## 2026-10-09 — Quadro novo (0.9.3), médico e advogado, levantar o analista
+
+- **Observado com o dono (`inspect-writes`):** levantar o analista (`PUT v1.1/…/spyinstructions/{id}/claim` → checklist 1/1) e pôr no médico (`POST …/doctortreatments`, 8 h, sem vídeo). Levantar o médico e todo o advogado por analogia, aceite pelo dono (`DISCOVERY.md` §3). Regras em `THEORY.md` §18.
+- **Maquetas** (3 rondas, dados reais, fora do repo) → correções do dono em D-026 (Aceite).
+- **Código:**
+  - `board/info.py` (puro: próximo jogo e confronto direto, fase da taça, valor do plantel, vendas);
+  - `game/clubinfo.py` (leituras do cartão);
+  - `game/sales.py` (`~/.osmbot/sales.json`);
+  - `medical/policy.py` + `game/medical.py`;
+  - levantar o analista em `game/prematch.py`;
+  - janela: `ClubCard`, grelha 2×2 com scroll, logótipos em `~/.osmbot/logos`, cor da faixa tirada do logótipo, painel de baixo com contadores.
+- **Velocidade:** o quadro lê o jogo em ~4 s (antes ~15 s): pedidos em paralelo (no máximo 6), calendário guardado 10 min, valor dos planteis 1 h; cadeado na renovação da sessão (`client.py`).
+- **Verificado:** 244 testes; snapshot real sem erros nos dois clubes; simulação do médico (o lesionado já está no médico → nada; acorda quando acaba) e do pré-jogo; `ativo --simular --sem-anuncios` do início ao fim.
+- **Não corrido em real:** levantar o médico (o primeiro acaba cerca das 08:12), advogado, levantar o analista pelo bot, deteção de vendas.
+- **Versão 0.9.3** (pedido do dono); `dist` reconstruído.
+
 ## 2026-10-08 (cont. 5) — Casa: `dist` 0.9.1
 
 - PC de casa estava em `64bc921` (0.8.2), 4 commits atrás; o dono fez pull para `1c84296` (0.9.1).
@@ -13,6 +29,8 @@ Entradas mais recentes primeiro. Cada sessão: o que se fez · o que ficou por f
 - **Construído (D-025):** o dono confirma que a análise passa a 1/1 sozinha e dá o OK. `prematch/policy.py` (puro) e `game/prematch.py`; no ciclo como os outros extras (falha não para os treinos); o bot acorda 4 h antes de cada jogo. Quadro: "pré-jogo: amigáveis N, análises N" no resumo; janela: caixa "Pré-jogo" (10 caixas, 891 px, cabe nos 1060 do quadro). 11 testes novos; 230 a passar. Simulação contra o jogo real (sem escrever): uma equipa já tinha tudo feito pelo dono → nada; a outra → 1 amigável e analista ao adversário da jornada seguinte. **Ainda não corrido em real.**
 - **Versão 0.9.2** (pedido do dono): `pyproject`, `__version__`, `CHANGELOG`, README; `dist` reconstruído (portátil, zip, instalador).
 - **Próximo passo:** o dono troca a pasta portátil, confirma a janela sem consola e os vídeos sem som, e vê o primeiro pré-jogo real nos logs ("Amigável: …", "Análise: …").
+- **Quadro 0.9.3 (D-026):** 20 respostas do dono registadas; confronto direto (±2 lugares) em `THEORY.md` §1. Maquetas com dados reais (janela Qt à parte, fora do repo): 2 clubes e 4 clubes (2×2). Dados confirmados (GET): logótipo (`assets`, URL), `ranking` = posição na liga, `cuprounds` + jogos `matchType` 1 → fase da taça, preço de venda no `transferplayers` (`price`). Valor do plantel por soma (a tabela do jogo está por observar). **Código ainda não mexido.**
+- **Achado:** a análise **não** passa a 1/1 sozinha (`DISCOVERY.md` §3). Observado a 2026-10-09 (o dono levantou o analista com `inspect-writes`): `PUT …/spyinstructions/{id}/claim` → checklist 1/1.
 
 ## 2026-10-08 (cont. 4) — Fábrica: pull, noite do bot, logs sem escolher pasta
 
