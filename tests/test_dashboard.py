@@ -247,3 +247,11 @@ def test_the_bot_wakes_when_a_new_day_starts_and_when_the_videos_reopen():
     snap = snapshot(daily=daily(videos={"count": 0, "threshold": 10, "claimable": False, "reopen": NOW + 5000}))
     events = dict(wake_events(snap, NOW))
     assert events["novo dia"] == NOW + 3600 * 16.5 and events["vídeos acumulados reabrem"] == NOW + 5000
+
+
+def test_a_training_that_finished_while_the_bot_was_busy_wakes_it_at_once():
+    snap = snapshot()
+    snap["clubs"][0]["trainings"][1]["finish"] = NOW - 15 * 60  # finished during a burst of shop videos
+    events = wake_events(snap, NOW)
+    assert events[0] == ("treino por recolher", NOW)
+    assert ("treino acaba", NOW + 3600 * 5) in events

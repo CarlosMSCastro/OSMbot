@@ -110,7 +110,10 @@ def wake_events(snapshot: dict | None, now: float) -> list[tuple[str, float]]:
     if not snapshot:
         return []
     events = []
-    finishes = [t["finish"] for c in snapshot["clubs"] for t in c["trainings"] if not t["claimed"] and t["finish"] > now]
+    unclaimed = [t["finish"] for c in snapshot["clubs"] for t in c["trainings"] if not t["claimed"]]
+    if any(finish <= now for finish in unclaimed):  # finished while the bot was busy (e.g. videos): collect it now
+        events.append(("treino por recolher", now))
+    finishes = [finish for finish in unclaimed if finish > now]
     if finishes:
         events.append(("treino acaba", min(finishes)))
     ends = [c["stadium"]["until"] for c in snapshot["clubs"] if (c.get("stadium") or {}).get("until")]

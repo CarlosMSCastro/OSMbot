@@ -2,7 +2,7 @@
 
 Exploração de um bot para o **Online Soccer Manager** (Gamebasics).
 
-> **Estado (0.9.0):** o bot trabalha sozinho no Windows (treinos, estádio, patrocinadores, vídeos da loja, de treino e de dinheiro, recompensas diárias, aviso de vagas na lista de transferências), numa **janela de programa** com ícone junto ao relógio (o quadro de consola continua disponível). Ver [`CHANGELOG.md`](CHANGELOG.md) e [`docs/`](docs/).
+> **Estado (0.9.1):** o bot trabalha sozinho no Windows (treinos, estádio, patrocinadores, vídeos da loja, de treino e de dinheiro, recompensas diárias, aviso de vagas na lista de transferências), numa **janela de programa** com ícone junto ao relógio (o quadro de consola continua disponível). Ver [`CHANGELOG.md`](CHANGELOG.md) e [`docs/`](docs/).
 
 ## Aviso
 
@@ -33,10 +33,11 @@ O comando `login` abre uma janela de Firefox a sério (não Chromium — o popup
 
 `osmbot` sem argumentos (ou o `OSMbot.exe`) abre a **janela** (D-024, só Windows por agora):
 
-- abre no **quadro** com o bot parado: os clubes lado a lado (jogo, lista de transferências, dinheiro, patrocinadores, estádio, treinos, cansados), a conta (boss coins, loja, diárias, troca de posição, resumo) e os avisos e erros;
-- **Iniciar** põe o bot a trabalhar; **Parar** pára-o na pausa seguinte; **Login** abre o Firefox; **Pasta dos logs** e, no menu Ver, **Capturas das falhas**;
-- a barra de baixo diz a próxima verificação;
-- fechar a janela (X) **só a esconde**: o bot continua, e o **ícone junto ao relógio** (logótipo com bolinha verde a trabalhar, cinzenta parado) volta a abri-la. Para sair: Bot → Sair, ou o ícone → Sair. Sem notificações do Windows.
+- abre pequena, com **Abrir**, **Login** e **Sair**. Num PC novo, começa pelo Login;
+- **Abrir** mostra "A carregar o jogo…", põe o bot a trabalhar e a janela cresce para o **quadro**: os clubes lado a lado (jogo, lista de transferências, dinheiro, patrocinadores, estádio, treinos, cansados), a conta (boss coins, loja, diárias, troca de posição) e o que o bot fez desde que foi ligado;
+- menu **Bot**: Iniciar, Parar (pára na pausa seguinte), Login, Sair. Menu **Ver**: Avisos e erros, Atualizar quadro, Pasta dos logs, Capturas das falhas;
+- a barra de baixo mostra o estado e a próxima verificação;
+- com o bot a trabalhar, fechar a janela (X) **só a esconde**: o **ícone junto ao relógio** (logótipo com bolinha verde a trabalhar, cinzenta parado) volta a abri-la. Para sair: Bot → Sair, ou o ícone → Sair. Sem notificações do Windows.
 
 O resto é por comandos:
 

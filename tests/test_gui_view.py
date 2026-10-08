@@ -2,7 +2,7 @@ import tomllib
 from pathlib import Path
 
 import osmbot
-from osmbot.gui.view import BLUE, GREEN, GREY, YELLOW, account_view, board_view, club_view, daily_view, next_check
+from osmbot.gui.view import BLUE, GREEN, GREY, YELLOW, account_view, board_view, club_view, daily_view, next_check, session_view
 
 NOW = 1_000_000.0
 
@@ -70,13 +70,20 @@ def test_the_account_box_counts_coins_since_the_start_and_shows_the_shop_wait():
     account = account_view(snap, {"start": NOW - 600, "coins0": 2574, "shop": 9}, NOW)
     assert account["coins"] == "2 586  (+12 desde o arranque)"
     assert account["shop"] == {"text": "reabre em 0h30", "colour": BLUE, "done": 0.5}
-    assert account["summary"].startswith("0h10 · vídeos: loja 9") and "salto" not in account["summary"]
     stopped = account_view({**snap, "ads": {"shop": {"open": True}}}, None, NOW)
-    assert stopped["coins"] == "2 586" and stopped["shop"]["text"] == "vídeos disponíveis" and stopped["summary"] == "—"
+    assert stopped["coins"] == "2 586" and stopped["shop"]["text"] == "vídeos disponíveis"
+
+
+def test_the_session_row_is_one_labelled_number_per_box():
+    stats = {"start": NOW - 38 * 60, "shop": 9, "training": 4, "claimed": 3, "started": 3, "r_missions": 3}
+    boxes = dict(session_view(stats, NOW))
+    assert boxes["Ligado há"] == "0h38" and boxes["Vídeos loja"] == "9" and boxes["Vídeos treino"] == "4 (−8 h)"
+    assert boxes["Vídeos dinheiro"] == "0" and boxes["Recolhidos"] == "3" and boxes["Recompensas"] == "3"
+    assert session_view(None, NOW) == [] and session_view({"start": None}, NOW) == []
 
 
 def test_the_status_bar_says_what_the_bot_waits_for_and_nothing_before_the_first_read():
     snap = {"coins": 1, "clubs": [club()], "ads": {"shop": {"open": False, "reopen": NOW + 1800}}}
-    assert next_check(snap, NOW).startswith("Próxima verificação: loja reabre em 0h30 · treino acaba em 4h00")
+    assert next_check(snap, NOW).startswith("Próxima verificação: treino por recolher em 0h00 · loja reabre em 0h30 · treino acaba em 4h00")
     assert board_view(None, None, NOW) is None
     assert [c["name"] for c in board_view(snap, None, NOW)["clubs"]] == ["Clube A"]

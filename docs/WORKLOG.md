@@ -24,7 +24,17 @@ Entradas mais recentes primeiro. Cada sessão: o que se fez · o que ficou por f
   - **Build:** `PySide6-Essentials` cortado a QtCore, QtGui e QtWidgets (49 MB). Portátil 552 MB, zip 205 MB, instalador 147 MB. Verificado: a janela abre com o Qt cortado, a partir do Python da pasta portátil, sem sessão (não leu o jogo).
   - **Não testado em real:** Iniciar/Parar contra o jogo, porque em modo de desenvolvimento não se escreve na conta (regra 5). Fica para o dono.
   - **Nota:** uma captura com `grabWindow` apanhou o ecrã do dono (o browser) em vez da janela; foi apagada logo. A partir daí só se usou `widget.grab()`.
-- **Próximo passo:** o dono testa a 0.9.0 (abrir, Login se preciso, Iniciar, fechar no X, ícone, Parar, Sair), faz commit/push e o release.
+- **0.9.0 publicada pelo dono** (`f236630`, release v0.9.0).
+- **Haaland não recolhido (fábrica, 14:11):** às 14:04:58 o bot acordou pela loja (0h05), antes do fim do treino (0h06); viu "0 para recolher" às 14:11:31 e depois fez 15 min de vídeos. Às 14:26 o treino acabado saiu de `wake_events` (só contava `finish > now`), e a verificação seguinte ficou para dali a 46 min. **Correção:** evento "treino por recolher" (agora) → acorda em ~30 s; com recolha falhada espera sempre `WRITE_RETRY` (10 min; antes `min(wait, 10 min)`, que com o evento novo daria 30 s). Teste novo. O "treino novo a decorrer" que o dono viu não aparece nos logs (nenhum treino de ATA iniciado depois das 08:11): *por esclarecer*.
+- **0.9.1, janela revista pelo dono:**
+  - ecrã inicial pequeno (Abrir · Login · Sair). Abrir → símbolo a rodar → bot a trabalhar → a janela cresce para o quadro (`QStackedWidget`, 3 faces);
+  - sem barra de botões; avisos e erros em Ver (janela à parte);
+  - resumo em fila de números (`view.session_view`);
+  - X com o bot parado fecha o programa;
+  - 217 testes.
+- **Incidente (Claude):** o rebuild da 0.9.1 esvaziou `dist/osmbot-portable` enquanto o dono corria a 0.9.0 **a partir dessa pasta**. Foram apagados `app/` e `browsers/` (Firefox) antes de o Windows bloquear um `.pyd` em uso. Consequência: os vídeos desse bot falham até ele ser reaberto com a pasta completa. **Prevenção:** o `build_portable.py` recusa construir se houver um `OSMbot.exe` a correr dessa pasta (`running_from`).
+- **`dist` 0.9.1 reconstruído** depois de o dono fechar o bot: completo (`app/`, `browsers/`, LEIA-ME); janela verificada com o Python da pasta portátil.
+- **Próximo passo:** o dono testa em real (Abrir → carrega → quadro; Parar/Iniciar no menu; X; ícone), faz commit/push e o release.
 
 ## 2026-10-08 (cont. 3) — Registo do bot no repo (0.8.2)
 

@@ -445,8 +445,8 @@ def run_active(dry_run: bool = False, *, claim=run_claim, train=run_train, finis
                 if ads_failed:
                     again = ads_wake(clock())
                     wait = min(wait, max(MIN_WAIT, again - clock()) if again else ADS_RETRY)
-                if failed:
-                    wait = min(wait, WRITE_RETRY)
+                if failed:  # look again in 10 min, never sooner: a training left to collect would otherwise wake it every 30 s
+                    wait = WRITE_RETRY
                 retries, offline_since = 0, None
             except SystemExit as error:  # NeedsBrowserLogin is turned into SystemExit by the commands
                 if error.code in (0, None, 1):

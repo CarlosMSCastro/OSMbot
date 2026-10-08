@@ -6,6 +6,20 @@ Este ficheiro é o **histórico de versões, para quem lê o repo**. O diário i
 
 ## [Por lançar]
 
+## [0.9.1] — 2026-10-08
+
+A janela abre pequena com Abrir · Login · Sair e só cresce para o quadro depois de o jogo carregar. Um treino acabado já não fica por recolher durante quase uma hora.
+
+### Corrigido
+- **Treino acabado não recolhido:** se um treino acabava enquanto o bot via vídeos, saía da lista do que o bot espera, e o bot só voltava quando a loja reabrisse, ~45 min depois (visto com o avançado do Real Betis: acabou às 14:11 e às 14:26 o bot marcou a verificação seguinte para dali a 46 min). Agora um treino acabado e por recolher faz o bot voltar logo (~30 s). Se a recolha falhar, espera os 10 min de sempre (D-019).
+
+### Alterado
+- **Ecrã inicial pequeno** com o logótipo e os botões **Abrir**, **Login** e **Sair**. **Abrir** mostra um símbolo a rodar ("A carregar o jogo…"), põe o bot a trabalhar e, quando o jogo carrega, a mesma janela cresce para o quadro completo.
+- **Sem barra de botões:** Iniciar, Parar e Login ficam no menu **Bot** e no ícone junto ao relógio. O estado ("● A trabalhar desde…") e a próxima verificação ficam na barra de baixo.
+- **Avisos e erros** passam para **Ver → Avisos e erros** (com o número entre parênteses), numa janela à parte.
+- A linha "Desde o arranque" passa a uma fila de números com legenda ("Desde que o bot foi ligado"): Ligado há, Vídeos loja, Vídeos treino, Vídeos dinheiro, Recolhidos, Postos a treinar, Estádio, Patrocinadores, Recompensas. O ganho de boss coins fica só na Conta.
+- Fechar a janela (X) com o bot parado fecha o programa; com o bot a trabalhar, só a esconde.
+
 ## [0.9.0] — 2026-10-08
 
 O bot passa a ter uma janela de programa, com ícone junto ao relógio.

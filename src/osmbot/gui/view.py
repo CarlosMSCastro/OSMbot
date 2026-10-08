@@ -6,8 +6,9 @@ a video skipped), yellow = needs attention, grey = labels / nothing going on, re
 """
 from __future__ import annotations
 
+from osmbot.game.ads import VIDEO_SAVES
 from osmbot.game.dashboard import (BAR_SECONDS, SHOP_BAR_SECONDS, SPONSOR_SLOTS, STADIUM_BAR_SECONDS, coin_jump, money,
-                                   span, summary_lines, wake_events)
+                                   span, wake_events)
 
 GREEN, BLUE, YELLOW, GREY, RED = "green", "blue", "yellow", "grey", "red"
 
@@ -95,7 +96,7 @@ def daily_view(daily: dict | None, now: float) -> tuple[list[tuple[str, str]], d
 
 
 def account_view(snapshot: dict, stats: dict | None, now: float) -> dict:
-    """The "Conta" box: boss coins (and what changed since the start), the shop, the daily rewards, the summary."""
+    """The "Conta" box: boss coins (and what changed since the start), the shop, the daily rewards."""
     jump = coin_jump(snapshot, stats)
     coins = f"{snapshot['coins']:,}".replace(",", " ") if snapshot.get("coins") is not None else "?"
     if jump is not None:
@@ -109,18 +110,20 @@ def account_view(snapshot: dict, stats: dict | None, now: float) -> dict:
     else:
         shop_row = {"text": "—", "colour": GREY, "done": None}
     daily, videos = daily_view(snapshot.get("daily"), now)
-    summary = _summary(snapshot, stats, now)
-    return {"coins": coins, "shop": shop_row, "daily": daily, "videos": videos, "summary": summary or "—"}
+    return {"coins": coins, "shop": shop_row, "daily": daily, "videos": videos}
 
 
-def _summary(snapshot: dict, stats: dict | None, now: float) -> str:
-    """The run's totals in one line: "0h38 · vídeos: loja 9 · ... · recompensas: ..." (the coins have their own field)."""
-    lines = summary_lines(snapshot, stats, now, full=True)
-    if not lines:
-        return ""
-    head = lines[0]
-    run_time = head[head.find("(") + 1:head.find(")")] if "(" in head else ""
-    return " · ".join(part for part in (run_time, *(line.strip() for line in lines[1:])) if part)
+def session_view(stats: dict | None, now: float) -> list[tuple[str, str]]:
+    """What the bot did since it was started, as (label, number) pairs for a row of small boxes (empty while stopped)."""
+    if not stats or stats.get("start") is None:
+        return []
+    training = stats.get("training", 0)
+    rewards = stats.get("r_login", 0) + stats.get("r_missions", 0) + stats.get("r_videos", 0)
+    return [("Ligado há", span(now - stats["start"])), ("Vídeos loja", str(stats.get("shop", 0))),
+            ("Vídeos treino", f"{training}" + (f" (−{training * VIDEO_SAVES // 3600} h)" if training else "")),
+            ("Vídeos dinheiro", str(stats.get("money", 0))), ("Recolhidos", str(stats.get("claimed", 0))),
+            ("Postos a treinar", str(stats.get("started", 0))), ("Estádio", str(stats.get("upgrades", 0))),
+            ("Patrocinadores", str(stats.get("signed", 0))), ("Recompensas", str(rewards))]
 
 
 def next_check(snapshot: dict | None, now: float) -> str:
@@ -137,4 +140,4 @@ def board_view(snapshot: dict | None, stats: dict | None, now: float) -> dict | 
         return None
     shortened = (stats or {}).get("shortened") or {}
     return {"clubs": [club_view(c, now, shortened) for c in snapshot["clubs"]],
-            "account": account_view(snapshot, stats, now), "next": next_check(snapshot, now)}
+            "account": account_view(snapshot, stats, now), "session": session_view(stats, now), "next": next_check(snapshot, now)}

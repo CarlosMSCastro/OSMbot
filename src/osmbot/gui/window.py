@@ -1,9 +1,10 @@
 """The OSMbot window (D-024): a Windows program around the same bot loop as the console.
 
-It opens on the board with the bot stopped (reading the game is read-only); "Iniciar" runs ``run_active`` in a
-background thread that sends the board here; "Parar" asks it to stop at its next pause. Closing the window (X)
-only hides it: the bot goes on, and the tray icon (the logo with a green dot when working, grey when stopped)
-opens it again or quits. No Windows notifications (owner, 2026-10-08).
+It opens small, on the start screen (Abrir · Login · Sair). "Abrir" shows a loading sign, runs ``run_active`` in a
+background thread that sends the board here, and grows to the full board once the game has been read. Iniciar,
+Parar and Login are in the menu "Bot" and in the tray icon; the warnings and errors in Ver → Avisos e erros.
+While the bot works, closing the window (X) only hides it; the tray icon (the logo with a green dot when working,
+grey when stopped) opens it again or quits. No Windows notifications (owner, 2026-10-08).
 """
 from __future__ import annotations
 
@@ -17,9 +18,9 @@ from pathlib import Path
 
 from PySide6.QtCore import QLockFile, QObject, QRectF, QSize, Qt, QTimer, Signal
 from PySide6.QtGui import QAction, QColor, QFont, QIcon, QPainter, QPalette, QPen, QPixmap
-from PySide6.QtWidgets import (QAbstractItemView, QApplication, QGridLayout, QGroupBox, QHBoxLayout, QHeaderView,
-                               QLabel, QMainWindow, QMenu, QMessageBox, QSizePolicy, QSplitter, QStatusBar, QStyle,
-                               QSystemTrayIcon, QTableWidget, QTableWidgetItem, QToolBar, QVBoxLayout, QWidget)
+from PySide6.QtWidgets import (QAbstractItemView, QApplication, QFrame, QGridLayout, QGroupBox, QHBoxLayout, QLabel,
+                               QMainWindow, QMenu, QMessageBox, QPushButton, QStackedWidget, QStatusBar, QStyle,
+                               QSystemTrayIcon, QTableWidget, QTableWidgetItem, QVBoxLayout, QWidget)
 
 from osmbot import __version__
 from osmbot.gui.view import BLUE, GREEN, GREY, RED, YELLOW, board_view
@@ -33,7 +34,6 @@ STYLE = (
     "QGroupBox QLabel, QGroupBox QTableWidget { font-weight: normal; }"
     "QHeaderView::section { background: #262626; color: #a0a0a0; border: none; border-bottom: 1px solid #3a3a3a; padding: 3px 6px; }"
     "QTableWidget { border: 1px solid #333333; }"
-    "QToolBar { border-bottom: 1px solid #333333; spacing: 4px; padding: 3px; }"
     "QStatusBar { border-top: 1px solid #333333; color: #a0a0a0; }"
 )
 
@@ -246,6 +246,36 @@ class ClubPanel(QGroupBox):
         self.tired.setText(f"⚠ Cansados: {club['tired']}" if club["tired"] else "")
 
 
+class Spinner(QWidget):
+    """The "loading" sign: an arc that turns while the game is being read."""
+
+    def __init__(self, size: int = 44):
+        super().__init__()
+        self.angle = 0
+        self.setFixedSize(size, size)
+        self.timer = QTimer(self)
+        self.timer.timeout.connect(self._turn)
+
+    def _turn(self) -> None:
+        self.angle = (self.angle + 30) % 360
+        self.update()
+
+    def showEvent(self, _event) -> None:
+        self.timer.start(80)
+
+    def hideEvent(self, _event) -> None:
+        self.timer.stop()
+
+    def paintEvent(self, _event) -> None:
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.Antialiasing)
+        box = QRectF(self.rect()).adjusted(4, 4, -4, -4)
+        painter.setPen(QPen(QColor("#333333"), 4))
+        painter.drawEllipse(box)
+        painter.setPen(QPen(QColor(COLOURS[GREEN]), 4, Qt.SolidLine, Qt.RoundCap))
+        painter.drawArc(box, -self.angle * 16, 100 * 16)
+
+
 class Bridge(QObject):
     """Carries what the background threads read to the window (Qt widgets live in the main thread only)."""
 
@@ -255,7 +285,38 @@ class Bridge(QObject):
     login = Signal(str)
 
 
+class NoticesWindow(QWidget):
+    """Ver → Avisos e erros: the problems and warnings of this run, in a window of their own."""
+
+    def __init__(self, parent: QWidget):
+        super().__init__(parent, Qt.Window)
+        self.setWindowTitle("OSMbot — Avisos e erros")
+        layout = QVBoxLayout(self)
+        self.table = make_table(["Hora", "Tipo", "Mensagem"], [70, 60])
+        layout.addWidget(self.table)
+        self.resize(760, 320)
+
+    def show_notices(self, notices: list) -> None:
+        if self.table.rowCount() == len(notices):
+            return
+        self.table.setRowCount(len(notices))
+        for row, (when, kind, text) in enumerate(notices):
+            set_cell(self.table, row, 0, when)
+            set_cell(self.table, row, 1, kind, RED if kind == "Erro" else YELLOW)
+            set_cell(self.table, row, 2, text)
+        self.table.scrollToBottom()
+
+
+LAUNCHER_SIZE = QSize(520, 290)
+BOARD_SIZE = QSize(1060, 600)
+START, LOADING, BOARD = 0, 1, 2
+
+
 class MainWindow(QMainWindow):
+    """One window, three faces: the start screen (Abrir · Login · Sair), "loading" while the game is read, and the
+    full board (it grows to it). Abrir starts the bot (owner, 2026-10-08); Iniciar/Parar/Login live in the menu
+    "Bot" and in the tray icon."""
+
     def __init__(self, app: QApplication):
         super().__init__()
         from osmbot.logs import machine
@@ -270,77 +331,89 @@ class MainWindow(QMainWindow):
         self.worker: threading.Thread | None = None
         self.busy = ""  # "login" / "a ler" while a helper thread runs
         self.quitting = False
+        self.stopping = False
         self.started_at: float | None = None
         self.message = ""
         self.logo = QIcon(str(logo_path()))
         self.setWindowTitle(f"OSMbot {__version__} — {machine()}")
         self.setWindowIcon(self.logo)
-        self.resize(1060, 680)
-        self._build_actions()
-        self._build_body()
+        self.pages = QStackedWidget()
+        self.pages.addWidget(self._build_start())
+        self.pages.addWidget(self._build_loading())
+        self.pages.addWidget(self._build_board())
+        self.setCentralWidget(self.pages)
+        self._build_menu()
+        self._build_status()
         self._build_tray()
+        self.notices_window = NoticesWindow(self)
         self.clock = QTimer(self)
         self.clock.timeout.connect(self.render)
         self.clock.start(1000)
-        self.refresh_state()
-        self.read_game()
+        self.go(START)
 
-    # ---- building -------------------------------------------------------------------------------------------
-    def _build_actions(self) -> None:
-        style = self.style()
-        self.start_action = QAction(style.standardIcon(QStyle.SP_MediaPlay), "Iniciar", self, triggered=self.start_bot)
-        self.stop_action = QAction(style.standardIcon(QStyle.SP_MediaStop), "Parar", self, triggered=self.stop_bot)
-        self.login_action = QAction(style.standardIcon(QStyle.SP_DialogApplyButton), "Login", self, triggered=self.do_login)
-        self.logs_action = QAction(style.standardIcon(QStyle.SP_DirOpenIcon), "Pasta dos logs", self, triggered=self.open_logs)
-        self.failures_action = QAction("Capturas das falhas", self, triggered=self.open_failures)
-        self.reload_action = QAction("Atualizar quadro", self, triggered=self.read_game)
-        self.quit_action = QAction("Sair", self, triggered=self.quit_app)
-        about = QAction("Sobre o OSMbot", self, triggered=self.about)
+    # ---- the three faces ------------------------------------------------------------------------------------
+    def _build_start(self) -> QWidget:
+        page = QWidget()
+        layout = QHBoxLayout(page)
+        layout.setContentsMargins(22, 22, 22, 18)
+        layout.setSpacing(22)
+        logo = QLabel()
+        logo.setPixmap(self.logo.pixmap(128, 128))
+        logo.setAlignment(Qt.AlignTop)
+        layout.addWidget(logo)
+        right = QVBoxLayout()
+        right.setSpacing(6)
+        title = QLabel("OSMbot")
+        title.setFont(QFont("Segoe UI", 16, QFont.Bold))
+        right.addWidget(title)
+        right.addWidget(coloured(f"Versão {__version__}", GREY))
+        text = QLabel("Trabalha por ti no Online Soccer Manager: recolhe e põe a treinar, vê os vídeos, sobe o estádio, "
+                      "assina patrocinadores e avisa das vagas na lista de transferências.")
+        text.setWordWrap(True)
+        right.addSpacing(6)
+        right.addWidget(text)
+        right.addSpacing(8)
+        self.session_label = QLabel()
+        self.session_label.setWordWrap(True)
+        right.addWidget(self.session_label)
+        right.addStretch()
+        buttons = QHBoxLayout()
+        buttons.addStretch()
+        self.login_button = QPushButton("Login")
+        self.quit_button = QPushButton("Sair")
+        self.open_button = QPushButton("Abrir")
+        self.open_button.setIcon(self.style().standardIcon(QStyle.SP_MediaPlay))
+        self.open_button.setDefault(True)
+        for button, slot in ((self.login_button, self.do_login), (self.quit_button, self.quit_app), (self.open_button, self.open_board)):
+            button.setMinimumWidth(88)
+            button.clicked.connect(slot)
+            buttons.addWidget(button)
+        right.addLayout(buttons)
+        layout.addLayout(right, 1)
+        return page
 
-        bot = self.menuBar().addMenu("Bot")
-        for action in (self.start_action, self.stop_action, self.login_action):
-            bot.addAction(action)
-        bot.addSeparator()
-        bot.addAction(self.quit_action)
-        view = self.menuBar().addMenu("Ver")
-        for action in (self.reload_action, self.logs_action, self.failures_action):
-            view.addAction(action)
-        self.menuBar().addMenu("Ajuda").addAction(about)
+    def _build_loading(self) -> QWidget:
+        page = QWidget()
+        layout = QVBoxLayout(page)
+        layout.addStretch()
+        self.spinner = Spinner()
+        layout.addWidget(self.spinner, 0, Qt.AlignHCenter)
+        layout.addSpacing(12)
+        self.loading_label = coloured("A carregar o jogo…", GREY)
+        self.loading_label.setAlignment(Qt.AlignCenter)
+        layout.addWidget(self.loading_label)
+        layout.addStretch()
+        return page
 
-        bar = QToolBar()
-        bar.setMovable(False)
-        bar.setIconSize(QSize(16, 16))
-        bar.setToolButtonStyle(Qt.ToolButtonTextBesideIcon)
-        for action in (self.start_action, self.stop_action):
-            bar.addAction(action)
-        bar.addSeparator()
-        bar.addAction(self.login_action)
-        bar.addAction(self.logs_action)
-        spacer = QWidget()
-        spacer.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
-        bar.addWidget(spacer)
-        self.state_dot = coloured("●", GREY)
-        self.state_text = QLabel()
-        bar.addWidget(self.state_dot)
-        bar.addWidget(self.state_text)
-        bar.addWidget(QLabel("  "))
-        self.addToolBar(bar)
-
-    def _build_body(self) -> None:
-        central = QWidget()
-        outer = QVBoxLayout(central)
+    def _build_board(self) -> QWidget:
+        page = QWidget()
+        outer = QVBoxLayout(page)
         outer.setContentsMargins(8, 8, 8, 6)
-        top = QWidget()
-        top_layout = QVBoxLayout(top)
-        top_layout.setContentsMargins(0, 0, 0, 0)
-        top_layout.setSpacing(8)
+        outer.setSpacing(8)
         self.clubs_row = QHBoxLayout()
         self.clubs_row.setSpacing(8)
         self.panels: list[ClubPanel] = []
-        self.loading = coloured("A ler o jogo…", GREY)
-        self.loading.setAlignment(Qt.AlignCenter)
-        self.clubs_row.addWidget(self.loading)
-        top_layout.addLayout(self.clubs_row, 1)
+        outer.addLayout(self.clubs_row, 1)
 
         account = QGroupBox("Conta")
         grid = QGridLayout(account)
@@ -350,7 +423,6 @@ class MainWindow(QMainWindow):
         self.shop_bar, self.shop_text = Bar(110), coloured("—", GREY)
         self.daily = QLabel("—")
         self.videos_bar, self.videos_text = Bar(110), coloured("—")
-        self.summary = QLabel("—")
         grid.addWidget(coloured("Boss coins:", GREY), 0, 0)
         grid.addWidget(self.coins, 0, 1)
         grid.addWidget(coloured("Loja:", GREY), 0, 2)
@@ -359,34 +431,33 @@ class MainWindow(QMainWindow):
         grid.addWidget(self.daily, 1, 1)
         grid.addWidget(coloured("Troca de posição:", GREY), 1, 2)
         grid.addLayout(self._bar_row(self.videos_bar, self.videos_text), 1, 3)
-        grid.addWidget(coloured("Desde o arranque:", GREY), 2, 0)
-        grid.addWidget(self.summary, 2, 1, 1, 3)
         grid.setColumnStretch(1, 1)
         grid.setColumnStretch(3, 1)
-        top_layout.addWidget(account)
+        outer.addWidget(account)
 
-        notices = QGroupBox("Avisos e erros")
-        notices_layout = QVBoxLayout(notices)
-        self.notices = make_table(["Hora", "Tipo", "Mensagem"], [70, 60])
-        self.notices.setMinimumHeight(HEADER_HEIGHT + ROW_HEIGHT * 2 + 4)
-        self.notices.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-        notices_layout.addWidget(self.notices)
-
-        split = QSplitter(Qt.Vertical)
-        split.addWidget(top)
-        split.addWidget(notices)
-        split.setChildrenCollapsible(False)
-        split.setStretchFactor(0, 1)
-        split.setStretchFactor(1, 0)
-        outer.addWidget(split)
-        self.setCentralWidget(central)
-
-        status = QStatusBar()
-        self.next_label = QLabel()
-        self.clock_label = QLabel()
-        status.addWidget(self.next_label, 1)
-        status.addPermanentWidget(self.clock_label)
-        self.setStatusBar(status)
+        self.session_box = QGroupBox("Desde que o bot foi ligado")
+        session = QHBoxLayout(self.session_box)
+        session.setSpacing(0)
+        self.session_cells: list[tuple[QLabel, QLabel]] = []
+        for index in range(9):
+            cell = QWidget()
+            column = QVBoxLayout(cell)
+            column.setContentsMargins(10, 0, 10, 0)
+            column.setSpacing(1)
+            name, value = coloured("", GREY), QLabel("")
+            value.setFont(QFont("Segoe UI", 11, QFont.Bold))
+            column.addWidget(name)
+            column.addWidget(value)
+            if index:
+                line = QFrame()
+                line.setFrameShape(QFrame.VLine)
+                line.setStyleSheet("color: #333333;")
+                session.addWidget(line)
+            session.addWidget(cell)
+            self.session_cells.append((name, value))
+        session.addStretch()
+        outer.addWidget(self.session_box)
+        return page
 
     @staticmethod
     def _bar_row(bar: Bar, text: QLabel) -> QHBoxLayout:
@@ -396,6 +467,41 @@ class MainWindow(QMainWindow):
         row.addWidget(text)
         row.addStretch()
         return row
+
+    def _build_menu(self) -> None:
+        style = self.style()
+        self.start_action = QAction(style.standardIcon(QStyle.SP_MediaPlay), "Iniciar", self, triggered=self.start_bot)
+        self.stop_action = QAction(style.standardIcon(QStyle.SP_MediaStop), "Parar", self, triggered=self.stop_bot)
+        self.login_action = QAction("Login", self, triggered=self.do_login)
+        self.notices_action = QAction("Avisos e erros", self, triggered=self.show_notices)
+        self.reload_action = QAction("Atualizar quadro", self, triggered=self.read_game)
+        self.logs_action = QAction("Pasta dos logs", self, triggered=self.open_logs)
+        self.failures_action = QAction("Capturas das falhas", self, triggered=self.open_failures)
+        self.quit_action = QAction("Sair", self, triggered=self.quit_app)
+        bot = self.menuBar().addMenu("Bot")
+        for action in (self.start_action, self.stop_action, self.login_action):
+            bot.addAction(action)
+        bot.addSeparator()
+        bot.addAction(self.quit_action)
+        view = self.menuBar().addMenu("Ver")
+        view.addAction(self.notices_action)
+        view.addSeparator()
+        for action in (self.reload_action, self.logs_action, self.failures_action):
+            view.addAction(action)
+        self.menuBar().addMenu("Ajuda").addAction(QAction("Sobre o OSMbot", self, triggered=self.about))
+
+    def _build_status(self) -> None:
+        status = QStatusBar()
+        self.state_dot = coloured("●", GREY)
+        self.state_text = QLabel()
+        self.next_label = QLabel()
+        self.clock_label = QLabel()
+        status.addWidget(QLabel(" "))
+        status.addWidget(self.state_dot)
+        status.addWidget(self.state_text)
+        status.addWidget(self.next_label, 1)
+        status.addPermanentWidget(self.clock_label)
+        self.setStatusBar(status)
 
     def _build_tray(self) -> None:
         self.tray_icons = {working: tray_icon(self.logo, working) for working in (True, False)}
@@ -411,6 +517,24 @@ class MainWindow(QMainWindow):
             QSystemTrayIcon.Trigger, QSystemTrayIcon.DoubleClick) else None)
         self.tray.show()
 
+    def go(self, page: int) -> None:
+        """Show one face; the window takes that face's size (small for the start screen, big for the board)."""
+        self.pages.setCurrentIndex(page)
+        self.menuBar().setVisible(page == BOARD)
+        self.statusBar().setVisible(page == BOARD)
+        if page == BOARD:
+            self.setMinimumSize(800, 480)
+            self.setMaximumSize(16777215, 16777215)
+            if self.width() < BOARD_SIZE.width():
+                centre = self.frameGeometry().center()
+                self.resize(BOARD_SIZE)
+                frame = self.frameGeometry()
+                frame.moveCenter(centre)
+                self.move(frame.topLeft())
+        else:
+            self.setFixedSize(LAUNCHER_SIZE)
+        self.refresh_state()
+
     # ---- state ----------------------------------------------------------------------------------------------
     def running(self) -> bool:
         return self.worker is not None and self.worker.is_alive()
@@ -420,36 +544,49 @@ class MainWindow(QMainWindow):
 
         working = self.running()
         idle = not working and not self.busy
+        has_session = STATE_FILE.exists()
         self.start_action.setEnabled(idle and not self.quitting)
         self.stop_action.setEnabled(working and not self.quitting and not self.stopping)
         self.login_action.setEnabled(idle)
-        self.reload_action.setEnabled(idle)
+        self.reload_action.setEnabled(idle and has_session)
+        self.open_button.setEnabled(idle and has_session)
+        self.login_button.setEnabled(idle)
         self.tray_toggle.setText("Parar" if working else "Iniciar")
-        self.tray_toggle.setEnabled((working and not self.stopping) or idle)
+        self.tray_toggle.setEnabled((working and not self.stopping) or (idle and has_session))
         self.tray.setIcon(self.tray_icons[working])
+        if self.busy == "login":
+            session, colour = "Login: entra no jogo no Firefox e FECHA essa janela.", BLUE
+        elif self.message and self.pages.currentIndex() == START:
+            session, colour = self.message, RED
+        elif has_session:
+            session, colour = "● Sessão iniciada", GREEN
+        else:
+            session, colour = "● Sem sessão: carrega em Login primeiro.", YELLOW
+        self.session_label.setText(session)
+        paint(self.session_label, colour)
         if working:
             since = datetime.fromtimestamp(self.started_at).strftime("%H:%M") if self.started_at else "?"
             text = "A parar…" if self.stopping else f"A trabalhar desde {since}"
-        elif self.busy == "login":
-            text = "Login: entra no jogo e FECHA a janela do Firefox"
         elif self.busy:
             text = "A ler o jogo…"
         else:
-            text = "Parado · " + ("sessão iniciada" if STATE_FILE.exists() else "sem sessão: faz Login")
-        if not self.panels:  # nothing read yet: say why
-            if working or self.busy == "a ler":
-                self.loading.setText("A ler o jogo…")
-            elif not STATE_FILE.exists():
-                self.loading.setText("Sem sessão. Carrega em Login, entra no jogo e fecha a janela do Firefox.")
-            else:
-                self.loading.setText("Sem dados do jogo. Ver → Atualizar quadro.")
+            text = "Parado"
         paint(self.state_dot, GREEN if working else GREY)
-        self.state_text.setText(" " + text)
+        self.state_text.setText(text + "   ")
         self.tray.setToolTip(f"OSMbot · {text}")
-
-    stopping = False
+        count = len(self.payload.get("notices") or [])
+        self.notices_action.setText(f"Avisos e erros ({count})" if count else "Avisos e erros")
 
     # ---- the bot --------------------------------------------------------------------------------------------
+    def open_board(self) -> None:
+        """Abrir: show "loading", start the bot, and grow to the board when the game has been read."""
+        if self.running() or self.busy:
+            return
+        self.message = ""
+        self.loading_label.setText("A carregar o jogo…")
+        self.go(LOADING)
+        self.start_bot()
+
     def start_bot(self) -> None:
         if self.running() or self.busy:
             return
@@ -483,10 +620,18 @@ class MainWindow(QMainWindow):
         self.refresh_state()
 
     def toggle_bot(self) -> None:
-        self.stop_bot() if self.running() else self.start_bot()
+        if self.running():
+            self.stop_bot()
+        elif self.pages.currentIndex() == START:
+            self.show_window()
+            self.open_board()
+        else:
+            self.start_bot()
 
     def on_board(self, payload: dict) -> None:
         self.payload = payload
+        if payload.get("snapshot") and self.pages.currentIndex() == LOADING:
+            self.go(BOARD)
         self.render()
 
     def on_finished(self, reason: str) -> None:
@@ -494,17 +639,20 @@ class MainWindow(QMainWindow):
         self.started_at = None
         self.message = reason
         self.worker = None
-        self.refresh_state()
-        self.render()
         if self.quitting:
             self.app.quit()
+            return
+        if self.pages.currentIndex() == LOADING:  # it stopped before the game could be read: back to the start
+            self.go(START)
+            self.show_window()
+        self.refresh_state()
+        self.render()
 
     # ---- reading the game while stopped, and the login -------------------------------------------------------
     def read_game(self) -> None:
         from osmbot.game.browser import STATE_FILE
 
         if self.running() or self.busy or not STATE_FILE.exists():
-            self.refresh_state()
             return
         self.busy = "a ler"
         self.refresh_state()
@@ -534,6 +682,7 @@ class MainWindow(QMainWindow):
         from osmbot.game.browser import open_login_session
 
         self.busy = "login"
+        self.message = ""
         self.refresh_state()
 
         def work() -> None:
@@ -549,13 +698,18 @@ class MainWindow(QMainWindow):
         self.busy = ""
         self.message = error
         self.refresh_state()
-        if not error:
+        if not error and self.pages.currentIndex() == BOARD:
             self.read_game()
 
     # ---- drawing --------------------------------------------------------------------------------------------
     def render(self) -> None:
         now = time.time()
         self.clock_label.setText(datetime.now().strftime("%H:%M:%S") + "  ")
+        notices = self.payload.get("notices") or []
+        self.notices_window.show_notices(notices)
+        self.refresh_state()
+        if self.pages.currentIndex() != BOARD:
+            return
         view = board_view(self.payload.get("snapshot"), self.payload.get("stats") if self.running() else None, now)
         if view:
             self._show_clubs(view["clubs"])
@@ -570,21 +724,22 @@ class MainWindow(QMainWindow):
             self.videos_bar.set(videos["done"] if videos else None)
             self.videos_text.setText(videos["text"] if videos else "—")
             paint(self.videos_text, videos["colour"] if videos else GREY)
-            self.summary.setText(account["summary"] if self.running() else "—")
-        self._show_notices(self.payload.get("notices") or [])
+            self.session_box.setVisible(bool(view["session"]))
+            for (name, value), (label, number) in zip(self.session_cells, view["session"]):
+                name.setText(label)
+                value.setText(number)
         if self.message:
-            self.next_label.setText("  " + self.message)
+            self.next_label.setText("· " + self.message)
             paint(self.next_label, RED)
         elif self.running():
-            self.next_label.setText("  " + ((view or {}).get("next") or "A trabalhar…"))
+            self.next_label.setText("· " + ((view or {}).get("next") or "a trabalhar…"))
             paint(self.next_label, GREY)
         else:
-            self.next_label.setText("  Parado. Carrega em Iniciar para o bot começar a trabalhar.")
+            self.next_label.setText("· Bot → Iniciar para voltar a trabalhar")
             paint(self.next_label, GREY)
 
     def _show_clubs(self, clubs: list[dict]) -> None:
         if len(self.panels) != len(clubs):
-            self.loading.hide()
             for panel in self.panels:
                 panel.deleteLater()
             self.panels = [ClubPanel() for _ in clubs]
@@ -593,27 +748,26 @@ class MainWindow(QMainWindow):
         for panel, club in zip(self.panels, clubs):
             panel.show_club(club)
 
-    def _show_notices(self, notices: list) -> None:
-        if self.notices.rowCount() == len(notices):
-            return
-        self.notices.setRowCount(len(notices))
-        for row, (when, kind, text) in enumerate(notices):
-            set_cell(self.notices, row, 0, when)
-            set_cell(self.notices, row, 1, kind, RED if kind == "Erro" else YELLOW)
-            set_cell(self.notices, row, 2, text)
-        self.notices.scrollToBottom()
-
     # ---- window, tray, quitting -----------------------------------------------------------------------------
+    def show_notices(self) -> None:
+        self.notices_window.show()
+        self.notices_window.raise_()
+        self.notices_window.activateWindow()
+        dark_title_bar(self.notices_window)
+
     def show_window(self) -> None:
         self.showNormal()
         self.raise_()
         self.activateWindow()
 
     def closeEvent(self, event) -> None:
-        if self.quitting:
-            event.accept()
+        if self.quitting or not self.running():
+            event.accept()  # nothing working: the X closes the program
+            self.quitting = True
+            self.tray.hide()
+            self.app.quit()
             return
-        event.ignore()  # the X only hides the window: the bot goes on, the tray icon brings it back
+        event.ignore()  # the bot works: the X only hides the window; the tray icon brings it back
         self.hide()
 
     def quit_app(self) -> None:
@@ -624,6 +778,7 @@ class MainWindow(QMainWindow):
             self.hide()
             QTimer.singleShot(150_000, self.app.quit)  # a video in the middle can take ~90 s; never hang forever
         else:
+            self.tray.hide()
             self.app.quit()
 
     def open_logs(self) -> None:
@@ -632,12 +787,14 @@ class MainWindow(QMainWindow):
         repo = repo_folder()
         folder = repo / "logs" / machine() if repo else Path.home() / ".osmbot"
         folder.mkdir(parents=True, exist_ok=True)
-        os.startfile(folder) if sys.platform == "win32" else None
+        if sys.platform == "win32":
+            os.startfile(folder)
 
     def open_failures(self) -> None:
         folder = Path.home() / ".osmbot" / "failures"
         folder.mkdir(parents=True, exist_ok=True)
-        os.startfile(folder) if sys.platform == "win32" else None
+        if sys.platform == "win32":
+            os.startfile(folder)
 
     def about(self) -> None:
         QMessageBox.about(self, "Sobre o OSMbot",
@@ -650,13 +807,13 @@ def run_gui() -> None:
     """``osmbot`` with no command (and OSMbot.exe): the window. One window per PC user at a time."""
     app = QApplication.instance() or QApplication(sys.argv[:1])
     app.setApplicationName("OSMbot")
-    app.setQuitOnLastWindowClosed(False)  # the X hides the window; the tray keeps the program alive
+    app.setQuitOnLastWindowClosed(False)  # the X hides the window while the bot works; the tray keeps it alive
     app.setStyle("Fusion")
     app.setPalette(dark_palette())
     app.setFont(QFont("Segoe UI", 9))
     app.setStyleSheet(STYLE)
-    lock = QLockFile(str(Path.home() / ".osmbot" / "window.lock"))
     (Path.home() / ".osmbot").mkdir(parents=True, exist_ok=True)
+    lock = QLockFile(str(Path.home() / ".osmbot" / "window.lock"))
     if not lock.tryLock(100):
         QMessageBox.information(None, "OSMbot", "O OSMbot já está aberto (vê o ícone junto ao relógio).")
         return

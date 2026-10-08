@@ -38,7 +38,7 @@
 
 - **Modo ativo** — o bot fica a correr e trabalha sozinho (treinos, vídeos, avisos) até se parar: botão **Parar** na janela, ou Ctrl+C na consola (`osmbot ativo`).
 - **Quadro** — o ecrã do modo ativo, que se atualiza sozinho (clubes, treinos, conta, avisos e erros, próxima verificação): na **janela** (D-024) ou na consola (`osmbot menu` / `osmbot ativo`).
-- **Janela** — o programa OSMbot (PySide6, D-024): quadro, botões Iniciar/Parar/Login, menu. Fechar (X) só a esconde.
+- **Janela** — o programa OSMbot (PySide6, D-024): ecrã inicial (Abrir · Login · Sair), depois o quadro; menus Bot (Iniciar, Parar, Login, Sair) e Ver (Avisos e erros…). Com o bot a trabalhar, fechar (X) só a esconde.
 - **Ícone junto ao relógio** (área de notificação / bandeja) — o logótipo com bolinha verde (a trabalhar) ou cinzenta (parado); abre a janela, inicia/pára, sai.
 - **Janela de anúncios / limite (cap)** — o jogo limita quantos vídeos de cada tipo se podem ver por período (loja ~9 por hora, treino 4 por 3 horas, dinheiro 3 por dia). Lê-se em `user/caps/actions/{actionId}/0`.
 - **actionId** — nome interno de cada tipo de vídeo: `BusinessClub` (loja), `TrainingTimer` (treino), `Multistep1` a `3` (dinheiro).

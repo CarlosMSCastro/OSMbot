@@ -31,17 +31,36 @@ def window(monkeypatch, tmp_path):
     win.close()
 
 
-def test_the_window_opens_stopped_and_draws_the_clubs_side_by_side(window):
-    assert window.start_action.isEnabled() and not window.stop_action.isEnabled()
-    assert "sem sessão" in window.state_text.text() and "Login" in window.loading.text()
-    window.on_board({"snapshot": NOW_SNAPSHOT, "status": "PARADO", "notices": [("09:26:15", "Erro", "Loja: erro")]})
+def test_it_opens_small_on_the_start_screen_and_asks_for_a_login_first(window):
+    from osmbot.gui.window import LAUNCHER_SIZE, START
+
+    assert window.pages.currentIndex() == START and window.size() == LAUNCHER_SIZE
+    assert not window.menuBar().isVisible() and not window.open_button.isEnabled()  # no session yet
+    assert "Login" in window.session_label.text() and window.login_button.isEnabled()
+
+
+def test_abrir_shows_loading_then_grows_to_the_board_when_the_game_is_read(window):
+    from osmbot.gui.window import BOARD, LOADING
+
+    window.go(LOADING)
+    window.on_board({"snapshot": None, "status": "A TRABALHAR", "notices": []})
+    assert window.pages.currentIndex() == LOADING  # nothing read yet: still loading
+    window.on_board({"snapshot": NOW_SNAPSHOT, "status": "A TRABALHAR", "notices": [("09:26:15", "Erro", "Loja: erro")]})
+    assert window.pages.currentIndex() == BOARD and window.width() >= 1000
     assert [p.title() for p in window.panels] == ["Clube A  —  1.º · Liga", "Clube B  —  1.º · Liga"]
     assert window.panels[0].trainings.item(0, 2).text() == "pronto"
-    assert window.coins.text() == "2 586" and window.notices.rowCount() == 1
-    assert "Iniciar" in window.next_label.text()
+    assert window.coins.text() == "2 586"
+    assert window.notices_window.table.rowCount() == 1 and window.notices_action.text() == "Avisos e erros (1)"
 
 
-def test_closing_the_window_only_hides_it(window):
+def test_closing_hides_the_window_only_while_the_bot_works(window):
+    import threading
+
+    hold = threading.Event()
+    window.worker = threading.Thread(target=hold.wait, daemon=True)
+    window.worker.start()
     window.show()
     window.close()
     assert not window.isVisible() and not window.quitting
+    hold.set()
+    window.worker.join()

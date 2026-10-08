@@ -73,13 +73,15 @@ README = """OSMbot - versao portatil (Windows)
 
 Nao instala nada. Copia esta pasta para onde quiseres.
 
-Abre o  OSMbot.exe  (duplo clique). Abre a janela do OSMbot, com o quadro e o bot parado:
+Abre o  OSMbot.exe  (duplo clique). Abre uma janela pequena:
 
-  Iniciar   o bot comeca a trabalhar (treinos, estadio, patrocinadores, videos, recompensas diarias, avisos)
-  Parar     o bot para na pausa seguinte
+  Abrir     carrega o jogo e o bot comeca a trabalhar (treinos, estadio, patrocinadores, videos,
+            recompensas diarias, avisos); a janela cresce para o quadro
   Login     abre o Firefox. Entra com o Facebook e FECHA a janela do Firefox.
+  Sair
 
-Fechar a janela (X) so a esconde: o bot continua, com o icone junto ao relogio
+No quadro: menu Bot (Iniciar, Parar, Login, Sair) e menu Ver (Avisos e erros, Pasta dos logs...).
+Com o bot a trabalhar, fechar a janela (X) so a esconde: o bot continua, com o icone junto ao relogio
 (bolinha verde = a trabalhar, cinzenta = parado). Para sair: menu Bot -> Sair, ou o icone -> Sair.
 
 Num PC novo, comeca pelo Login. A sessao fica em %USERPROFILE%\\.osmbot
@@ -176,9 +178,20 @@ def build_installer(icon: Path) -> None:
     print(f"Instalador: {target}  ({target.stat().st_size / 1e6:.0f} MB)")
 
 
+def running_from(folder: Path) -> list[str]:
+    """Paths of OSMbot.exe processes started from ``folder`` (Windows): the build must not empty a folder in use."""
+    result = subprocess.run(["powershell", "-NoProfile", "-Command",
+                             "Get-Process OSMbot -ErrorAction SilentlyContinue | ForEach-Object { $_.Path }"],
+                            capture_output=True, text=True)
+    inside = str(folder.resolve()).lower()
+    return [line.strip() for line in result.stdout.splitlines() if line.strip().lower().startswith(inside)]
+
+
 def build(make_zip: bool, make_installer: bool = False, icon: Path = ICON) -> None:
     if sys.platform != "win32":
         raise SystemExit("Este script constroi a versao Windows; corre-o no Windows.")
+    if OUT.exists() and running_from(OUT):  # emptying it would delete the code and the Firefox of a running bot
+        raise SystemExit(f"Ha um OSMbot a correr a partir de {OUT}. Fecha-o (Bot -> Sair) e volta a correr o build.")
     if OUT.exists():  # empty the folder instead of deleting it: a terminal opened inside it would block the delete
         for child in OUT.iterdir():
             shutil.rmtree(child) if child.is_dir() else child.unlink()

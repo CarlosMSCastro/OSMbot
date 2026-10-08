@@ -4,7 +4,7 @@
 
 ## Objetivo
 
-**Poupar tempo ao dono automatizando tarefas repetitivas** no Online Soccer Manager (D-010). Estado em 0.9.0 (o bot corre numa janela com ícone junto ao relógio, D-024):
+**Poupar tempo ao dono automatizando tarefas repetitivas** no Online Soccer Manager (D-010). Estado em 0.9.1 (o bot corre numa janela com ícone junto ao relógio, D-024):
 
 | # | Automação | Estado |
 |---|---|---|
