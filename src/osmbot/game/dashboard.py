@@ -156,7 +156,8 @@ def summary_lines(snapshot: dict | None, stats: dict | None, now: float, full: b
         head += f": salto {jump:+d} boss coins"
     return [head, f"  {videos} · treinos: {stats.get('claimed', 0)} recolhidos, {stats.get('started', 0)} postos"
                   f" · estádio {stats.get('upgrades', 0)} · patrocinadores {stats.get('signed', 0)}"
-                  f" · recompensas: início {stats.get('r_login', 0)}, missões {stats.get('r_missions', 0)}, vídeos acumulados {stats.get('r_videos', 0)}"]
+                  f" · recompensas: início {stats.get('r_login', 0)}, missões {stats.get('r_missions', 0)}, vídeos acumulados {stats.get('r_videos', 0)}"
+                  f" · pré-jogo: amigáveis {stats.get('friendlies', 0)}, análises {stats.get('analyses', 0)}"]
 
 
 def summary_text(snapshot: dict | None, stats: dict | None, now: float) -> str:

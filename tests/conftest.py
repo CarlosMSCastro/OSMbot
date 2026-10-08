@@ -62,6 +62,7 @@ def _isolated_from_the_game(monkeypatch, tmp_path):
     monkeypatch.setattr(loop, "run_stadium", lambda confirm: (0, []))
     monkeypatch.setattr(loop, "run_sponsors", lambda confirm: (0, []))
     monkeypatch.setattr(loop, "run_rewards", lambda confirm: (0, []))
+    monkeypatch.setattr(loop, "run_prematch", lambda confirm: (0, []))
     monkeypatch.setattr(loop, "collect", lambda client: None)
 
     from osmbot.game import rewards
@@ -71,6 +72,11 @@ def _isolated_from_the_game(monkeypatch, tmp_path):
     monkeypatch.setattr(rewards, "_day_done", set())
     monkeypatch.setattr(rewards, "COUNTS", {"login": 0, "missions": 0, "videos": 0})
     monkeypatch.setattr(rewards, "_catalogue", [])
+
+    from osmbot.game import prematch
+
+    monkeypatch.setattr(prematch, "COUNTS", {"friendlies": 0, "analyses": 0})
+    monkeypatch.setattr(prematch, "PAUSE_BETWEEN_WRITES", 0)
 
     class _NoClient:
         def __init__(self, *args, **kwargs):

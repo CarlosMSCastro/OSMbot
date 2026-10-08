@@ -123,7 +123,8 @@ def session_view(stats: dict | None, now: float) -> list[tuple[str, str]]:
             ("Vídeos treino", f"{training}" + (f" (−{training * VIDEO_SAVES // 3600} h)" if training else "")),
             ("Vídeos dinheiro", str(stats.get("money", 0))), ("Recolhidos", str(stats.get("claimed", 0))),
             ("Postos a treinar", str(stats.get("started", 0))), ("Estádio", str(stats.get("upgrades", 0))),
-            ("Patrocinadores", str(stats.get("signed", 0))), ("Recompensas", str(rewards))]
+            ("Patrocinadores", str(stats.get("signed", 0))), ("Recompensas", str(rewards)),
+            ("Pré-jogo", f"{stats.get('friendlies', 0)} · {stats.get('analyses', 0)}")]
 
 
 def next_check(snapshot: dict | None, now: float) -> str:

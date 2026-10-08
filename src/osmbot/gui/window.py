@@ -439,7 +439,7 @@ class MainWindow(QMainWindow):
         session = QHBoxLayout(self.session_box)
         session.setSpacing(0)
         self.session_cells: list[tuple[QLabel, QLabel]] = []
-        for index in range(9):
+        for index in range(10):  # one per session_view box
             cell = QWidget()
             column = QVBoxLayout(cell)
             column.setContentsMargins(10, 0, 10, 0)

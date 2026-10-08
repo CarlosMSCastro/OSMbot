@@ -1,7 +1,8 @@
 """Build the Windows portable folder of osmbot (D-016): ``python tools/build_portable.py [--zip]``.
 
 Result: ``dist/osmbot-portable/`` with ``OSMbot.exe`` (a renamed copy of the official, signed
-embeddable ``python.exe``; ``app/sitecustomize.py`` turns it into the osmbot menu), the Python
+embeddable ``pythonw.exe``, so no console; ``app/sitecustomize.py`` turns it into the osmbot window),
+``OSMbot-consola.exe`` (the same for ``python.exe``: console menu and commands), the Python
 runtime next to it, osmbot's dependencies and the Playwright Firefox. Copy the folder (or the .zip)
 to another Windows PC and double-click ``OSMbot.exe``; nothing is installed. The session
 (``~/.osmbot``) stays per machine: choose "Login" in the menu once on each PC.
@@ -25,20 +26,26 @@ OUT = DIST / "osmbot-portable"
 PYTHON_VERSION = "3.12.10"  # same minor version as the dependencies are installed for
 EMBED_URL = f"https://www.python.org/ftp/python/{PYTHON_VERSION}/python-{PYTHON_VERSION}-embed-amd64.zip"
 
-SITECUSTOMIZE = '''"""Runs when Python starts. As OSMbot.exe (a renamed python.exe) it opens the osmbot window or runs a command."""
+SITECUSTOMIZE = '''\"\"\"Runs when Python starts. As OSMbot.exe (a renamed pythonw.exe: no console) it opens the osmbot window;
+as OSMbot-consola.exe (a renamed python.exe) it runs the console menu or a command.\"\"\"
 import os
 import sys
 
-if os.path.basename(sys.executable).lower() == "osmbot.exe":
+NAME = os.path.basename(sys.executable).lower()
+if NAME in ("osmbot.exe", "osmbot-consola.exe"):
     here = os.path.dirname(os.path.abspath(sys.executable))
     os.environ.setdefault("PLAYWRIGHT_BROWSERS_PATH", os.path.join(here, "browsers"))
-    try:
-        import ctypes
+    windowed = sys.stdout is None  # pythonw: no console to print to
+    if windowed:
+        sys.stdout = sys.stderr = open(os.devnull, "w", encoding="utf-8")
+    else:
+        try:
+            import ctypes
 
-        ctypes.windll.kernel32.SetConsoleOutputCP(65001)
-        ctypes.windll.kernel32.SetConsoleTitleW("OSMbot")
-    except Exception:
-        pass
+            ctypes.windll.kernel32.SetConsoleOutputCP(65001)
+            ctypes.windll.kernel32.SetConsoleTitleW("OSMbot")
+        except Exception:
+            pass
     code = 0
     try:
         from osmbot.cli import main
@@ -55,16 +62,26 @@ if os.path.basename(sys.executable).lower() == "osmbot.exe":
     except BaseException:
         import traceback
 
-        try:  # the window hides the console: show it again so the error can be read
-            import ctypes
-
-            ctypes.windll.user32.ShowWindow(ctypes.windll.kernel32.GetConsoleWindow(), 5)
-        except Exception:
-            pass
-        traceback.print_exc()
-        input("\\nErro. Enter para fechar...")
         code = 1
-    sys.stdout.flush()
+        if windowed:  # no console: keep the error in a file and say where it is
+            text = traceback.format_exc()
+            target = os.path.join(os.path.expanduser("~"), ".osmbot", "erro.txt")
+            try:
+                os.makedirs(os.path.dirname(target), exist_ok=True)
+                with open(target, "w", encoding="utf-8") as file:
+                    file.write(text)
+                import ctypes
+
+                ctypes.windll.user32.MessageBoxW(None, text[-1500:] + "\\n\\nGuardado em " + target, "OSMbot - erro", 0x10)
+            except Exception:
+                pass
+        else:
+            traceback.print_exc()
+            input("\\nErro. Enter para fechar...")
+    try:
+        sys.stdout.flush()
+    except Exception:
+        pass
     os._exit(code)
 '''
 
@@ -76,7 +93,7 @@ Nao instala nada. Copia esta pasta para onde quiseres.
 Abre o  OSMbot.exe  (duplo clique). Abre uma janela pequena:
 
   Abrir     carrega o jogo e o bot comeca a trabalhar (treinos, estadio, patrocinadores, videos,
-            recompensas diarias, avisos); a janela cresce para o quadro
+            recompensas diarias, amigavel e analise 4 h antes do jogo, avisos); a janela cresce para o quadro
   Login     abre o Firefox. Entra com o Facebook e FECHA a janela do Firefox.
   Sair
 
@@ -92,7 +109,7 @@ Regra: so uma maquina com o bot ligado de cada vez.
 Nao mexer nos outros ficheiros e pastas (sao o Python, as bibliotecas e o Firefox).
 Se o Windows avisar ("SmartScreen"): Mais informacoes -> Executar mesmo assim.
 
-Comandos diretos (para quem quiser): OSMbot.exe menu (o menu antigo, na consola) | ativo --simular | ativo --sem-anuncios | status | treinos | slots
+Comandos diretos (para quem quiser), numa consola: OSMbot-consola.exe menu (o menu antigo) | ativo --simular | ativo --sem-anuncios | status | treinos | slots
 """
 
 
@@ -179,9 +196,9 @@ def build_installer(icon: Path) -> None:
 
 
 def running_from(folder: Path) -> list[str]:
-    """Paths of OSMbot.exe processes started from ``folder`` (Windows): the build must not empty a folder in use."""
+    """Paths of OSMbot.exe / OSMbot-consola.exe processes started from ``folder`` (Windows): the build must not empty a folder in use."""
     result = subprocess.run(["powershell", "-NoProfile", "-Command",
-                             "Get-Process OSMbot -ErrorAction SilentlyContinue | ForEach-Object { $_.Path }"],
+                             "Get-Process OSMbot, OSMbot-consola -ErrorAction SilentlyContinue | ForEach-Object { $_.Path }"],
                             capture_output=True, text=True)
     inside = str(folder.resolve()).lower()
     return [line.strip() for line in result.stdout.splitlines() if line.strip().lower().startswith(inside)]
@@ -204,8 +221,9 @@ def build(make_zip: bool, make_installer: bool = False, icon: Path = ICON) -> No
     pth = next(OUT.glob("python*._pth"))
     stem = pth.stem.split("._")[0]
     pth.write_text(f"{stem}.zip\n.\nLib\\site-packages\napp\nimport site\n", encoding="utf-8")
-    shutil.move(OUT / "python.exe", OUT / "OSMbot.exe")  # the signed python.exe, under osmbot's name
-    (OUT / "pythonw.exe").unlink(missing_ok=True)
+    # the signed pythonw.exe (no console) opens the window; the signed python.exe runs the console menu and commands
+    shutil.move(OUT / "pythonw.exe", OUT / "OSMbot.exe")
+    shutil.move(OUT / "python.exe", OUT / "OSMbot-consola.exe")
 
     print("2/5 Dependencias")
     run(sys.executable, "-m", "pip", "install", "--quiet", "--target", str(OUT / "Lib" / "site-packages"),

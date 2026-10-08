@@ -300,3 +300,17 @@ def test_a_free_button_is_clicked_once():
 
     _click_past_windows(page, Tile())
     assert Tile.tries == 1 and page.clicks == 0
+
+
+def test_video_firefox_is_muted():
+    seen = {}
+
+    class Firefox:
+        def launch(self, **options):
+            seen.update(options)
+
+    class Playwright:
+        firefox = Firefox()
+
+    ads._launch(Playwright(), headless=True)
+    assert seen == {"headless": True, "firefox_user_prefs": {"media.volume_scale": "0.0"}}

@@ -26,6 +26,12 @@ PAUSE = (20.0, 75.0)  # seconds between two videos
 WAIT_FOR_REWARD = 90.0  # seconds to wait for the boss coins to arrive
 PAGE_TIMEOUT = 60_000  # ms (slow office PCs / networks)
 QUICK_CLICK = 15_000  # ms: a first try; if a late window covers the button, close it and try again
+MUTED = {"media.volume_scale": "0.0"}  # Firefox plays the ads silently; the page still sees the video playing (owner, 2026-10-08)
+
+
+def _launch(playwright, headless: bool):
+    """The Firefox used for videos: muted, so the ads make no sound on the owner's PC."""
+    return playwright.firefox.launch(headless=headless, firefox_user_prefs=MUTED)
 
 
 def save_failure(page, tag: str) -> None:
@@ -86,7 +92,7 @@ def watch_shop_video(client, headless: bool = True) -> None:
     before = _wallet_amount(client)
     cookies = None
     with sync_playwright() as playwright:
-        browser = playwright.firefox.launch(headless=headless)
+        browser = _launch(playwright, headless)
         try:
             context = browser.new_context(storage_state=str(STATE_FILE), viewport={"width": 1280, "height": 900})
             page = context.new_page()
@@ -235,7 +241,7 @@ def watch_training_video(client, club: str, session: dict, base: str, headless: 
     before = finishes()
     cookies = None
     with sync_playwright() as playwright:
-        browser = playwright.firefox.launch(headless=headless)
+        browser = _launch(playwright, headless)
         try:
             context = browser.new_context(storage_state=str(STATE_FILE), viewport={"width": 1280, "height": 900})
             page = context.new_page()
@@ -320,7 +326,7 @@ def watch_money_video(client, club: str, headless: bool = True) -> None:
 
     cookies = None
     with sync_playwright() as playwright:
-        browser = playwright.firefox.launch(headless=headless)
+        browser = _launch(playwright, headless)
         try:
             context = browser.new_context(storage_state=str(STATE_FILE), viewport={"width": 1280, "height": 900})
             page = context.new_page()

@@ -2,6 +2,18 @@
 
 Entradas mais recentes primeiro. Cada sessão: o que se fez · o que ficou por fazer · próximo passo.
 
+## 2026-10-08 (cont. 5) — Casa: `dist` 0.9.1
+
+- PC de casa estava em `64bc921` (0.8.2), 4 commits atrás; o dono fez pull para `1c84296` (0.9.1).
+- `.venv` sem `PySide6` → `pip install -e .`; 217 testes a passar.
+- `dist` reconstruído (portátil 552 MB, zip 205 MB, instalador 147 MB); verificado com o Python da pasta: `__version__` 0.9.1, `PySide6` 6.12.0, `osmbot.gui.window` importa.
+- **Vídeos sem som** (pedido do dono): o Firefox dos vídeos (`ads._launch`, loja/treino/dinheiro) arranca com `media.volume_scale = 0.0`. Corta o som à saída; a página continua a ver o vídeo a tocar (não usa `video.muted`). Teste novo; 218 testes. `dist` reconstruído com isto. **Não verificado em real** que fica mudo (falta o dono ouvir um vídeo).
+- **Consola aberta ao lado da janela** (dono, casa): no Windows 11 a consola por omissão é o Windows Terminal; `hide_own_console` (`ShowWindow`) não o esconde, e fechá-lo matava o bot. **Correção** (`build_portable.py`): `OSMbot.exe` passa a ser o `pythonw.exe` (sem consola); `OSMbot-consola.exe` (o `python.exe`) fica para `menu` e comandos. Sem consola, `stdout` vai para `devnull` e um erro fatal abre uma caixa e fica em `~/.osmbot/erro.txt`. O Playwright já esconde o processo dele com `pythonw`. Teste novo (o lançador compila); 219 testes. `dist` reconstruído; verificado: `OSMbot.exe` é GUI (subsystem 2), `status` corre nos dois. **Por verificar pelo dono:** abrir a janela com duplo clique, sem consola.
+- **Amigável e análise à última hora** (pedido do dono): regra em `THEORY.md` §6 (4 h antes do jogo, se ainda não houver; adversário indiferente; todas as equipas). Observação com `inspect-writes` (dono: 2 amigáveis, 1 análise) → pedidos e checklist `matchpreparation` em `DISCOVERY.md` §3. **Por fazer:** confirmar se a análise passa a 1/1 sozinha quando o timer de 1 h acaba; OK do dono para construir (escritas novas, regra 5).
+- **Construído (D-025):** o dono confirma que a análise passa a 1/1 sozinha e dá o OK. `prematch/policy.py` (puro) e `game/prematch.py`; no ciclo como os outros extras (falha não para os treinos); o bot acorda 4 h antes de cada jogo. Quadro: "pré-jogo: amigáveis N, análises N" no resumo; janela: caixa "Pré-jogo" (10 caixas, 891 px, cabe nos 1060 do quadro). 11 testes novos; 230 a passar. Simulação contra o jogo real (sem escrever): uma equipa já tinha tudo feito pelo dono → nada; a outra → 1 amigável e analista ao adversário da jornada seguinte. **Ainda não corrido em real.**
+- **Versão 0.9.2** (pedido do dono): `pyproject`, `__version__`, `CHANGELOG`, README; `dist` reconstruído (portátil, zip, instalador).
+- **Próximo passo:** o dono troca a pasta portátil, confirma a janela sem consola e os vídeos sem som, e vê o primeiro pré-jogo real nos logs ("Amigável: …", "Análise: …").
+
 ## 2026-10-08 (cont. 4) — Fábrica: pull, noite do bot, logs sem escolher pasta
 
 - **Git (`DESKTOP-8OFGOB3`):** o pull tinha feito merge com um commit local antigo (`0.8.1 - Debug`); o dono repôs `main` igual a `origin/main` (comandos dados, regra 9).

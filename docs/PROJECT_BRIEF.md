@@ -19,6 +19,7 @@
 | 9 | **Aviso de condição física** dos titulares (`THEORY.md` §16) | **Feito** (quadro) |
 | 10 | Transferências automáticas | Por especificar; escritas novas pedem OK |
 | 11 | Aviso de jogadores novos "SALE" no mercado (`THEORY.md` §7.7) | Por fazer |
+| 12a | **Amigável e análise do adversário**: 4 h antes de cada jogo, se o dono ainda não os fez; amigável contra qualquer clube, analista ao próximo adversário (`THEORY.md` §6, D-025) | **Feito** (a validar em real) |
 | 12 | **Amigáveis em quantidade** com as boss coins dos vídeos (~25 por equipa por jornada, `THEORY.md` §6) | Ideia; o dono vê primeiro o ganho real de coins durante uns dias |
 
 Os vídeos têm limites impostos pelo servidor (detalhe em `THEORY.md` §12); o bot respeita-os sempre, salta algumas janelas da **loja** de propósito (os de treino e de dinheiro vêem-se sempre, D-021) e nunca forja a recompensa (D-012, regra 8).
@@ -32,7 +33,7 @@ Fora do alcance: táticas. O dono aplica a sua teoria de jogo ele mesmo; está r
 - [x] Alcance escolhido (D-002) e postura de risco definida (D-004).
 - [x] Forma como o jogo comunica verificada com o dono presente (`DISCOVERY.md`).
 - [x] Stack escolhida: Python (D-001); Firefox/Playwright só para login e vídeos, HTTP para o resto.
-- [x] O bot recolhe e treina sozinho, vê vídeos dentro dos limites do jogo, trata do estádio, dos patrocinadores e das recompensas diárias.
+- [x] O bot recolhe e treina sozinho, vê vídeos dentro dos limites do jogo, trata do estádio, dos patrocinadores, das recompensas diárias e, 4 h antes de cada jogo, do amigável e da análise do adversário.
 - [x] Funciona em Windows sem instalar o ambiente de desenvolvimento (D-016).
 - [ ] Corre vários dias seguidos sem intervenção (por validar).
 - [ ] Funciona no PC da empresa (por testar).

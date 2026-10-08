@@ -25,9 +25,11 @@ from osmbot.game.ads import (SHOP_ACTION, TRAINING_ACTION, VIDEO_SAVES, AdsError
                              run_shop_ads, run_training_ads, watch_money_video, watch_shop_video, watch_training_video)
 from osmbot.game.dashboard import Screen, collect, machine_name, render, span, summary_text, wake_events
 from osmbot.game.slots import describe, newly_free, read_slots
+from osmbot.game import prematch as prematch_module
 from osmbot.game import sponsors as sponsors_module
 from osmbot.game import rewards as rewards_module
 from osmbot.game import stadium as stadium_module
+from osmbot.game.prematch import run_prematch
 from osmbot.game.rewards import run_rewards
 from osmbot.game.sponsors import run_sponsors
 from osmbot.game.stadium import run_stadium
@@ -178,7 +180,8 @@ def _summary_data() -> dict:
     return {**_stats, "claimed": COUNTS["claimed"], "started": COUNTS["started"],
             "upgrades": stadium_module.COUNTS["upgrades"], "signed": sponsors_module.COUNTS["signed"],
             "r_login": rewards_module.COUNTS["login"], "r_missions": rewards_module.COUNTS["missions"],
-            "r_videos": rewards_module.COUNTS["videos"]}
+            "r_videos": rewards_module.COUNTS["videos"], "friendlies": prematch_module.COUNTS["friendlies"],
+            "analyses": prematch_module.COUNTS["analyses"]}
 
 
 def _check_fitness(snapshot: dict | None, previous: set[int]) -> set[int]:
@@ -295,7 +298,8 @@ def ads_wake(now: float) -> float | None:
 
 def run_active(dry_run: bool = False, *, claim=run_claim, train=run_train, finish_times=None, slots=None,
                ads=lambda dry_run: _all_ads(dry_run), stadium=lambda confirm: run_stadium(confirm),
-               sponsors=lambda confirm: run_sponsors(confirm), rewards=lambda confirm: run_rewards(confirm), snapshot=None, use_screen: bool | None = None,
+               sponsors=lambda confirm: run_sponsors(confirm), rewards=lambda confirm: run_rewards(confirm),
+               prematch=lambda confirm: run_prematch(confirm), snapshot=None, use_screen: bool | None = None,
                sleep=time.sleep, clock=time.time, rng=random, board=None) -> None:
     """Loop until Ctrl+C (or ``request_stop``) or the first failure. With ``dry_run`` do one simulated pass and show the board once.
 
@@ -321,6 +325,7 @@ def run_active(dry_run: bool = False, *, claim=run_claim, train=run_train, finis
     COUNTS.update(claimed=0, started=0)
     stadium_module.COUNTS["upgrades"] = sponsors_module.COUNTS["signed"] = 0
     rewards_module.COUNTS.update(login=0, missions=0, videos=0)
+    prematch_module.COUNTS.update(friendlies=0, analyses=0)
     machine = machine_name()
     if board:
         screen = None
@@ -361,7 +366,7 @@ def run_active(dry_run: bool = False, *, claim=run_claim, train=run_train, finis
 
     def counts() -> tuple:
         return (COUNTS["claimed"], COUNTS["started"], stadium_module.COUNTS["upgrades"], sponsors_module.COUNTS["signed"],
-                *rewards_module.COUNTS.values())
+                *rewards_module.COUNTS.values(), *prematch_module.COUNTS.values())
 
     try:
         _log("Simulação (uma passagem)" if dry_run else "Bot ligado")
@@ -422,6 +427,16 @@ def run_active(dry_run: bool = False, *, claim=run_claim, train=run_train, finis
                         raise
                     except Exception as error:
                         _log(f"Recompensas: erro ({error}); volto a tentar")
+                prematch_times: list[float] = []
+                if prematch:
+                    try:  # an extra: friendly and analysis 4 h before each match (THEORY.md section 6)
+                        prematch_failed, prematch_times = _quiet(prematch, not dry_run)
+                        if prematch_failed:
+                            _log(f"Pré-jogo: {prematch_failed} falha(s); volto a tentar")
+                    except OSError:
+                        raise
+                    except Exception as error:
+                        _log(f"Pré-jogo: erro ({error}); volto a tentar")
                 if changed(before):
                     refresh_board()
                 if ads:
@@ -440,7 +455,7 @@ def run_active(dry_run: bool = False, *, claim=run_claim, train=run_train, finis
                     _stats["coins0"] = last_snapshot["coins"]
                 events = wake_events(last_snapshot, clock())
                 times = [ts for _, ts in events] or finish_times()
-                times = times + [t for t in stadium_times + reward_times if t > clock()]
+                times = times + [t for t in stadium_times + reward_times + prematch_times if t > clock()]
                 wait = next_wait(times, clock(), rng.uniform(*JITTER))
                 if ads_failed:
                     again = ads_wake(clock())

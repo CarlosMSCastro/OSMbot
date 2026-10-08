@@ -126,6 +126,18 @@ Implementado em `plan_training` / `pick_trainee`:
   - Limite diário do jogo: o dono acha que **não há** (por verificar).
   - Por decidir: quantos por dia, que clube primeiro, reserva mínima de boss coins. O pedido que inicia um amigável **nunca foi observado** (regra 7; escrita nova, pede OK pela regra 5).
   - Conta: 2 equipas × ~25 × 4 coins = ~200 boss coins por jornada; o bot ganha ~140 por dia com 18 h a correr (8 vídeos/h vistos no `bot.log`).
+- **Amigável e análise do adversário à última hora (dono, 2026-10-08; pedido de automação, ainda não construído):**
+  - Quando faltarem **4 horas para o próximo jogo** de uma equipa, se ainda não houver **amigável feito** para esse jogo, o bot faz **1**. O mesmo para a **análise do adversário** (envia o analista; é grátis).
+  - **Não fazer mais cedo:** nos confrontos diretos o dono gosta de verificar ele próprio nas últimas horas; as 4 h dão-lhe esse tempo, e o bot só cobre o que ele não fez.
+  - **Adversário do amigável (dono, 2026-10-08):** é **indiferente**. O jogo sugere 1 (há 1 lugar recomendado), mas pode escolher-se qualquer clube. O que importa é haver **pelo menos 1 amigável antes de cada jogo**. Não tem nada a ver com o próximo adversário, nem com liga ou taça: serve **qualquer clube** da liga (o jogo só deixa 1 amigável contra cada clube por jornada).
+  - **Só a análise** usa o próximo adversário: o analista vai ao clube do próximo jogo oficial (foi o que o site fez quando o dono analisou à mão).
+  - **"Feito" (dono, 2026-10-08):** pelo menos 1 amigável **desde o último jogo dessa equipa**. Se o dono já fez um para este jogo, o bot não faz outro.
+  - **Todas as equipas (dono, 2026-10-08):** vale para todas as equipas da conta, em qualquer liga, de 1 a 4 (há 4 lugares). Regra geral do projeto, não só desta: nada é fixo a clubes ou ligas.
+  - **Para mais tarde (dono, 2026-10-08):** se isto funcionar bem, talvez **5 amigáveis por dia**. Não construir agora.
+  - **Observado e autorizado (2026-10-08, D-025):** pedidos em `DISCOVERY.md` §3. Construído em `prematch/policy.py` e `game/prematch.py`:
+    - "Feito" é o que diz a checklist do jogo (`matchpreparation`). A análise só conta lá depois da hora do analista; por isso um analista já enviado nesta jornada também conta (o dono confirma que passa a 1/1 sozinha).
+    - **[S]** O adversário do amigável é **ao acaso** entre os clubes da liga ainda sem amigável nesta jornada (o dono diz que é indiferente; ao acaso evita um padrão de máquina). Se o jogo recusar, tenta outro (até 3).
+    - **[S]** Sem boss coins para o amigável (4): só avisa. Se não for claro quem é o próximo adversário: a análise fica por fazer, com aviso. **O dono (2026-10-08): uma jornada nunca tem 2 jogos.** No calendário de uma equipa, a jornada 14 tinha um jogo de taça (`matchType` 1) no lugar do da liga. Por isso esta proteção não deve disparar; fica só para dados inesperados.
 - Treino secreto e estágio são decisões de gasto do dono (coins, limites por época); não parecem candidatos a automatizar. O **amigável** é diferente: custa só 4 boss coins e o dono **faz sempre** — se um dia se automatizar algo da checklist, é candidato (mas só se o dono o pedir).
 - Pontos onde o jogo **não valida a qualidade** (especialistas, banco) são justamente onde a regra do dono acrescenta valor: só ele sabe se estão certos.
 

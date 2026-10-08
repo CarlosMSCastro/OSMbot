@@ -6,6 +6,17 @@ Este ficheiro é o **histórico de versões, para quem lê o repo**. O diário i
 
 ## [Por lançar]
 
+## [0.9.2] — 2026-10-08
+
+O bot faz o amigável e a análise do adversário 4 horas antes de cada jogo, se ainda não estiverem feitos. Os vídeos passam a correr sem som e a pasta portátil já não abre consola.
+
+### Adicionado
+- **Amigável e análise do adversário** (D-025, `THEORY.md` §6): 4 horas antes de cada jogo, em todas as equipas, se a checklist do jogo ainda os tiver por fazer, o bot faz 1 amigável (contra qualquer clube da liga; 4 boss coins) e envia o analista ao próximo adversário. Nunca antes, para deixar as últimas horas ao dono, e nunca por cima do que ele já fez. Na janela, caixa "Pré-jogo" no resumo da sessão. **Ainda não corrido em real.**
+
+### Alterado
+- **Vídeos sem som:** o Firefox dos vídeos corre com o volume a zero; a página continua a ver o vídeo a tocar.
+- **Pasta portátil sem consola:** `OSMbot.exe` abre só a janela (no Windows 11 a consola não se escondia e fechá-la fechava o bot). Os comandos passam para `OSMbot-consola.exe` (p. ex. `OSMbot-consola.exe menu`). Um erro grave abre uma caixa e fica em `~/.osmbot/erro.txt`.
+
 ## [0.9.1] — 2026-10-08
 
 A janela abre pequena com Abrir · Login · Sair e só cresce para o quadro depois de o jogo carregar. Um treino acabado já não fica por recolher durante quase uma hora.

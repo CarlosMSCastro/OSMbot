@@ -2,7 +2,7 @@
 
 Exploração de um bot para o **Online Soccer Manager** (Gamebasics).
 
-> **Estado (0.9.1):** o bot trabalha sozinho no Windows (treinos, estádio, patrocinadores, vídeos da loja, de treino e de dinheiro, recompensas diárias, aviso de vagas na lista de transferências), numa **janela de programa** com ícone junto ao relógio (o quadro de consola continua disponível). Ver [`CHANGELOG.md`](CHANGELOG.md) e [`docs/`](docs/).
+> **Estado (0.9.2):** o bot trabalha sozinho no Windows (treinos, estádio, patrocinadores, vídeos da loja, de treino e de dinheiro, recompensas diárias, amigável e análise do adversário 4 h antes de cada jogo, aviso de vagas na lista de transferências), numa **janela de programa** com ícone junto ao relógio (o quadro de consola continua disponível). Ver [`CHANGELOG.md`](CHANGELOG.md) e [`docs/`](docs/).
 
 ## Aviso
 
@@ -31,7 +31,7 @@ O comando `login` abre uma janela de Firefox a sério (não Chromium — o popup
 
 ## Utilização
 
-`osmbot` sem argumentos (ou o `OSMbot.exe`) abre a **janela** (D-024, só Windows por agora):
+`osmbot` sem argumentos (ou o `OSMbot.exe` da pasta portátil, que não abre consola) abre a **janela** (D-024, só Windows por agora):
 
 - abre pequena, com **Abrir**, **Login** e **Sair**. Num PC novo, começa pelo Login;
 - **Abrir** mostra "A carregar o jogo…", põe o bot a trabalhar e a janela cresce para o **quadro**: os clubes lado a lado (jogo, lista de transferências, dinheiro, patrocinadores, estádio, treinos, cansados), a conta (boss coins, loja, diárias, troca de posição) e o que o bot fez desde que foi ligado;
@@ -45,7 +45,7 @@ O resto é por comandos:
 |---|---|
 | `osmbot menu` | O menu antigo, na consola (Iniciar, Login, Sair), com o quadro em texto |
 | `osmbot login` | Abre o Firefox para entrares; fecha a janela para guardar a sessão |
-| `osmbot ativo` | **Modo ativo**: recolhe e treina quando os treinos acabam, sobe o estádio, assina patrocinadores, vê os vídeos (loja, treino, dinheiro), reclama as recompensas diárias e avisa de vagas na lista de transferências; quadro em tempo real. Ctrl+C para parar |
+| `osmbot ativo` | **Modo ativo**: recolhe e treina quando os treinos acabam, sobe o estádio, assina patrocinadores, vê os vídeos (loja, treino, dinheiro), reclama as recompensas diárias, faz o amigável e a análise do adversário 4 h antes de cada jogo (se ainda não estiverem feitos) e avisa de vagas na lista de transferências; quadro em tempo real. Ctrl+C para parar |
 | `osmbot ativo --simular` | Uma passagem sem escrever nada |
 | `osmbot ativo --sem-anuncios` / `--sem-quadro` | Sem vídeos / linhas simples em vez do quadro |
 | `osmbot status`, `treinos`, `slots` | Só leitura |
@@ -57,7 +57,7 @@ Só **uma máquina com o bot ligado de cada vez**. O registo fica em `~/.osmbot/
 
 ## Windows: pasta portátil e instalador
 
-`python tools/build_portable.py --zip --installer` cria, em `dist/` (fora do git), `osmbot-portable.zip` (Python, dependências e Firefox lá dentro; abre-se `OSMbot.exe`) e `OSMbot-Setup.exe` (instalador por utilizador, sem administrador; precisa do Inno Setup para ser construído). A sessão não viaja: fica em `%USERPROFILE%\.osmbot` de cada PC e faz-se *Login* uma vez em cada um. Ver `docs/DECISIONS.md` D-016.
+`python tools/build_portable.py --zip --installer` cria, em `dist/` (fora do git), `osmbot-portable.zip` (Python, dependências e Firefox lá dentro; abre-se `OSMbot.exe`, só a janela, sem consola; os comandos correm com `OSMbot-consola.exe`, p. ex. `OSMbot-consola.exe menu`) e `OSMbot-Setup.exe` (instalador por utilizador, sem administrador; precisa do Inno Setup para ser construído). A sessão não viaja: fica em `%USERPROFILE%\.osmbot` de cada PC e faz-se *Login* uma vez em cada um. Ver `docs/DECISIONS.md` D-016.
 
 ## Documentação
 
