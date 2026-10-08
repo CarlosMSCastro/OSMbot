@@ -71,6 +71,8 @@ Legenda: **[V]** verificado por nós · **[R]** reportado por fonte de terceiros
 
 - O dono viu as 4 propostas de patrocinador e escolheu a que paga mais (comparou-as à mão; as propostas vêm de pedidos de leitura, ainda por mapear).
 - **Não apareceu nenhum pedido de "recolher"** do estádio. Por apurar: a melhoria acabada recolhe-se com um pedido que não foi feito, ou o jogo aplica-a sozinho.
+- **[V]** (2026-10-08, leitura do código público da web, `osm.cloud/sb/*.js.v32583`) **Na web não há vídeo para encurtar o estádio.** A página do estádio (`stadium.js`) só tem: começar a melhoria (`POST .../stadiumparts`), **acelerar com boss coins** (`PUT leagues/{L}/teams/{T}/stadiumparts/{id}/boost`, form `productId`, só se a liga tiver `boostTimersAllowed`) e **recolher** a melhoria acabada (`stadiumPartService.claim`, caminho em `.../stadiumparts/{id}/...`; resto do caminho por ler). Nenhuma referência a vídeos. Na lista de vídeos da web (`WatchVideoPlacementType`) só existem: BusinessClub, Shop, Header, Transfer, SpyTimer, TrainingTimer, ScoutTimer, MultistepCFReward/BCReward, OnboardingTransfer, Mission_Re-roll. Os pedidos de vídeo da web são `trainingsessions/{id}/consumereward`, `spyinstructions/{id}/consumereward`, `scoutinstructions/consumereward`, `finances/consumereward`, `bosscoinwallet/consumereward`, `reroll/consumereward`.
+- **[H]** O vídeo de −2h do estádio que o dono vê **no telemóvel** usará um pedido parecido (ex.: `stadiumparts/{id}/consumereward`) e um `actionId` próprio. Não está no código da web; só se confirma observando a app (não verificado).
 
 ### Início de sessão, missões e vídeos acumulados (2026-10-07, *Verificado*, só leitura; ensaio do `inspect-writes` sem reclamar nada)
 

@@ -13,7 +13,9 @@ def _no_repo_logs(monkeypatch, tmp_path):
     from osmbot import logs
 
     monkeypatch.setattr(logs, "CONFIG_FILE", tmp_path / "config.json")
-    monkeypatch.setattr(logs, "SOURCE_ROOT", tmp_path / "no-repo")
+    monkeypatch.setattr(logs, "SOURCE_ROOT", tmp_path / "no-repo" / "app")
+    monkeypatch.setattr(logs, "HOME", tmp_path / "no-repo")
+    monkeypatch.setattr(logs, "OLD_LOG", tmp_path / "old-bot.log")
     monkeypatch.delenv("OSMBOT_REPO", raising=False)
 
 

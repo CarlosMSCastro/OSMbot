@@ -52,7 +52,7 @@ def test_menu_lists_every_action_and_exit():
 
 
 def test_the_default_menu_has_start_login_logs_folder_and_exit():
-    assert [label for label, _ in menu._default_actions().values()] == ["Iniciar", "Login", "Pasta dos logs"]
+    assert [label for label, _ in menu._default_actions().values()] == ["Iniciar", "Login"]
 
 
 def test_default_menu_only_has_start_login_and_exit():

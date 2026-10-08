@@ -1,7 +1,7 @@
 """The console menu that opens when you run ``osmbot`` with no command (D-015, D-016).
 
-Only what the owner uses every day is in the menu: start the bot, log in, where the logs go (D-022), leave. The rest
-(status, simulation, a run without videos...) stays available as commands: ``osmbot --help``.
+Only what the owner uses every day is in the menu: start the bot, log in, leave (the logs folder is found on
+its own, D-023). The rest (status, simulation, a run without videos...) stays available as commands: ``osmbot --help``.
 """
 from __future__ import annotations
 
@@ -33,12 +33,10 @@ def _default_actions() -> dict[str, tuple[str, Callable[[], None]]]:
     """Menu key -> (label, action). Imported lazily so the menu itself stays light and testable."""
     from osmbot.game.browser import open_login_session
     from osmbot.game.loop import run_active
-    from osmbot.logs import run_logs_folder
 
     return {
         "1": ("Iniciar", lambda: run_active(False)),
         "2": ("Login", open_login_session),
-        "3": ("Pasta dos logs", run_logs_folder),
     }
 
 

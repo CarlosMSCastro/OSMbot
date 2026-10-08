@@ -2,6 +2,18 @@
 
 Entradas mais recentes primeiro. Cada sessão: o que se fez · o que ficou por fazer · próximo passo.
 
+## 2026-10-08 (cont. 4) — Fábrica: pull, noite do bot, logs sem escolher pasta
+
+- **Git (`DESKTOP-8OFGOB3`):** o pull tinha feito merge com um commit local antigo (`0.8.1 - Debug`); o dono repôs `main` igual a `origin/main` (comandos dados, regra 9).
+- **Noite de 2026-10-08 (casa, 7h44):** sem erros; 55 vídeos da loja, 12 de treino, 3 de dinheiro. "+27 boss coins" no resumo é saldo final − inicial: inclui o que o dono gastou (amigáveis); ganho bruto ~60. *Hipótese* (não verificada): o limite da loja é uma janela móvel de 1 h por vídeo → o bot acorda várias vezes seguidas para 1 vídeo. O dono não quer mexer.
+- **Erro 09:26 (fábrica):** "os boss coins não subiram" no 7.º vídeo; captura mostra a loja sem vídeo a correr → provável falta de anúncio; pontual, o bot seguiu.
+- **Logs:** o portátil (`Documents\osmbot-portable`, código igual à 0.8.2) não escrevia em `logs/` porque não sabia onde estava o repo. **D-023:** o bot procura-o sozinho (ao lado da pasta do bot, home, Documents, Desktop, OneDrive) e copia o `bot.log` antigo na 1.ª linha; "Pasta dos logs" sai do menu (fica o comando `osmbot pasta-logs`). 202 testes.
+- **Estádio −2h (telemóvel):** no código público da web não há vídeo do estádio (só `boost` com boss coins e recolha); ver `DISCOVERY.md`. A app pode ter o pedido, mas é *Hipótese*; e sem página web onde ver o anúncio, usá-lo seria forjar (regra 8).
+- **Erro 09:51 (vídeo de treino, `TimeoutError`):** captura = janela de XP de manager ("Lost against manager 2-0") por cima do mosaico TRAINING; apareceu **depois** da verificação das janelas. `ads.py`: `_click_past_windows` (1.ª tentativa 15 s; se falhar, passa as janelas da jornada e tenta de novo) no Shop, Watch ad, TRAINING, −2h e carteira do dinheiro. 204 testes.
+- **Versão 0.8.3** (pedido do dono): `pyproject`, `CHANGELOG`, `dist` reconstruído (portátil, zip, instalador).
+- **Interface fora da consola (discussão, nada feito):** ícone na bandeja sim, telemóvel não; indeciso entre PySide6 e página web numa janela (pywebview). Proposta: um protótipo pequeno de cada antes de decidir; seria a 0.9.0.
+- **Próximo passo:** o dono faz commit/push da 0.8.3 e substitui a pasta portátil em cada PC; ver `logs/DESKTOP-8OFGOB3/` a aparecer. Depois, protótipos da interface.
+
 ## 2026-10-08 (cont. 3) — Registo do bot no repo (0.8.2)
 
 - **Pedido do dono:** todos os logs no repo, para analisar de qualquer máquina. Perguntado: repo público → o dono quer-os **completos** ("não estou preocupado com isso"); tem o repo clonado em todos os PCs. **D-022** aceite (exceção a D-016 só para `logs/`); `CLAUDE.md`, `README`, `RISKS_AND_COMPLIANCE` atualizados.

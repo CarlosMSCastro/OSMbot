@@ -95,6 +95,10 @@ Substitui D-012 **só na parte das janelas saltadas**. O salto ao acaso (15%) fi
 Cada linha do registo do bot vai também para `logs/<nome do PC>/AAAA-MM-DD.log` no repo (um ficheiro por PC e por dia, para não haver conflitos no git). **Completo, com os nomes dos clubes e jogadores**: exceção à regra de D-016 só para `logs/`, escolhida pelo dono ("não estou preocupado com isso"). O `~/.osmbot/bot.log` mantém-se. Segredos **nunca** (regra 6): tokens e e-mails são apagados antes de escrever. O bot não mexe no git (regra 9): commit e push são do dono. Pasta do repo: encontrada sozinha a correr do código; no bot instalado escolhe-se uma vez (menu "Pasta dos logs" / `osmbot pasta-logs`), o que copia também o registo antigo desse PC.
 **Porquê:** o dono trabalha em várias máquinas (casa, fábrica, Mac) e quer analisar os logs de qualquer uma.
 
+### D-023 · O bot encontra sozinho o repo para os logs · Aceite · 2026-10-08
+Substitui D-022 **só na parte da pasta do repo**. O bot (código, portátil ou instalado) procura o repo sozinho: primeiro `OSMBOT_REPO` ou a pasta escolhida com `osmbot pasta-logs`, depois o código de onde corre, depois um repo OSMbot **ao lado da pasta do bot** ou na pasta pessoal, `Documents`, `Desktop` (também os do OneDrive); se houver vários, ganha o que se chama `OSMbot`. Na primeira linha de um PC copia também o `~/.osmbot/bot.log` antigo. A opção "Pasta dos logs" sai do menu; o comando `osmbot pasta-logs` fica só para um repo noutro sítio. O resto de D-022 mantém-se.
+**Porquê:** dono, 2026-10-08: "os logs devem ficar no repo em cada uma das máquinas" sem ter de escolher a pasta; na fábrica o portátil corria em `Documents\osmbot-portable` e os logs ficavam só em `~/.osmbot`.
+
 ## Em aberto
 
 | ID | Decisão | Depende de | Notas |

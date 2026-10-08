@@ -25,6 +25,7 @@ MAX_PER_BURST = 9  # the shop's own limit per window
 PAUSE = (20.0, 75.0)  # seconds between two videos
 WAIT_FOR_REWARD = 90.0  # seconds to wait for the boss coins to arrive
 PAGE_TIMEOUT = 60_000  # ms (slow office PCs / networks)
+QUICK_CLICK = 15_000  # ms: a first try; if a late window covers the button, close it and try again
 
 
 def save_failure(page, tag: str) -> None:
@@ -91,8 +92,8 @@ def watch_shop_video(client, headless: bool = True) -> None:
             page = context.new_page()
             _open_game(page)
             try:
-                page.locator("a:visible", has_text="Shop").first.click(timeout=PAGE_TIMEOUT)
-                page.get_by_text("Watch ad", exact=False).first.click(timeout=PAGE_TIMEOUT)
+                _click_past_windows(page, page.locator("a:visible", has_text="Shop").first)
+                _click_past_windows(page, page.get_by_text("Watch ad", exact=False).first)
             except Exception as error:
                 save_failure(page, "loja")
                 raise AdsError(f"botão da loja não encontrado ({type(error).__name__})") from error
@@ -169,6 +170,16 @@ def _dismiss_matchday(page) -> None:
         page.wait_for_timeout(3000)
 
 
+def _click_past_windows(page, locator) -> None:
+    """Click, but if the round's screens (above all the manager-XP window) show up late and cover the
+    button, get past them and click again. Seen 2026-10-08: the XP window came after the check."""
+    try:
+        locator.click(timeout=QUICK_CLICK)
+    except Exception:
+        _dismiss_matchday(page)
+        locator.click(timeout=PAGE_TIMEOUT)
+
+
 def _open_game(page) -> None:
     """Open the game (the career page) and get past the "Continue" screen the game often shows after a
     match, whatever the task: every browser job starts here."""
@@ -188,7 +199,7 @@ def _open_club(page, club: str) -> None:
 def _open_training_page(page, club: str) -> None:
     """The club's card, then its "TRAINING" tile (the top "Training Ground" menu does not react to clicks)."""
     _open_club(page, club)
-    page.locator("text=/^training$/i").filter(visible=True).first.click(timeout=PAGE_TIMEOUT)
+    _click_past_windows(page, page.locator("text=/^training$/i").filter(visible=True).first)
     page.wait_for_timeout(5000)
 
 
@@ -233,7 +244,7 @@ def watch_training_video(client, club: str, session: dict, base: str, headless: 
                 button = _coach_button(page, session["trainer"])
                 if dry_run:
                     return
-                button.click(timeout=PAGE_TIMEOUT)
+                _click_past_windows(page, button)
             except Exception as error:
                 save_failure(page, "treino")
                 if isinstance(error, AdsError):
@@ -315,7 +326,7 @@ def watch_money_video(client, club: str, headless: bool = True) -> None:
             page = context.new_page()
             try:
                 _open_club(page, club)
-                page.locator(".clubfunds-wallet").first.click(timeout=PAGE_TIMEOUT)
+                _click_past_windows(page, page.locator(".clubfunds-wallet").first)
                 page.wait_for_selector(MONEY_CARD, timeout=PAGE_TIMEOUT)
                 before = page.locator(MONEY_DONE).count()
                 page.locator(MONEY_CARD).first.click(timeout=PAGE_TIMEOUT)

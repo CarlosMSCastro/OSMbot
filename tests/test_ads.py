@@ -267,3 +267,36 @@ def test_every_browser_job_starts_by_getting_past_the_continue_screen():
     page = Page(screens=2)
     _open_game(page)
     assert page.opened.startswith("https://en.onlinesoccermanager.com") and page.clicks == 2
+
+
+def test_a_button_covered_by_a_late_xp_window_is_clicked_after_closing_it():
+    from osmbot.game.ads import _click_past_windows
+
+    page = _Page([])
+
+    class Tile:
+        tries = 0
+
+        def click(self, timeout=None):
+            Tile.tries += 1
+            if page.top() == "xp":
+                raise TimeoutError("covered by the XP window")
+
+    page.screens = ["xp"]  # shows up only after the club was opened (seen 2026-10-08)
+    _click_past_windows(page, Tile())
+    assert Tile.tries == 2 and page.remaining == 0
+
+
+def test_a_free_button_is_clicked_once():
+    from osmbot.game.ads import _click_past_windows
+
+    page = _Page(screens=0)
+
+    class Tile:
+        tries = 0
+
+        def click(self, timeout=None):
+            Tile.tries += 1
+
+    _click_past_windows(page, Tile())
+    assert Tile.tries == 1 and page.clicks == 0

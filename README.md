@@ -31,7 +31,7 @@ O comando `login` abre uma janela de Firefox a sério (não Chromium — o popup
 
 ## Utilização
 
-`osmbot` sem argumentos abre um **menu** com Iniciar, Login, Pasta dos logs e Sair. O resto (estado, simulação, sem vídeos) é por comandos:
+`osmbot` sem argumentos abre um **menu** com Iniciar, Login e Sair. O resto (estado, simulação, sem vídeos) é por comandos:
 
 | Comando | O que faz |
 |---|---|
@@ -41,10 +41,10 @@ O comando `login` abre uma janela de Firefox a sério (não Chromium — o popup
 | `osmbot ativo --sem-anuncios` / `--sem-quadro` | Sem vídeos / linhas simples em vez do quadro |
 | `osmbot status`, `treinos`, `slots` | Só leitura |
 | `osmbot recolher`, `treinar` | Escrevem na conta; `--simular` mostra o plano |
-| `osmbot pasta-logs [pasta do repo]` | Mostra ou escolhe o repo para onde vai o registo (`logs/<PC>/`); copia o registo antigo |
+| `osmbot pasta-logs [pasta do repo]` | Mostra ou escolhe o repo para onde vai o registo (`logs/<PC>/`), se não for encontrado sozinho; copia o registo antigo |
 | `osmbot recompensas` | Reclama as recompensas diárias (início de sessão, missões, vídeos acumulados); ficam no inventário; `--simular` mostra o plano |
 
-Só **uma máquina com o bot ligado de cada vez**. O registo fica em `~/.osmbot/bot.log` e também no repo, em `logs/<nome do PC>/AAAA-MM-DD.log` (D-022), para o ver noutra máquina depois do teu commit/push. A correr a partir do repo a pasta é encontrada sozinha; no bot instalado escolhe-se uma vez no menu (**Pasta dos logs**).
+Só **uma máquina com o bot ligado de cada vez**. O registo fica em `~/.osmbot/bot.log` e também no repo, em `logs/<nome do PC>/AAAA-MM-DD.log` (D-022), para o ver noutra máquina depois do teu commit/push. O bot encontra o repo sozinho (D-023): o código de onde corre, ou uma pasta `OSMbot` ao lado da pasta do bot ou na pasta pessoal, `Documents` ou `Desktop`. Só se o repo estiver noutro sítio: `osmbot pasta-logs <pasta do repo>`.
 
 ## Windows: pasta portátil e instalador
 

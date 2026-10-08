@@ -76,3 +76,31 @@ def test_the_menu_option_leaves_quietly_without_an_answer():
 
     logs.run_logs_folder(ask=no_input, show=said.append)
     assert "não definido" in said[0]
+
+
+def test_the_portable_bot_finds_the_repo_next_to_its_folder(tmp_path, monkeypatch):
+    repo = _repo(tmp_path)
+    monkeypatch.setattr(logs, "SOURCE_ROOT", tmp_path / "osmbot-portable")  # Documents\osmbot-portable\app\osmbot
+    assert logs.repo_folder() == repo
+
+
+def test_the_installed_bot_finds_the_repo_in_documents(tmp_path, monkeypatch):
+    home = tmp_path / "home"
+    copy = _repo(home / "Documents")
+    copy.rename(home / "Documents" / "old-copy")
+    repo = _repo(home / "Documents")
+    monkeypatch.setattr(logs, "HOME", home)
+    assert logs.repo_folder() == repo  # the one named OSMbot wins
+
+
+def test_the_first_line_from_a_pc_brings_its_old_log_without_repeating_it(tmp_path, monkeypatch):
+    repo = _repo(tmp_path)
+    old = tmp_path / "bot.log"
+    old.write_text("2026-10-07 17:00:00  Loja: vídeo 1\n2026-10-08 09:14:34  Bot ligado\n", encoding="utf-8")
+    monkeypatch.setattr(logs, "OLD_LOG", old)
+    logs.write(datetime(2026, 10, 8, 9, 14, 34), "Bot ligado", repo)
+    logs.write(datetime(2026, 10, 8, 9, 15, 0), "Loja: vídeo 1", repo)
+    folder = repo / "logs" / logs.machine()
+    assert (folder / "2026-10-07.log").exists()
+    assert (folder / "2026-10-08.log").read_text(encoding="utf-8").splitlines() == [
+        "2026-10-08 09:14:34  Bot ligado", "2026-10-08 09:15:00  Loja: vídeo 1"]

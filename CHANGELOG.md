@@ -6,6 +6,16 @@ Este ficheiro é o **histórico de versões, para quem lê o repo**. O diário i
 
 ## [Por lançar]
 
+## [0.8.3] — 2026-10-08
+
+O registo vai para o repo sem configurar nada, e os vídeos já não ficam presos atrás da janela de experiência de manager.
+
+### Corrigido
+- **Vídeo de treino "não encontrado" (`TimeoutError`):** a janela de experiência de manager ("Won/Lost against manager…") às vezes só aparece depois de o bot verificar se havia janelas abertas, e tapava o botão TRAINING. Agora, se um botão estiver tapado, o bot fecha as janelas da ronda e tenta outra vez. Vale para os botões Shop, Watch ad, TRAINING, "-2h" e para a carteira dos vídeos de dinheiro.
+
+### Alterado
+- **A pasta do repo para o registo é encontrada sozinha** (D-023): o bot (a partir do código, portátil ou instalado) procura uma pasta `OSMbot` ao lado da sua pasta, ou na pasta pessoal, em `Documents` ou em `Desktop` (incluindo as do OneDrive). Na primeira vez, copia também o registo antigo desse PC. A opção **Pasta dos logs** sai do menu; fica o comando `osmbot pasta-logs <pasta>` para um repo noutro sítio.
+
 ## [0.8.2] — 2026-10-08
 
 Os vídeos de treino deixam de esperar e o registo do bot passa a ir também para o repo.
