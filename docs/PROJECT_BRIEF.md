@@ -1,10 +1,10 @@
 # Project Brief
 
-*Última atualização: 2026-10-06*
+*Última atualização: 2026-10-08*
 
 ## Objetivo
 
-**Poupar tempo ao dono automatizando tarefas repetitivas** no Online Soccer Manager (D-010). Estado em 0.8.2:
+**Poupar tempo ao dono automatizando tarefas repetitivas** no Online Soccer Manager (D-010). Estado em 0.9.0 (o bot corre numa janela com ícone junto ao relógio, D-024):
 
 | # | Automação | Estado |
 |---|---|---|
@@ -12,7 +12,7 @@
 | 2 | **Vídeos da loja** (1 boss coin cada, até 9 por hora): pagam os amigáveis (4 boss coins cada) | **Feito** |
 | 3 | **Vídeos de treino** (−2h cada, 4 por 3h): o treino acaba mais cedo e o ciclo volta a treinar mais cedo; regra "uniformizar"; nunca salta janelas (D-021) | **Feito** |
 | 4 | **Vídeos de dinheiro** (3 por dia: ~300k, ~600k, 3 boss coins) | **Feito** (no clube com mais poupança) |
-| 5 | **Aviso de slots de venda livres** (4 normalmente, 6 em eventos) | **Feito** (consola e registo) |
+| 5 | **Aviso de slots de venda livres** (4 normalmente, 6 em eventos) | **Feito** (janela, consola e registo) |
 | 6 | **Estádio**: começar a melhoria seguinte quando há dinheiro (`THEORY.md` §15) | **Feito** |
 | 7 | **Patrocinadores**: a melhor proposta em cada espaço livre (`THEORY.md` §15) | **Feito** |
 | 8 | **Recompensas diárias**: início de sessão, 3 missões, prémio do dia e vídeos acumulados; ficam no inventário, nunca se usam itens (`THEORY.md` §17, D-020) | **Feito** (0.8.0; a validar em real) |

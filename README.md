@@ -2,7 +2,7 @@
 
 Exploração de um bot para o **Online Soccer Manager** (Gamebasics).
 
-> **Estado (0.8.2):** o bot trabalha sozinho no Windows (treinos, estádio, patrocinadores, vídeos da loja, de treino e de dinheiro, recompensas diárias, aviso de vagas na lista de transferências), com quadro de consola em tempo real. Ver [`CHANGELOG.md`](CHANGELOG.md) e [`docs/`](docs/).
+> **Estado (0.9.0):** o bot trabalha sozinho no Windows (treinos, estádio, patrocinadores, vídeos da loja, de treino e de dinheiro, recompensas diárias, aviso de vagas na lista de transferências), numa **janela de programa** com ícone junto ao relógio (o quadro de consola continua disponível). Ver [`CHANGELOG.md`](CHANGELOG.md) e [`docs/`](docs/).
 
 ## Aviso
 
@@ -22,7 +22,7 @@ Funciona em Windows e macOS. Cria o ambiente virtual e ativa-o:
 Com o ambiente ativado, os comandos são iguais nos dois sistemas:
 
 ```
-pip install -e .
+pip install -e .                       # inclui o PySide6 (a janela)
 python -m playwright install firefox   # transferência única (~120 MB)
 osmbot login
 ```
@@ -31,10 +31,18 @@ O comando `login` abre uma janela de Firefox a sério (não Chromium — o popup
 
 ## Utilização
 
-`osmbot` sem argumentos abre um **menu** com Iniciar, Login e Sair. O resto (estado, simulação, sem vídeos) é por comandos:
+`osmbot` sem argumentos (ou o `OSMbot.exe`) abre a **janela** (D-024, só Windows por agora):
+
+- abre no **quadro** com o bot parado: os clubes lado a lado (jogo, lista de transferências, dinheiro, patrocinadores, estádio, treinos, cansados), a conta (boss coins, loja, diárias, troca de posição, resumo) e os avisos e erros;
+- **Iniciar** põe o bot a trabalhar; **Parar** pára-o na pausa seguinte; **Login** abre o Firefox; **Pasta dos logs** e, no menu Ver, **Capturas das falhas**;
+- a barra de baixo diz a próxima verificação;
+- fechar a janela (X) **só a esconde**: o bot continua, e o **ícone junto ao relógio** (logótipo com bolinha verde a trabalhar, cinzenta parado) volta a abri-la. Para sair: Bot → Sair, ou o ícone → Sair. Sem notificações do Windows.
+
+O resto é por comandos:
 
 | Comando | O que faz |
 |---|---|
+| `osmbot menu` | O menu antigo, na consola (Iniciar, Login, Sair), com o quadro em texto |
 | `osmbot login` | Abre o Firefox para entrares; fecha a janela para guardar a sessão |
 | `osmbot ativo` | **Modo ativo**: recolhe e treina quando os treinos acabam, sobe o estádio, assina patrocinadores, vê os vídeos (loja, treino, dinheiro), reclama as recompensas diárias e avisa de vagas na lista de transferências; quadro em tempo real. Ctrl+C para parar |
 | `osmbot ativo --simular` | Uma passagem sem escrever nada |

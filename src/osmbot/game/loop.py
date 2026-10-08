@@ -14,6 +14,7 @@ import shutil
 import io
 import random
 import sys
+import threading
 import time
 from collections import deque
 from datetime import datetime
@@ -64,6 +65,26 @@ _live: dict = {}  # values fresher than the last snapshot (boss coins after a vi
 _screen_on = False  # while the board is drawn, nothing else may print to the terminal
 _redraw = None  # set by run_active while the board is on: redraws it after each new log line
 _refresh = None  # set by run_active while the board is on: re-reads the game and redraws (after a change)
+_notices: deque[tuple[str, str, str]] = deque(maxlen=200)  # (hh:mm:ss, "Erro"/"Aviso", text) of this run, for the window (D-024)
+_stop = threading.Event()  # set by the window's "Parar": the loop stops at its next pause, as with Ctrl+C
+
+
+def request_stop() -> None:
+    """Ask a running loop to stop (the window's "Parar"); it stops at the next pause and logs "Parado"."""
+    _stop.set()
+
+
+def _check_stop() -> None:
+    if _stop.is_set():
+        raise KeyboardInterrupt
+
+
+def notice_kind(message: str) -> str | None:
+    """"Erro" for a problem, "Aviso" for a warning (lines starting with "!"), None for the rest."""
+    text = message.lstrip(chr(7)).strip()
+    if any(word in text.lower() for word in ERROR_WORDS):
+        return "Erro"
+    return "Aviso" if text.startswith("!") else None
 
 
 def _log(message: str) -> None:
@@ -76,6 +97,9 @@ def _log(message: str) -> None:
     _recent.append(line)
     if any(word in message.lower() for word in ERROR_WORDS):
         _errors.append((time.time(), line))
+    kind = notice_kind(message)
+    if kind:
+        _notices.append((f"{now:%H:%M:%S}", kind, message.lstrip(chr(7)).lstrip("! ").strip()))
     if not _screen_on:
         print(f"{now:%Y-%m-%d %H:%M:%S}  {message}", flush=True)
     elif _redraw:
@@ -139,12 +163,15 @@ def _counted(key: str, function, refresh=None):
 def _tick_sleep(seconds: float) -> None:
     """A pause that keeps the board alive (countdowns move) instead of freezing it."""
     if not (_screen_on and _redraw):
+        _check_stop()
         time.sleep(seconds)
         return
     end = time.time() + seconds
     while time.time() < end:
+        _check_stop()
         _redraw()
         time.sleep(min(1.0, max(0.0, end - time.time())))
+    _check_stop()
 
 
 def _summary_data() -> dict:
@@ -269,10 +296,12 @@ def ads_wake(now: float) -> float | None:
 def run_active(dry_run: bool = False, *, claim=run_claim, train=run_train, finish_times=None, slots=None,
                ads=lambda dry_run: _all_ads(dry_run), stadium=lambda confirm: run_stadium(confirm),
                sponsors=lambda confirm: run_sponsors(confirm), rewards=lambda confirm: run_rewards(confirm), snapshot=None, use_screen: bool | None = None,
-               sleep=time.sleep, clock=time.time, rng=random) -> None:
-    """Loop until Ctrl+C or the first failure. With ``dry_run`` do one simulated pass and show the board once.
+               sleep=time.sleep, clock=time.time, rng=random, board=None) -> None:
+    """Loop until Ctrl+C (or ``request_stop``) or the first failure. With ``dry_run`` do one simulated pass and show the board once.
 
-    ``use_screen``: None = draw the board when the output is a terminal (and not a dry run)."""
+    ``use_screen``: None = draw the board when the output is a terminal (and not a dry run).
+    ``board``: the window (D-024) instead of the terminal: called with a dict (snapshot, status, stats, notices)
+    whenever the board would be redrawn; nothing is printed then."""
     global _screen_on, _redraw, _refresh
     from osmbot.game.client import OsmClient
 
@@ -286,13 +315,19 @@ def run_active(dry_run: bool = False, *, claim=run_claim, train=run_train, finis
     _live.clear()
     _errors.clear()
     _ads_backoff.clear()
+    _notices.clear()
+    _stop.clear()
     _stats["start"] = clock()
     COUNTS.update(claimed=0, started=0)
     stadium_module.COUNTS["upgrades"] = sponsors_module.COUNTS["signed"] = 0
     rewards_module.COUNTS.update(login=0, missions=0, videos=0)
     machine = machine_name()
-    screen = Screen() if (sys.stdout.isatty() and not dry_run if use_screen is None else use_screen) else None
-    _screen_on = screen is not None
+    if board:
+        screen = None
+    else:
+        screen = Screen() if (sys.stdout.isatty() and not dry_run if use_screen is None else use_screen) else None
+    shown = screen is not None or board is not None  # something draws the board: lines go to the log, not the terminal
+    _screen_on = shown
 
     current = {"status": "A TRABALHAR"}
 
@@ -303,8 +338,10 @@ def run_active(dry_run: bool = False, *, claim=run_claim, train=run_train, finis
             problems = [line for when, line in _errors if time.time() - when < ERRORS_SHOWN_FOR]
             screen.draw(render(_shown(last_snapshot), clock(), status, problems, machine, stats=_summary_data(),
                                rows=size.lines, cols=size.columns))
+        if board:
+            board({"snapshot": _shown(last_snapshot), "status": status, "stats": _summary_data(), "notices": list(_notices)})
 
-    _redraw = (lambda: draw(current["status"])) if screen else None
+    _redraw = (lambda: draw(current["status"])) if shown else None
 
     def refresh_board() -> None:
         """Re-read the game and redraw now, so a change (trainings started, upgrade begun...) shows at once and
@@ -317,10 +354,10 @@ def run_active(dry_run: bool = False, *, claim=run_claim, train=run_train, finis
             pass
         draw(current["status"])
 
-    _refresh = refresh_board if screen else None
+    _refresh = refresh_board if shown else None
 
     def changed(before: tuple) -> bool:
-        return bool(screen) and counts() != before
+        return shown and counts() != before
 
     def counts() -> tuple:
         return (COUNTS["claimed"], COUNTS["started"], stadium_module.COUNTS["upgrades"], sponsors_module.COUNTS["signed"],
@@ -328,7 +365,7 @@ def run_active(dry_run: bool = False, *, claim=run_claim, train=run_train, finis
 
     try:
         _log("Simulação (uma passagem)" if dry_run else "Bot ligado")
-        if screen:  # something to show right away, before the first pass (which can take minutes)
+        if shown:  # something to show right away, before the first pass (which can take minutes)
             try:
                 last_snapshot = snapshot()
                 _stats["coins0"] = last_snapshot["coins"]
@@ -338,6 +375,7 @@ def run_active(dry_run: bool = False, *, claim=run_claim, train=run_train, finis
         retries, offline_since, write_failures = 0, None, 0
         while True:
             try:
+                _check_stop()
                 draw("A TRABALHAR")
                 ads_failed = False
                 before = counts()
@@ -435,9 +473,10 @@ def run_active(dry_run: bool = False, *, claim=run_claim, train=run_train, finis
             _log("Próxima verificação: " + (" · ".join(f"{label} em {span(ts - clock())}" for label, ts in events) or f"em {span(wait)}"))
             try:
                 deadline = clock() + wait
-                if not screen:
+                if not shown:
                     sleep(wait)
-                while screen and clock() < deadline:
+                while shown and clock() < deadline:
+                    _check_stop()
                     draw("ATIVO")
                     sleep(min(1.0, max(0.0, deadline - clock())))
             except KeyboardInterrupt:
@@ -448,8 +487,9 @@ def run_active(dry_run: bool = False, *, claim=run_claim, train=run_train, finis
             _log("Resumo: " + summary_text(last_snapshot, _summary_data(), clock()))
         if screen:
             screen.close()
-            _screen_on = False
-            _redraw = None
-            _refresh = None
             print(chr(10).join(_recent))
+        if board:
+            draw("PARADO")
         _screen_on = False
+        _redraw = None
+        _refresh = None

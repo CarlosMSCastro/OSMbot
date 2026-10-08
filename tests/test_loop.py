@@ -310,3 +310,34 @@ def test_the_board_is_refreshed_right_after_a_reward_is_claimed():
                         rewards=rewards, use_screen=True, sleep=lambda s: clock.__setitem__("t", clock["t"] + s),
                         clock=lambda: clock["t"], rng=FixedRng())
     assert state["at_ads"] == 2  # the first look plus the refresh after the claim, both before the videos
+
+
+def test_the_window_gets_the_board_and_its_stop_button_ends_the_loop_like_ctrl_c():
+    clock_state = {"t": 1_000_000.0}
+    shown = []
+    snap = {"coins": 2452, "clubs": [], "ads": {"shop": {"open": False, "reopen": None}, "training": {"open": False, "reopen": None}}}
+
+    def sleep(seconds):
+        clock_state["t"] += seconds
+        if clock_state["t"] > 1_000_000.0 + 120:
+            loop.request_stop()  # the owner presses "Parar" while the bot waits
+
+    def board(payload):
+        shown.append(payload)
+
+    loop.run_active(claim=lambda c: 0, train=lambda c: 0, finish_times=lambda: [], ads=None, stadium=None, sponsors=None,
+                    rewards=None, snapshot=lambda: snap, board=board, sleep=sleep, clock=lambda: clock_state["t"], rng=FixedRng())
+    with_data = [p for p in shown if p["snapshot"]]
+    assert with_data and with_data[0]["snapshot"] == snap and with_data[0]["stats"]["start"] == 1_000_000.0
+    assert len(with_data) > 5  # redrawn while waiting, so the countdowns move
+    assert shown[-1]["status"] == "PARADO"
+    assert "Parado" in loop.LOG_FILE.read_text(encoding="utf-8")
+
+
+def test_errors_and_warnings_are_kept_for_the_window():
+    loop._notices.clear()
+    loop._log("Vídeos: erro (shop_ads: os boss coins não subiram); volto a tentar")
+    loop._log("! Clube A: Jogador 5 (DEF) com 68% de condição; convém descansar 1 jogo")
+    loop._log("Loja: vídeo 1")
+    kinds = [(kind, text[:9]) for _, kind, text in loop._notices]
+    assert kinds == [("Erro", "Vídeos: e"), ("Aviso", "Clube A: ")]

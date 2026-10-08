@@ -11,8 +11,20 @@ Entradas mais recentes primeiro. Cada sessão: o que se fez · o que ficou por f
 - **Estádio −2h (telemóvel):** no código público da web não há vídeo do estádio (só `boost` com boss coins e recolha); ver `DISCOVERY.md`. A app pode ter o pedido, mas é *Hipótese*; e sem página web onde ver o anúncio, usá-lo seria forjar (regra 8).
 - **Erro 09:51 (vídeo de treino, `TimeoutError`):** captura = janela de XP de manager ("Lost against manager 2-0") por cima do mosaico TRAINING; apareceu **depois** da verificação das janelas. `ads.py`: `_click_past_windows` (1.ª tentativa 15 s; se falhar, passa as janelas da jornada e tenta de novo) no Shop, Watch ad, TRAINING, −2h e carteira do dinheiro. 204 testes.
 - **Versão 0.8.3** (pedido do dono): `pyproject`, `CHANGELOG`, `dist` reconstruído (portátil, zip, instalador).
-- **Interface fora da consola (discussão, nada feito):** ícone na bandeja sim, telemóvel não; indeciso entre PySide6 e página web numa janela (pywebview). Proposta: um protótipo pequeno de cada antes de decidir; seria a 0.9.0.
-- **Próximo passo:** o dono faz commit/push da 0.8.3 e substitui a pasta portátil em cada PC; ver `logs/DESKTOP-8OFGOB3/` a aparecer. Depois, protótipos da interface.
+- **Interface (D-024):** PySide6, só Windows, sem telemóvel, ícone na bandeja. Maquetes (capturas de janelas Qt reais, fora do repo): 1.ª "página web AI slop" rejeitada; 2.ª estilo programa de Windows aprovada; abre logo no quadro (parado → Iniciar), clubes lado a lado, avisos pequenos, redimensionável; X esconde e o bot continua; ícone = logótipo + bolinha verde/cinzenta, sem vermelho, sem notificações. Para a 0.9.0; ainda nada no código.
+- **Versão 0.9.0: a janela (D-024)**
+  - **Pedido do dono:** "atualizar o dist e toda a documentação".
+  - **Código:**
+    - `gui/view.py`, puro: snapshot → textos, cores e barras.
+    - `gui/window.py`: QMainWindow, ícone na bandeja (bolinha verde-lima com contorno branco ou cinzenta), lock de uma janela por utilizador, consola escondida quando aberta por duplo clique.
+    - `loop.run_active(board=...)`, `request_stop()`, `_notices` (erros e avisos para a janela).
+    - `osmbot` → janela; `osmbot menu` → consola.
+    - `__version__` com teste igual ao `pyproject`.
+    - 214 testes, incluindo um de fumo da janela sem ecrã.
+  - **Build:** `PySide6-Essentials` cortado a QtCore, QtGui e QtWidgets (49 MB). Portátil 552 MB, zip 205 MB, instalador 147 MB. Verificado: a janela abre com o Qt cortado, a partir do Python da pasta portátil, sem sessão (não leu o jogo).
+  - **Não testado em real:** Iniciar/Parar contra o jogo, porque em modo de desenvolvimento não se escreve na conta (regra 5). Fica para o dono.
+  - **Nota:** uma captura com `grabWindow` apanhou o ecrã do dono (o browser) em vez da janela; foi apagada logo. A partir daí só se usou `widget.grab()`.
+- **Próximo passo:** o dono testa a 0.9.0 (abrir, Login se preciso, Iniciar, fechar no X, ícone, Parar, Sair), faz commit/push e o release.
 
 ## 2026-10-08 (cont. 3) — Registo do bot no repo (0.8.2)
 

@@ -1,6 +1,6 @@
 # Opções em aberto
 
-*Estado em 0.8.0: o essencial está decidido (ver `DECISIONS.md`): alcance **A3/A4** (D-002), abordagem **híbrida** (browser só para login e vídeos; HTTP para o resto), interface **consola** com quadro e menu (D-015), stack **Python** (D-001), distribuição Windows em pasta portátil e instalador (D-016). O texto abaixo fica como registo das opções consideradas.*
+*Estado em 0.8.0: o essencial está decidido (ver `DECISIONS.md`): alcance **A3/A4** (D-002), abordagem **híbrida** (browser só para login e vídeos; HTTP para o resto), interface **consola** com quadro e menu (D-015), depois **janela PySide6** com ícone junto ao relógio (D-024, 0.9.0), stack **Python** (D-001), distribuição Windows em pasta portátil e instalador (D-016). O texto abaixo fica como registo das opções consideradas.*
 
 ## A. Alcance — o que faz o bot?
 

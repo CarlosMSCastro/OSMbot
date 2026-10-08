@@ -14,7 +14,7 @@ O bot já **escreve na conta** (modo ativo). Versão atual em `pyproject.toml` e
 
 ## Código
 
-Python ≥ 3.11, layout `src/`. A lógica de decisão (`theory/`, `training/`, políticas) é **pura** (sem I/O, sem rede) e testada com dados sintéticos; o contacto com o jogo está só em `src/osmbot/game/`.
+Python ≥ 3.11, layout `src/`. A lógica de decisão (`theory/`, `training/`, políticas) é **pura** (sem I/O, sem rede) e testada com dados sintéticos; o contacto com o jogo está só em `src/osmbot/game/`. A janela (`src/osmbot/gui/`, PySide6, D-024) só mostra: `gui/view.py` é puro e testado; `gui/window.py` corre o mesmo ciclo (`run_active(board=...)`) numa thread e não fala com o jogo por si, exceto a leitura do quadro com o bot parado (GET).
 
 Correr testes (com o venv ativado, igual em Windows e macOS): `python -m pytest`. Criar o venv e ativá-lo: ver `README.md`. O projeto corre em Windows e macOS (o dono desenvolve nos dois): código com `pathlib`, `encoding="utf-8"` explícito, sem comandos específicos de um SO; a sessão do browser (`~/.osmbot/`) é por máquina e nunca se sincroniza.
 

@@ -6,6 +6,19 @@ Este ficheiro é o **histórico de versões, para quem lê o repo**. O diário i
 
 ## [Por lançar]
 
+## [0.9.0] — 2026-10-08
+
+O bot passa a ter uma janela de programa, com ícone junto ao relógio.
+
+### Adicionado
+- **Janela do OSMbot** (D-024, PySide6, só Windows por agora): o `OSMbot.exe` (e `osmbot` sem argumentos) abre o quadro numa janela, com a mesma informação da consola. Os clubes aparecem lado a lado (jogo, lista de transferências, dinheiro, patrocinadores, estádio, treinos com barras, cansados). Por baixo ficam a conta (boss coins, loja, diárias, troca de posição, resumo), os avisos e erros, e a próxima verificação na barra de estado. Abre com o bot parado e mostra logo os dados do jogo (só leitura). Tem menu (Bot · Ver · Ajuda) e barra com **Iniciar**, **Parar**, **Login** e **Pasta dos logs**. É redimensionável e usa o tema escuro.
+- **Ícone junto ao relógio:** o logótipo com uma bolinha verde (a trabalhar) ou cinzenta (parado). O menu do ícone tem Abrir, Iniciar/Parar e Sair. Fechar a janela (X) só a esconde, e o bot continua. Não há notificações do Windows.
+- **Parar sem Ctrl+C:** o bot pára na pausa seguinte e escreve o resumo no registo, como antes.
+
+### Alterado
+- O menu da consola passa a abrir-se com `osmbot menu` (ou `OSMbot.exe menu`); os comandos de sempre mantêm-se.
+- A versão portátil e o instalador incluem o PySide6, só com as partes que a janela usa (~50 MB): portátil 552 MB, zip 205 MB, instalador 147 MB.
+
 ## [0.8.3] — 2026-10-08
 
 O registo vai para o repo sem configurar nada, e os vídeos já não ficam presos atrás da janela de experiência de manager.

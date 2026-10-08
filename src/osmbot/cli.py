@@ -17,7 +17,8 @@ from osmbot.game.browser import inspect_network, inspect_writes, inspect_session
 
 def main(argv: list[str] | None = None) -> None:
     parser = argparse.ArgumentParser(prog="osmbot")
-    subparsers = parser.add_subparsers(dest="command")  # no command: the menu
+    subparsers = parser.add_subparsers(dest="command")  # no command: the window (D-024)
+    subparsers.add_parser("menu", help="The console menu (the board in the terminal) instead of the window.")
     subparsers.add_parser(
         "login",
         help="Open a browser window to log into OSM; the session is saved for reuse.",
@@ -76,6 +77,16 @@ def main(argv: list[str] | None = None) -> None:
         stream.reconfigure(encoding="utf-8", errors="replace")
 
     if args.command is None:
+        try:
+            from osmbot.gui.window import run_gui
+        except ImportError as error:  # PySide6 missing (e.g. an old venv): the console menu still works
+            print(f"Janela indisponível ({error}); abro o menu da consola. Para a janela: pip install -e .")
+            from osmbot.menu import run_menu
+
+            run_menu()
+        else:
+            run_gui()
+    elif args.command == "menu":
         from osmbot.menu import run_menu
 
         run_menu()
