@@ -21,8 +21,9 @@ from datetime import datetime
 from pathlib import Path
 
 from osmbot import logs as repo_log
-from osmbot.game.ads import (SHOP_ACTION, TRAINING_ACTION, VIDEO_SAVES, AdsError, is_claimable, money_state, pick_money_club, run_money_ads,
-                             run_shop_ads, run_training_ads, watch_money_video, watch_shop_video, watch_training_video)
+from osmbot.game.ads import (MAX_PER_BURST, MAX_TRAINING_VIDEOS, SHOP_ACTION, TRAINING_ACTION, VIDEO_SAVES, AdsError, is_claimable, money_state, pick_money_club, run_money_ads,
+                             run_shop_ads, run_training_ads, watch_money_video, watch_shop_video, watch_training_video,
+                             watch_with_retry)
 from osmbot.game.dashboard import Screen, collect, machine_name, render, span, summary_text, wake_events
 from osmbot.game.slots import describe, newly_free, read_slots
 from osmbot.game import medical as medical_module
@@ -64,8 +65,9 @@ _recent: deque[str] = deque(maxlen=8)  # last log lines (printed when the board 
 _errors: deque[tuple[float, str]] = deque(maxlen=5)  # (when, line) of the last problems: the only log lines the board shows
 ERRORS_SHOWN_FOR = 30 * 60.0  # a problem stays on the board this long
 ERROR_WORDS = ("erro", "falha", "parou")
-_stats: dict = {}  # this run: start time, first coin balance, videos watched
+_stats: dict = {}  # this run: start time, boss coins from the shop videos, videos watched
 _live: dict = {}  # values fresher than the last snapshot (boss coins after a video)
+_doing: dict = {}  # what the bot is doing right now, for the window's status bar: text, kind of video, count...
 _screen_on = False  # while the board is drawn, nothing else may print to the terminal
 _redraw = None  # set by run_active while the board is on: redraws it after each new log line
 _refresh = None  # set by run_active while the board is on: re-reads the game and redraws (after a change)
@@ -122,6 +124,14 @@ def _quiet(function, *args):
         for line in buffer.getvalue().splitlines():
             if line.strip():
                 _log(line.strip())
+
+
+def _now(text: str, kind: str | None = None, **extra) -> None:
+    """Say what the bot is doing now ("vídeo da loja 3/9", "à espera"...); the window shows it with what comes next."""
+    _doing.clear()
+    _doing.update(text=text, kind=kind, **extra)
+    if _redraw:
+        _redraw()
 
 
 def _note_shortened(session_id: int) -> None:
@@ -230,7 +240,16 @@ def _shop_ads(dry_run: bool) -> int:
         _live["shop"] = {"open": bool(cap.get("isClaimable")) and not cap.get("isCapReached"),
                          "reopen": cap.get("timestampUntilUnreached") if cap.get("isCapReached") else None}
 
-    return run_shop_ads(lambda: is_claimable(client), _counted("shop", lambda: watch_shop_video(client), refresh_coins),
+    count = 0
+
+    def watch() -> None:
+        nonlocal count
+        count += 1
+        _now(f"vídeo da loja {count}/{MAX_PER_BURST}", "shop", count=count)
+        gained = watch_with_retry(lambda: watch_shop_video(client), lambda: is_claimable(client))
+        _stats["shop_coins"] = _stats.get("shop_coins", 0) + gained  # the "+X" beside the boss coins (owner, 2026-10-09)
+
+    return run_shop_ads(lambda: is_claimable(client), _counted("shop", watch, refresh_coins),
                         dry_run=dry_run, log=_log, sleep=_tick_sleep)
 
 
@@ -248,7 +267,12 @@ def _training_ads(dry_run: bool) -> int:
             found += [(club, s) for s in sessions]
         return found
 
+    count = 0
+
     def watch(club, session):
+        nonlocal count
+        count += 1
+        _now(f"vídeo de treino {session['player']['name']} ({club})", "training", count=count, session=session["id"])
         watch_training_video(client, club, session, clubs[club])
         _note_shortened(session["id"])
 
@@ -266,8 +290,12 @@ def _money_ads(dry_run: bool) -> int:
     def savings() -> dict[str, int]:
         return {team["name"]: client.get(f"{base}/finances")[1]["savings"] for _, team, base in _teams(client)}
 
+    def watch(club: str) -> None:
+        _now(f"vídeo de dinheiro ({club})", "money")
+        watch_money_video(client, club)
+
     return run_money_ads(lambda: money_state(client)["open"], lambda: pick_money_club(savings()),
-                         _counted("money", lambda club: watch_money_video(client, club), lambda: _refresh and _refresh()),
+                         _counted("money", watch, lambda: _refresh and _refresh()),
                          dry_run=dry_run, log=_log, sleep=_tick_sleep)
 
 
@@ -319,6 +347,7 @@ def run_active(dry_run: bool = False, *, claim=run_claim, train=run_train, finis
     last_snapshot = None
     _stats.clear()
     _live.clear()
+    _doing.clear()
     _errors.clear()
     _ads_backoff.clear()
     _notices.clear()
@@ -347,7 +376,8 @@ def run_active(dry_run: bool = False, *, claim=run_claim, train=run_train, finis
             screen.draw(render(_shown(last_snapshot), clock(), status, problems, machine, stats=_summary_data(),
                                rows=size.lines, cols=size.columns))
         if board:
-            board({"snapshot": _shown(last_snapshot), "status": status, "stats": _summary_data(), "notices": list(_notices)})
+            board({"snapshot": _shown(last_snapshot), "status": status, "stats": _summary_data(), "notices": list(_notices),
+                   "doing": dict(_doing)})
 
     _redraw = (lambda: draw(current["status"])) if shown else None
 
@@ -377,7 +407,6 @@ def run_active(dry_run: bool = False, *, claim=run_claim, train=run_train, finis
         if shown:  # something to show right away, before the first pass (which can take minutes)
             try:
                 last_snapshot = snapshot()
-                _stats["coins0"] = last_snapshot["coins"]
                 _live.clear()
             except Exception as error:
                 _log(f"Estado inicial: erro ({error})")
@@ -385,6 +414,7 @@ def run_active(dry_run: bool = False, *, claim=run_claim, train=run_train, finis
         while True:
             try:
                 _check_stop()
+                _now("recolher e pôr treinos")
                 draw("A TRABALHAR")
                 ads_failed = False
                 before = counts()
@@ -404,6 +434,7 @@ def run_active(dry_run: bool = False, *, claim=run_claim, train=run_train, finis
                 before = counts()
                 stadium_times: list[float] = []
                 if stadium:
+                    _now("estádio")
                     try:  # an extra too: a failure here never stops the trainings
                         stadium_failed, stadium_times = _quiet(stadium, not dry_run)
                         if stadium_failed:
@@ -413,6 +444,7 @@ def run_active(dry_run: bool = False, *, claim=run_claim, train=run_train, finis
                     except Exception as error:
                         _log(f"Estádio: erro ({error}); volto a tentar")
                 if sponsors:
+                    _now("patrocinadores")
                     try:  # also an extra
                         sponsors_failed, _ = _quiet(sponsors, not dry_run)
                         if sponsors_failed:
@@ -423,6 +455,7 @@ def run_active(dry_run: bool = False, *, claim=run_claim, train=run_train, finis
                         _log(f"Patrocinadores: erro ({error}); volto a tentar")
                 reward_times: list[float] = []
                 if rewards:
+                    _now("recompensas")
                     try:  # an extra as well: the daily rewards never stop the trainings
                         rewards_failed, reward_times = _quiet(rewards, not dry_run)
                         if rewards_failed:
@@ -433,6 +466,7 @@ def run_active(dry_run: bool = False, *, claim=run_claim, train=run_train, finis
                         _log(f"Recompensas: erro ({error}); volto a tentar")
                 prematch_times: list[float] = []
                 if prematch:
+                    _now("pré-jogo")
                     try:  # an extra: friendly and analysis 4 h before each match (THEORY.md section 6)
                         prematch_failed, prematch_times = _quiet(prematch, not dry_run)
                         if prematch_failed:
@@ -445,6 +479,7 @@ def run_active(dry_run: bool = False, *, claim=run_claim, train=run_train, finis
                     refresh_board()
                 medical_times: list[float] = []
                 if medical:
+                    _now("médico e advogado")
                     before = counts()
                     try:  # an extra: doctor and lawyer (THEORY.md section 18)
                         medical_failed, medical_times = _quiet(medical, not dry_run)
@@ -462,14 +497,13 @@ def run_active(dry_run: bool = False, *, claim=run_claim, train=run_train, finis
                     except Exception as error:  # ads are an extra: they never stop the trainings, and are retried
                         ads_failed = True
                         _log(f"Vídeos: erro ({error}); volto a tentar")
+                _now("ler o jogo")
                 try:
                     last_snapshot = snapshot()
                     _live.clear()  # the snapshot is fresher than anything read before it
                 except Exception as error:  # the board is an extra too
                     _log(f"Quadro: erro ao atualizar ({error})")
                 tired_before = _check_fitness(last_snapshot, tired_before)
-                if last_snapshot and "coins0" not in _stats:
-                    _stats["coins0"] = last_snapshot["coins"]
                 events = wake_events(last_snapshot, clock())
                 times = [ts for _, ts in events] or finish_times()
                 times = times + [t for t in stadium_times + reward_times + prematch_times + medical_times if t > clock()]
@@ -503,6 +537,7 @@ def run_active(dry_run: bool = False, *, claim=run_claim, train=run_train, finis
                 _log(f"Simulação: próxima verificação em {span(wait)}")
                 return
             _log("Próxima verificação: " + (" · ".join(f"{label} em {span(ts - clock())}" for label, ts in events) or f"em {span(wait)}"))
+            _now("à espera")
             try:
                 deadline = clock() + wait
                 if not shown:

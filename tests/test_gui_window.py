@@ -135,3 +135,27 @@ def test_it_reads_the_game_every_3_minutes_only_on_the_board(window, monkeypatch
     window.go(BOARD)
     window.auto_read()
     assert reads == [1]
+
+
+def test_a_part_going_up_shows_its_bar_and_the_status_bar_says_now_and_next(window):
+    import threading
+    import time
+
+    from osmbot.gui.window import BOARD
+
+    now = time.time()
+    club = {**NOW_SNAPSHOT["clubs"][0], "stadium": {"parts": [("Treinos", 3, 3, None), ("Campo", 1, 3, now + 9 * 3600)],
+                                                    "until": now + 9 * 3600, "lengths": {"Campo": 18 * 3600}}}
+    snapshot = {**NOW_SNAPSHOT, "clubs": [club], "ads": {"shop": {"open": True}}}
+    hold = threading.Event()
+    window.worker = threading.Thread(target=hold.wait, daemon=True)
+    window.worker.start()
+    try:
+        window.go(BOARD)
+        window.on_board({"snapshot": snapshot, "status": "A TRABALHAR", "notices": [],
+                         "doing": {"text": "vídeo da loja 8/9", "kind": "shop", "count": 8}, "stats": {"start": now}})
+        name, bar, left = window.panels[0].upgrade_rows[0]
+        assert name.text() == "Campo 1/3" and left.text() in ("9h00", "8h59") and abs(bar.done - 0.5) < 0.01
+        assert window.next_label.text() == "· agora: vídeo da loja 8/9 · a seguir: vídeo da loja 9/9"
+    finally:
+        hold.set()

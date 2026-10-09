@@ -6,6 +6,9 @@ a video skipped), yellow = needs attention, grey = labels / nothing going on, re
 """
 from __future__ import annotations
 
+from datetime import datetime
+
+from osmbot.game.ads import MAX_PER_BURST, MAX_TRAINING_VIDEOS, VIDEO_SAVES
 from osmbot.game.dashboard import BAR_SECONDS, SPONSOR_SLOTS, coin_jump, money, span, wake_events
 
 GREEN, BLUE, YELLOW, GREY, RED = "green", "blue", "yellow", "grey", "red"
@@ -68,9 +71,12 @@ def club_view(club: dict, now: float, shortened: dict | None = None) -> dict:
                     GREEN if sponsors["slots"] >= SPONSOR_SLOTS else YELLOW) if sponsors else ("—", GREY))
 
     still, moving = [], []
+    lengths = (club.get("stadium") or {}).get("lengths") or {}
     for name, level, top, ends in (club.get("stadium") or {}).get("parts", []):
         if ends and ends > now:
-            moving.append((f"{name} {level}/{top} · a subir, acaba em {span(ends - now)}", BLUE))
+            length = lengths.get(name)
+            moving.append({"text": f"{name} {level}/{top}", "left": span(ends - now),
+                           "done": _done(ends - now, length) if length else None})
         else:
             still.append((f"{name} {level}/{top}", GREEN if level >= top else None))
 
@@ -85,7 +91,6 @@ def club_view(club: dict, now: float, shortened: dict | None = None) -> dict:
             steps.append((f"◉ {name} por levantar", YELLOW))
         else:
             steps.append((f"○ {name}", GREY))
-    pct = prep.get("pct")
 
     trainings = []
     for t in club.get("trainings", []):
@@ -99,7 +104,7 @@ def club_view(club: dict, now: float, shortened: dict | None = None) -> dict:
             "subtitle": subtitle, "facts": facts, "alert": alert,
             "money": _money(total), "sales": sales, "sponsors": sponsor_row,
             "stadium": {"still": still, "moving": moving},
-            "prep": {"pct": f"{pct}%" if pct is not None else "", "colour": GREEN if pct == 100 else YELLOW, "steps": steps},
+            "prep": {"steps": steps},
             "trainings": trainings,
             "tired": " · ".join(f"{p['name']} {p['fitness']}%" for p in club.get("tired") or []),
             "injured": _people(club.get("injured") or [], "no médico", now),
@@ -172,10 +177,71 @@ def next_check(snapshot: dict | None, now: float) -> str:
     return f"próximo: {label} em {span(ts - now)}"
 
 
-def board_view(snapshot: dict | None, stats: dict | None, now: float) -> dict | None:
+def _training_video(snapshot: dict, now: float, current: int | None = None) -> str | None:
+    """The training the next -2h video goes to, as the bot picks it (``ads.pick_session``): the most time left,
+    2 h at least. ``current``: the session getting a video right now (it will have 2 h less)."""
+    best = None
+    for club in snapshot["clubs"]:
+        for t in club.get("trainings") or []:
+            left = t["finish"] - now - (VIDEO_SAVES if current is not None and t.get("id") == current else 0)
+            if not t["claimed"] and left >= VIDEO_SAVES and (best is None or left > best[0]):
+                best = (left, t["name"], club["name"])
+    return f"vídeo de treino {best[1]} ({best[2]})" if best else None
+
+
+def _video(kind: str, snapshot: dict, now: float) -> str | None:
+    if not ((snapshot.get("ads") or {}).get(kind) or {}).get("open"):
+        return None
+    if kind == "shop":
+        return f"vídeo da loja 1/{MAX_PER_BURST}"
+    if kind == "training":
+        return _training_video(snapshot, now)
+    savings = {c["name"]: (c.get("money") or (0, 0))[1] or 0 for c in snapshot["clubs"]}
+    return f"vídeo de dinheiro ({max(savings, key=savings.get)})" if savings else None
+
+
+def _waited_for(snapshot: dict, now: float) -> str:
+    """The next thing the bot waits for, by name: "recolher treino Fulano (Clube) às 15:51"."""
+    events = wake_events(snapshot, now)
+    if not events:
+        return ""
+    label, ts = events[0]
+    if label in ("treino acaba", "treino por recolher"):
+        found = next(((t["name"], c["name"]) for c in snapshot["clubs"] for t in c.get("trainings") or []
+                      if not t["claimed"] and (t["finish"] == ts or (label == "treino por recolher" and t["finish"] <= now))), None)
+        if found:
+            label = f"recolher treino {found[0]} ({found[1]})"
+    return label if ts <= now else f"{label} às {datetime.fromtimestamp(ts):%H:%M}"
+
+
+def doing_view(snapshot: dict | None, doing: dict | None, now: float) -> str:
+    """The status bar while the bot works: "agora: vídeo da loja 8/9 · a seguir: vídeo de treino Fulano (Clube)"
+    (owner, 2026-10-09: one thing each, in the singular). "A seguir" is the next step the bot will take, worked out
+    from the last reading of the game: more of the same video, the next kind of video that is open (shop, training,
+    money, in the bot's order), or, with nothing left, the next thing it waits for."""
+    if not doing or not snapshot:
+        return ""
+    kind, count = doing.get("kind"), doing.get("count") or 0
+    following = None
+    if kind == "shop" and count < MAX_PER_BURST and ((snapshot.get("ads") or {}).get("shop") or {}).get("open"):
+        following = f"vídeo da loja {count + 1}/{MAX_PER_BURST}"
+    elif kind == "training" and count < MAX_TRAINING_VIDEOS and ((snapshot.get("ads") or {}).get("training") or {}).get("open"):
+        following = _training_video(snapshot, now, doing.get("session"))
+    if following is None and doing.get("text") != "à espera":
+        order = ("shop", "training", "money")
+        for later in order[order.index(kind) + 1:] if kind in order else order:
+            following = _video(later, snapshot, now)
+            if following:
+                break
+    following = following or _waited_for(snapshot, now)
+    return f"agora: {doing['text']}" + (f" · a seguir: {following}" if following else "")
+
+
+def board_view(snapshot: dict | None, stats: dict | None, now: float, doing: dict | None = None) -> dict | None:
     """Everything the window shows for one moment (None while there is nothing read yet)."""
     if not snapshot:
         return None
     shortened = (stats or {}).get("shortened") or {}
     return {"clubs": [club_view(c, now, shortened) for c in snapshot["clubs"]],
-            "account": account_view(snapshot, stats, now), "next": next_check(snapshot, now)}
+            "account": account_view(snapshot, stats, now), "next": next_check(snapshot, now),
+            "doing": doing_view(snapshot, doing, now)}

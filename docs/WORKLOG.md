@@ -2,6 +2,19 @@
 
 Entradas mais recentes primeiro. Cada sessão: o que se fez · o que ficou por fazer · próximo passo.
 
+## 2026-10-09 (cont. 2) — Fábrica: quadro com "agora · a seguir", estádio com barra, loja
+
+- **Boss coins (pergunta do dono):** o saldo do bot bate com o do jogo (2651 via API, 2646 no topo do site às 14:00); o atraso era a 0.9.3 ler só no fim das passagens. Dono confirmou com Ver → Atualizar. O "-42" era saldo menos o saldo inicial.
+- **Pedidos do dono (D-026, correções 0.9.5):** "+X" só da loja; estádio "Campo 1/3" + barra + tempo; pré-jogo sem %; barra de baixo "agora · a seguir" no singular.
+- **Código:**
+  - `loop.py`: `_doing` / `_now()` em cada fase e em cada vídeo (loja N/9, treino com jogador e clube, dinheiro com clube), vai no payload da janela; `shop_coins` somado a cada vídeo da loja (`coins0` saiu).
+  - `view.py`: `doing_view` (pura): mais do mesmo vídeo, o próximo tipo aberto (loja, treino, dinheiro), ou o próximo evento pelo nome.
+  - `dashboard.py`: `upgrade_length` (18 h; 4 h se visto a começar; senão só o tempo), `stadium["lengths"]`; `coin_jump` = `shop_coins`.
+  - `ads.py`: loja desliza até "Watch ad", devolve os coins ganhos, captura 5 s depois do clique (só guardada se falhar), `watch_with_retry`.
+- **Verificado:** 265 testes; no jogo real (só leitura) o "Watch ad" estava em x = 3591 e ficou em x = 602 depois de deslizar.
+- **Não verificado em real:** as linhas novas da janela com o bot a trabalhar; a 2.ª tentativa da loja.
+- **Versão 0.9.5** (pedido do dono); `dist` reconstruído.
+
 ## 2026-10-09 (cont.) — Fábrica: quadro que se atualiza sozinho, vídeos que não se perdem (0.9.4)
 
 - **Pergunta do dono:** o quadro não mostrava o que ele mudou à mão (lista de transferências, banco) passados 10 min. Causa: só o bot lia o jogo, no fim de cada passagem, e "Atualizar quadro" só funcionava com o bot parado.
@@ -14,7 +27,7 @@ Entradas mais recentes primeiro. Cada sessão: o que se fez · o que ficou por f
   - Janela (D-027): lê o jogo de 3 em 3 min e em Ver → Atualizar (1.ª opção), com o bot a trabalhar ou não; fica a leitura mais recente (`read_at` no snapshot).
 - **Verificado:** 256 testes; ensaio no jogo real (só navegação, sem carregar em "-2h") nos dois clubes: OK. Com isso a janela de energia foi reclamada (autorizado pelo dono).
 - **CPU depois da correção (medido):** leitura do quadro com 0,27 s de CPU (antes ~25 s), 1,5 s no total.
-- **Ainda não verificado no jogo real:** a leitura de 3 em 3 min com o bot a trabalhar.
+- **Verificado pelo dono (0.9.4):** gastou boss coins e o saldo atualizou com Ver → Atualizar. **Ainda por ver:** a leitura automática de 3 em 3 min com o bot a trabalhar.
 - `.venv` criado nesta máquina para os testes. **Versão 0.9.4**; `dist` reconstruído.
 
 ## 2026-10-09 — Quadro novo (0.9.3), médico e advogado, levantar o analista

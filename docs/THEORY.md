@@ -434,6 +434,7 @@ Há **3 componentes** a melhorar, cada um com **níveis 0, 1, 2 e 3**:
 **Estádio**
 - Não há "recolher": uma melhoria acaba e a seguinte **põe-se a correr**, nada mais.
 - **Ordem das partes:** campo de treinos → campo → capacidade.
+- **Duração de uma melhoria (dono, 2026-10-09):** **18 h** normalmente; nos **eventos** do estádio, **4 h**. Há eventos destes para outras coisas também (p. ex. treinos). Visto nos registos: campo, 3 melhorias seguidas de 18h00. **[S]** As outras partes (treinos, capacidade) duram o mesmo. O jogo só dá a hora em que a melhoria acaba; o quadro calcula o início como "fim − 18 h" (ou "fim − 4 h" se a viu começar num evento) e, quando não dá para saber, mostra só o tempo.
 - **Em todas as equipas**, sempre que houver dinheiro.
 - Se não houver dinheiro nos fundos, ver a **poupança**: se tiver, tirar tudo (§13: é tudo ou nada), pagar a melhoria e **voltar a depositar o que sobra** o mais depressa possível.
 - Se **nem com a poupança** chega, **não faz nada** (nem tira a poupança).

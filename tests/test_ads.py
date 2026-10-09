@@ -447,3 +447,28 @@ def test_after_every_try_failing_the_last_error_is_raised():
     with pytest.raises(TimeoutError):
         _open_club(page, "Clube B", training)
     assert page.cards == CLUB_TRIES
+
+
+def test_a_failed_shop_video_is_tried_once_more_straight_away():
+    from osmbot.game.ads import watch_with_retry
+
+    tries = []
+
+    def watch():
+        tries.append(1)
+        if len(tries) == 1:
+            raise AdsError("os boss coins não subiram")
+        return 3
+
+    assert watch_with_retry(watch, lambda: True) == 3 and len(tries) == 2
+
+
+def test_no_second_try_when_the_shop_closed_meanwhile_and_a_second_failure_is_reported():
+    from osmbot.game.ads import watch_with_retry
+
+    def fail():
+        raise AdsError("os boss coins não subiram")
+
+    assert watch_with_retry(fail, lambda: False) == 0
+    with pytest.raises(AdsError):
+        watch_with_retry(fail, lambda: True)

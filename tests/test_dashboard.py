@@ -65,7 +65,7 @@ def test_render_without_data_and_without_colour_codes():
 def test_summary_shows_coin_change_videos_and_trainings():
     from osmbot.game.dashboard import summary_text
 
-    stats = {"start": NOW - 2 * 3600, "coins0": 2450, "shop": 5, "training": 2, "claimed": 8, "started": 8}
+    stats = {"start": NOW - 2 * 3600, "shop_coins": 2, "shop": 5, "training": 2, "claimed": 8, "started": 8}
     text = summary_text(snapshot(), stats, NOW)
     for expected in ("2h00", "+2 boss coins", "loja 5", "treino 2", "8 recolhido", "8 posto"):
         assert expected in text
@@ -130,7 +130,7 @@ def test_sponsors_say_chosen_and_use_millions():
 def test_board_summary_is_one_line_with_the_videos_and_the_hours_saved():
     from osmbot.game.dashboard import summary_lines
 
-    stats = {"start": NOW - 3600, "coins0": 2450, "shop": 1, "training": 3, "money": 0, "claimed": 8, "started": 8}
+    stats = {"start": NOW - 3600, "shop_coins": 2, "shop": 1, "training": 3, "money": 0, "claimed": 8, "started": 8}
     board = summary_lines(snapshot(), stats, NOW)
     assert len(board) == 1 and "encurtadas 6 h" in board[0] and "loja 1" in board[0]
     assert "salto" not in board[0] and "recolhidos" not in board[0]
@@ -139,7 +139,7 @@ def test_board_summary_is_one_line_with_the_videos_and_the_hours_saved():
 
 
 def test_boss_coins_line_shows_the_jump_right_after_the_balance():
-    stats = {"start": NOW - 3600, "coins0": 2449}
+    stats = {"start": NOW - 3600, "shop_coins": 3}
     text = render(snapshot(), NOW, "ATIVO", [], "Windows", colour=False, stats=stats)
     assert "Boss coins 2452  +3" in text
     lines = text.split("\n")
@@ -255,3 +255,14 @@ def test_a_training_that_finished_while_the_bot_was_busy_wakes_it_at_once():
     events = wake_events(snap, NOW)
     assert events[0] == ("treino por recolher", NOW)
     assert ("treino acaba", NOW + 3600 * 5) in events
+
+
+def test_the_length_of_a_stadium_upgrade_is_guessed_from_its_end(monkeypatch):
+    from osmbot.game import dashboard
+
+    monkeypatch.setattr(dashboard, "_upgrade_lengths", {})
+    hours = 3600
+    assert dashboard.upgrade_length(1, 14 * hours) == 18 * hours  # more than 4 h left: a normal one
+    assert dashboard.upgrade_length(2, 4 * hours - 60) == 4 * hours  # an event one, just started
+    assert dashboard.upgrade_length(3, 2 * hours) is None  # could be either: only the time is shown
+    assert dashboard.upgrade_length(1, 3 * hours) == 18 * hours  # decided the first time it is seen

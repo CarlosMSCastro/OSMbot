@@ -126,6 +126,11 @@ Revê o aspeto de D-024; o resto de D-024 mantém-se. Respostas do dono, 2026-10
   - Estádio em 2 linhas: em cima as partes paradas ("Treinos 3/3 · Capacidade 0/3"); em baixo a parte a subir, como "Campo 1/3", com o tempo que falta, sem percentagem.
   - "Troca de posição" passa a **"Reward cumulativo"** (0/10).
   - **Lesionados e suspensos** no cartão do clube: "Lesionados: 0", ou "Lesionados: Fulano (6 jogos) → no médico 2h10" (o mesmo para suspensos e advogado).
+- **Correções do dono (2026-10-09, 0.9.5):**
+  - O **"+X"** ao lado dos boss coins conta só o que os **vídeos da loja** deram desde que o bot arrancou; o que o dono gasta no jogo fica de fora (nunca negativo). Letra um pouco maior.
+  - **Estádio:** por baixo das partes paradas, cada parte a subir numa linha: "Campo 1/3", uma barra e o tempo que falta (duração em `THEORY.md` §15).
+  - **Pré-jogo:** sem percentagem, só as marcas (✓, ○, ⏳).
+  - **Barra de baixo:** "A trabalhar desde HH:MM · agora: vídeo da loja 8/9 · a seguir: vídeo de treino Fulano (Clube)", no singular; à espera: "agora: à espera · a seguir: recolher treino Fulano (Clube) às 15:51".
 - **Analista (dono, 2026-10-09):** o bot também o **levanta** quando a hora acaba, mesmo que tenha sido o dono a enviá-lo (a partir das 4 h antes do jogo). Pedido observado (`DISCOVERY.md` §3).
 - **Médico e advogado (pedido do dono, 2026-10-09):** de graça, com timer, levantam-se no fim; o bot trata dos dois. O médico está a ser observado; o advogado é igual por hipótese, até se ver (regra 7).
 

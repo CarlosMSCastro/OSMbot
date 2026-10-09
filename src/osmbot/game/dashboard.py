@@ -68,6 +68,25 @@ def get_many(client, paths: list[str]) -> list[tuple[int, object]]:
         return list(pool.map(client.get, paths))
 
 
+UPGRADE_NORMAL = 18 * 3600  # s: a stadium upgrade (seen on the pitch, 2026-10-07/08/09)
+UPGRADE_EVENT = 4 * 3600  # s: during the game's stadium events (owner, 2026-10-09)
+JUST_STARTED = 15 * 60  # s: an event upgrade first seen with this little gone is taken as one that just started
+_upgrade_lengths: dict[int, float | None] = {}  # timer id -> total length, decided the first time it is seen
+
+
+def upgrade_length(timer_id: int, left: float) -> float | None:
+    """How long a stadium upgrade lasts in all: the game gives only its end. More than 4 h left: a normal 18 h one;
+    just under 4 h: an event one that has just started; otherwise unknown (None: the board shows only the time)."""
+    if timer_id not in _upgrade_lengths:
+        if UPGRADE_EVENT < left <= UPGRADE_NORMAL:
+            _upgrade_lengths[timer_id] = UPGRADE_NORMAL
+        elif UPGRADE_EVENT - JUST_STARTED < left <= UPGRADE_EVENT:
+            _upgrade_lengths[timer_id] = UPGRADE_EVENT
+        else:
+            _upgrade_lengths[timer_id] = None
+    return _upgrade_lengths[timer_id]
+
+
 def collect(client) -> dict:
     """One snapshot of everything the board shows (GET requests only, several at a time)."""
 
@@ -96,7 +115,11 @@ def collect(client) -> dict:
                                    max((lv["level"] for lv in p["stadiumPartLevels"]), default=0),
                                    (p.get("countdownTimer") or {}).get("finishedTimestamp"))
                                   for p in sorted(stadium["stadiumParts"], key=lambda p: -p["stadiumPartType"])],
-                        "until": max(running) if running else None},
+                        "until": max(running) if running else None,
+                        "lengths": {STADIUM_NAMES.get(p["stadiumPartType"], "?"): upgrade_length(
+                            p["countdownTimer"]["id"], p["countdownTimer"]["finishedTimestamp"] - time.time())
+                            for p in stadium["stadiumParts"]
+                            if p.get("countdownTimer") and p["countdownTimer"]["finishedTimestamp"] > time.time()}},
             "sponsors": {"slots": len(live), "revenue": sum(c["sponsorRevenueForTeam"] for c in live)}, "slots": (slot.listed, slot.maximum) if slot else None,
             "trainings": [
                 {"id": s["id"], "name": s["player"]["name"], "pos": POSITIONS.get(s["player"]["position"], "?"),
@@ -164,9 +187,10 @@ def wake_events(snapshot: dict | None, now: float) -> list[tuple[str, float]]:
 
 
 def coin_jump(snapshot: dict | None, stats: dict | None) -> int | None:
-    """Boss coins gained since the bot started (None while unknown)."""
-    if snapshot and stats and stats.get("coins0") is not None:
-        return snapshot["coins"] - stats["coins0"]
+    """Boss coins the shop videos gave since the bot started (None while it has not started). What the owner
+    spends in the game is left out, so it never goes below 0 (owner, 2026-10-09)."""
+    if snapshot and stats and stats.get("start") is not None:
+        return stats.get("shop_coins", 0)
     return None
 
 

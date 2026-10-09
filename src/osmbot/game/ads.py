@@ -34,14 +34,19 @@ def _launch(playwright, headless: bool):
     return playwright.firefox.launch(headless=headless, firefox_user_prefs=MUTED)
 
 
-def save_failure(page, tag: str) -> None:
-    """Keep a screenshot of what the browser was showing when a video failed (~/.osmbot/failures/), to debug later."""
+def save_failure(page, tag: str, image: bytes | None = None) -> None:
+    """Keep a screenshot of what the browser was showing when a video failed (~/.osmbot/failures/), to debug later.
+    ``image``: one taken earlier (e.g. just after the click) instead of a new one."""
     try:
         folder = Path.home() / ".osmbot" / "failures"
         folder.mkdir(parents=True, exist_ok=True)
         for old in sorted(folder.glob("*.png"))[:-10]:  # keep the last 10 only
             old.unlink()
-        page.screenshot(path=str(folder / f"{time.strftime('%Y%m%d-%H%M%S')}-{tag}.png"))
+        target = folder / f"{time.strftime('%Y%m%d-%H%M%S')}-{tag}.png"
+        if image is not None:
+            target.write_bytes(image)
+        else:
+            page.screenshot(path=str(target))
     except Exception:
         pass
 
@@ -82,15 +87,19 @@ def _wallet_amount(client) -> int:
     return wallet["amount"]
 
 
-def watch_shop_video(client, headless: bool = True) -> None:
-    """Open the shop in Firefox, click "Watch ad" and wait for the boss coin to arrive."""
+AFTER_CLICK = 5000  # ms: the screenshot kept (only if the video then fails) to tell "never started" from "no coins"
+
+
+def watch_shop_video(client, headless: bool = True) -> int:
+    """Open the shop in Firefox, scroll to the "Watch ad" button, click it and wait for the boss coins to arrive.
+    Returns the boss coins the video gave."""
     from playwright.sync_api import sync_playwright
 
     from osmbot.game.browser import STATE_FILE
     from osmbot.game.client import save_browser_session
 
     before = _wallet_amount(client)
-    cookies = None
+    cookies, gained = None, 0
     with sync_playwright() as playwright:
         browser = _launch(playwright, headless)
         try:
@@ -99,16 +108,25 @@ def watch_shop_video(client, headless: bool = True) -> None:
             _open_game(page)
             try:
                 _click_past_windows(page, page.locator("a:visible", has_text="Shop").first)
-                _click_past_windows(page, page.get_by_text("Watch ad", exact=False).first)
+                button = page.get_by_text("Watch ad", exact=False).filter(visible=True).first
+                button.scroll_into_view_if_needed(timeout=PAGE_TIMEOUT)  # the videos are at the far right of the shop
+                _click_past_windows(page, button)
             except Exception as error:
                 save_failure(page, "loja")
                 raise AdsError(f"botão da loja não encontrado ({type(error).__name__})") from error
+            page.wait_for_timeout(AFTER_CLICK)
+            try:
+                clicked = page.screenshot()
+            except Exception:
+                clicked = None
             deadline = time.time() + WAIT_FOR_REWARD
             while time.time() < deadline:
                 page.wait_for_timeout(3000)
-                if _wallet_amount(client) > before:
+                gained = _wallet_amount(client) - before
+                if gained > 0:
                     break
             else:
+                save_failure(page, "loja-clique", clicked)
                 save_failure(page, "loja")
                 raise AdsError("os boss coins não subiram")
             cookies = context.cookies()
@@ -116,6 +134,19 @@ def watch_shop_video(client, headless: bool = True) -> None:
             browser.close()
     if cookies:  # the site may have renewed the tokens: keep the saved session in step with it (if newer)
         save_browser_session(cookies)
+    return gained
+
+
+def watch_with_retry(watch: Callable[[], int], claimable: Callable[[], bool]) -> int:
+    """One shop video, tried a second time straight away if it fails: the ad network sometimes has no video for a
+    moment (~4% of the videos, 2026-10-08/09), and waiting 10 min may let the shop window close. Not retried when
+    the shop has closed meanwhile (the game may have counted it)."""
+    try:
+        return watch()
+    except AdsError:
+        if not claimable():
+            return 0
+        return watch()
 
 
 def pick_session(candidates: list[tuple[str, dict]], now: float) -> tuple[str, dict] | None:

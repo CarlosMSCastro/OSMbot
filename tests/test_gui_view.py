@@ -52,14 +52,20 @@ def test_league_cup_and_squad_value_and_one_money_line_with_the_sales():
 
 
 def test_stadium_has_the_parts_standing_still_and_the_one_going_up_with_its_time():
-    view = club_view(club(), NOW)
+    view = club_view(club(), NOW)  # the length is unknown here: only the time
     assert view["stadium"] == {"still": [("Campo 3/3", GREEN), ("Capacidade 2/3", None)],
-                               "moving": [("Treinos 2/3 · a subir, acaba em 9h00", BLUE)]}
+                               "moving": [{"text": "Treinos 2/3", "left": "9h00", "done": None}]}
+
+
+def test_the_part_going_up_has_a_bar_when_its_length_is_known():
+    data = club()
+    data["stadium"]["lengths"] = {"Treinos": 18 * 3600}
+    assert club_view(data, NOW)["stadium"]["moving"] == [{"text": "Treinos 2/3", "left": "9h00", "done": 0.5}]
 
 
 def test_pre_match_checklist_shows_done_waiting_and_open_points():
     prep = club_view(club(), NOW)["prep"]
-    assert prep["pct"] == "35%" and prep["colour"] == YELLOW
+    assert set(prep) == {"steps"}  # no percentage, only the marks (owner, 2026-10-09)
     assert prep["steps"] == [("✓ Amigável", GREEN), ("⏳ Análise 0h10", BLUE), ("○ Onze", GREY)]
     later = club_view(club(), NOW + 700)["prep"]
     assert later["steps"][1] == ("◉ Análise por levantar", YELLOW)
@@ -89,7 +95,7 @@ def test_the_bottom_panel_has_the_coins_gain_and_the_timers():
     snap = {"coins": 2586, "clubs": [club()], "ads": {"shop": {"open": False, "reopen": NOW + 1800},
                                                       "training": {"open": True}, "money": {"open": False}},
             "daily": {"videos": {"count": 0, "threshold": 10, "claimable": False, "reopen": NOW + 600}}}
-    account = account_view(snap, {"start": NOW - 600, "coins0": 2574}, NOW)
+    account = account_view(snap, {"start": NOW - 600, "shop_coins": 12}, NOW)
     assert account["coins"] == "2 586" and account["jump"] == "+12"
     assert account["since"] == "desde que o bot foi ligado (0h10)"
     assert account["timers"] == [("Vídeos da loja", "◷ em 0h30", BLUE), ("Acelerar treinos", "● disponível", GREEN),
@@ -111,3 +117,53 @@ def test_a_club_read_without_the_extras_still_shows():
     view = club_view(bare, NOW)
     assert view["subtitle"] == [("Liga A · em 2h00", GREY)] and view["facts"][1][1] == "—"
     assert view["injured"] == [("0", GREY)] and view["prep"]["steps"] == []
+
+
+def test_the_coins_gain_counts_only_the_shop_videos_never_what_the_owner_spends():
+    from osmbot.gui.view import account_view
+
+    snap = {"coins": 2400, "ads": {}, "daily": {}}  # the owner spent 200 since the start
+    assert account_view(snap, {"start": NOW - 600, "coins0": 2600, "shop_coins": 9}, NOW)["jump"] == "+9"
+    assert account_view(snap, {"start": NOW - 600}, NOW)["jump"] == "+0"
+
+
+def _game(shop=False, training=False, money=False, trainings=None):
+    from datetime import datetime  # noqa: F401 (used by the callers' expected times)
+
+    a = club(name="Clube A", money=(0, 5_000_000), trainings=trainings if trainings is not None else [
+        {"id": 1, "name": "Jogador 1", "pos": "ATA", "finish": NOW + 5 * 3600, "claimed": False},
+        {"id": 2, "name": "Jogador 2", "pos": "GR", "finish": NOW + 4 * 3600, "claimed": False}])
+    b = club(name="Clube B", money=(0, 9_000_000), trainings=[])
+    return {"clubs": [a, b], "ads": {"shop": {"open": shop}, "training": {"open": training}, "money": {"open": money}}}
+
+
+def test_now_and_next_during_a_burst_of_shop_videos():
+    from osmbot.gui.view import doing_view
+
+    game = _game(shop=True, training=True)
+    assert doing_view(game, {"text": "vídeo da loja 8/9", "kind": "shop", "count": 8}, NOW) == \
+        "agora: vídeo da loja 8/9 · a seguir: vídeo da loja 9/9"
+    assert doing_view(game, {"text": "vídeo da loja 9/9", "kind": "shop", "count": 9}, NOW) == \
+        "agora: vídeo da loja 9/9 · a seguir: vídeo de treino Jogador 1 (Clube A)"
+
+
+def test_the_next_training_video_goes_to_the_one_with_most_time_left_after_this_one():
+    from osmbot.gui.view import doing_view
+
+    game = _game(training=True)
+    now = {"text": "vídeo de treino Jogador 1 (Clube A)", "kind": "training", "count": 1, "session": 1}
+    assert doing_view(game, now, NOW) == "agora: vídeo de treino Jogador 1 (Clube A) · a seguir: vídeo de treino Jogador 2 (Clube A)"
+
+
+def test_after_the_videos_it_names_what_it_waits_for():
+    from datetime import datetime
+
+    from osmbot.gui.view import doing_view
+
+    game = _game()
+    at = f"{datetime.fromtimestamp(NOW + 4 * 3600):%H:%M}"
+    assert doing_view(game, {"text": "à espera"}, NOW) == f"agora: à espera · a seguir: recolher treino Jogador 2 (Clube A) às {at}"
+    money = _game(money=True)
+    assert doing_view(money, {"text": "estádio"}, NOW) == "agora: estádio · a seguir: vídeo de dinheiro (Clube B)"
+    assert doing_view(money, {"text": "à espera"}, NOW).startswith("agora: à espera · a seguir: recolher treino")
+    assert doing_view(game, None, NOW) == ""

@@ -6,6 +6,19 @@ Este ficheiro é o **histórico de versões, para quem lê o repo**. O diário i
 
 ## [Por lançar]
 
+## [0.9.5] — 2026-10-09
+
+A barra de baixo diz o que o bot está a fazer e o que vem a seguir; o estádio tem barra; o "+X" conta só a loja; menos vídeos da loja falhados.
+
+### Alterado
+- **"+X" dos boss coins:** conta só o que os vídeos da loja deram desde que o bot arrancou; o que gastas no jogo fica de fora, por isso nunca fica negativo. Letra maior.
+- **Estádio:** a parte a subir aparece numa linha própria, "Campo 1/3", com uma barra e o tempo que falta. A duração é calculada (18 h, ou 4 h nos eventos); quando não dá para saber, só o tempo.
+- **Pré-jogo:** sem percentagem, só as marcas.
+- **Barra de baixo:** o que o bot está a fazer agora e o que vai fazer a seguir ("agora: vídeo da loja 8/9 · a seguir: vídeo de treino Fulano (Clube)").
+
+### Corrigido
+- **Vídeos da loja falhados (~4%):** o botão "Watch ad" ficava fora do ecrã, à direita da loja. O bot desliza até ele antes de clicar, tenta uma 2.ª vez logo a seguir se falhar e guarda uma captura 5 s depois do clique.
+
 ## [0.9.4] — 2026-10-09
 
 O quadro atualiza-se sozinho de 3 em 3 minutos, mesmo com o bot a meio de um vídeo. Os vídeos já não falham por causa dos ecrãs que o jogo põe à frente, e o bot gasta muito menos processador.

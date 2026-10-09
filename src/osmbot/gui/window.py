@@ -287,6 +287,15 @@ class ClubCard(QFrame):
         self.money = self._row(body, "Dinheiro")
         self.sponsors = self._row(body, "Patrocinadores")
         self.stadium = self._row(body, "Estádio")
+        upgrades = QHBoxLayout()  # under it, each part going up: "Campo 1/3", a bar and the time left (owner, 2026-10-09)
+        upgrades.addSpacing(self.LABEL_WIDTH + 8)
+        self.upgrades = QGridLayout()
+        self.upgrades.setHorizontalSpacing(10)
+        self.upgrades.setVerticalSpacing(3)
+        self.upgrades.setColumnStretch(3, 1)
+        self.upgrade_rows: list[tuple[QLabel, Bar, QLabel]] = []
+        upgrades.addLayout(self.upgrades, 1)
+        body.addLayout(upgrades)
         self.prep = self._row(body, "Pré-jogo")
         self.prep.setWordWrap(True)
 
@@ -336,19 +345,37 @@ class ClubCard(QFrame):
         self.money.setText(f"<b>{rich([(club['money'], None)])}</b>" + rich([("     " + sale, GREEN) for sale in club["sales"]]))
         self.sponsors.setText(rich([club["sponsors"]]))
         still = rich([piece for index, part in enumerate(club["stadium"]["still"]) for piece in ((" · ", GREY),) * bool(index) + (part,)])
-        moving = "<br>".join(rich([part]) for part in club["stadium"]["moving"])
-        self.stadium.setText("<br>".join(line for line in (still, moving) if line) or rich([("—", GREY)]))
-        prep = club["prep"]
-        head = rich([(prep["pct"], prep["colour"])]) + "&nbsp;&nbsp;" if prep["pct"] else ""
-        steps = [rich([step]) for step in prep["steps"]]
+        moving = club["stadium"]["moving"]
+        self.stadium.setText(still or ("" if moving else rich([("—", GREY)])))
+        self._show_upgrades(moving)
+        steps = [rich([step]) for step in club["prep"]["steps"]]
         half = (len(steps) + 1) // 2
-        self.prep.setText(head + "&nbsp;&nbsp;".join(steps[:half]) + "<br>" + "&nbsp;&nbsp;".join(steps[half:]) if steps
+        self.prep.setText("&nbsp;&nbsp;".join(steps[:half]) + "<br>" + "&nbsp;&nbsp;".join(steps[half:]) if steps
                           else rich([("—", GREY)]))
         self._show_trainings(club["trainings"])
         self.tired.setVisible(bool(club["tired"]))
         self.tired.setText(f"⚠ Cansados: {club['tired']}")
         self.injured.setText(rich([("Lesionados: ", GREY)] + club["injured"]))
         self.suspended.setText(rich([("Suspensos: ", GREY)] + club["suspended"]))
+
+    def _show_upgrades(self, rows: list[dict]) -> None:
+        while len(self.upgrade_rows) < len(rows):
+            index = len(self.upgrade_rows)
+            cells = (text_label(), Bar(120), text_label(colour=BLUE))
+            for column, cell in enumerate(cells):
+                self.upgrades.addWidget(cell, index, column)
+            self.upgrade_rows.append(cells)
+        for index, (name, bar, left) in enumerate(self.upgrade_rows):
+            visible = index < len(rows)
+            for cell in (name, left):
+                cell.setVisible(visible)
+            if not visible:
+                bar.set(None)
+                continue
+            row = rows[index]
+            name.setText(row["text"])
+            bar.set(row["done"])  # hidden when the length is unknown (only the time then)
+            left.setText(row["left"])
 
     def _show_trainings(self, rows: list) -> None:
         while len(self.training_rows) < len(rows):
@@ -579,7 +606,7 @@ class MainWindow(QMainWindow):
         coins.addWidget(coloured("Boss coins", GREY))
         line = QHBoxLayout()
         self.coins = text_label(22, True, YELLOW)
-        self.coins_jump = text_label(11, True, GREEN)
+        self.coins_jump = text_label(14, True, GREEN)
         line.addWidget(self.coins)
         line.addWidget(self.coins_jump, 0, Qt.AlignBottom)
         line.addStretch()
@@ -863,7 +890,9 @@ class MainWindow(QMainWindow):
         self.refresh_state()
         if self.pages.currentIndex() != BOARD:
             return
-        view = board_view(self.payload.get("snapshot"), self.payload.get("stats") if self.running() else None, now)
+        running = self.running()
+        view = board_view(self.payload.get("snapshot"), self.payload.get("stats") if running else None, now,
+                          self.payload.get("doing") if running else None)
         if view:
             self._show_clubs(view["clubs"])
             account = view["account"]
@@ -879,7 +908,7 @@ class MainWindow(QMainWindow):
             self.next_label.setText("· " + self.message)
             paint(self.next_label, RED)
         elif self.running():
-            self.next_label.setText("· " + ((view or {}).get("next") or "a trabalhar…"))
+            self.next_label.setText("· " + ((view or {}).get("doing") or (view or {}).get("next") or "a trabalhar…"))
             paint(self.next_label, GREY)
         else:
             self.next_label.setText("· Bot → Iniciar para voltar a trabalhar")
