@@ -17,6 +17,7 @@ Entradas mais recentes primeiro. Cada sessão: o que se fez · o que ficou por f
 - **Verificado:** 244 testes; snapshot real sem erros nos dois clubes; simulação do médico (o lesionado já está no médico → nada; acorda quando acaba) e do pré-jogo; `ativo --simular --sem-anuncios` do início ao fim.
 - **Não corrido em real:** levantar o médico (o primeiro acaba cerca das 08:12), advogado, levantar o analista pelo bot, deteção de vendas.
 - **Versão 0.9.3** (pedido do dono); `dist` reconstruído.
+- **Ideias do dono para o futuro** (registadas em `PROJECT_BRIEF.md` 13 e 14, não construir já): estudar o preço máximo de venda dos jogadores caros pelo histórico de transferências; medir quanto a equipa melhora com os amigáveis, para subir o número por equipa.
 
 ## 2026-10-08 (cont. 5) — Casa: `dist` 0.9.1
 
