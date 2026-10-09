@@ -82,3 +82,56 @@ def test_four_clubs_go_in_a_2_by_2_grid_and_the_logo_colour_is_its_strongest_col
         for y in range(20):
             image.setPixelColor(x, y, QColor("#1a8a3a"))
     assert QColor(logo_colour(image)).hue() in range(120, 150)
+
+
+def test_atualizar_comes_first_in_ver_and_works_while_the_bot_works(window, monkeypatch, tmp_path):
+    import threading
+
+    from osmbot.game import browser
+
+    view = next(menu.menu() for menu in window.menuBar().actions() if menu.text() == "Ver")
+    names = [action.text() for action in view.actions() if not action.isSeparator()]
+    assert names[0] == "Atualizar" and len(names) == 4
+    session = tmp_path / "session.json"
+    session.write_text("{}", encoding="utf-8")
+    monkeypatch.setattr(browser, "STATE_FILE", session)
+    hold = threading.Event()
+    window.worker = threading.Thread(target=hold.wait, daemon=True)
+    window.worker.start()
+    try:
+        window.refresh_state()
+        assert window.reload_action.isEnabled()
+        window.reading = True  # one reading at a time
+        window.refresh_state()
+        assert not window.reload_action.isEnabled()
+    finally:
+        hold.set()
+
+
+def test_the_board_always_shows_the_newest_reading_whoever_made_it(window):
+    from osmbot.gui.window import BOARD
+
+    window.go(BOARD)
+    old, new = {**NOW_SNAPSHOT, "read_at": 100, "coins": 1}, {**NOW_SNAPSHOT, "read_at": 200, "coins": 2}
+    window.reading = True
+    window.on_read({"snapshot": new})  # the window's own reading, every 3 min
+    assert not window.reading
+    window.on_board({"snapshot": old, "status": "ATIVO", "notices": []})  # the bot still shows its older one
+    assert window.payload["snapshot"]["coins"] == 2 and window.payload["status"] == "ATIVO"
+    window.on_board({"snapshot": {**old, "read_at": 300}, "status": "ATIVO", "notices": []})
+    assert window.payload["snapshot"]["read_at"] == 300
+    window.on_read({"snapshot": new})  # a reading that started before the bot's: kept out
+    assert window.payload["snapshot"]["read_at"] == 300
+
+
+def test_it_reads_the_game_every_3_minutes_only_on_the_board(window, monkeypatch):
+    from osmbot.gui.window import BOARD, READ_EVERY, START
+
+    reads = []
+    monkeypatch.setattr(window, "read_game", lambda: reads.append(1))
+    assert window.reader.interval() == READ_EVERY * 1000 == 180_000
+    window.go(START)
+    window.auto_read()
+    window.go(BOARD)
+    window.auto_read()
+    assert reads == [1]

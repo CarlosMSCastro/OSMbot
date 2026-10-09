@@ -161,11 +161,15 @@ def _dismiss_matchday(page) -> None:
     """After a round the game shows, over the club's home, a chain of screens that hide the menus (seen
     2026-10-07): "Matchday ... Continue", then the match itself ("Skip"), "Continue" again, and the
     manager-XP window, which only closes with a click outside it. Go through them as the owner does by
-    hand. "Skip" is only pressed on the matchday screen; nothing in the XP window is clicked."""
+    hand. "Skip" is only pressed on the matchday screen; nothing in the XP window is clicked.
+    The "Unclaimed Energy" window (energy waiting, e.g. after the daily missions) is claimed: the owner always
+    does so (2026-10-09, THEORY.md section 17); the energy goes to its wallet."""
     for _ in range(MAX_CONTINUES):
         button = page.get_by_text(re.compile(r"^\s*continue\s*$", re.I)).filter(visible=True)
         if not button.count() and page.get_by_text(re.compile(r"^\s*matchday\b", re.I)).filter(visible=True).count():
             button = page.get_by_text(re.compile(r"^\s*skip\s*$", re.I)).filter(visible=True)
+        if not button.count() and page.get_by_text(re.compile(r"^\s*unclaimed energy\s*$", re.I)).filter(visible=True).count():
+            button = page.get_by_text(re.compile(r"^\s*claim\s*$", re.I)).filter(visible=True)
         if button.count():
             button.first.click(timeout=PAGE_TIMEOUT)
         elif page.locator("#skillRatingUpdate-modal-content").filter(visible=True).count():
@@ -194,19 +198,55 @@ def _open_game(page) -> None:
     _dismiss_matchday(page)
 
 
-def _open_club(page, club: str) -> None:
-    """Career page -> the club's card (opens the club's home screen)."""
-    _open_game(page)
-    page.locator(".clubslot-main-title", has_text=club).first.click(force=True, timeout=PAGE_TIMEOUT)
-    page.wait_for_timeout(6000)
-    _dismiss_matchday(page)
+CLUB_TRIES = 3  # the last match's screen can show up late and send the browser back to the career page
+HEADER_BOTTOM = 80  # px: the club in use is named at the top left, above the menu (seen 2026-10-09)
 
 
-def _open_training_page(page, club: str) -> None:
-    """The club's card, then its "TRAINING" tile (the top "Training Ground" menu does not react to clicks)."""
-    _open_club(page, club)
-    _click_past_windows(page, page.locator("text=/^training$/i").filter(visible=True).first)
-    page.wait_for_timeout(5000)
+def _in_club(page, club: str) -> bool:
+    """True when the club's name is at the top left (the club in use), no round screen is in front and it is not the
+    career page (which also names the last club used up there, seen 2026-10-09)."""
+    if page.get_by_text(re.compile(r"^\s*continue\s*$", re.I)).filter(visible=True).count():
+        return False
+    if page.locator(".clubslot-main-title").filter(visible=True).count():
+        return False
+    names = page.get_by_text(re.compile(rf"^\s*{re.escape(club)}\s*$", re.I)).filter(visible=True).all()
+    return any((box := name.bounding_box()) and box["y"] < HEADER_BOTTOM for name in names)
+
+
+def _open_club(page, club: str, then: Callable[[], None] | None = None) -> None:
+    """Career page -> the club's card (opens the club's home screen), then ``then`` (e.g. a tile inside the club).
+    The last match's screen shows up on the first visit of every new session, at no fixed moment (owner,
+    2026-10-09); its "Continue" can land on the career page or on another club. So it checks where it ended up
+    and starts again from the career page, up to CLUB_TRIES times."""
+    error: Exception | None = None
+    for _ in range(CLUB_TRIES):
+        try:
+            _open_game(page)
+            page.locator(".clubslot-main-title", has_text=club).first.click(force=True, timeout=PAGE_TIMEOUT)
+            page.wait_for_timeout(6000)
+            _dismiss_matchday(page)
+            if then:
+                then()
+            if _in_club(page, club):
+                return
+            error = None
+        except Exception as failure:
+            error = failure
+    if error:
+        raise error
+    raise AdsError(f"não consegui ficar em {club} (outro clube ou ecrã do jogo à frente)")
+
+
+def _open_training_page(page, club: str, trainer: int) -> None:
+    """The club's card, then its "TRAINING" tile (the top "Training Ground" menu does not react to clicks), until
+    the trainer's column is on screen."""
+
+    def training() -> None:
+        _click_past_windows(page, page.locator("text=/^training$/i").filter(visible=True).first)
+        page.wait_for_timeout(5000)
+        page.get_by_text(COACH_TITLES[trainer], exact=True).filter(visible=True).first.wait_for(timeout=QUICK_CLICK)
+
+    _open_club(page, club, training)
 
 
 def _coach_button(page, trainer: int):
@@ -246,7 +286,7 @@ def watch_training_video(client, club: str, session: dict, base: str, headless: 
             context = browser.new_context(storage_state=str(STATE_FILE), viewport={"width": 1280, "height": 900})
             page = context.new_page()
             try:
-                _open_training_page(page, club)
+                _open_training_page(page, club, session["trainer"])
                 button = _coach_button(page, session["trainer"])
                 if dry_run:
                     return

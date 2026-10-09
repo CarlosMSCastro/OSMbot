@@ -73,6 +73,7 @@ def collect(client) -> dict:
 
     from osmbot.game.clubinfo import max_listed
 
+    started = time.time()  # when the reading began: the board keeps the newest one (bot's or window's)
     (_, account), (_, wallet) = get_many(client, ["user/accounts", "user/bosscoinwallet"])
     leagues = {c["team"]["name"]: c.get("league") or {} for c in (account.get("teamSlots") or {}).values() if c and c.get("team")}
 
@@ -131,7 +132,7 @@ def collect(client) -> dict:
         account_part = pool.submit(read_account)
         clubs = list(pool.map(lambda item: read_club(*item), teams))
         ads, daily = account_part.result()
-    return {"coins": wallet.get("amount"), "clubs": clubs, "ads": ads, "daily": daily}
+    return {"coins": wallet.get("amount"), "clubs": clubs, "ads": ads, "daily": daily, "read_at": started}
 
 
 def wake_events(snapshot: dict | None, now: float) -> list[tuple[str, float]]:

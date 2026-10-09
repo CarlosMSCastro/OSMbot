@@ -213,6 +213,8 @@ class _Page:
             return _Locator(self, lambda: self.top() == "continue")
         if pattern.match("Skip"):
             return _Locator(self, lambda: self.top() == "skip")
+        if pattern.match("Unclaimed Energy") or pattern.match("Claim"):
+            return _Locator(self, lambda: self.top() == "energy")
         assert pattern.match("Matchday 12/26")
         return _Locator(self, lambda: self.top() in ("continue", "skip"))
 
@@ -238,6 +240,14 @@ def test_the_whole_chain_after_a_round_is_dismissed_skip_and_xp_window_included(
     page = _Page(["continue", "skip", "continue", "xp"])  # seen in the game on 2026-10-07
     _dismiss_matchday(page)
     assert page.clicks == 4 and page.remaining == 0
+
+
+def test_the_unclaimed_energy_window_is_claimed_like_the_owner_does():
+    from osmbot.game.ads import _dismiss_matchday
+
+    page = _Page(["energy", "continue"])  # seen on the career page after the daily missions (2026-10-09)
+    _dismiss_matchday(page)
+    assert page.clicks == 2 and page.remaining == 0
 
 
 def test_nothing_is_clicked_when_there_is_no_matchday_screen():
@@ -314,3 +324,126 @@ def test_video_firefox_is_muted():
 
     ads._launch(Playwright(), headless=True)
     assert seen == {"headless": True, "firefox_user_prefs": {"media.volume_scale": "0.0"}}
+
+
+class _Game:
+    """A browser on the game: ``where`` is "career", a club's name, or "result" (the last match's screen,
+    whose Continue goes back to the career page). ``late`` = the result screen shows up right after the
+    first club card is clicked, too late for the dismissal (seen 2026-10-09)."""
+
+    viewport_size = {"width": 1280, "height": 900}
+
+    def __init__(self, late=0, lands_on=None):
+        self.where, self.late, self.lands_on, self.cards = "career", late, lands_on, 0
+
+    def goto(self, url):
+        self.where = "career"
+
+    def wait_for_timeout(self, ms):
+        if self.late and self.where != "career":
+            self.late -= 1
+            self.where = "result"
+
+    def locator(self, selector, has_text=None):
+        if selector == ".clubslot-main-title":
+            def open_card():
+                assert self.where == "career"
+                self.cards += 1
+                self.where = self.lands_on or has_text
+            return _Element(lambda: self.where == "career", open_card)
+        return _Element(lambda: False)
+
+    def get_by_text(self, pattern, exact=False):
+        if pattern.match("Continue"):
+            return _Element(lambda: self.where == "result", lambda: setattr(self, "where", "career"))
+        if pattern.match("Skip") or pattern.match("Matchday 12/26"):
+            return _Element(lambda: False)
+        return _Element(lambda: self.where != "result" and pattern.match(self.last), y=27)  # the career page names it too
+
+    @property
+    def last(self):
+        return self.where if self.where not in ("career", "result") else getattr(self, "_last", "")
+
+    def __setattr__(self, name, value):
+        if name == "where" and value not in ("career", "result"):
+            object.__setattr__(self, "_last", value)
+        object.__setattr__(self, name, value)
+
+
+class _Element:
+    def __init__(self, shown, on_click=None, y=500):
+        self.shown, self.on_click, self.y = shown, on_click, y
+
+    def filter(self, visible=None):
+        return self
+
+    @property
+    def first(self):
+        return self
+
+    def count(self):
+        return int(bool(self.shown()))
+
+    def all(self):
+        return [self] if self.shown() else []
+
+    def bounding_box(self):
+        return {"x": 20, "y": self.y, "width": 100, "height": 20}
+
+    def click(self, timeout=None, force=None):
+        if not self.shown():
+            raise TimeoutError("not on screen")
+        self.on_click()
+
+
+def test_the_club_is_opened_again_when_the_last_match_screen_sends_it_back_to_the_career_page():
+    from osmbot.game.ads import _open_club
+
+    page = _Game(late=1)
+    _open_club(page, "Clube B")
+    assert page.where == "Clube B" and page.cards == 2
+
+
+def test_it_never_stays_in_another_club():
+    from osmbot.game.ads import CLUB_TRIES, AdsError, _open_club
+
+    page = _Game(lands_on="Clube A")
+    with pytest.raises(AdsError, match="Clube B"):
+        _open_club(page, "Clube B")
+    assert page.cards == CLUB_TRIES
+
+
+def test_the_step_inside_the_club_is_tried_again_from_the_start_when_it_fails():
+    from osmbot.game.ads import _open_club
+
+    page, tries = _Game(), []
+
+    def training():
+        tries.append(1)
+        if len(tries) == 1:
+            raise TimeoutError("Training tile covered")
+
+    _open_club(page, "Clube B", training)
+    assert len(tries) == 2 and page.where == "Clube B"
+
+
+def test_the_career_page_is_not_taken_for_the_club_although_it_names_it_at_the_top():
+    from osmbot.game.ads import _in_club
+
+    page = _Game()
+    page.where = "Clube B"
+    page.where = "career"
+    assert page.last == "Clube B" and not _in_club(page, "Clube B")
+
+
+def test_after_every_try_failing_the_last_error_is_raised():
+    from osmbot.game.ads import CLUB_TRIES, _open_club
+
+    page = _Game()
+
+    def training():
+        raise TimeoutError("Training tile covered")
+
+    with pytest.raises(TimeoutError):
+        _open_club(page, "Clube B", training)
+    assert page.cards == CLUB_TRIES

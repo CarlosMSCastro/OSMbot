@@ -129,7 +129,14 @@ Revê o aspeto de D-024; o resto de D-024 mantém-se. Respostas do dono, 2026-10
 - **Analista (dono, 2026-10-09):** o bot também o **levanta** quando a hora acaba, mesmo que tenha sido o dono a enviá-lo (a partir das 4 h antes do jogo). Pedido observado (`DISCOVERY.md` §3).
 - **Médico e advogado (pedido do dono, 2026-10-09):** de graça, com timer, levantam-se no fim; o bot trata dos dois. O médico está a ser observado; o advogado é igual por hipótese, até se ver (regra 7).
 
-## Em aberto
+### D-027 · A janela lê o quadro sozinha, de 3 em 3 minutos · Aceite · 2026-10-09
+Substitui a parte de D-024 que só deixava a janela ler o jogo com o bot parado. A janela lê o quadro (**só GET**) **de 3 em 3 minutos** e quando o dono carrega em **Ver → Atualizar** (primeira opção do menu Ver; por baixo, Avisos e erros, Pasta dos logs, Capturas das falhas), **com o bot a trabalhar ou não**, sem esperar por ele (p. ex. a meio de um vídeo). O quadro mostra sempre a leitura mais recente, seja do bot ou da janela. As leituras do bot (fim de cada passagem, depois de cada escrita) mantêm-se. Uma leitura são ~36 pedidos (~720/hora a mais), medido em 2026-10-09.
+Para os dois não se atrapalharem: um só cadeado no programa para renovar a sessão (o segundo usa o passe que o primeiro guardou) e outro para o ficheiro das vendas. As definições HTTPS passam a ser criadas uma só vez (antes, cada pedido gastava ~0,35 s de CPU a carregar os certificados).
+**Porquê:** dono, 2026-10-09: o quadro não mostrava o que ele mudou no jogo (lista de transferências, banco) porque só o bot o lia, no fim de cada passagem; "Atualiza sempre a cada 3 minutos (para além dos updates que já faz)", "mesmo que tivesse a ver um vídeo".
+
+### D-028 · O bot carrega em "Claim" na janela "Unclaimed Energy" · Aceite · 2026-10-09
+No browser dos vídeos, a janela **"Unclaimed Energy … Claim"** (energia por reclamar, p. ex. depois de o bot guardar o prémio de energia das missões) tapa a página inicial e fazia falhar todos os vídeos. O bot carrega **sempre em Claim**, como faz com os ecrãs do jogo; a energia vai para a carteira de energia. Exceção à regra "nunca usar itens" de D-020, só para esta janela. Regra em `THEORY.md` §17.
+**Porquê:** dono, 2026-10-09: "dá claim sempre". Visto nas capturas das 14:00 e 14:04 (os dois clubes bloqueados).
 
 | ID | Decisão | Depende de | Notas |
 |---|---|---|---|

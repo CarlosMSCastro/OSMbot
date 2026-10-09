@@ -14,7 +14,7 @@ O bot já **escreve na conta** (modo ativo). Versão atual em `pyproject.toml` e
 
 ## Código
 
-Python ≥ 3.11, layout `src/`. A lógica de decisão (`theory/`, `training/`, políticas) é **pura** (sem I/O, sem rede) e testada com dados sintéticos; o contacto com o jogo está só em `src/osmbot/game/`. A janela (`src/osmbot/gui/`, PySide6, D-024) só mostra: `gui/view.py` é puro e testado; `gui/window.py` corre o mesmo ciclo (`run_active(board=...)`) numa thread e não fala com o jogo por si, exceto a leitura do quadro com o bot parado (GET).
+Python ≥ 3.11, layout `src/`. A lógica de decisão (`theory/`, `training/`, políticas) é **pura** (sem I/O, sem rede) e testada com dados sintéticos; o contacto com o jogo está só em `src/osmbot/game/`. A janela (`src/osmbot/gui/`, PySide6, D-024) só mostra: `gui/view.py` é puro e testado; `gui/window.py` corre o mesmo ciclo (`run_active(board=...)`) numa thread e não fala com o jogo por si, exceto a leitura do quadro (só GET), a qualquer momento: de 3 em 3 min e em Ver → Atualizar (D-027).
 
 Correr testes (com o venv ativado, igual em Windows e macOS): `python -m pytest`. Criar o venv e ativá-lo: ver `README.md`. O projeto corre em Windows e macOS (o dono desenvolve nos dois): código com `pathlib`, `encoding="utf-8"` explícito, sem comandos específicos de um SO; a sessão do browser (`~/.osmbot/`) é por máquina e nunca se sincroniza.
 
@@ -43,7 +43,7 @@ Regra: **cada regra do código tem de estar em `THEORY.md`**. Se o código preci
 4. **Factos vs. hipóteses:** em `DISCOVERY.md` marcar cada afirmação como *Verificado* (visto por nós), *Reportado* (fonte de terceiros) ou *Hipótese*. Não promover sem verificar.
 5. **Contacto com o jogo real, por níveis (D-014, 2026-10-05).** Ver `RISKS_AND_COMPLIANCE.md`.
    - **Livre (só leitura):** `status`, `treinos`, `probe`, GETs. Posso correr sem perguntar, desde que a sessão já exista. O login é sempre feito pelo dono (interativo).
-   - **Autónomo, só com o bot "ativo":** `recolher`, `treinar` e `recompensas` (início de sessão, missões, vídeos acumulados; D-020; só reclamam e guardam no inventário, nunca usam itens) (escritas já observadas e testadas), sem `--max`, sem pedir confirmação. "Ativo" = o dono disse nessa sessão que o bot está a trabalhar. **Em modo de desenvolvimento (por omissão) não executo escritas na conta**; só simulação ou testes.
+   - **Autónomo, só com o bot "ativo":** `recolher`, `treinar` e `recompensas` (início de sessão, missões, vídeos acumulados; D-020; só reclamam e guardam no inventário, nunca usam itens, exceto o Claim da janela "Unclaimed Energy", D-028) (escritas já observadas e testadas), sem `--max`, sem pedir confirmação. "Ativo" = o dono disse nessa sessão que o bot está a trabalhar. **Em modo de desenvolvimento (por omissão) não executo escritas na conta**; só simulação ou testes.
    - **Pede OK sempre:** qualquer escrita nova, nunca observada (vender, comprar, anúncios) e tudo o que o jogo possa tratar como abuso. Nunca exceder os limites do próprio jogo; nunca forjar recompensas (regra 8).
    - Segredos continuam a ser regra 6, sem exceção.
 6. **Segredos:** nunca escrever credenciais, cookies, tokens, HARs ou dumps de sessão em ficheiros versionados. Vão para `.env*` / pastas ignoradas (ver `.gitignore`). O repo vai ser público no GitHub.

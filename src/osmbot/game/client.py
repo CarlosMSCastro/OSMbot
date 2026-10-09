@@ -69,12 +69,23 @@ def save_browser_session(cookies: list[dict], state_file: Path = STATE_FILE) -> 
     return True
 
 
+_RENEW_LOCK = threading.RLock()  # one for the whole program: the bot and the window never renew at the same time
+_ssl_context: ssl.SSLContext | None = None
+
+
+def _context() -> ssl.SSLContext:
+    """The HTTPS settings, built once: loading the certificates costs ~0.35 s of CPU each time (measured 2026-10-09)."""
+    global _ssl_context
+    if _ssl_context is None:
+        # certifi's CA bundle: some Pythons (e.g. Homebrew on macOS) ship without one
+        _ssl_context = ssl.create_default_context(cafile=certifi.where())
+    return _ssl_context
+
+
 def _http(request: urllib.request.Request) -> tuple[int, bytes]:
     """Default transport; tests replace it. Returns (status, body) without raising on 4xx/5xx."""
     try:
-        # certifi's CA bundle: some Pythons (e.g. Homebrew on macOS) ship without one
-        context = ssl.create_default_context(cafile=certifi.where())
-        with urllib.request.urlopen(request, timeout=30, context=context) as response:
+        with urllib.request.urlopen(request, timeout=30, context=_context()) as response:
             return response.status, response.read()
     except urllib.error.HTTPError as error:
         return error.code, error.read()
@@ -88,7 +99,7 @@ class OsmClient:
         if not state_file.exists():
             raise NeedsBrowserLogin("Sem sessao guardada. Corre primeiro: osmbot login")
         self._state = json.loads(state_file.read_text(encoding="utf-8"))
-        self._lock = threading.RLock()  # the board reads clubs in parallel: only one of them renews the session
+        self._lock = _RENEW_LOCK  # shared by every client (board, bot, window): only one of them renews the session
 
     def _reload(self) -> None:
         """Take the saved session if it is newer than the one in memory: another client of the bot, or a
@@ -195,7 +206,8 @@ class OsmClient:
             )
             status, raw = self._transport(request)
             if status == 401 and attempt == 1:
-                with self._lock:  # token rejected despite looking fresh: renew once (unless another request just did)
+                with self._lock:  # token rejected despite looking fresh: renew once (unless another client just did)
+                    self._reload()
                     if self._token("access_token") == used:
                         self.refresh(force=True)
                 continue

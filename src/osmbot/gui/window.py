@@ -3,6 +3,7 @@
 It opens small, on the start screen (Abrir · Login · Sair). "Abrir" shows a loading sign, runs ``run_active`` in a
 background thread that sends the board here, and grows to the full board once the game has been read. Iniciar,
 Parar and Login are in the menu "Bot" and in the tray icon; the warnings and errors in Ver → Avisos e erros.
+The window also reads the board itself (GETs only) every 3 min and on Ver → Atualizar, bot busy or not (D-027).
 While the bot works, closing the window (X) only hides it; the tray icon (the logo with a green dot when working,
 grey when stopped) opens it again or quits. No Windows notifications (owner, 2026-10-08).
 """
@@ -431,6 +432,17 @@ class NoticesWindow(QWidget):
         self.table.scrollToBottom()
 
 
+READ_EVERY = 180  # s: the window reads the board on its own this often (owner, 2026-10-09)
+READ_ERROR = "Não consegui ler o jogo"
+
+
+def newest(snapshot: dict | None, other: dict | None) -> dict | None:
+    """The more recent of two readings of the game: the bot's and the window's own come in any order."""
+    if not snapshot or not other:
+        return snapshot or other
+    return snapshot if snapshot.get("read_at", 0) >= other.get("read_at", 0) else other
+
+
 LAUNCHER_SIZE = QSize(520, 290)
 BOARD_SIZE = QSize(1060, 600)
 START, LOADING, BOARD = 0, 1, 2
@@ -455,7 +467,8 @@ class MainWindow(QMainWindow):
         self.logos: dict[str, tuple[QPixmap, str] | None] = {}  # club key -> (logo, stripe colour); None while fetching
         self.payload: dict = {}
         self.worker: threading.Thread | None = None
-        self.busy = ""  # "login" / "a ler" while a helper thread runs
+        self.busy = ""  # "login" while the login runs
+        self.reading = False  # the window reads the board on its own, bot working or not (D-027)
         self.quitting = False
         self.stopping = False
         self.started_at: float | None = None
@@ -475,6 +488,9 @@ class MainWindow(QMainWindow):
         self.clock = QTimer(self)
         self.clock.timeout.connect(self.render)
         self.clock.start(1000)
+        self.reader = QTimer(self)
+        self.reader.timeout.connect(self.auto_read)
+        self.reader.start(READ_EVERY * 1000)
         self.go(START)
 
     # ---- the three faces ------------------------------------------------------------------------------------
@@ -600,7 +616,7 @@ class MainWindow(QMainWindow):
         self.stop_action = QAction(style.standardIcon(QStyle.SP_MediaStop), "Parar", self, triggered=self.stop_bot)
         self.login_action = QAction("Login", self, triggered=self.do_login)
         self.notices_action = QAction("Avisos e erros", self, triggered=self.show_notices)
-        self.reload_action = QAction("Atualizar quadro", self, triggered=self.read_game)
+        self.reload_action = QAction("Atualizar", self, triggered=self.read_game)
         self.logs_action = QAction("Pasta dos logs", self, triggered=self.open_logs)
         self.failures_action = QAction("Capturas das falhas", self, triggered=self.open_failures)
         self.quit_action = QAction("Sair", self, triggered=self.quit_app)
@@ -610,9 +626,9 @@ class MainWindow(QMainWindow):
         bot.addSeparator()
         bot.addAction(self.quit_action)
         view = self.menuBar().addMenu("Ver")
-        view.addAction(self.notices_action)
+        view.addAction(self.reload_action)
         view.addSeparator()
-        for action in (self.reload_action, self.logs_action, self.failures_action):
+        for action in (self.notices_action, self.logs_action, self.failures_action):
             view.addAction(action)
         self.menuBar().addMenu("Ajuda").addAction(QAction("Sobre o OSMbot", self, triggered=self.about))
 
@@ -674,7 +690,7 @@ class MainWindow(QMainWindow):
         self.start_action.setEnabled(idle and not self.quitting)
         self.stop_action.setEnabled(working and not self.quitting and not self.stopping)
         self.login_action.setEnabled(idle)
-        self.reload_action.setEnabled(idle and has_session)
+        self.reload_action.setEnabled(has_session and not self.reading and not self.busy)
         self.open_button.setEnabled(idle and has_session)
         self.login_button.setEnabled(idle)
         self.tray_toggle.setText("Parar" if working else "Iniciar")
@@ -693,7 +709,7 @@ class MainWindow(QMainWindow):
         if working:
             since = datetime.fromtimestamp(self.started_at).strftime("%H:%M") if self.started_at else "?"
             text = "A parar…" if self.stopping else f"A trabalhar desde {since}"
-        elif self.busy:
+        elif self.busy or self.reading:
             text = "A ler o jogo…"
         else:
             text = "Parado"
@@ -755,7 +771,7 @@ class MainWindow(QMainWindow):
             self.start_bot()
 
     def on_board(self, payload: dict) -> None:
-        self.payload = payload
+        self.payload = {**payload, "snapshot": newest(payload.get("snapshot"), self.payload.get("snapshot"))}
         if payload.get("snapshot") and self.pages.currentIndex() == LOADING:
             self.go(BOARD)
         self.render()
@@ -774,13 +790,19 @@ class MainWindow(QMainWindow):
         self.refresh_state()
         self.render()
 
-    # ---- reading the game while stopped, and the login -------------------------------------------------------
+    # ---- reading the game (any time), and the login -------------------------------------------------------------
+    def auto_read(self) -> None:
+        """Every READ_EVERY seconds the board is read again, even while the bot is busy (a video, say)."""
+        if self.pages.currentIndex() == BOARD:
+            self.read_game()
+
     def read_game(self) -> None:
+        """Ver → Atualizar (and every 3 min): read the game now, GETs only, beside the bot and never waiting for it."""
         from osmbot.game.browser import STATE_FILE
 
-        if self.running() or self.busy or not STATE_FILE.exists():
+        if self.reading or self.busy or not STATE_FILE.exists():
             return
-        self.busy = "a ler"
+        self.reading = True
         self.refresh_state()
 
         def work() -> None:
@@ -790,15 +812,20 @@ class MainWindow(QMainWindow):
             try:
                 self.bridge.read.emit({"snapshot": collect(OsmClient())})
             except BaseException as error:
-                self.bridge.read.emit({"error": f"Não consegui ler o jogo ({error})"})
+                self.bridge.read.emit({"error": f"{READ_ERROR} ({error})"})
 
         threading.Thread(target=work, name="osmbot-read", daemon=True).start()
 
     def on_read(self, result: dict) -> None:
-        self.busy = ""
-        if "snapshot" in result and not self.running():
-            self.payload = {**self.payload, "snapshot": result["snapshot"], "status": "PARADO"}
-        self.message = result.get("error", "")
+        self.reading = False
+        if "snapshot" in result:
+            self.payload = {**self.payload, "snapshot": newest(result["snapshot"], self.payload.get("snapshot"))}
+            if not self.running():
+                self.payload["status"] = "PARADO"
+            if self.message.startswith(READ_ERROR):
+                self.message = ""
+        else:
+            self.message = result["error"]
         self.refresh_state()
         self.render()
 

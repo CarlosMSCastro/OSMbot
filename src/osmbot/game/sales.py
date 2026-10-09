@@ -2,11 +2,13 @@
 from __future__ import annotations
 
 import json
+import threading
 from pathlib import Path
 
 from osmbot.board.info import track_sales
 
 SALES_FILE = Path.home() / ".osmbot" / "sales.json"
+_LOCK = threading.Lock()  # clubs are read side by side, by the bot and the window: one read-and-write at a time
 
 
 def _load() -> dict:
@@ -18,12 +20,13 @@ def _load() -> dict:
 
 def update(club_key: str, listed: dict[int, dict], squad: set[int]) -> list[dict]:
     """Follow one club's transfer list and return its sales still to show."""
-    data = _load()
-    state = track_sales(data.get(club_key) or {}, listed, squad)
-    data[club_key] = {"listed": {str(k): v for k, v in state["listed"].items()}, "sales": state["sales"]}
-    try:
-        SALES_FILE.parent.mkdir(parents=True, exist_ok=True)
-        SALES_FILE.write_text(json.dumps(data, ensure_ascii=False), encoding="utf-8")
-    except OSError:
-        pass
+    with _LOCK:
+        data = _load()
+        state = track_sales(data.get(club_key) or {}, listed, squad)
+        data[club_key] = {"listed": {str(k): v for k, v in state["listed"].items()}, "sales": state["sales"]}
+        try:
+            SALES_FILE.parent.mkdir(parents=True, exist_ok=True)
+            SALES_FILE.write_text(json.dumps(data, ensure_ascii=False), encoding="utf-8")
+        except OSError:
+            pass
     return state["sales"]

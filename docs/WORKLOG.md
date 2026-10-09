@@ -2,6 +2,21 @@
 
 Entradas mais recentes primeiro. Cada sessão: o que se fez · o que ficou por fazer · próximo passo.
 
+## 2026-10-09 (cont.) — Fábrica: quadro que se atualiza sozinho, vídeos que não se perdem (0.9.4)
+
+- **Pergunta do dono:** o quadro não mostrava o que ele mudou à mão (lista de transferências, banco) passados 10 min. Causa: só o bot lia o jogo, no fim de cada passagem, e "Atualizar quadro" só funcionava com o bot parado.
+- **Vídeo de treino a falhar** (09:03, 09:19, 11:51, 12:03; capturas): o resultado do jogo da taça (o dono: aparece **sempre** na 1.ª abertura de cada sessão) surgia tarde, e o "Continue" devolvia à página inicial; depois de as missões guardarem energia, a janela **"Unclaimed Energy"** bloqueou todos os vídeos (14:00).
+- **Medido:** uma leitura do quadro = 36 pedidos (77 com a cache vazia), ~9 s, mas **~25 s de CPU**: cada pedido criava um contexto SSL novo (certifi, ~0,35 s de CPU cada).
+- **Código:**
+  - `client.py`: contexto SSL criado uma vez; cadeado de renovação único no programa (`_RENEW_LOCK`); num 401, relê o ficheiro antes de renovar.
+  - `sales.py`: cadeado no ler-e-escrever de `sales.json` (os clubes já eram lidos em paralelo).
+  - `ads.py`: `_open_club` confirma o clube (nome no topo à esquerda, sem "Continue", fora da página inicial) e repete até 3 vezes; o treino espera a coluna do treinador; `_dismiss_matchday` carrega em Claim na "Unclaimed Energy" (D-028).
+  - Janela (D-027): lê o jogo de 3 em 3 min e em Ver → Atualizar (1.ª opção), com o bot a trabalhar ou não; fica a leitura mais recente (`read_at` no snapshot).
+- **Verificado:** 256 testes; ensaio no jogo real (só navegação, sem carregar em "-2h") nos dois clubes: OK. Com isso a janela de energia foi reclamada (autorizado pelo dono).
+- **CPU depois da correção (medido):** leitura do quadro com 0,27 s de CPU (antes ~25 s), 1,5 s no total.
+- **Ainda não verificado no jogo real:** a leitura de 3 em 3 min com o bot a trabalhar.
+- `.venv` criado nesta máquina para os testes. **Versão 0.9.4**; `dist` reconstruído.
+
 ## 2026-10-09 — Quadro novo (0.9.3), médico e advogado, levantar o analista
 
 - **Observado com o dono (`inspect-writes`):** levantar o analista (`PUT v1.1/…/spyinstructions/{id}/claim` → checklist 1/1) e pôr no médico (`POST …/doctortreatments`, 8 h, sem vídeo). Levantar o médico e todo o advogado por analogia, aceite pelo dono (`DISCOVERY.md` §3). Regras em `THEORY.md` §18.

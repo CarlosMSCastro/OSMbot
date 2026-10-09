@@ -122,3 +122,50 @@ def test_a_video_browser_never_overwrites_newer_tokens_with_older_ones(tmp_path)
     assert not save_browser_session(older, state)
     assert save_browser_session(newer, state)
     assert json.loads(state.read_text(encoding="utf-8"))["cookies"] == newer
+
+
+def test_two_clients_at_the_same_time_renew_only_once(tmp_path):
+    """The window reads the board while the bot works: both find the token expired, only one renews."""
+    import threading
+
+    state, codes = make(tmp_path, time.time() - 10, time.time() + 86400)
+    answer, new = renewal(tmp_path)
+    renewals, started = [], threading.Event()
+
+    def transport(request):
+        if request.full_url.endswith("/api/tokenRefresh"):
+            renewals.append(request)
+            started.set()
+            time.sleep(0.2)  # the other client arrives while this renewal is on its way
+            return answer
+        return 200, b"{}"
+
+    clients = [OsmClient(state, codes, transport) for _ in range(2)]
+    threads = [threading.Thread(target=client.get, args=("x",)) for client in clients]
+    threads[0].start()
+    started.wait(2)
+    threads[1].start()
+    for thread in threads:
+        thread.join(5)
+    assert len(renewals) == 1
+    assert all(client._token("access_token") == new["access_token"] for client in clients)
+
+
+def test_a_401_after_another_client_renewed_takes_its_tokens_instead_of_renewing_again(tmp_path):
+    state, codes = make(tmp_path, time.time() + 600, time.time() + 86400)
+    answer, new = renewal(tmp_path)
+    late = OsmClient(state, codes, None)
+    OsmClient(state, codes, Fake(answer)).refresh(force=True)  # the other one renewed: the old token stops working
+    fake = Fake((401, b""), (200, b'{"ok": 1}'))
+    late._transport = fake
+    assert late.get("x") == (200, {"ok": 1})
+    assert len(fake.requests) == 2 and fake.requests[1].get_header("Authorization") == f"Bearer {new['access_token']}"
+
+
+def test_the_https_settings_are_built_once(monkeypatch):
+    from osmbot.game import client
+
+    built = []
+    monkeypatch.setattr(client, "_ssl_context", None)
+    monkeypatch.setattr(client.ssl, "create_default_context", lambda **_: built.append(1) or object())
+    assert client._context() is client._context() and len(built) == 1

@@ -6,6 +6,21 @@ Este ficheiro é o **histórico de versões, para quem lê o repo**. O diário i
 
 ## [Por lançar]
 
+## [0.9.4] — 2026-10-09
+
+O quadro atualiza-se sozinho de 3 em 3 minutos, mesmo com o bot a meio de um vídeo. Os vídeos já não falham por causa dos ecrãs que o jogo põe à frente, e o bot gasta muito menos processador.
+
+### Adicionado
+- **Quadro atualizado de 3 em 3 minutos** pela própria janela (só leituras), mesmo com o bot ocupado; mostra sempre a leitura mais recente (D-027).
+- **Ver → Atualizar** (primeira opção do menu Ver): lê o jogo na hora, com o bot a trabalhar ou parado.
+- **Janela "Unclaimed Energy":** o bot carrega em Claim (D-028); antes bloqueava todos os vídeos.
+
+### Corrigido
+- **Vídeos de treino e de dinheiro falhavam** quando o resultado do último jogo aparecia tarde (o jogo mostra-o sempre na primeira abertura de cada sessão): o bot ficava na página inicial ou noutro clube. Agora confirma que está no clube certo (e, no treino, na coluna do treinador) e, se não estiver, volta a entrar, até 3 vezes.
+- **Processador:** cada pedido ao jogo carregava de novo os certificados de segurança (~0,35 s de CPU por pedido; ~25 s por leitura do quadro). Agora carregam-se uma vez.
+- **Sessão:** o bot e a janela nunca renovam a sessão ao mesmo tempo (um só cadeado no programa); quem chega depois usa o passe novo.
+- **Registo de vendas:** dois clubes lidos ao mesmo tempo podiam apagar as vendas um do outro em `~/.osmbot/sales.json`.
+
 ## [0.9.3] — 2026-10-09
 
 Quadro novo na janela, médico e advogado automáticos, e o analista passa a ser levantado.

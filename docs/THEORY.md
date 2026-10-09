@@ -461,6 +461,7 @@ Há **3 componentes** a melhorar, cada um com **níveis 0, 1, 2 e 3**:
 **Início de sessão** (uma vez por dia, quando `user/dailylogin` diz `isClaimable`)
 - Reclamar. O site gasta a recompensa logo na carteira certa; o bot faz o mesmo: **energia** → carteira de energia; **boss coins** → carteira de boss coins (o dono: "vão para a carteira, não há nada a ver").
 - Qualquer outra recompensa (p. ex. o saco do dia 21): reclamar e **deixar no inventário**, sem gastar. **[S]** O pedido que a gasta nunca foi observado.
+- **Janela "Unclaimed Energy"** (energia por reclamar, p. ex. depois do prémio das missões; aparece no browser dos vídeos e tapa o jogo): carregar **sempre em Claim**; a energia vai para a carteira de energia (dono, 2026-10-09: "dá claim sempre"; D-028).
 
 **Missões**
 - As **3 missões diárias** (as que têm `order`) reclamam-se quando o progresso chega ao objetivo (`threshold`, do catálogo `missions`). O bot já treina jogadores, por isso são as que se cumprem sozinhas.
