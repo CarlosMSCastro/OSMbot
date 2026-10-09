@@ -132,6 +132,11 @@ def test_a_refused_friendly_tries_another_opponent_and_a_server_error_is_a_failu
     client = FakeClient([step(7, 0), step(5, 1)], post_status=400)
     assert prepare(client)[0] == (0, None)
     assert [form["opponentId"] for _, form in client.posts] == [3, 4]
+    prepare(client)  # the next pass: the refused clubs are not asked again this round (D-032)
+    assert [form["opponentId"] for _, form in client.posts] == [3, 4]
+    from osmbot.game import refusals
+
+    refusals.FILE.unlink()
     client = FakeClient([step(7, 0), step(5, 1)], post_status=500)
     assert prepare(client)[0] == (1, None)
 

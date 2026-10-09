@@ -5,7 +5,6 @@ LEAGUE = "leagues/9"
 BASE = f"{LEAGUE}/teams/1"
 TEAM = {"id": 1, "name": "Club"}
 NOW = 1_000_000.0
-V11 = "https://web-api.onlinesoccermanager.com/api/v1.1"
 
 
 def case(cid, player, ends=None, claimed=False, week=14):
@@ -28,6 +27,7 @@ class FakeClient:
         self.injured, self.suspended = list(injured), list(suspended)
         self.doctor, self.lawyer, self.status = list(doctor), list(lawyer), status
         self.writes = []
+        self.week = 14
 
     def get(self, path):
         players = [{"id": pid, "name": f"P{pid}", "unavailable": 3} for pid in self.injured + self.suspended]
@@ -35,7 +35,7 @@ class FakeClient:
                  f"{BASE}/doctortreatments": self.doctor, f"{BASE}/lawyercases": self.lawyer}
         if path in lists:
             return (200, lists[path]) if lists[path] else (404, "")
-        return 200, {LEAGUE: {"weekNr": 14}, f"{BASE}/players": players}[path]
+        return 200, {LEAGUE: {"weekNr": self.week}, f"{BASE}/players": players}[path]
 
     def post(self, path, form):
         self.writes.append(("POST", path, form))
@@ -65,22 +65,59 @@ def test_every_injured_player_goes_to_the_doctor_and_every_suspended_one_to_the_
 def test_a_finished_case_is_collected_and_a_running_one_left_alone():
     client = FakeClient(injured=[10, 11], doctor=[case(7, 10, NOW - 5), case(8, 11, NOW + 600)])
     (failures, wake), _ = treat(client)
-    assert ("PUT", f"{V11}/{BASE}/doctortreatments/7/claim") in client.writes
+    assert ("PUT", f"{BASE}/doctortreatments/7/claim") in client.writes
     assert NOW + 600 in wake and failures == 0
 
 
-def test_a_refusal_makes_the_others_wait_and_an_unknown_lawyer_request_is_said_once():
-    client = FakeClient(injured=[10, 11], status=400)
-    (failures, _), lines = treat(client)
-    assert failures == 0 and len(client.writes) == 1 and any("fica à espera" in line for line in lines)
-    client = FakeClient(suspended=[20, 21], status=404)
-    (failures, _), lines = treat(client)
-    (failures2, _), lines2 = treat(client)
-    assert failures == failures2 == 0 and len(client.writes) == 1  # never asked again this run
-    assert sum("o jogo não aceitou" in line for line in lines + lines2) == 1
+def test_a_refused_player_is_not_asked_again_this_round_even_after_a_restart():
+    client = FakeClient(injured=[10], status=400)
+    _, lines = treat(client)
+    _, again = treat(client)  # the next pass (or a restart: the note is kept on disk)
+    assert len(client.writes) == 1 and sum("volto a tentar na próxima jornada" in line for line in lines + again) == 1
+    client.week = 15
+    treat(client)
+    assert len(client.writes) == 2  # a new round: one more try
+
+
+def test_while_someone_is_with_the_doctor_a_refused_one_waits_for_that_case_to_end():
+    client = FakeClient(injured=[10, 11], doctor=[case(8, 10, NOW + 600)], status=400)
+    _, lines = treat(client)
+    assert [w[2]["playerId"] for w in client.writes] == [11] and any("fica à espera" in line for line in lines)
+    treat(client)
+    assert len(client.writes) == 1
+    medical.treat_club(client, TEAM, BASE, True, NOW + 601, log=lambda m: None)
+    posts = [w[2]["playerId"] for w in client.writes if w[0] == "POST"]
+    assert posts == [11, 11]  # the running case ended (and is collected): try again
+
+
+def test_a_refused_collect_is_not_repeated_this_round():
+    client = FakeClient(injured=[10], doctor=[case(7, 10, NOW - 5)], status=404)
+    treat(client)
+    treat(client)
+    assert sum(w[0] == "PUT" for w in client.writes) == 1
+
+
+def test_a_server_error_is_not_a_refusal():
+    client = FakeClient(injured=[10], status=500)
+    (failures, _), _ = treat(client)
+    treat(client)
+    assert failures == 1 and len(client.writes) == 2  # tried again, as before
 
 
 def test_simulation_writes_nothing():
     client = FakeClient(injured=[10], doctor=[case(7, 12, NOW - 5)])
     _, lines = treat(client, confirm=False)
     assert client.writes == [] and "Club: poria P10 no médico" in lines and "Club: levantaria 12 (médico)" in lines
+
+
+
+def test_a_one_game_suspension_never_goes_to_the_lawyer():
+    class OneGame(FakeClient):
+        def get(self, path):
+            if path == f"{BASE}/players":
+                return 200, [{"id": 20, "name": "P20", "unavailable": 1}, {"id": 21, "name": "P21", "unavailable": 3}]
+            return super().get(path)
+
+    client = OneGame(suspended=[20, 21])
+    treat(client)
+    assert [w[2]["playerId"] for w in client.writes if w[1].endswith("lawyercases")] == [21]

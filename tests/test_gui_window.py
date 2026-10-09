@@ -48,7 +48,7 @@ def test_abrir_shows_loading_then_grows_to_the_board_when_the_game_is_read(windo
     window.on_board({"snapshot": NOW_SNAPSHOT, "status": "A TRABALHAR", "notices": [("09:26:15", "Erro", "Loja: erro")]})
     assert window.pages.currentIndex() == BOARD and window.width() >= 1000
     assert [p.name.text() for p in window.panels] == ["Clube A", "Clube B"]
-    assert "pronto" in window.panels[0].training_rows[0][2].text()
+    assert window.panels[0].ring_cells[0][1].text == "pronto" and window.panels[0].ring_cells[0][2].text() == "Jogador 1"
     assert window.coins.text() == "2 586"
     assert window.notices_window.table.rowCount() == 1 and window.notices_action.text() == "Avisos e erros (1)"
 
@@ -66,7 +66,7 @@ def test_closing_hides_the_window_only_while_the_bot_works(window):
     window.worker.join()
 
 
-def test_four_clubs_go_in_a_2_by_2_grid_and_the_logo_colour_is_its_strongest_colour(window):
+def test_four_clubs_go_one_per_row_and_the_logo_colour_is_its_strongest_colour(window):
     from PySide6.QtGui import QColor, QImage
 
     from osmbot.gui.window import BOARD, LOADING, logo_colour
@@ -74,8 +74,7 @@ def test_four_clubs_go_in_a_2_by_2_grid_and_the_logo_colour_is_its_strongest_col
     window.go(LOADING)
     window.on_board({"snapshot": {**NOW_SNAPSHOT, "clubs": NOW_SNAPSHOT["clubs"] * 2}, "status": "A TRABALHAR", "notices": []})
     assert window.pages.currentIndex() == BOARD and len(window.panels) == 4
-    places = [window.clubs_grid.getItemPosition(window.clubs_grid.indexOf(p))[:2] for p in window.panels]
-    assert places == [(0, 0), (0, 1), (1, 0), (1, 1)]
+    assert [window.clubs_column.indexOf(p) for p in window.panels] == [0, 1, 2, 3]  # one per row (D-030)
     image = QImage(20, 20, QImage.Format_ARGB32)
     image.fill(QColor("#ffffff"))
     for x in range(10):
@@ -137,11 +136,11 @@ def test_it_reads_the_game_every_3_minutes_only_on_the_board(window, monkeypatch
     assert reads == [1]
 
 
-def test_a_part_going_up_shows_its_bar_and_the_status_bar_says_now_and_next(window):
+def test_the_stadium_rings_the_doctor_and_the_top_says_only_since_when_the_bot_works(window):
     import threading
     import time
 
-    from osmbot.gui.window import BOARD
+    from osmbot.gui.window import ACCENT, BOARD
 
     now = time.time()
     club = {**NOW_SNAPSHOT["clubs"][0], "stadium": {"parts": [("Treinos", 3, 3, None), ("Campo", 1, 3, now + 9 * 3600)],
@@ -154,8 +153,56 @@ def test_a_part_going_up_shows_its_bar_and_the_status_bar_says_now_and_next(wind
         window.go(BOARD)
         window.on_board({"snapshot": snapshot, "status": "A TRABALHAR", "notices": [],
                          "doing": {"text": "vídeo da loja 8/9", "kind": "shop", "count": 8}, "stats": {"start": now}})
-        name, bar, left = window.panels[0].upgrade_rows[0]
-        assert name.text() == "Campo 1/3" and left.text() in ("9h00", "8h59") and abs(bar.done - 0.5) < 0.01
-        assert window.next_label.text() == "· agora: vídeo da loja 8/9 · a seguir: vídeo da loja 9/9"
+        still, going = window.panels[0].stadium_cells[:2]
+        assert going.ring.text == "1/3" and going.lines[0].text() == "Campo" and going.lines[1].text() in ("9h00", "8h59")
+        assert abs(going.ring.done - 0.5) < 0.01 and going.ring.arc == ACCENT
+        assert still.ring.text == "3/3" and still.lines[1].text() == "no máximo"
+        doctor, lawyer = window.panels[0].care_cells
+        assert doctor.ring.text == "🩺" and doctor.ring.emoji and doctor.lines[1].text() == "ninguém"
+        assert window.timeline.now_text == "vídeo da loja 8/9"
+        assert window.state_text.text().startswith("A trabalhar desde")
     finally:
         hold.set()
+
+
+def test_the_timeline_has_now_in_the_middle_the_next_things_above_and_what_the_bot_did_below(window):
+    import threading
+    import time
+
+    from osmbot.gui.window import BOARD
+
+    hold = threading.Event()
+    window.worker = threading.Thread(target=hold.wait, daemon=True)
+    window.worker.start()
+    try:
+        window.go(BOARD)
+        history = [{"kind": "shop", "title": "Vídeos da loja", "ts": time.time() - 60, "count": 3}]
+        window.on_board({"snapshot": NOW_SNAPSHOT, "status": "A TRABALHAR", "notices": [],
+                         "doing": {"text": "à espera"}, "history": history})
+        assert window.timeline.now_text == "à espera"
+        assert window.timeline.past[0]["title"] == "Vídeos da loja ×3"
+        due = [(e["title"], e["left"]) for e in window.timeline.future if e["left"] == "já"]
+        assert ("Vídeos da loja", "já") in due and ("Recolher treino Jogador 1", "já") in due
+        window.timeline.grab()  # it draws without errors
+        assert window.panels[0].grab()
+    finally:
+        hold.set()
+
+
+def test_idioma_language_switches_the_window_at_once(window):
+    from osmbot import i18n
+    from osmbot.gui.window import BOARD
+
+    try:
+        window.go(BOARD)
+        window.on_board({"snapshot": NOW_SNAPSHOT, "status": "A TRABALHAR", "notices": [("09:26:15", "Erro", "Loja: janela saltada")]})
+        menus = [action.text() for action in window.menuBar().actions()]
+        assert "Idioma / Language" in menus and "Ver" in menus
+        window.choose_language("en")
+        assert [action.text() for action in window.menuBar().actions()] == ["Bot", "View", "Idioma / Language", "Help"]
+        assert window.language_actions["en"].isChecked() and window.pages.currentIndex() == BOARD
+        assert window.notices_window.table.item(0, 1).text() == "Error"
+        assert window.notices_window.table.item(0, 2).text() == "Shop: window skipped"
+        assert window.panels[0].prep_title.text().startswith("PRE-MATCH") or window.panels[0].prep_title.text() == "PRE-MATCH"
+    finally:
+        i18n.set_language("pt", save=False)

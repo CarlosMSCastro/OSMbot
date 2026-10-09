@@ -31,7 +31,9 @@ from osmbot.game import prematch as prematch_module
 from osmbot.game import sponsors as sponsors_module
 from osmbot.game import rewards as rewards_module
 from osmbot.game import stadium as stadium_module
+from osmbot.board import timeline
 from osmbot.game.medical import run_medical
+from osmbot.game.transfers import save_transfers
 from osmbot.game.prematch import run_prematch
 from osmbot.game.rewards import run_rewards
 from osmbot.game.sponsors import run_sponsors
@@ -71,6 +73,7 @@ _doing: dict = {}  # what the bot is doing right now, for the window's status ba
 _screen_on = False  # while the board is drawn, nothing else may print to the terminal
 _redraw = None  # set by run_active while the board is on: redraws it after each new log line
 _refresh = None  # set by run_active while the board is on: re-reads the game and redraws (after a change)
+_history: list[dict] = []  # the bot's actions of this run, for the window's timeline (D-030)
 _notices: deque[tuple[str, str, str]] = deque(maxlen=200)  # (hh:mm:ss, "Erro"/"Aviso", text) of this run, for the window (D-024)
 _stop = threading.Event()  # set by the window's "Parar": the loop stops at its next pause, as with Ctrl+C
 
@@ -103,6 +106,7 @@ def _log(message: str) -> None:
     _recent.append(line)
     if any(word in message.lower() for word in ERROR_WORDS):
         _errors.append((time.time(), line))
+    timeline.add(_history, time.time(), message)
     kind = notice_kind(message)
     if kind:
         _notices.append((f"{now:%H:%M:%S}", kind, message.lstrip(chr(7)).lstrip("! ").strip()))
@@ -329,7 +333,8 @@ def ads_wake(now: float) -> float | None:
 def run_active(dry_run: bool = False, *, claim=run_claim, train=run_train, finish_times=None, slots=None,
                ads=lambda dry_run: _all_ads(dry_run), stadium=lambda confirm: run_stadium(confirm),
                sponsors=lambda confirm: run_sponsors(confirm), rewards=lambda confirm: run_rewards(confirm),
-               prematch=lambda confirm: run_prematch(confirm), medical=lambda confirm: run_medical(confirm), snapshot=None, use_screen: bool | None = None,
+               prematch=lambda confirm: run_prematch(confirm), medical=lambda confirm: run_medical(confirm),
+               transfers=lambda: save_transfers(log=_log), snapshot=None, use_screen: bool | None = None,
                sleep=time.sleep, clock=time.time, rng=random, board=None) -> None:
     """Loop until Ctrl+C (or ``request_stop``) or the first failure. With ``dry_run`` do one simulated pass and show the board once.
 
@@ -351,6 +356,7 @@ def run_active(dry_run: bool = False, *, claim=run_claim, train=run_train, finis
     _errors.clear()
     _ads_backoff.clear()
     _notices.clear()
+    _history.clear()
     _stop.clear()
     _stats["start"] = clock()
     COUNTS.update(claimed=0, started=0)
@@ -377,7 +383,7 @@ def run_active(dry_run: bool = False, *, claim=run_claim, train=run_train, finis
                                rows=size.lines, cols=size.columns))
         if board:
             board({"snapshot": _shown(last_snapshot), "status": status, "stats": _summary_data(), "notices": list(_notices),
-                   "doing": dict(_doing)})
+                   "doing": dict(_doing), "history": [dict(entry) for entry in _history]})
 
     _redraw = (lambda: draw(current["status"])) if shown else None
 
@@ -491,6 +497,13 @@ def run_active(dry_run: bool = False, *, claim=run_claim, train=run_train, finis
                         _log(f"Médico/advogado: erro ({error}); volto a tentar")
                     if changed(before):
                         refresh_board()
+                if transfers:
+                    try:  # read-only: the league transfers, once a day, for the price study (D-029)
+                        transfers()
+                    except OSError:
+                        raise
+                    except Exception as error:
+                        _log(f"Transferências: erro ({error}); volto a tentar")
                 if ads:
                     try:
                         _quiet(ads, dry_run)

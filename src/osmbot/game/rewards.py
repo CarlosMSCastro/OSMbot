@@ -3,12 +3,13 @@
 Login reward, the three daily missions plus the day reward, and the reward for accumulated videos. Whatever
 the game offers is claimed and KEPT in the inventory, except the login reward, which the site itself spends
 into its wallet (energy, boss coins). Nothing from the inventory is ever used. The game's own limits are
-respected: no claim that would overfill an inventory slot, and a refused claim is not repeated.
+respected: no claim that would overfill an inventory slot, and a refused claim is not repeated that day (D-032).
 """
 from __future__ import annotations
 
 import time
 
+from osmbot.game import refusals
 from osmbot.rewards.policy import (VIDEO_COUNTER_ACTION, day_key, has_room, is_daily, mission_summary, next_claim,
                                    wallet_path)
 
@@ -16,7 +17,6 @@ PAUSE_BETWEEN_WRITES = 1.5  # seconds
 MAX_MISSION_CLAIMS = 10  # per pass
 API_V11 = "https://web-api.onlinesoccermanager.com/api/v1.1"
 COUNTS = {"login": 0, "missions": 0, "videos": 0}  # claimed in this run
-_refused: set[int] = set()  # user mission ids the game refused: not asked again until the bot restarts
 _day_done: set[frozenset] = set()  # days whose day reward was already asked for (one per day)
 _said: set[str] = set()  # "inventory full" notes already given
 _catalogue: list[dict] = []  # the mission catalogue: it hardly ever changes, read once per run
@@ -61,6 +61,11 @@ def _spend(client, reward_id: int, action: str, coins_before: int | None, value:
     """Spend one login reward into its wallet, as the site does. Returns the failures (0 or 1)."""
     path = wallet_path(action)
     status, _ = client.post(path, {"rewardId": reward_id})
+    if refusals.is_refusal(status):  # D-032: not asked again today (it stays in the inventory meanwhile)
+        _unspent[reward_id] = action
+        refusals.refuse(f"início:gastar:{reward_id}", log, f"! Início de sessão: o jogo recusou gastar {action} ({status}); "
+                        "volto a tentar amanhã", day=refusals.game_day())
+        return 0
     if status != 200:
         _unspent[reward_id] = action
         log(f"Início de sessão: falha ao gastar {action} ({status}); volto a tentar")
@@ -83,6 +88,8 @@ def spend_leftovers(client, confirm: bool, log=print) -> int:
         if reward_id not in owned:  # spent meanwhile (by hand, or the game): nothing to do
             _unspent.pop(reward_id)
             continue
+        if refusals.blocked(f"início:gastar:{reward_id}"):
+            continue
         failures += _spend(client, reward_id, action, None, 0, log)
         time.sleep(PAUSE_BETWEEN_WRITES)
     return failures
@@ -92,7 +99,7 @@ def claim_login(client, confirm: bool, log=print) -> int:
     """The login reward, when ``isClaimable``. Returns the failures."""
     failures = spend_leftovers(client, confirm, log)
     _, state = client.get("user/dailylogin")
-    if not isinstance(state, dict) or not state.get("isClaimable"):
+    if not isinstance(state, dict) or not state.get("isClaimable") or refusals.blocked("início:reclamar"):
         return failures
     today = next((d for d in state.get("rewardTrackDays", []) if d.get("isClaimable")), {})
     if not confirm:
@@ -101,6 +108,10 @@ def claim_login(client, confirm: bool, log=print) -> int:
     known = {r["id"] for r in client.get("user/userrewards")[1]}
     coins_before = client.get("user/bosscoinwallet")[1]["amount"]
     status, _ = client.put("user/dailylogin/claim")
+    if refusals.is_refusal(status):
+        refusals.refuse("início:reclamar", log, f"! Início de sessão: o jogo recusou ({status}); volto a tentar amanhã",
+                        day=refusals.game_day())
+        return failures
     if status != 200:
         log(f"Início de sessão: falha ao reclamar ({status})")
         return failures + 1
@@ -120,7 +131,8 @@ def claim_missions(client, confirm: bool, log=print, clock=time.time) -> int:
     goals = {m["id"]: m for m in catalogue(client)}
     for _ in range(MAX_MISSION_CLAIMS):
         state = read_missions(client)
-        mission = next_claim(state, list(goals.values()), _refused, _day_done, clock())
+        refused = {m["id"] for m in state if refusals.blocked(f"missão:{m['id']}")}  # D-032: kept for the game day
+        mission = next_claim(state, list(goals.values()), refused, _day_done, clock())
         if mission is None:
             return 0
         daily = is_daily(mission)
@@ -139,9 +151,9 @@ def claim_missions(client, confirm: bool, log=print, clock=time.time) -> int:
         if status == 200:
             COUNTS["missions"] += 1
             log(f"Missões: {label} reclamado" + ("" if daily else " e guardado no inventário"))
-        elif 400 <= status < 500:
-            _refused.add(mission["id"])
-            log(f"Missões: o jogo recusou {label} ({status}); não insisto")
+        elif refusals.is_refusal(status):
+            refusals.refuse(f"missão:{mission['id']}", log, f"Missões: o jogo recusou {label} ({status}); não insisto hoje",
+                            day=refusals.game_day())
         else:
             log(f"Missões: falha ao reclamar {label} ({status})")
             return 1
@@ -179,8 +191,9 @@ def daily_state(client, clock=time.time) -> dict:
     except Exception:
         pass
     try:
-        out["missions"] = mission_summary(read_missions(client, MISSIONS_FRESH, clock), catalogue(client), _refused,
-                                          _day_done, clock())
+        state = read_missions(client, MISSIONS_FRESH, clock)
+        refused = {m["id"] for m in state if refusals.blocked(f"missão:{m['id']}")}
+        out["missions"] = mission_summary(state, catalogue(client), refused, _day_done, clock())
     except Exception:
         pass
     try:

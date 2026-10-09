@@ -50,7 +50,6 @@ class FakeClient:
 @pytest.fixture(autouse=True)
 def _fast(monkeypatch):
     monkeypatch.setattr(sponsors, "PAUSE_BETWEEN_WRITES", 0)
-    sponsors._refused.clear()
 
 
 def sign(client, confirm=True):

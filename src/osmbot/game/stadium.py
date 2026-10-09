@@ -10,12 +10,13 @@ from __future__ import annotations
 
 import time
 
+from osmbot.game import refusals
+
 from osmbot.stadium.policy import PART_NAMES, next_part, running_until
 
 SETTING_NAME = "StadiumUpgrade"  # gamesettings entry with the upgrade duration (id 30 on 2026-10-07)
 PAUSE_BETWEEN_WRITES = 1.5  # seconds
 COUNTS = {"upgrades": 0}
-_last_refused: dict[str, int] = {}  # club base path -> total money (funds + savings) at its last refusal
 
 
 def _money(client, base: str) -> tuple[int, int]:
@@ -49,8 +50,8 @@ def _try_upgrade(client, base: str, part_type: int, setting: int, log) -> tuple[
     if status == 200:
         timer = body.get("countdownTimer") if isinstance(body, dict) else None
         return "ok", (timer or {}).get("finishedTimestamp")
-    log(f"  recusado ({status})" if 400 <= status < 500 else f"  falhou ({status})")
-    return ("refused" if 400 <= status < 500 else "failed"), None
+    log(f"  recusado ({status})" if refusals.is_refusal(status) else f"  falhou ({status})")
+    return ("refused" if refusals.is_refusal(status) else "failed"), None
 
 
 def upgrade_club(client, team: dict, base: str, confirm: bool, log=print, now: float | None = None) -> tuple[int, list[float]]:
@@ -70,8 +71,8 @@ def upgrade_club(client, team: dict, base: str, confirm: bool, log=print, now: f
         return 0, []
     balance, savings = _money(client, base)
     total = balance + savings
-    if total <= _last_refused.get(base, -1):
-        return 0, []  # no new money since the last refusal: do not touch savings for nothing
+    if refusals.blocked(f"estádio:{base}", money=total):
+        return 0, []  # no new money since the last refusal: do not touch savings for nothing (D-032)
     label = f"{team['name']}: {PART_NAMES[part_type]}"
     if not confirm:
         log(f"{label}: tentaria melhorar (fundos {balance}, poupança {savings})")
@@ -98,12 +99,11 @@ def upgrade_club(client, team: dict, base: str, confirm: bool, log=print, now: f
             return 1, []
     if outcome == "ok":
         COUNTS["upgrades"] += 1
-        _last_refused.pop(base, None)
+        refusals.forget(f"estádio:{base}")
         log(f"{label}: melhoria iniciada")
         return 0, [ends] if ends else []
     if outcome == "refused":
-        _last_refused[base] = total
-        log(f"{label}: sem dinheiro para melhorar")
+        refusals.refuse(f"estádio:{base}", log, f"{label}: sem dinheiro para melhorar; volto a tentar quando houver mais", money=total)
         return 0, []
     return 1, []
 

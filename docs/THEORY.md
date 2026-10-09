@@ -122,7 +122,7 @@ Implementado em `plan_training` / `pick_trainee`:
 
 *Notas nossas (não são regras do dono):*
 - A exigência de **4 sessões de treino concluídas no dia do jogo** liga-se diretamente à automação de treinos (§5): a recolha e a recolocação automáticas têm de garantir que as 4 sessões terminam nesse dia. O prior art viu treinos de 2 h; o dono diz que as sessões duram 8 h (§12.1), e que se podem encurtar com vídeos.
-- **Amigáveis em quantidade (dono, 2026-10-08; ideia, não é para construir já):**
+- **Amigáveis em quantidade (dono, 2026-10-08; posta de lado em 2026-10-09):** o dono fez **10 amigáveis (40 boss coins)** e o valor do plantel subiu só **~1,5–2 M**; não compensa. Fica o registo:
   - Só se pode jogar **1 amigável contra cada clube da liga por jornada**; escolhe-se o adversário. Na prática ~**25 por equipa** por jornada (depende do número de clubes da liga).
   - **Não cansam nem lesionam** jogadores.
   - Limite diário do jogo: o dono acha que **não há** (por verificar).
@@ -228,7 +228,7 @@ Observações:
 
 - **Que jogadores:** os **suplentes**, **sem ordem particular** ("meio indiferente").
 - **Preço pedido** (palavras do dono):
-  - Se o **preço máximo** do jogador for **acima de 100 M€**, pede só **75% do seu valor**.
+  - Se o **preço máximo** do jogador for **acima de 100 M€**, pede só **75% do preço máximo**.
   - Se for **abaixo de 100 M€**, pede **SEMPRE o máximo**, por cada jogador.
 - **O jogo acaba por vender os jogadores a bots, independentemente do preço** (afirmação do dono). Por isso pedir o máximo não atrasa a venda.
 - **Os 75% são do preço máximo permitido** (não do valor de mercado). Exemplo do dono: o preço máximo do Jogador 1 é **111 M€** (o dono foi ver ao jogo), por isso pediria 75% disso ≈ **83,25 M€**.
@@ -483,5 +483,5 @@ Há **3 componentes** a melhorar, cada um com **níveis 0, 1, 2 e 3**:
 
 - **De graça**, com um timer de 8 h; no fim **levanta-se** (como um treino). **Sem vídeo** para encurtar no PC.
 - **Médico:** **todos** os lesionados (onze, banco ou fora), **logo** que se lesionam. Pode usar-se **várias vezes por jornada** (às vezes tira 1 jogo, às vezes 4). Com 2 lesionados ao mesmo tempo, tenta os dois; se o jogo só deixar 1, o outro espera.
-- **Advogado:** a mesma lógica para os suspensos, mas **só 1 vez por jornada** por jogador.
+- **Advogado:** a mesma lógica para os suspensos, mas **só 1 vez por jornada** por jogador. **Só com 2 ou mais jogos de suspensão:** com 1 jogo o jogo não deixa pôr no advogado (dono, 2026-10-09; coerente com §10, o advogado baixa para 1 jogo). O quadro mostra na mesma o suspenso.
 - Uma falha aqui nunca encrava as outras tarefas do bot; o quadro mostra a mudança logo a seguir (D-026).

@@ -2,6 +2,7 @@ import tomllib
 from pathlib import Path
 
 import osmbot
+from osmbot.gui.view import care_ring, stadium_rings
 from osmbot.gui.view import BLUE, GREEN, GREY, YELLOW, account_view, board_view, club_view, daily_view, next_check
 
 NOW = 1_000_000.0
@@ -167,3 +168,22 @@ def test_after_the_videos_it_names_what_it_waits_for():
     assert doing_view(money, {"text": "estádio"}, NOW) == "agora: estádio · a seguir: vídeo de dinheiro (Clube B)"
     assert doing_view(money, {"text": "à espera"}, NOW).startswith("agora: à espera · a seguir: recolher treino")
     assert doing_view(game, None, NOW) == ""
+
+
+def test_stadium_rings_say_which_part_goes_up_and_the_level_of_the_others():
+    rings = stadium_rings({"parts": [("Treinos", 3, 3, None), ("Capacidade", 0, 3, None), ("Campo", 1, 3, NOW + 9 * 3600)],
+                           "lengths": {"Campo": 18 * 3600}}, NOW)
+    assert [(r["name"], r["level"], r["state"], r["left"]) for r in rings] == [
+        ("Treinos", "3/3", "top", "no máximo"), ("Capacidade", "0/3", "still", "parado"), ("Campo", "1/3", "moving", "9h00")]
+    assert rings[2]["done"] == 0.5
+
+
+def test_doctor_and_lawyer_rings():
+    assert care_ring("Médico", [], NOW)["state"] == "none"
+    working = care_ring("Médico", [{"name": "J3", "games": 2, "until": NOW + 3600}], NOW)
+    assert (working["state"], working["centre"], working["name"]) == ("working", "1h00", "J3") and working["done"] == 7 / 8
+    assert care_ring("Médico", [{"name": "J3", "games": 2, "ready": True}], NOW)["centre"] == "pronto"
+    assert care_ring("Médico", [{"name": "J3", "games": 4}, {"name": "J5", "games": 1}], NOW)["name"] == "J3 +1"
+    one = care_ring("Advogado", [{"name": "J8", "games": 1}], NOW, lawyer=True)
+    assert (one["state"], one["sub"]) == ("blocked", "1 jogo · não dá")  # the game refuses a 1-game suspension
+    assert care_ring("Advogado", [{"name": "J8", "games": 3}], NOW, lawyer=True)["state"] == "waiting"

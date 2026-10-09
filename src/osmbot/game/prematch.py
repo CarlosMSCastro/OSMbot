@@ -4,12 +4,14 @@
 The game's own pre-match checklist (``matchpreparation``) says what is done. A friendly is played at once
 (4 boss coins); the analyst takes an hour, so one sent this week also counts while it is still working, and when
 the hour is over it has to be collected for the checklist to count it (observed 2026-10-09).
+A refused request is noted and not repeated this round (D-032): a refused opponent is left out, the others are tried.
 """
 from __future__ import annotations
 
 import random
 import time
 
+from osmbot.game import refusals
 from osmbot.prematch.policy import LEAD, friendly_choices, in_window, needs_analysis, needs_friendly, next_opponent
 
 FRIENDLY_PRODUCT = 62  # bosscoinproducts: "Friendly"
@@ -37,6 +39,8 @@ def _play_friendly(client, team: dict, base: str, league: str, week: int, confir
     _, matches = client.get(f"{league}/matches/filter")
     names = {t["id"]: t["name"] for t in teams}
     choices = friendly_choices(teams, matches, team["id"], week)
+    every = len(choices)
+    choices = [c for c in choices if not refusals.blocked(f"amigável:{base}:{c}", week=week)]
     rng.shuffle(choices)
     for opponent in choices[:MAX_TRIES]:
         if not confirm:
@@ -51,11 +55,12 @@ def _play_friendly(client, team: dict, base: str, league: str, week: int, confir
                      else f"{body.get('awayGoals')}-{body.get('homeGoals')}")
             log(f"Amigável: {team['name']} {score} {names[opponent]}")
             return 0
-        if not 400 <= status < 500:
+        if not refusals.is_refusal(status):
             log(f"Amigável: {team['name']} contra {names[opponent]} falhou ({status})")
             return 1
-        log(f"Amigável: {team['name']} contra {names[opponent]} recusado ({status}); tento outro")
-    if not choices:
+        refusals.refuse(f"amigável:{base}:{opponent}", log, f"Amigável: {team['name']} contra {names[opponent]} recusado ({status}); "
+                        "não volto a tentar este clube nesta jornada", week=week)
+    if not every:
         log(f"! {team['name']}: nenhum clube disponível para amigável nesta jornada")
     return 0
 
@@ -68,6 +73,9 @@ def _send_analyst(client, team: dict, base: str, league: str, week: int, confirm
         return 0
     _, teams = client.get(f"{league}/teams")
     name = next((t["name"] for t in teams if t["id"] == opponent), str(opponent))
+    key = f"analista:enviar:{base}"
+    if refusals.blocked(key, week=week):
+        return 0
     if not confirm:
         log(f"{team['name']}: enviaria o analista a {name}")
         return 0
@@ -76,6 +84,10 @@ def _send_analyst(client, team: dict, base: str, league: str, week: int, confirm
     if status == 200:
         COUNTS["analyses"] += 1
         log(f"Análise: {team['name']} enviou o analista a {name} (1 h)")
+        return 0
+    if refusals.is_refusal(status):
+        refusals.refuse(key, log, f"! Análise: o jogo recusou enviar o analista a {name} ({team['name']}, {status}); "
+                        "volto a tentar na próxima jornada", week=week)
         return 0
     log(f"Análise: {team['name']} → {name} falhou ({status})")
     return 1
@@ -89,6 +101,9 @@ def _collect_analyst(client, team: dict, base: str, sent: list[dict], week: int,
             continue
         if timer["finishedTimestamp"] > now:
             return 0, timer["finishedTimestamp"]
+        key = f"analista:levantar:{base}:{entry['id']}"
+        if refusals.blocked(key, week=week):
+            return 0, None
         if not confirm:
             log(f"{team['name']}: levantaria o analista")
             return 0, None
@@ -97,6 +112,10 @@ def _collect_analyst(client, team: dict, base: str, sent: list[dict], week: int,
         if status == 200:
             COUNTS["collected"] += 1
             log(f"Análise: {team['name']} levantou o analista")
+            return 0, None
+        if refusals.is_refusal(status):
+            refusals.refuse(key, log, f"! Análise (levantar): o jogo recusou ({team['name']}, {status}); volto a tentar na próxima jornada",
+                            week=week)
             return 0, None
         log(f"Análise: {team['name']} levantar o analista falhou ({status})")
         return 1, None

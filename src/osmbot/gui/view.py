@@ -8,6 +8,7 @@ from __future__ import annotations
 
 from datetime import datetime
 
+from osmbot.board.timeline import future_view, past_view
 from osmbot.game.ads import MAX_PER_BURST, MAX_TRAINING_VIDEOS, VIDEO_SAVES
 from osmbot.game.dashboard import BAR_SECONDS, SPONSOR_SLOTS, coin_jump, money, span, wake_events
 
@@ -37,17 +38,55 @@ def _people(people: list[dict], place: str, now: float) -> list[tuple[str, str |
     return pieces or [("0", GREY)]
 
 
+CASE_SECONDS = 8 * 3600  # doctor and lawyer: 480 min (DISCOVERY.md section 3)
+
+
+def stadium_rings(stadium: dict | None, now: float) -> list[dict]:
+    """The stadium as small rings (D-030, owner 2026-10-09): the part going up fills in the accent colour with the
+    time left; the others stand still in grey with their level (green when at the top)."""
+    rings = []
+    lengths = (stadium or {}).get("lengths") or {}
+    for name, level, top, ends in (stadium or {}).get("parts", []):
+        if ends and ends > now:
+            length = lengths.get(name)
+            rings.append({"name": name, "level": f"{level}/{top}", "state": "moving", "left": span(ends - now),
+                          "done": _done(ends - now, length) if length else 0.0})
+        else:
+            rings.append({"name": name, "level": f"{level}/{top}", "state": "top" if level >= top else "still",
+                          "left": "no máximo" if level >= top else "parado", "done": level / top if top else 0.0})
+    return rings
+
+
+def care_ring(label: str, people: list[dict], now: float, lawyer: bool = False) -> dict:
+    """The doctor or the lawyer as one ring: nobody · working on someone (time left) · done, to collect · someone
+    waiting · (lawyer) a 1-game suspension, which the lawyer cannot take (owner, 2026-10-09)."""
+    if not people:
+        return {"label": label, "state": "none", "centre": "—", "name": "ninguém", "sub": "", "done": 0.0}
+    first = next((p for p in people if p.get("until") or p.get("ready")), people[0])
+    name = first["name"] + (f" +{len(people) - 1}" if len(people) > 1 else "")
+    games = f"{first['games']} jogo{'s' if first['games'] != 1 else ''}"
+    if first.get("ready"):
+        return {"label": label, "state": "ready", "centre": "pronto", "name": name, "sub": "a levantar", "done": 1.0}
+    if first.get("until") and first["until"] > now:
+        return {"label": label, "state": "working", "centre": span(first["until"] - now), "name": name, "sub": games,
+                "done": _done(first["until"] - now, CASE_SECONDS)}
+    if lawyer and first["games"] < 2:
+        return {"label": label, "state": "blocked", "centre": "1 j", "name": name, "sub": "1 jogo · não dá", "done": 0.0}
+    return {"label": label, "state": "waiting", "centre": f"{first['games']} j", "name": name, "sub": f"{games} · à espera",
+            "done": 0.0}
+
+
 def club_view(club: dict, now: float, shortened: dict | None = None) -> dict:
     """One club's card (D-026): header, Liga · Taça · Valor do plantel, money and sales, sponsors, stadium,
     pre-match checklist, trainings, tired starters, injured and suspended players."""
     shortened = shortened or {}
     subtitle: list[tuple[str, str | None]] = []
     nxt = club.get("next")
+    rank = f" ({nxt['rank']}.º)" if nxt and nxt.get("rank") else ""
     when = f" · em {span(club['match'] - now)}" if club.get("match") else ""
     if nxt:
         if nxt["danger"]:
             subtitle.append(("⚠ confronto direto · ", YELLOW))
-        rank = f" ({nxt['rank']}.º)" if nxt.get("rank") else ""
         subtitle.append((f"vs {nxt['opponent']}{rank} ({nxt['side']})" + (" · taça" if nxt["cup"] else "") + when,
                          YELLOW if nxt["danger"] else None))
     else:
@@ -100,15 +139,27 @@ def club_view(club: dict, now: float, shortened: dict | None = None) -> dict:
         skipped = min(done, max(shortened.get(t.get("id"), 0), 0) / BAR_SECONDS)
         trainings.append((t["name"], t["pos"], "pronto" if ready else span(left), GREEN if ready else BLUE, done, skipped))
 
+    match = None  # the stripe of the next match (D-030): green at home, red away
+    if nxt:
+        match = {"text": f"vs {nxt['opponent']}{rank}", "home": nxt["side"] == "H",
+                 "tag": ("CASA" if nxt["side"] == "H" else "FORA") + (" · TAÇA" if nxt["cup"] else ""), "danger": nxt["danger"], "left": span(club["match"] - now) if club.get("match") else ""}
+    header = f"{club.get('ranking') or '?'}.º Campeonato"  # and the cup on a line of its own (owner, 2026-10-09)
+    cup_line = cup[:1].upper() + cup[1:]
+    done_steps = sum(1 for _, done, _ in prep.get("steps") or [] if done)
+    prep_title = f"PRÉ-JOGO · {done_steps}/{len(prep.get('steps') or [])}" if prep.get("steps") else "PRÉ-JOGO"
+
     return {"name": club["name"], "logo": club.get("logo"), "logo_key": club.get("logo_key") or club["name"],
-            "subtitle": subtitle, "facts": facts, "alert": alert,
+            "subtitle": subtitle, "facts": facts, "alert": alert, "header": header, "cup_line": cup_line, "match": match, "prep_title": prep_title,
             "money": _money(total), "sales": sales, "sponsors": sponsor_row,
             "stadium": {"still": still, "moving": moving},
             "prep": {"steps": steps},
             "trainings": trainings,
             "tired": " · ".join(f"{p['name']} {p['fitness']}%" for p in club.get("tired") or []),
             "injured": _people(club.get("injured") or [], "no médico", now),
-            "suspended": _people(club.get("suspended") or [], "no advogado", now)}
+            "suspended": _people(club.get("suspended") or [], "no advogado", now),
+            "stadium_rings": stadium_rings(club.get("stadium"), now),
+            "care": [care_ring("Médico", club.get("injured") or [], now),
+                     care_ring("Advogado", club.get("suspended") or [], now, lawyer=True)]}
 
 
 def daily_view(daily: dict | None, now: float) -> tuple[list[tuple[str, str]], dict | None]:
@@ -237,11 +288,16 @@ def doing_view(snapshot: dict | None, doing: dict | None, now: float) -> str:
     return f"agora: {doing['text']}" + (f" · a seguir: {following}" if following else "")
 
 
-def board_view(snapshot: dict | None, stats: dict | None, now: float, doing: dict | None = None) -> dict | None:
+def board_view(snapshot: dict | None, stats: dict | None, now: float, doing: dict | None = None,
+               history: list[dict] | None = None) -> dict | None:
     """Everything the window shows for one moment (None while there is nothing read yet)."""
     if not snapshot:
         return None
     shortened = (stats or {}).get("shortened") or {}
+    daily, _ = daily_view(snapshot.get("daily"), now)
     return {"clubs": [club_view(c, now, shortened) for c in snapshot["clubs"]],
             "account": account_view(snapshot, stats, now), "next": next_check(snapshot, now),
-            "doing": doing_view(snapshot, doing, now)}
+            "doing": doing_view(snapshot, doing, now),
+            "daily": [piece for piece in daily if not piece[0].startswith("novo dia")],  # the new day is on the timeline
+            "timeline": {"future": future_view(snapshot, now), "past": past_view(history or []),
+                         "now": (doing or {}).get("text") or ""}}

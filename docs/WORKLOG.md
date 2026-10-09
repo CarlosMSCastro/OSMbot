@@ -2,6 +2,24 @@
 
 Entradas mais recentes primeiro. Cada sessão: o que se fez · o que ficou por fazer · próximo passo.
 
+## 2026-10-09 (cont. 3) — Casa: médico corrigido, transferências guardadas, janela nova
+
+- **Médico (pergunta do dono):** o bot nunca levantou o médico; 3 tentativas com 404 (09:13, 17:26, 19:31). Com `inspect-writes`, o dono levantou à mão: o pedido é `PUT api/v1/…/doctortreatments/{id}/claim` (o bot usava `v1.1`). Corrigido em `game/medical.py`; `DISCOVERY.md` §3 passa a *Verificado*. Advogado: mesma base, ainda por confirmar.
+- **Porque o lesionado não voltava ao médico:** o tratamento acabado, por levantar, conta como "ainda no médico", por isso o bot não o mandava de novo; com o levantamento a falhar, ficava à espera para sempre.
+- **Histórico de transferências:** `GET leagues/{L}/transfers` (últimas 100 por liga; `DISCOVERY.md` §3). 1.ª análise: 82 de 94 vendas de utilizadores aos bots foram a 100% do máximo; um utilizador vende sempre a 52–81%; nenhuma venda com máximo acima de ~68 M€ (Espanha cobre ~10 dias, Arménia ~2,5).
+- **D-029:** o bot guarda as transferências 1 vez por dia em `logs/<PC>/transferencias/<liga>.json` (`transfers/history.py` puro, `game/transfers.py`, ligado ao ciclo). 1.ª gravação feita (100 + 100). 269 testes.
+- `THEORY.md` §7.5: "75% do seu valor" → "75% do preço máximo" (pedido do dono).
+- **Não em uso ainda:** a correção do médico e a gravação diária só entram com uma versão nova / o bot reiniciado a partir do código.
+- **Janela nova (D-030)** a partir de uma maquete do dono: fundo (`gui/assets/fundo.jpg`, a imagem do dono reduzida para 2560 px; no repo por escolha dele), barra de cima com diárias e "A trabalhar desde", cartões de 3 colunas com anéis de treino, coluna da direita com boss coins e linha do tempo. Código: `board/timeline.py` (puro: ações do bot tiradas das linhas do registo, juntando as seguidas; eventos futuros do snapshot), `loop.py` manda `history` à janela, `view.py` (faixa do jogo, "PRÉ-JOGO · N/8", diárias, timeline), `window.py` (`Ring`, `MatchStripe`, `Backdrop`, `Timeline`; saem o painel de baixo e a barra de estado). 273 testes. Vista com dados reais (só leitura; o passado era de exemplo).
+- **Revisão do dono à janela:** estádio em 3 círculos, médico e advogado em círculos por baixo dos treinos (`stadium_rings`, `care_ring` em `view.py`; `Ring`/`RingCell` em `window.py`), só ⚠ no confronto direto, caixas mais opacas (D-030). 2.ª revisão: "2.º Campeonato" + "🏆 taça", rodapé CASA/FORA na faixa (`ElidedLabel`, sem quebra de linha), venda por baixo do dinheiro, estádio centrado, médico/advogado à esquerda com 🩺/⚖️, pré-jogo maior. 276 testes.
+- **Janela em inglês (D-031, escolha do dono: janela e avisos):** `src/osmbot/i18n.py` (puro: `WORDS` + `PATTERNS` PT→EN; escolha em `~/.osmbot/config.json`); a janela passa todo o texto por `tr()`; menu "Idioma / Language" reconstrói páginas e menus na hora. O bot e os logs continuam em português. Textos sem tradução ficam em português (ex.: a posição em "FC Van GR" no passado). 280 testes.
+- **Regra das recusas (D-032):** `game/refusals.py` (anotações em `~/.osmbot/recusas.json`, por jornada / dia de jogo / momento / dinheiro; apagam-se com a versão); ligada a médico, advogado, analista, amigável, patrocinadores, estádio, início de sessão e missões. Treinos e vídeos sem mudança. Avisos novos traduzidos. 287 testes.
+- **Versão 0.9.6** (pedido do dono): `pyproject`, `__init__`, `CHANGELOG`; `dist` reconstruído; notas em `dist/release-notes-v0.9.6.md`.
+- **Rumo ao 1.0 (conversa com o dono):** critérios registados em `PROJECT_BRIEF.md` (validar em real todas as escritas, nunca repetir pedidos recusados, 7 dias sem intervenção, sessão expirada). Instalador **verificado pelo dono** no PC pessoal e no da fábrica. Fora do 1.0: transferências automáticas (próxima grande funcionalidade; o dono dá a teoria primeiro), Mac à mão (mais tarde), README público. **Amigáveis em quantidade postos de lado** (10 amigáveis = 40 coins → ~1,5–2 M de valor; `THEORY.md` §6).
+- **Advogado:** o bot tentava a cada passagem um suspenso de 1 jogo e o jogo dava 400; o dono explica que com 1 jogo não dá. `LAWYER_MIN_GAMES = 2` (`THEORY.md` §18, `DISCOVERY.md` §3). O pedido de envio do advogado continua por observar (precisa de um suspenso de 2+ jogos).
+- **Confirmado:** às 21:08 o bot pôs o Rice no médico (0.9.5), depois de o dono levantar o tratamento à mão.
+- **Próximo passo:** o dono vê a janela nova a correr e diz o que mudar; decide quando lançar a versão; quando houver vendas caras guardadas, fazer o estudo dos 100 M€.
+
 ## 2026-10-09 (cont. 2) — Fábrica: quadro com "agora · a seguir", estádio com barra, loja
 
 - **Boss coins (pergunta do dono):** o saldo do bot bate com o do jogo (2651 via API, 2646 no topo do site às 14:00); o atraso era a 0.9.3 ler só no fim das passagens. Dono confirmou com Ver → Atualizar. O "-42" era saldo menos o saldo inicial.

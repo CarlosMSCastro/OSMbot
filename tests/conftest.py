@@ -17,6 +17,9 @@ def _no_repo_logs(monkeypatch, tmp_path):
     monkeypatch.setattr(logs, "HOME", tmp_path / "no-repo")
     monkeypatch.setattr(logs, "OLD_LOG", tmp_path / "old-bot.log")
     monkeypatch.delenv("OSMBOT_REPO", raising=False)
+    from osmbot.game import refusals
+
+    monkeypatch.setattr(refusals, "FILE", tmp_path / "recusas.json")  # never the owner's notes of refused requests
 
 
 @pytest.fixture
@@ -68,7 +71,7 @@ def _isolated_from_the_game(monkeypatch, tmp_path):
 
     from osmbot.game import rewards
 
-    monkeypatch.setattr(rewards, "_refused", set())
+
     monkeypatch.setattr(rewards, "_said", set())
     monkeypatch.setattr(rewards, "_day_done", set())
     monkeypatch.setattr(rewards, "COUNTS", {"login": 0, "missions": 0, "videos": 0})
@@ -83,7 +86,6 @@ def _isolated_from_the_game(monkeypatch, tmp_path):
 
     monkeypatch.setattr(medical, "COUNTS", {"doctor": 0, "lawyer": 0, "collected": 0})
     monkeypatch.setattr(medical, "PAUSE_BETWEEN_WRITES", 0)
-    monkeypatch.setattr(medical, "_unconfirmed", set())
     monkeypatch.setattr(sales, "SALES_FILE", tmp_path / "sales.json")
 
     class _NoClient:

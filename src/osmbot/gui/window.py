@@ -20,14 +20,17 @@ from pathlib import Path
 from PySide6.QtCore import QLockFile, QObject, QRectF, QSize, Qt, QTimer, Signal
 from PySide6.QtGui import QAction, QColor, QFont, QIcon, QImage, QPainter, QPalette, QPen, QPixmap
 from PySide6.QtWidgets import (QAbstractItemView, QApplication, QFrame, QGridLayout, QGroupBox, QHBoxLayout, QLabel,
-                               QMainWindow, QMenu, QMessageBox, QPushButton, QScrollArea, QStackedWidget, QStatusBar, QStyle,
+                               QMainWindow, QMenu, QMessageBox, QPushButton, QScrollArea, QStackedWidget, QStyle,
                                QSystemTrayIcon, QTableWidget, QTableWidgetItem, QVBoxLayout, QWidget)
 
 from osmbot import __version__
+from osmbot.i18n import LANGUAGES, language, load_language, set_language, tr
 from osmbot.gui.view import BLUE, GREEN, GREY, RED, YELLOW, board_view
 
-COLOURS = {GREEN: "#5cb85c", BLUE: "#5aa9ff", YELLOW: "#f0b429", GREY: "#8b9099", RED: "#e5534b", None: "#e8e8e8"}
-BACKGROUND, CARD, LINE = "#1b1c1f", "#25272b", "#33363b"
+COLOURS = {GREEN: "#5cd17a", BLUE: "#7cc4ff", YELLOW: "#f5c542", GREY: "#8f95b8", RED: "#ff6b6b", None: "#eef0ff"}
+BACKGROUND, CARD, LINE = "#0b0f2a", "rgba(16, 20, 50, 232)", "#2d3366"  # night-stadium blues (D-030)
+TEXT, MUTED, ACCENT, ACCENT_LIGHT, RING_TRACK = "#eef0ff", "#8f95b8", "#8b8cf8", "#b9baff", "#2a2f5a"
+BACKGROUND_FILE = Path(__file__).resolve().parent / "assets" / "fundo.jpg"  # the board's background picture (D-030)
 LOGOS = Path.home() / ".osmbot" / "logos"
 TRAY_DOT = {True: "#9be22d", False: "#9a9a9a"}  # lime with a white ring: readable on the green logo at 16 px
 ROW_HEIGHT, HEADER_HEIGHT = 22, 24
@@ -37,8 +40,10 @@ STYLE = (
     "QGroupBox QLabel, QGroupBox QTableWidget { font-weight: normal; }"
     "QHeaderView::section { background: #262626; color: #a0a0a0; border: none; border-bottom: 1px solid #3a3a3a; padding: 3px 6px; }"
     "QTableWidget { border: 1px solid #333333; }"
-    "QStatusBar { border-top: 1px solid #333333; color: #a0a0a0; }"
-    f"QFrame#card {{ background: {CARD}; border: 1px solid {LINE}; border-radius: 8px; }}"
+    f"QFrame#card {{ background: {CARD}; border: 1px solid rgba(139, 140, 248, 45); border-radius: 14px; }}"
+    "QFrame#coins { border: 1px solid rgba(245, 197, 66, 70); border-radius: 14px; background: qlineargradient("
+    "x1:0, y1:0, x2:1, y2:1, stop:0 rgba(16, 20, 50, 238), stop:1 rgba(90, 70, 20, 218)); }"
+    "QFrame#coins QLabel { background: transparent; }"
     "QFrame#card QLabel { background: transparent; }"
     f"QScrollArea, QScrollArea > QWidget > QWidget {{ background: {BACKGROUND}; }}"
     f"QScrollBar:vertical {{ background: {BACKGROUND}; width: 10px; }}"
@@ -114,7 +119,7 @@ def tray_icon(logo: QIcon, working: bool) -> QIcon:
 
 
 def coloured(text: str, colour: str | None = None, bold: bool = False) -> QLabel:
-    label = QLabel(text)
+    label = QLabel(tr(text))
     paint(label, colour, bold)
     return label
 
@@ -155,7 +160,7 @@ class Bar(QWidget):
 
 def make_table(headers: list[str], widths: list[int]) -> QTableWidget:
     table = QTableWidget(0, len(headers))
-    table.setHorizontalHeaderLabels(headers)
+    table.setHorizontalHeaderLabels([tr(h) for h in headers])
     table.verticalHeader().hide()
     table.verticalHeader().setDefaultSectionSize(ROW_HEIGHT)
     table.horizontalHeader().setFixedHeight(HEADER_HEIGHT)
@@ -177,7 +182,7 @@ def set_cell(table: QTableWidget, row: int, column: int, text: str, colour: str 
     if item is None:
         item = QTableWidgetItem()
         table.setItem(row, column, item)
-    item.setText(text)
+    item.setText(tr(text))
     item.setForeground(QColor(COLOURS.get(colour, COLOURS[None])))
 
 
@@ -185,7 +190,7 @@ def rich(pieces: list[tuple[str, str | None]]) -> str:
     """Coloured pieces of text as one label's HTML."""
     from html import escape
 
-    return "".join(f"<span style='color:{COLOURS.get(colour, COLOURS[None])}'>{escape(text)}</span>" for text, colour in pieces)
+    return "".join(f"<span style='color:{COLOURS.get(colour, COLOURS[None])}'>{escape(tr(text))}</span>" for text, colour in pieces)
 
 
 def text_label(size: int = 9, bold: bool = False, colour: str | None = None) -> QLabel:
@@ -232,169 +237,420 @@ def fetch_logo(key: str, url: str) -> Path | None:
         return None
 
 
-class ClubCard(QFrame):
-    """One club (D-026): logo, name, next match; Liga · Taça · Valor do plantel; money, sponsors, stadium, pre-match;
-    trainings; tired, injured and suspended players."""
+class Ring(QWidget):
+    """A ring (D-030). Trainings: the arc is the time gone by (the part a video skipped in light blue), the time left
+    in the middle, full and green when ready. ``show_ring`` paints any other ring: the arc's share, its colour and the
+    text colour (the stadium parts standing still and the doctor/lawyer with nobody are dimmed)."""
 
-    LABEL_WIDTH = 108
+    def __init__(self, size: int = 78, width: int = 6, font: int = 11):
+        super().__init__()
+        self.setFixedSize(size, size)
+        self.pen, self.font_size = width, font
+        self.text, self.colour, self.done, self.skipped = "", None, 0.0, 0.0
+        self.arc, self.text_colour, self.emoji = ACCENT, TEXT, False
+
+    def set(self, text: str, colour: str | None, done: float, skipped: float = 0.0) -> None:
+        """A training: green and full when ready, else the accent colour (and light blue for the skipped part)."""
+        ready = colour == GREEN
+        self.show_ring(text, 1.0 if ready else done, COLOURS[GREEN] if ready else ACCENT,
+                       COLOURS[GREEN] if ready else TEXT, 0.0 if ready else skipped)
+        self.colour = colour
+
+    def show_ring(self, text: str, done: float, arc: str, text_colour: str, skipped: float = 0.0, emoji: bool = False) -> None:
+        self.text, self.done, self.arc, self.text_colour, self.emoji = text, done, arc, text_colour, emoji
+        self.skipped = min(skipped, done)
+        self.update()
+
+    def paintEvent(self, _event) -> None:
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.Antialiasing)
+        margin = self.pen / 2 + 2
+        box = QRectF(self.rect()).adjusted(margin, margin, -margin, -margin)
+        painter.setPen(QPen(QColor(RING_TRACK), self.pen))
+        painter.drawEllipse(box)
+        own = self.done - self.skipped
+        start = 90 * 16  # from the top, clockwise
+        if own > 0:
+            painter.setPen(QPen(QColor(self.arc), self.pen, Qt.SolidLine, Qt.RoundCap))
+            painter.drawArc(box, start, -int(own * 360 * 16))
+        if self.skipped:
+            painter.setPen(QPen(QColor(COLOURS[BLUE]), self.pen, Qt.SolidLine, Qt.RoundCap))
+            painter.drawArc(box, start - int(own * 360 * 16), -int(self.skipped * 360 * 16))
+        painter.setPen(QColor(self.text_colour))
+        painter.setFont(QFont("Segoe UI Emoji", self.font_size + 7) if self.emoji else QFont("Segoe UI", self.font_size, QFont.Bold))
+        painter.drawText(self.rect(), Qt.AlignCenter, self.text)
+
+
+class RingCell(QWidget):
+    """A ring with a few lines under it (name, detail...)."""
+
+    def __init__(self, size: int, width: int, font: int, lines: int = 2):
+        super().__init__()
+        column = QVBoxLayout(self)
+        column.setContentsMargins(0, 0, 0, 0)
+        column.setSpacing(1)
+        self.ring = Ring(size, width, font)
+        column.addWidget(self.ring, 0, Qt.AlignHCenter)
+        self.lines = [text_label(10 if index == 0 else 8) for index in range(lines)]
+        for label in self.lines:
+            label.setAlignment(Qt.AlignHCenter)
+            column.addWidget(label, 0, Qt.AlignHCenter)
+
+    def say(self, *texts: tuple[str, str]) -> None:
+        """(text, css colour) for each line."""
+        for label, (text, colour) in zip(self.lines, texts):
+            label.setText(tr(text))
+            label.setStyleSheet(f"color:{colour};")
+            label.setVisible(bool(text))
+
+
+CARE_EMOJI = {"Médico": "🩺", "Advogado": "⚖️"}
+STADIUM_RING = {"moving": (ACCENT, TEXT), "top": (COLOURS[GREEN], COLOURS[GREEN]), "still": ("#4a5080", MUTED)}
+CARE_RING = {"none": (RING_TRACK, MUTED), "working": (ACCENT, TEXT), "ready": (COLOURS[GREEN], COLOURS[GREEN]),
+             "waiting": (COLOURS[YELLOW], COLOURS[YELLOW]), "blocked": ("#4a5080", MUTED)}
+
+
+class ElidedLabel(QLabel):
+    """One line that ends in "…" when it does not fit, instead of breaking."""
+
+    def paintEvent(self, _event) -> None:
+        painter = QPainter(self)
+        painter.setPen(self.palette().color(QPalette.WindowText))
+        painter.setFont(self.font())
+        painter.drawText(self.rect(), Qt.AlignLeft | Qt.AlignVCenter,
+                         painter.fontMetrics().elidedText(self.text(), Qt.ElideRight, self.width()))
+
+    def minimumSizeHint(self) -> QSize:
+        return QSize(20, super().minimumSizeHint().height())
+
+
+class MatchStripe(QFrame):
+    """The next match (D-030): a small "CASA"/"FORA" tag in the corner, "vs Clube (8.º)" on one line and "em 3h33";
+    green at home, red away; ⚠ for a direct rival (owner, 2026-10-09)."""
+
+    def __init__(self):
+        super().__init__()
+        row = QHBoxLayout(self)
+        row.setContentsMargins(14, 5, 14, 7)
+        texts = QVBoxLayout()
+        texts.setSpacing(0)
+        self.tag = text_label(7, True)
+        self.text = ElidedLabel()
+        self.text.setFont(QFont("Segoe UI", 10))
+        texts.addWidget(self.tag)
+        texts.addWidget(self.text)
+        self.left = text_label(10)
+        row.addLayout(texts, 1)
+        row.addWidget(self.left, 0, Qt.AlignVCenter)
+
+    def show_match(self, match: dict | None) -> None:
+        self.setVisible(bool(match))
+        if not match:
+            return
+        start, end = ("#1f7a4a", "rgba(31,122,74,40)") if match["home"] else ("#8a2236", "rgba(138,34,54,40)")
+        self.setStyleSheet(f"MatchStripe {{ border-radius: 8px; background: qlineargradient(x1:0, y1:0, x2:1, y2:0, "
+                           f"stop:0 {start}, stop:1 {end}); }} QLabel {{ background: transparent; color: #f2f2f7; }}")
+        self.tag.setText(tr(match["tag"]))
+        self.tag.setStyleSheet("color: rgba(255,255,255,170); letter-spacing: 1px;")
+        self.text.setText(("⚠ " if match["danger"] else "") + tr(match["text"]))
+        self.left.setText(f"{tr('em')} <b style='font-size:15pt'>{match['left']}</b>" if match["left"] else "")
+
+
+def column_title(text: str = "") -> QLabel:
+    label = text_label(8, True)
+    label.setStyleSheet(f"color:{MUTED}; letter-spacing:1px; font-weight:bold;")
+    label.setText(tr(text))
+    return label
+
+
+def divider() -> QFrame:
+    line = QFrame()
+    line.setFixedWidth(1)
+    line.setStyleSheet(f"background:{LINE};")
+    return line
+
+
+class ClubCard(QFrame):
+    """One club (D-030), three columns: the club (name, match, value, money, sponsors, stadium) · the trainings as
+    rings · the pre-match checklist with the tired, injured and suspended players under it."""
+
+    LABEL_WIDTH = 104
 
     def __init__(self):
         super().__init__()
         self.setObjectName("card")
-        outer = QVBoxLayout(self)
-        outer.setContentsMargins(0, 0, 0, 10)
-        outer.setSpacing(0)
-        self.stripe = QFrame()
-        self.stripe.setFixedHeight(5)
-        outer.addWidget(self.stripe)
-        body = QVBoxLayout()
-        body.setContentsMargins(14, 10, 14, 0)
-        body.setSpacing(5)
-        outer.addLayout(body)
+        row = QHBoxLayout(self)
+        row.setContentsMargins(0, 0, 0, 0)
+        row.setSpacing(0)
 
+        club = QVBoxLayout()
+        club.setContentsMargins(18, 14, 16, 14)
+        club.setSpacing(5)
         head = QHBoxLayout()
+        head.setSpacing(10)
         self.logo = QLabel()
-        self.logo.setFixedSize(46, 46)
+        self.logo.setFixedSize(48, 48)
         head.addWidget(self.logo)
         titles = QVBoxLayout()
         titles.setSpacing(0)
         self.name = text_label(16, True)
-        self.subtitle = text_label()
+        self.header = text_label(9)
+        paint(self.header, None)
+        self.header.setStyleSheet(f"color:{MUTED};")
+        self.cup = text_label(9)
+        self.cup.setStyleSheet(f"color:{MUTED};")
         titles.addWidget(self.name)
-        titles.addWidget(self.subtitle)
+        titles.addWidget(self.header)
+        titles.addWidget(self.cup)
         head.addLayout(titles, 1)
-        body.addLayout(head)
-
-        facts = QGridLayout()
-        facts.setHorizontalSpacing(0)
-        facts.setVerticalSpacing(0)
-        self.facts = []
-        for column, span_ in ((0, 1), (1, 1), (2, 2)):
-            title, value = text_label(8, colour=GREY), text_label(10, True)
-            title.setAlignment(Qt.AlignCenter)
-            value.setAlignment(Qt.AlignCenter)
-            facts.addWidget(title, 0, column if column < 2 else 2, 1, span_)
-            facts.addWidget(value, 1, column if column < 2 else 2, 1, span_)
-            self.facts.append((title, value))
-        for column in range(4):
-            facts.setColumnStretch(column, 1)
-        body.addSpacing(6)
-        body.addLayout(facts)
-        body.addSpacing(8)
-
+        club.addLayout(head)
+        club.addSpacing(4)
+        self.match = MatchStripe()
+        club.addWidget(self.match)
+        club.addSpacing(4)
         self.alert = text_label(9, True, YELLOW)
-        body.addWidget(self.alert)
-        self.money = self._row(body, "Dinheiro")
-        self.sponsors = self._row(body, "Patrocinadores")
-        self.stadium = self._row(body, "Estádio")
-        upgrades = QHBoxLayout()  # under it, each part going up: "Campo 1/3", a bar and the time left (owner, 2026-10-09)
-        upgrades.addSpacing(self.LABEL_WIDTH + 8)
-        self.upgrades = QGridLayout()
-        self.upgrades.setHorizontalSpacing(10)
-        self.upgrades.setVerticalSpacing(3)
-        self.upgrades.setColumnStretch(3, 1)
-        self.upgrade_rows: list[tuple[QLabel, Bar, QLabel]] = []
-        upgrades.addLayout(self.upgrades, 1)
-        body.addLayout(upgrades)
-        self.prep = self._row(body, "Pré-jogo")
-        self.prep.setWordWrap(True)
+        self.alert.setWordWrap(True)
+        club.addWidget(self.alert)
+        self.facts = QGridLayout()
+        self.facts.setHorizontalSpacing(10)
+        self.facts.setVerticalSpacing(4)
+        club.addLayout(self.facts)
+        self.value = self._row(0, "Valor plantel")
+        self.money = self._row(1, "Dinheiro")
+        self.sales = text_label(9)
+        self.sales.setWordWrap(True)
+        self.facts.addWidget(self.sales, 2, 1, 1, 3)
+        self.sponsors = self._row(3, "Patrocinadores")
+        club.addSpacing(6)
+        club.addWidget(column_title("ESTÁDIO"))
+        stadium = QHBoxLayout()  # three small rings: the part going up fills, the others stand still (owner, 2026-10-09)
+        stadium.setSpacing(22)
+        stadium.addStretch(1)
+        self.stadium_cells = [RingCell(54, 5, 9, lines=2) for _ in range(3)]
+        for cell in self.stadium_cells:
+            stadium.addWidget(cell)
+        stadium.addStretch(1)
+        club.addLayout(stadium)
+        club.addStretch(1)
+        left = QWidget()
+        left.setLayout(club)
+        left.setFixedWidth(345)
+        row.addWidget(left)
+        row.addWidget(divider())
 
-        body.addSpacing(4)
-        self.trainings = QGridLayout()
-        self.trainings.setHorizontalSpacing(10)
-        self.trainings.setVerticalSpacing(3)
-        self.trainings.addWidget(text_label(8, colour=GREY), 0, 0)
-        self.trainings.itemAtPosition(0, 0).widget().setText("Treinos")
-        self.trainings.setColumnStretch(3, 1)
-        self.training_rows: list[tuple[QLabel, QLabel, QLabel, Bar]] = []
-        body.addLayout(self.trainings)
-        body.addSpacing(2)
+        trainings = QVBoxLayout()
+        trainings.setContentsMargins(16, 14, 16, 14)
+        trainings.setSpacing(8)
+        trainings.addWidget(column_title("TREINOS"))
+        self.rings = QHBoxLayout()
+        self.rings.setSpacing(10)
+        trainings.addLayout(self.rings)
+        trainings.addSpacing(10)
+        care = QHBoxLayout()  # the doctor and the lawyer under the trainings (owner, 2026-10-09)
+        care.setSpacing(24)
+        self.care_cells = [RingCell(62, 5, 9, lines=3) for _ in range(2)]
+        for cell in self.care_cells:
+            care.addWidget(cell)
+        care.addStretch(1)
+        trainings.addLayout(care)
+        trainings.addStretch(1)
+        self.ring_cells: list[tuple[QWidget, Ring, QLabel, QLabel]] = []
+        row.addLayout(trainings, 1)
+        row.addWidget(divider())
+
+        prep = QVBoxLayout()
+        prep.setContentsMargins(18, 14, 18, 14)
+        prep.setSpacing(3)
+        self.prep_title = column_title()
+        prep.addWidget(self.prep_title)
+        prep.addSpacing(4)
+        self.prep = text_label(11)
+        prep.addWidget(self.prep)
+        prep.addSpacing(8)
         self.tired = text_label(9, colour=YELLOW)
-        self.injured = text_label()
-        self.suspended = text_label()
-        for label in (self.tired, self.injured, self.suspended):
-            label.setWordWrap(True)
-            body.addWidget(label)
+        self.tired.setWordWrap(True)
+        prep.addWidget(self.tired)
+        prep.addStretch(1)
+        right = QWidget()
+        right.setLayout(prep)
+        right.setFixedWidth(235)
+        row.addWidget(right)
 
-    def _row(self, body: QVBoxLayout, name: str) -> QLabel:
-        row = QHBoxLayout()
-        row.setSpacing(8)
-        title = text_label(colour=GREY)
-        title.setText(name)
+    def _row(self, index: int, name: str) -> QLabel:
+        title = text_label(9)
+        title.setStyleSheet(f"color:{MUTED};")
+        title.setText(tr(name))
         title.setFixedWidth(self.LABEL_WIDTH)
-        title.setAlignment(Qt.AlignLeft | Qt.AlignTop)
-        value = text_label()
-        row.addWidget(title)
-        row.addWidget(value, 1)
-        body.addLayout(row)
+        value = text_label(10)
+        value.setWordWrap(True)
+        self.facts.addWidget(title, index, 0, Qt.AlignTop)
+        self.facts.addWidget(value, index, 1, 1, 3)
         return value
 
-    def set_logo(self, pixmap: QPixmap | None, colour: str | None) -> None:
+    def set_logo(self, pixmap: QPixmap | None, _colour: str | None = None) -> None:
         if pixmap is not None and not pixmap.isNull():
-            self.logo.setPixmap(pixmap.scaled(46, 46, Qt.KeepAspectRatio, Qt.SmoothTransformation))
-        self.stripe.setStyleSheet(f"background:{colour or LINE}; border-top-left-radius:8px; border-top-right-radius:8px;")
+            self.logo.setPixmap(pixmap.scaled(48, 48, Qt.KeepAspectRatio, Qt.SmoothTransformation))
 
     def show_club(self, club: dict) -> None:
         self.name.setText(club["name"])
-        self.subtitle.setText(rich(club["subtitle"]))
-        for (title, value), (name, text, colour) in zip(self.facts, club["facts"]):
-            title.setText(name)
-            value.setText(rich([(text, colour)]))
+        self.header.setText(tr(club["header"]))
+        self.cup.setText(tr(f"🏆 {club['cup_line']}"))
+        self.match.show_match(club["match"])
         self.alert.setVisible(bool(club["alert"]))
-        self.alert.setText(f"❗ {club['alert']}")
-        self.money.setText(f"<b>{rich([(club['money'], None)])}</b>" + rich([("     " + sale, GREEN) for sale in club["sales"]]))
+        self.alert.setText(f"❗ {tr(club['alert'])}")
+        _, value, colour = club["facts"][2]
+        self.value.setText(rich([(value, colour)]))
+        self.money.setText(f"<b>{rich([(club['money'], None)])}</b>")
+        self.sales.setVisible(bool(club["sales"]))
+        self.sales.setText("<br>".join(rich([("✓ ", GREEN), (sale.removeprefix("✓ "), None)]) for sale in club["sales"]))
         self.sponsors.setText(rich([club["sponsors"]]))
-        still = rich([piece for index, part in enumerate(club["stadium"]["still"]) for piece in ((" · ", GREY),) * bool(index) + (part,)])
-        moving = club["stadium"]["moving"]
-        self.stadium.setText(still or ("" if moving else rich([("—", GREY)])))
-        self._show_upgrades(moving)
-        steps = [rich([step]) for step in club["prep"]["steps"]]
-        half = (len(steps) + 1) // 2
-        self.prep.setText("&nbsp;&nbsp;".join(steps[:half]) + "<br>" + "&nbsp;&nbsp;".join(steps[half:]) if steps
-                          else rich([("—", GREY)]))
+        rings = club["stadium_rings"]
+        for index, cell in enumerate(self.stadium_cells):
+            cell.setVisible(index < len(rings))
+            if index < len(rings):
+                ring = rings[index]
+                arc, text = STADIUM_RING[ring["state"]]
+                cell.ring.show_ring(ring["level"], ring["done"], arc, text)  # names and states go through say()
+                moving = ring["state"] == "moving"
+                cell.say((ring["name"], TEXT if moving else MUTED), (ring["left"], COLOURS[BLUE] if moving else MUTED))
+        for cell, ring in zip(self.care_cells, club["care"]):
+            arc, text = CARE_RING[ring["state"]]
+            share = {"working": ring["done"], "ready": 1.0, "waiting": 1.0}.get(ring["state"], 0.0)
+            nobody = ring["state"] == "none"  # nobody: the emoji of each one instead of "—" (owner, 2026-10-09)
+            cell.ring.show_ring(CARE_EMOJI[ring["label"]] if nobody else tr(ring["centre"]), share, arc, text, emoji=nobody)
+            cell.say((ring["label"], TEXT), (ring["name"], MUTED if ring["state"] == "none" else text), (ring["sub"], MUTED))
+        self.prep_title.setText(tr(club["prep_title"]))
+        self.prep.setText("<br>".join(rich([step]) for step in club["prep"]["steps"]) or rich([("—", GREY)]))
         self._show_trainings(club["trainings"])
         self.tired.setVisible(bool(club["tired"]))
-        self.tired.setText(f"⚠ Cansados: {club['tired']}")
-        self.injured.setText(rich([("Lesionados: ", GREY)] + club["injured"]))
-        self.suspended.setText(rich([("Suspensos: ", GREY)] + club["suspended"]))
-
-    def _show_upgrades(self, rows: list[dict]) -> None:
-        while len(self.upgrade_rows) < len(rows):
-            index = len(self.upgrade_rows)
-            cells = (text_label(), Bar(120), text_label(colour=BLUE))
-            for column, cell in enumerate(cells):
-                self.upgrades.addWidget(cell, index, column)
-            self.upgrade_rows.append(cells)
-        for index, (name, bar, left) in enumerate(self.upgrade_rows):
-            visible = index < len(rows)
-            for cell in (name, left):
-                cell.setVisible(visible)
-            if not visible:
-                bar.set(None)
-                continue
-            row = rows[index]
-            name.setText(row["text"])
-            bar.set(row["done"])  # hidden when the length is unknown (only the time then)
-            left.setText(row["left"])
+        self.tired.setText(tr(f"⚠ Cansados: {club['tired']}"))
 
     def _show_trainings(self, rows: list) -> None:
-        while len(self.training_rows) < len(rows):
-            index = len(self.training_rows) + 1
-            cells = (text_label(), text_label(colour=GREY), text_label(), Bar())
-            for column, cell in enumerate(cells):
-                self.trainings.addWidget(cell, index, column)
-            self.training_rows.append(cells)
-        for index, cells in enumerate(self.training_rows):
-            visible = index < len(rows)
-            for cell in cells:
-                cell.setVisible(visible)
-            if not visible:
+        while len(self.ring_cells) < len(rows):
+            cell = QWidget()
+            column = QVBoxLayout(cell)
+            column.setContentsMargins(0, 0, 0, 0)
+            column.setSpacing(2)
+            ring, name, pos = Ring(), text_label(10), text_label(8)
+            pos.setStyleSheet(f"color:{MUTED};")
+            for widget in (ring, name, pos):
+                column.addWidget(widget, 0, Qt.AlignHCenter)
+            self.rings.addWidget(cell)
+            self.ring_cells.append((cell, ring, name, pos))
+        for index, (cell, ring, name, pos) in enumerate(self.ring_cells):
+            cell.setVisible(index < len(rows))
+            if index >= len(rows):
                 continue
-            name, pos, left, colour, done, skipped = rows[index]
-            cells[0].setText(name)
-            cells[1].setText(pos)
-            cells[2].setText(rich([(left, colour)]))
-            cells[3].set(done, skipped)
+            player, position, left, colour, done, skipped = rows[index]
+            ring.set(tr(left), colour, done, skipped)
+            name.setText(player)
+            pos.setText(tr(position))
+
+
+class Backdrop(QWidget):
+    """The board's background (D-030): the stadium picture, filling the window, darkened so the boxes read well."""
+
+    def __init__(self):
+        super().__init__()
+        self.picture = QPixmap(str(BACKGROUND_FILE)) if BACKGROUND_FILE.exists() else QPixmap()
+        self.cache: QPixmap | None = None
+
+    def resizeEvent(self, _event) -> None:
+        self.cache = None
+
+    def paintEvent(self, _event) -> None:
+        painter = QPainter(self)
+        if self.picture.isNull():
+            painter.fillRect(self.rect(), QColor(BACKGROUND))
+            return
+        if self.cache is None or self.cache.size() != self.size():
+            scaled = self.picture.scaled(self.size(), Qt.KeepAspectRatioByExpanding, Qt.SmoothTransformation)
+            x, y = (scaled.width() - self.width()) // 2, (scaled.height() - self.height()) // 2
+            self.cache = scaled.copy(x, y, self.width(), self.height())
+        painter.drawPixmap(0, 0, self.cache)
+        painter.fillRect(self.rect(), QColor(4, 6, 22, 120))
+
+
+class Timeline(QWidget):
+    """The timeline (D-030): "now" in the middle; above it what comes next, the soonest right above "now";
+    below it what the bot already did, newest first, fading as it goes down."""
+
+    ROW = 46
+    NOW = 44
+    TIME_WIDTH = 62
+
+    def __init__(self):
+        super().__init__()
+        self.future: list[dict] = []
+        self.past: list[dict] = []
+        self.now_text = ""
+        self.colours: list[str] = []
+        self.setMinimumHeight(260)
+
+    def set(self, timeline: dict, colours: list[str], now_text: str) -> None:
+        self.future, self.past, self.colours, self.now_text = timeline["future"], timeline["past"], colours, now_text
+        self.update()
+
+    def paintEvent(self, _event) -> None:
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.Antialiasing)
+        width, centre = self.width(), self.height() / 2
+        line_x = self.TIME_WIDTH + 14
+        painter.setPen(QPen(QColor(LINE), 2))
+        painter.drawLine(int(line_x), 0, int(line_x), self.height())
+        top_of_now = centre - self.NOW / 2
+        for index, event in enumerate(self.future):
+            y = top_of_now - (index + 1) * self.ROW
+            if y < 0:  # only whole rows
+                break
+            club = event.get("club")
+            colour = self.colours[club] if club is not None and club < len(self.colours) else ACCENT
+            self._row(painter, y, tr(event["left"]), tr(event["title"]), tr(event["sub"]), colour, 1.0, ACCENT_LIGHT, filled=False)
+        for index, entry in enumerate(self.past):
+            y = centre + self.NOW / 2 + index * self.ROW
+            if y + self.ROW > self.height():
+                break
+            fade = max(0.18, 1 - 0.16 * (index + 1))
+            self._row(painter, y, entry["time"], tr(entry["title"]), tr(entry["sub"]), MUTED, fade, MUTED, filled=True)
+        pill = QRectF(4, top_of_now + 3, width - 8, self.NOW - 6)
+        painter.setPen(Qt.NoPen)
+        painter.setBrush(QColor(139, 140, 248, 60))
+        painter.drawRoundedRect(pill, 10, 10)
+        painter.setBrush(QColor(ACCENT))
+        painter.drawEllipse(QRectF(line_x - 7, centre - 7, 14, 14))
+        painter.setPen(QColor(ACCENT_LIGHT))
+        painter.setFont(QFont("Segoe UI", 8, QFont.Bold))
+        painter.drawText(QRectF(4, top_of_now, self.TIME_WIDTH, self.NOW), Qt.AlignRight | Qt.AlignVCenter, tr("AGORA"))
+        painter.setPen(QColor(TEXT))
+        painter.setFont(QFont("Segoe UI", 10, QFont.Bold))
+        text = painter.fontMetrics().elidedText(tr(self.now_text), Qt.ElideRight, int(width - line_x - 30))
+        painter.drawText(QRectF(line_x + 18, top_of_now, width - line_x - 24, self.NOW), Qt.AlignLeft | Qt.AlignVCenter, text)
+
+    def _row(self, painter: QPainter, y: float, when: str, title: str, sub: str, colour: str, fade: float,
+             time_colour: str, filled: bool) -> None:
+        def tone(name: str) -> QColor:
+            c = QColor(name)
+            c.setAlphaF(fade)
+            return c
+
+        line_x = self.TIME_WIDTH + 14
+        text_x = line_x + 18
+        room = int(self.width() - text_x - 6)
+        painter.setPen(tone(time_colour))
+        painter.setFont(QFont("Segoe UI", 10, QFont.Bold))
+        painter.drawText(QRectF(0, y, self.TIME_WIDTH, self.ROW * 0.55), Qt.AlignRight | Qt.AlignVCenter, when)
+        painter.setPen(QPen(tone(colour), 2.5))
+        painter.setBrush(tone(colour) if filled else QColor(BACKGROUND))
+        painter.drawEllipse(QRectF(line_x - 5, y + self.ROW * 0.275 - 5, 10, 10))
+        painter.setPen(tone(TEXT))
+        painter.setFont(QFont("Segoe UI", 10))
+        painter.drawText(QRectF(text_x, y, room, self.ROW * 0.55), Qt.AlignLeft | Qt.AlignVCenter,
+                         painter.fontMetrics().elidedText(title, Qt.ElideRight, room))
+        if sub:
+            painter.setPen(tone(MUTED))
+            painter.setFont(QFont("Segoe UI", 8))
+            painter.drawText(QRectF(text_x, y + self.ROW * 0.5, room, self.ROW * 0.4), Qt.AlignLeft | Qt.AlignVCenter,
+                             painter.fontMetrics().elidedText(sub, Qt.ElideRight, room))
 
 
 class Spinner(QWidget):
@@ -442,14 +698,14 @@ class NoticesWindow(QWidget):
 
     def __init__(self, parent: QWidget):
         super().__init__(parent, Qt.Window)
-        self.setWindowTitle("OSMbot — Avisos e erros")
+        self.setWindowTitle(tr("OSMbot — Avisos e erros"))
         layout = QVBoxLayout(self)
         self.table = make_table(["Hora", "Tipo", "Mensagem"], [70, 60])
         layout.addWidget(self.table)
         self.resize(760, 320)
 
-    def show_notices(self, notices: list) -> None:
-        if self.table.rowCount() == len(notices):
+    def show_notices(self, notices: list, again: bool = False) -> None:
+        if self.table.rowCount() == len(notices) and not again:
             return
         self.table.setRowCount(len(notices))
         for row, (when, kind, text) in enumerate(notices):
@@ -471,7 +727,7 @@ def newest(snapshot: dict | None, other: dict | None) -> dict | None:
 
 
 LAUNCHER_SIZE = QSize(520, 290)
-BOARD_SIZE = QSize(1060, 600)
+BOARD_SIZE = QSize(1400, 800)
 START, LOADING, BOARD = 0, 1, 2
 
 
@@ -509,7 +765,6 @@ class MainWindow(QMainWindow):
         self.pages.addWidget(self._build_board())
         self.setCentralWidget(self.pages)
         self._build_menu()
-        self._build_status()
         self._build_tray()
         self.notices_window = NoticesWindow(self)
         self.clock = QTimer(self)
@@ -536,8 +791,8 @@ class MainWindow(QMainWindow):
         title.setFont(QFont("Segoe UI", 16, QFont.Bold))
         right.addWidget(title)
         right.addWidget(coloured(f"Versão {__version__}", GREY))
-        text = QLabel("Trabalha por ti no Online Soccer Manager: treinos, vídeos, estádio, patrocinadores, amigável e "
-                      "análise antes do jogo, médico e advogado, e avisa das vagas na lista de transferências.")
+        text = QLabel(tr("Trabalha por ti no Online Soccer Manager: treinos, vídeos, estádio, patrocinadores, amigável e "
+                         "análise antes do jogo, médico e advogado, e avisa das vagas na lista de transferências."))
         text.setWordWrap(True)
         right.addSpacing(6)
         right.addWidget(text)
@@ -548,9 +803,9 @@ class MainWindow(QMainWindow):
         right.addStretch()
         buttons = QHBoxLayout()
         buttons.addStretch()
-        self.login_button = QPushButton("Login")
-        self.quit_button = QPushButton("Sair")
-        self.open_button = QPushButton("Abrir")
+        self.login_button = QPushButton(tr("Login"))
+        self.quit_button = QPushButton(tr("Sair"))
+        self.open_button = QPushButton(tr("Abrir"))
         self.open_button.setIcon(self.style().standardIcon(QStyle.SP_MediaPlay))
         self.open_button.setDefault(True)
         for button, slot in ((self.login_button, self.do_login), (self.quit_button, self.quit_app), (self.open_button, self.open_board)):
@@ -575,124 +830,152 @@ class MainWindow(QMainWindow):
         return page
 
     def _build_board(self) -> QWidget:
-        page = QWidget()
-        outer = QVBoxLayout(page)
-        outer.setContentsMargins(10, 8, 10, 6)
-        outer.setSpacing(10)
+        """The board (D-030): on the stadium picture, the daily rewards and the bot's state on top; the clubs on the
+        left (one per row, scrolling when 3 or 4 don't fit); the boss coins and the timeline on the right."""
+        page = Backdrop()
+        outer = QHBoxLayout(page)
+        outer.setContentsMargins(14, 12, 14, 14)
+        outer.setSpacing(14)
+
+        main = QVBoxLayout()
+        main.setSpacing(12)
+        top = QFrame()
+        top.setObjectName("card")
+        bar = QHBoxLayout(top)
+        bar.setContentsMargins(18, 9, 18, 9)
+        bar.setSpacing(14)
+        bar.addWidget(column_title("DIÁRIAS"))
+        self.daily = text_label(10)
+        bar.addWidget(self.daily)
+        bar.addStretch(1)
+        self.state_dot = text_label(10)
+        self.state_text = text_label(10)
+        bar.addWidget(self.state_dot)
+        bar.addWidget(self.state_text)
+        main.addWidget(top)
+
         inner = QWidget()
-        column = QVBoxLayout(inner)
-        column.setContentsMargins(0, 0, 0, 0)
-        self.clubs_grid = QGridLayout()
-        self.clubs_grid.setSpacing(10)
-        self.clubs_grid.setColumnStretch(0, 1)
-        self.clubs_grid.setColumnStretch(1, 1)
-        column.addLayout(self.clubs_grid)
-        column.addStretch(1)
-        scroll = QScrollArea()  # 3 or 4 clubs may not fit: the clubs scroll, the account panel stays (owner, 2026-10-09)
+        inner.setAttribute(Qt.WA_TranslucentBackground)
+        self.clubs_column = QVBoxLayout(inner)
+        self.clubs_column.setContentsMargins(0, 0, 0, 0)
+        self.clubs_column.setSpacing(12)
+        self.clubs_column.addStretch(1)
+        scroll = QScrollArea()  # 3 or 4 clubs may not fit: the clubs scroll, the rest stays
         scroll.setWidgetResizable(True)
         scroll.setFrameShape(QFrame.NoFrame)
         scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         scroll.setWidget(inner)
+        scroll.setStyleSheet("QScrollArea, QScrollArea > QWidget > QWidget { background: transparent; }")
         self.panels: list[ClubCard] = []
-        outer.addWidget(scroll, 1)
+        main.addWidget(scroll, 1)
+        outer.addLayout(main, 1)
 
-        account = QFrame()
-        account.setObjectName("card")
-        row = QHBoxLayout(account)
-        row.setContentsMargins(16, 10, 16, 10)
-        row.setSpacing(28)
-        coins = QVBoxLayout()
-        coins.setSpacing(0)
-        coins.addWidget(coloured("Boss coins", GREY))
+        side = QVBoxLayout()
+        side.setSpacing(14)
+        coins = QFrame()
+        coins.setObjectName("coins")
+        box = QVBoxLayout(coins)
+        box.setContentsMargins(20, 14, 20, 14)
+        box.setSpacing(0)
+        box.addWidget(column_title("BOSS COINS"))
         line = QHBoxLayout()
-        self.coins = text_label(22, True, YELLOW)
+        self.coins = text_label(28, True, YELLOW)
         self.coins_jump = text_label(14, True, GREEN)
         line.addWidget(self.coins)
         line.addWidget(self.coins_jump, 0, Qt.AlignBottom)
         line.addStretch()
-        coins.addLayout(line)
-        self.coins_since = text_label(8, colour=GREY)
-        coins.addWidget(self.coins_since)
-        row.addLayout(coins)
-        divider = QFrame()
-        divider.setFrameShape(QFrame.VLine)
-        divider.setStyleSheet(f"color:{LINE};")
-        row.addWidget(divider)
-        grid = QGridLayout()
-        grid.setHorizontalSpacing(14)
-        grid.setVerticalSpacing(4)
-        self.timer_cells: list[tuple[QLabel, QLabel]] = []
-        for index in range(4):
-            r, c = (index, 0) if index < 3 else (index - 3, 2)
-            name, value = text_label(colour=GREY), text_label()
-            grid.addWidget(name, r, c)
-            grid.addWidget(value, r, c + 1)
-            self.timer_cells.append((name, value))
-        grid.addWidget(coloured("Diárias", GREY), 1, 2)
-        self.daily = text_label()
-        grid.addWidget(self.daily, 1, 3)
-        grid.setColumnStretch(1, 1)
-        grid.setColumnStretch(3, 2)
-        row.addLayout(grid, 1)
-        outer.addWidget(account)
+        box.addLayout(line)
+        self.coins_since = text_label(9)
+        self.coins_since.setStyleSheet(f"color:{MUTED};")
+        box.addWidget(self.coins_since)
+        side.addWidget(coins)
+        timeline = QFrame()
+        timeline.setObjectName("card")
+        column = QVBoxLayout(timeline)
+        column.setContentsMargins(12, 12, 12, 12)
+        column.addWidget(column_title("A SEGUIR"))
+        self.timeline = Timeline()
+        column.addWidget(self.timeline, 1)
+        side.addWidget(timeline, 1)
+        right = QWidget()
+        right.setAttribute(Qt.WA_TranslucentBackground)
+        right.setLayout(side)
+        right.setFixedWidth(340)
+        outer.addWidget(right)
         return page
 
     def _build_menu(self) -> None:
         style = self.style()
-        self.start_action = QAction(style.standardIcon(QStyle.SP_MediaPlay), "Iniciar", self, triggered=self.start_bot)
-        self.stop_action = QAction(style.standardIcon(QStyle.SP_MediaStop), "Parar", self, triggered=self.stop_bot)
-        self.login_action = QAction("Login", self, triggered=self.do_login)
-        self.notices_action = QAction("Avisos e erros", self, triggered=self.show_notices)
-        self.reload_action = QAction("Atualizar", self, triggered=self.read_game)
-        self.logs_action = QAction("Pasta dos logs", self, triggered=self.open_logs)
-        self.failures_action = QAction("Capturas das falhas", self, triggered=self.open_failures)
-        self.quit_action = QAction("Sair", self, triggered=self.quit_app)
-        bot = self.menuBar().addMenu("Bot")
+        self.menuBar().clear()
+        self.start_action = QAction(style.standardIcon(QStyle.SP_MediaPlay), tr("Iniciar"), self, triggered=self.start_bot)
+        self.stop_action = QAction(style.standardIcon(QStyle.SP_MediaStop), tr("Parar"), self, triggered=self.stop_bot)
+        self.login_action = QAction(tr("Login"), self, triggered=self.do_login)
+        self.notices_action = QAction(tr("Avisos e erros"), self, triggered=self.show_notices)
+        self.reload_action = QAction(tr("Atualizar"), self, triggered=self.read_game)
+        self.logs_action = QAction(tr("Pasta dos logs"), self, triggered=self.open_logs)
+        self.failures_action = QAction(tr("Capturas das falhas"), self, triggered=self.open_failures)
+        self.quit_action = QAction(tr("Sair"), self, triggered=self.quit_app)
+        bot = self.menuBar().addMenu(tr("Bot"))
         for action in (self.start_action, self.stop_action, self.login_action):
             bot.addAction(action)
         bot.addSeparator()
         bot.addAction(self.quit_action)
-        view = self.menuBar().addMenu("Ver")
+        view = self.menuBar().addMenu(tr("Ver"))
         view.addAction(self.reload_action)
         view.addSeparator()
         for action in (self.notices_action, self.logs_action, self.failures_action):
             view.addAction(action)
-        self.menuBar().addMenu("Ajuda").addAction(QAction("Sobre o OSMbot", self, triggered=self.about))
-
-    def _build_status(self) -> None:
-        status = QStatusBar()
-        self.state_dot = coloured("●", GREY)
-        self.state_text = QLabel()
-        self.next_label = QLabel()
-        self.clock_label = QLabel()
-        status.addWidget(QLabel(" "))
-        status.addWidget(self.state_dot)
-        status.addWidget(self.state_text)
-        status.addWidget(self.next_label, 1)
-        status.addPermanentWidget(self.clock_label)
-        self.setStatusBar(status)
+        languages = self.menuBar().addMenu("Idioma / Language")  # the same in both languages, so it is always found (D-031)
+        self.language_actions = {}
+        for code, name in LANGUAGES.items():
+            action = QAction(name, self, checkable=True, triggered=lambda _checked=False, code=code: self.choose_language(code))
+            action.setChecked(code == language())
+            languages.addAction(action)
+            self.language_actions[code] = action
+        self.menuBar().addMenu(tr("Ajuda")).addAction(QAction(tr("Sobre o OSMbot"), self, triggered=self.about))
 
     def _build_tray(self) -> None:
         self.tray_icons = {working: tray_icon(self.logo, working) for working in (True, False)}
         self.tray = QSystemTrayIcon(self.tray_icons[False], self)
-        menu = QMenu()
-        menu.addAction(QAction("Abrir", self, triggered=self.show_window))
-        self.tray_toggle = QAction("Iniciar", self, triggered=self.toggle_bot)
-        menu.addAction(self.tray_toggle)
-        menu.addSeparator()
-        menu.addAction(self.quit_action)
-        self.tray.setContextMenu(menu)
+        self._tray_menu()
         self.tray.activated.connect(lambda reason: self.show_window() if reason in (
             QSystemTrayIcon.Trigger, QSystemTrayIcon.DoubleClick) else None)
         self.tray.show()
+
+    def _tray_menu(self) -> None:
+        self.tray_menu = QMenu()
+        self.tray_menu.addAction(QAction(tr("Abrir"), self, triggered=self.show_window))
+        self.tray_toggle = QAction(tr("Iniciar"), self, triggered=self.toggle_bot)
+        self.tray_menu.addAction(self.tray_toggle)
+        self.tray_menu.addSeparator()
+        self.tray_menu.addAction(self.quit_action)
+        self.tray.setContextMenu(self.tray_menu)
+
+    def choose_language(self, code: str) -> None:
+        """Idioma / Language: remember the choice and show the window in it at once (D-031)."""
+        set_language(code)
+        page = self.pages.currentIndex()
+        for index in reversed(range(self.pages.count())):
+            widget = self.pages.widget(index)
+            self.pages.removeWidget(widget)
+            widget.deleteLater()
+        self.panels = []
+        for build in (self._build_start, self._build_loading, self._build_board):
+            self.pages.addWidget(build())
+        self._build_menu()
+        self._tray_menu()
+        self.notices_window.setWindowTitle(tr("OSMbot — Avisos e erros"))
+        self.notices_window.table.setHorizontalHeaderLabels([tr(h) for h in ("Hora", "Tipo", "Mensagem")])
+        self.notices_window.show_notices(self.payload.get("notices") or [], again=True)
+        self.go(page)
+        self.render()
 
     def go(self, page: int) -> None:
         """Show one face; the window takes that face's size (small for the start screen, big for the board)."""
         self.pages.setCurrentIndex(page)
         self.menuBar().setVisible(page == BOARD)
-        self.statusBar().setVisible(page == BOARD)
         if page == BOARD:
-            self.setMinimumSize(800, 480)
+            self.setMinimumSize(1180, 600)
             self.setMaximumSize(16777215, 16777215)
             if self.width() < BOARD_SIZE.width():
                 centre = self.frameGeometry().center()
@@ -720,7 +1003,7 @@ class MainWindow(QMainWindow):
         self.reload_action.setEnabled(has_session and not self.reading and not self.busy)
         self.open_button.setEnabled(idle and has_session)
         self.login_button.setEnabled(idle)
-        self.tray_toggle.setText("Parar" if working else "Iniciar")
+        self.tray_toggle.setText(tr("Parar" if working else "Iniciar"))
         self.tray_toggle.setEnabled((working and not self.stopping) or (idle and has_session))
         self.tray.setIcon(self.tray_icons[working])
         if self.busy == "login":
@@ -731,7 +1014,7 @@ class MainWindow(QMainWindow):
             session, colour = "● Sessão iniciada", GREEN
         else:
             session, colour = "● Sem sessão: carrega em Login primeiro.", YELLOW
-        self.session_label.setText(session)
+        self.session_label.setText(tr(session))
         paint(self.session_label, colour)
         if working:
             since = datetime.fromtimestamp(self.started_at).strftime("%H:%M") if self.started_at else "?"
@@ -740,11 +1023,17 @@ class MainWindow(QMainWindow):
             text = "A ler o jogo…"
         else:
             text = "Parado"
+        self.state_dot.setText("●")
         paint(self.state_dot, GREEN if working else GREY)
-        self.state_text.setText(text + "   ")
-        self.tray.setToolTip(f"OSMbot · {text}")
+        if self.message and self.pages.currentIndex() == BOARD:  # a problem: said in red where the state is
+            self.state_text.setText(tr(self.message))
+            paint(self.state_text, RED)
+        else:
+            self.state_text.setText(tr(text))
+            self.state_text.setStyleSheet(f"color:{MUTED};")
+        self.tray.setToolTip(f"OSMbot · {tr(text)}")
         count = len(self.payload.get("notices") or [])
-        self.notices_action.setText(f"Avisos e erros ({count})" if count else "Avisos e erros")
+        self.notices_action.setText(tr(f"Avisos e erros ({count})" if count else "Avisos e erros"))
 
     # ---- the bot --------------------------------------------------------------------------------------------
     def open_board(self) -> None:
@@ -752,7 +1041,7 @@ class MainWindow(QMainWindow):
         if self.running() or self.busy:
             return
         self.message = ""
-        self.loading_label.setText("A carregar o jogo…")
+        self.loading_label.setText(tr("A carregar o jogo…"))
         self.go(LOADING)
         self.start_bot()
 
@@ -884,7 +1173,6 @@ class MainWindow(QMainWindow):
     # ---- drawing --------------------------------------------------------------------------------------------
     def render(self) -> None:
         now = time.time()
-        self.clock_label.setText(datetime.now().strftime("%H:%M:%S") + "  ")
         notices = self.payload.get("notices") or []
         self.notices_window.show_notices(notices)
         self.refresh_state()
@@ -892,27 +1180,21 @@ class MainWindow(QMainWindow):
             return
         running = self.running()
         view = board_view(self.payload.get("snapshot"), self.payload.get("stats") if running else None, now,
-                          self.payload.get("doing") if running else None)
-        if view:
-            self._show_clubs(view["clubs"])
-            account = view["account"]
-            self.coins.setText(account["coins"])
-            self.coins_jump.setText(account["jump"])
-            self.coins_since.setText(account["since"])
-            for (name, value), (label, text, colour) in zip(self.timer_cells, account["timers"]):
-                name.setText(label)
-                value.setText(rich([(text, colour)]))
-            self.daily.setText(rich([piece for index, part in enumerate(account["daily"])
-                                     for piece in ((" · ", GREY),) * bool(index) + (part,)]) or rich([("—", GREY)]))
-        if self.message:
-            self.next_label.setText("· " + self.message)
-            paint(self.next_label, RED)
-        elif self.running():
-            self.next_label.setText("· " + ((view or {}).get("doing") or (view or {}).get("next") or "a trabalhar…"))
-            paint(self.next_label, GREY)
+                          self.payload.get("doing") if running else None, self.payload.get("history") if running else None)
+        if not view:
+            return
+        self._show_clubs(view["clubs"])
+        account = view["account"]
+        self.coins.setText(account["coins"])
+        self.coins_jump.setText(account["jump"])
+        self.coins_since.setText(tr(account["since"]))
+        self.daily.setText("&nbsp;&nbsp;&nbsp;".join(rich([part]) for part in view["daily"]) or rich([("—", GREY)]))
+        if running:
+            doing = view["timeline"]["now"] or "a trabalhar…"
         else:
-            self.next_label.setText("· Bot → Iniciar para voltar a trabalhar")
-            paint(self.next_label, GREY)
+            doing = "Parado · Bot → Iniciar para voltar a trabalhar"
+        colours = [(self._logo(club)[1] or ACCENT) for club in view["clubs"]]
+        self.timeline.set(view["timeline"], colours, doing)
 
     def _show_clubs(self, clubs: list[dict]) -> None:
         if len(self.panels) != len(clubs):
@@ -920,7 +1202,7 @@ class MainWindow(QMainWindow):
                 panel.deleteLater()
             self.panels = [ClubCard() for _ in clubs]
             for index, panel in enumerate(self.panels):
-                self.clubs_grid.addWidget(panel, index // 2, index % 2, Qt.AlignTop)  # 2 x 2 (owner, 2026-10-08)
+                self.clubs_column.insertWidget(index, panel)  # one per row (D-030); the stretch stays last
         for panel, club in zip(self.panels, clubs):
             panel.show_club(club)
             panel.set_logo(*self._logo(club))
@@ -995,6 +1277,13 @@ class MainWindow(QMainWindow):
             os.startfile(folder)
 
     def about(self) -> None:
+        if language() == "en":
+            QMessageBox.about(self, tr("Sobre o OSMbot"),
+                              f"<b>OSMbot {__version__}</b><br>Works for you in Online Soccer Manager: collects and starts the "
+                              "trainings, watches the videos, upgrades the stadium, signs sponsors, does the friendly and the analysis "
+                              "before the match, handles the doctor and the lawyer and tells you about free transfer-list slots."
+                              "<br><br>Independent project, not linked to Gamebasics.")
+            return
         QMessageBox.about(self, "Sobre o OSMbot",
                           f"<b>OSMbot {__version__}</b><br>Trabalha por ti no Online Soccer Manager: recolhe e põe a treinar, "
                           "vê os vídeos, sobe o estádio, assina patrocinadores, faz o amigável e a análise antes do jogo, trata do médico "
@@ -1012,9 +1301,10 @@ def run_gui() -> None:
     app.setFont(QFont("Segoe UI", 9))
     app.setStyleSheet(STYLE)
     (Path.home() / ".osmbot").mkdir(parents=True, exist_ok=True)
+    load_language()
     lock = QLockFile(str(Path.home() / ".osmbot" / "window.lock"))
     if not lock.tryLock(100):
-        QMessageBox.information(None, "OSMbot", "O OSMbot já está aberto (vê o ícone junto ao relógio).")
+        QMessageBox.information(None, "OSMbot", tr("O OSMbot já está aberto (vê o ícone junto ao relógio)."))
         return
     window = MainWindow(app)
     window.winId()

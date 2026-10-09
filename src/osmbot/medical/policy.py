@@ -1,6 +1,8 @@
 """Doctor and lawyer (THEORY.md section 18): who to send and which cases to collect. Pure: no network."""
 from __future__ import annotations
 
+LAWYER_MIN_GAMES = 2  # the lawyer brings a suspension down to 1 game: with 1 game the game refuses it (owner, 2026-10-09)
+
 
 def _timer(case: dict) -> dict | None:
     timer = case.get("countdownTimer")

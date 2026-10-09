@@ -6,6 +6,22 @@ Este ficheiro é o **histórico de versões, para quem lê o repo**. O diário i
 
 ## [Por lançar]
 
+## [0.9.6] — 2026-10-09
+
+Janela nova com linha do tempo e em inglês; o bot já não repete pedidos que o jogo recusou; médico corrigido; transferências guardadas para estudo.
+
+### Alterado
+- **Janela nova** (D-030): fundo de estádio; diárias e "A trabalhar desde" em cima; cada clube num cartão de 3 colunas (clube com a faixa do próximo jogo verde em casa / vermelha fora · treinos em anéis · pré-jogo em coluna com "N/8"); à direita os boss coins em destaque e a **linha do tempo**, com o "agora" a meio, o que vem a seguir por cima e o que o bot já fez por baixo, a escurecer. Estádio em 3 círculos e médico/advogado em 2 círculos por baixo dos treinos. Saem o painel de baixo e a barra de estado.
+
+### Adicionado
+- **Inglês na janela** (D-031): menu **Idioma / Language** (Português · English), guardado por PC; traduz a janela e os avisos e erros. Os logs continuam em português.
+- **Transferências guardadas:** uma vez por dia o bot guarda as transferências da liga de cada equipa em `logs/<PC>/transferencias/`, para estudar mais tarde os preços dos jogadores caros (D-029). Só leitura.
+
+### Corrigido
+- **Pedidos recusados já não se repetem** (D-032): quando o jogo diz "não", o bot anota e só volta a tentar quando faz sentido: na jornada seguinte (médico, advogado, analista, amigável contra esse clube), no dia seguinte (início de sessão, missões, patrocinador recusado), quando acaba o tratamento em curso (2.º lesionado) ou quando houver mais dinheiro (estádio). A anotação fica guardada no PC (reiniciar não recomeça as tentativas) e apaga-se quando muda a versão. Falta de rede, erro do servidor ou "demasiados pedidos" continuam a ser tentados como antes.
+- **Advogado:** o bot já não tenta pôr no advogado um suspenso de 1 jogo (o jogo recusava com 400, e o bot tentava em cada passagem).
+- **Médico:** o bot já levanta o tratamento acabado. O pedido certo é o `api/v1` (o bot usava o `v1.1` e o jogo respondia 404); sem isso o lesionado ficava à espera e não voltava ao médico.
+
 ## [0.9.5] — 2026-10-09
 
 A barra de baixo diz o que o bot está a fazer e o que vem a seguir; o estádio tem barra; o "+X" conta só a loja; menos vídeos da loja falhados.

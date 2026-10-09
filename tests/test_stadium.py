@@ -65,7 +65,7 @@ class FakeClient:
 @pytest.fixture(autouse=True)
 def _fast(monkeypatch):
     monkeypatch.setattr(stadium, "PAUSE_BETWEEN_WRITES", 0)
-    stadium._last_refused.clear()
+
     stadium.COUNTS["upgrades"] = 0
 
 
