@@ -151,7 +151,7 @@ def future_events(snapshot: dict | None, now: float) -> list[dict]:
         if match and match > now:
             opponent = nxt.get("opponent")
             sub = "jogo · " + SIDES.get(nxt.get("side"), "?") + (" · taça" if nxt.get("cup") else "")
-            events.append(_event(match, f"{name} vs {opponent}" if opponent else f"Jogo {name}", sub, index))
+            events.append(_event(match, f"{name} vs {opponent}" if opponent else f"Jogo {name}", sub, index, "ball"))
             missing = [step for step, done, _ in (club.get("prep") or {}).get("steps") or []
                        if step in ("Amigável", "Análise") and not done]
             if missing and match - PREP_BEFORE > now:

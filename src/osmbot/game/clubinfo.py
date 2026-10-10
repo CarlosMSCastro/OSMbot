@@ -2,7 +2,8 @@
 
 Next match, cup, squad value, transfer list and sales, the pre-match checklist, injured and suspended players.
 Slow-changing reads are kept for a while: the fixtures and cup rounds for 10 minutes, the squad values of the
-whole league (one read per club) for an hour.
+whole league (one read per club) for an hour (the own club's always from its fresh squad). Ver → Atualizar
+forgets them all (``forget``).
 """
 from __future__ import annotations
 
@@ -27,6 +28,11 @@ def _cached(key: tuple, seconds: float, read):
     value = read()
     _cache[key] = (time.time(), value)
     return value
+
+
+def forget() -> None:
+    """Drop the kept reads, so the next board read asks the game again (Ver → Atualizar)."""
+    _cache.clear()
 
 
 def _list(client, path: str) -> list:
@@ -90,6 +96,7 @@ def club_extra(client, team: dict, base: str, players: list[dict], slot, market:
     matches = _cached(("matches", league), FIXTURES_FOR, lambda: _list(client, f"{league}/matches/filter"))
     rounds = _cached(("rounds", league), FIXTURES_FOR, lambda: _list(client, f"{league}/cuprounds"))
     values = _cached(("values", league), VALUES_FOR, lambda: _values(client, league, teams))
+    values = {**values, team["id"]: (sum(p.get("value") or 0 for p in players), len(players))}  # own squad: fresh
 
     squad = {p["id"] for p in players}
     listed = {item["player"]["id"]: {"name": item["player"].get("name", "?"), "price": item.get("price") or 0}

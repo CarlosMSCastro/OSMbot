@@ -45,7 +45,7 @@ Legenda: **[V]** verificado por nós · **[R]** reportado por fonte de terceiros
 - **[H]** Existe algum tipo de proteção anti-automação no jogo (não foi observada). Desconhecido.
 - **Por descobrir:** validade do `access_token` e pedido de renovação, hosts, hosts, formato dos dados de plantel/mercado/jogos, limites concretos de pedidos.
 - **[V]** (2026-10-05) Sessões **independentes por máquina**: login no Windows com a sessão do Mac (de 2026-10-04) ainda ativa → o Mac continuou a funcionar (`status`), e o Windows também depois disso. O login numa máquina não desliga a outra. Cliente sem browser + `certifi` confirmados no Windows.
-- **[V]** (2026-10-05, GET, só leitura) **Slots de venda:** `leagues/{L}/gamesettings` tem a entrada `MaxPlayersOnTransferlist` (id 266, valor 4 hoje). Slots livres = esse valor − nº de jogadores meus em `transferplayers/0` (cruzando com `players`). Hoje: 4 listados nos 2 clubes → 0 livres. **[H]** nos eventos de 6 slots este valor sobe para 6 (confirmar quando ocorrer). `MaxSalePercentage` = 250 confirma o preço máximo de 2,5× (THEORY §7.5). `user/caps/actions/Shop/0` devolve `actionId`, `isCapReached`, `isClaimable`, `timestampUntilUnreached` (limite dos vídeos da loja, só leitura).
+- **[V]** (2026-10-05, GET, só leitura) **Slots de venda:** `leagues/{L}/gamesettings` tem a entrada `MaxPlayersOnTransferlist` (id 266, valor 4 hoje). Slots livres = esse valor − nº de jogadores meus em `transferplayers/0` (cruzando com `players`). Hoje: 4 listados nos 2 clubes → 0 livres. **[V]** (2026-10-10, comando `slots`) no evento "Loucura das transferências" (fim de semana; "maior probabilidade de venda e 2 transferências adicionais") o valor sobe para **6** nos dois clubes (1/6 listados em cada). `MaxSalePercentage` = 250 confirma o preço máximo de 2,5× (THEORY §7.5). `user/caps/actions/Shop/0` devolve `actionId`, `isCapReached`, `isClaimable`, `timestampUntilUnreached` (limite dos vídeos da loja, só leitura).
 - **[V]** (2026-10-05, `inspect-writes`, dono viu vídeos à mão) **Fluxo de um vídeo com recompensa**, 3 vezes seguidas, sempre igual: (1) `POST /api/v1.1/user/videos/start` (form: `actionId`, `capVariation`) → devolve o estado do limite (`isCapReached`, `isClaimable`, `timestampUntilUnreached`); (2) o anúncio corre no browser (fornecedor externo, não observado); (3) `POST /api/v1.1/user/videos/watched` (form: `actionId`, `rewardVariation`, `capVariation`) → devolve a recompensa (`reward`: `id`, `name`, `type`, `value`…); (4) o dono recolhe: `POST /api/v1/user/bosscoinwallet/consumereward` (form: `rewardId`) → boss coins, **ou** `POST /api/v1/leagues/{L}/teams/{T}/finances/consumereward` (form: `rewardId`) → dinheiro do clube. Neste teste (confirmado pelo dono): vídeos 1 e 2 = **loja** (boss coins), vídeo 3 = secção do **dinheiro** (1 dos 3 diários). **[V]** O `watched` é a confirmação de "anúncio visto" perante o servidor: chamá-lo sem ver o anúncio é forjar a recompensa (regra 8, fora de questão). Ver o anúncio e o `watched` ficam sempre a cargo do site num browser real.
 - **[V]** (2026-10-05, 2.ª observação, valores dos 3 campos visíveis) Os 3 tipos de vídeo seguem o fluxo `start` → anúncio → `watched` → recolha, com `capVariation`=0 e `rewardVariation`=0 em todos. O que muda é o `actionId` e o passo final: **loja** = `BusinessClub` → `POST user/bosscoinwallet/consumereward`; **treino (−2h)** = `TrainingTimer` → `POST leagues/{L}/teams/{T}/trainingsessions/{id da sessão}/consumereward` (form `rewardId`; a resposta é a sessão com o `countdownTimer` já encurtado; o vídeo aplica-se à sessão escolhida); **dinheiro, 3.º vídeo** (3 boss coins) = `Multistep3` → `bosscoinwallet/consumereward`. **[H]** o 1.º e o 2.º vídeos de dinheiro serão `Multistep1`/`Multistep2` e recolhem por `finances/consumereward` (visto antes, `actionId` não registado). O pedido `RewardedVideoCounterPositionModifier` **não** voltou a aparecer: não faz parte do fluxo. **[V]** o limite de cada vídeo lê-se por GET `user/caps/actions/{actionId}/{capVariation}` (`isCapReached`, `isClaimable`, `timestampUntilUnreached`).
 - **[V]** (2026-10-05, dono a ver) **O vídeo da loja funciona num Firefox controlado pelo Playwright:** menu "Shop" → botão "Watch ad" (texto "FREE / Watch ad"). Um clique deu +1 boss coin em ~8 s (2450 → 2451, confirmado por `status`), sem o dono ter de fazer mais nada. O dono diz que, **cerca de metade das vezes**, abre a janela do anúncio, o anúncio não carrega e a recompensa é atribuída na mesma (comportamento do site/fornecedor, também à mão). O `watched` é enviado pela própria página, nunca por nós. Texto do DOM: o menu é "Shop" (no ecrã aparece em maiúsculas por CSS); a loja abre como janela por cima da carreira.
@@ -138,6 +138,40 @@ Resumo (detalhe e citações em `RISKS_AND_COMPLIANCE.md`): bots e software de t
 - **Risco de confusão de jogo (como o aviso do `GLOSSARY.md` para OpenStreetMap/Scout Manager):** várias páginas devolvidas eram de **`soccermanager.com`** ("Soccer Manager"), um jogo **diferente** do nosso (`onlinesoccermanager.com`, Gamebasics), com nome muito parecido. Não é seguro que os números acima sejam do jogo certo. **Tratar como não confirmado até se ver o mesmo no jogo do dono.**
 - **Conclusão:** não há fonte online fiável para "quantos melhoramentos por nível". A via mais fiável continua a ser o dono recolher mais exemplos reais (mais clubes/ligas) e nós procurarmos um padrão (ex.: será que escala com o nível da liga ou com o valor do plantel?).
 
+## 6b. Amigáveis e eventos: pesquisa web (2026-10-10)
+
+Fórum oficial (lido no Chrome; o Anubis bloqueia leitores automáticos e a pesquisa interna pede sessão), guias de fãs e lojas de apps. Nada sobre isto no Reddit.
+
+| Afirmação | Nível | Fonte |
+|---|---|---|
+| Cada amigável dá progressão de treino; **quanto mais amigáveis na mesma jornada, menos progressão**, de propósito, "para os utilizadores não beneficiarem demasiado". No exemplo do fórum a quebra já se vê no **4.º** | Reportado (gestor de comunidade, 2023-05) | [fórum 70290](https://forum.onlinesoccermanager.com/topic/70290/friendly-progresion-decreasing-bug) |
+| Jogadores **bem acima de 100** progridem muito menos (treino e amigáveis) | Reportado (gestor de comunidade, 2023-05) | idem |
+| O mesmo nos **treinos**: quanto mais se treina **o mesmo jogador** na mesma jornada, menos progride; **repõe-se a cada jogo** | Reportado (staff DE, 2022-06) | [fórum 67196](https://forum.onlinesoccermanager.com/topic/67196/slow-training-progress-glitch) |
+| Eventos **Friendly Frenzy** (1 dia) e **Intense Friendlies** (2 dias): mais progressão por amigável, **mas continua a descer** a cada um. Só o **Trainingcamp Terror** faz **subir** a progressão a cada amigável | Reportado (gestor de comunidade, 2025-05) | [fórum 74067](https://forum.onlinesoccermanager.com/topic/74067/frendlies) |
+| Amigáveis **não contam para as missões** (p. ex. "marcar 9 golos"), para as missões não serem fáceis demais | Reportado (gestor de comunidade, 2025-07) | [fórum 74301](https://forum.onlinesoccermanager.com/topic/74301/why-don-t-friendlies-count-into-the-score-9-goals-mission) |
+| Não há histórico de amigáveis de jornadas anteriores | Reportado (moderador NL, 2025-03) | [fórum 73877](https://forum.onlinesoccermanager.com/topic/73877/friendly-match-records) |
+| Amigáveis sem lesões nem vermelhos; moral e forma não mudam; "repõem-se depois do jogo do dia"; 4 BC | Reportado (guia de fãs) | [osmhelper](https://osmhelper.com/guideline/) |
+| Os resultados dos amigáveis não refletem o motor dos jogos a sério; servem para subir jogadores | Opinião de jogadores | [fórum 3856](https://forum.onlinesoccermanager.com/topic/3856/friendlies), fórum 74301 |
+| Jovens evoluem mais; dica PT: "fazer amigáveis todas as jornadas" | Opinião de jogadores | [fórum 4894](https://forum.onlinesoccermanager.com/topic/4894/o-meu-plantel/199) |
+
+Bate com a medição do dono (THEORY §6: 10 amigáveis numa jornada = ~1,5–2 M de valor): depois dos primeiros, cada amigável rende pouco.
+
+**Calendário oficial de eventos, outubro de 2026** ([fórum 67089](https://forum.onlinesoccermanager.com/topic/67089/monthly-weekend-events-schedule), staff, "sujeito a alterações"; Reportado):
+
+| Dias | Evento | O que muda |
+|---|---|---|
+| 3–4 | Legends · Training Camp Mania | lendas na lista; mais progressão (ao recolher) em cada treino e amigável; estágio e treino secreto mais baratos |
+| 7 | Stadium Blitz | estádio 4 h; treinos 5 h (universal 4 h) |
+| **10–11** | **Transfer Madness** | mais hipótese de venda, mais jogadores do motor; **até 6 na lista** (bate com o `slots` de hoje, §3); olheiro 2 h |
+| 14 | Super Staff | analista 15 min; olheiro 4 h; médico e advogado 3 h; treinos 2 h (universal 1h30) |
+| 17–18 | Golden Oldies × Legends | mais progressão para velhos; treinos 2 h (universal 1h30) |
+| 21 | Bargain Scout | olheiro mais barato e 2 h |
+| **24–25** | **Intense Friendlies** | mais progressão em cada amigável |
+| 28 | Top Facilities | estádio 4 h; treinos 4 h (universal 3 h) |
+| **31** | **Extreme Training** | progressão extrema (ao recolher) em cada treino e amigável; treinos 3 h (universal 2 h) |
+
+**[H]** "ao recolher" sugere que a progressão do amigável conta quando se recolhe, como nos treinos; por verificar.
+
 ## 7. Próximos passos de descoberta
 
 Já feito (ver §3): mapa dos endpoints de leitura e de escrita dos treinos, dos vídeos (loja, treino, dinheiro), dos slots, do estádio, dos patrocinadores, do início de sessão, das missões e dos vídeos acumulados; formato do `tokenRefresh`; páginas da loja e do treino.
@@ -145,6 +179,6 @@ Já feito (ver §3): mapa dos endpoints de leitura e de escrita dos treinos, dos
 Por fazer:
 1. **Gastar a recompensa de início de sessão em boss coins** (dias 17, 18 e 20 da sequência) e **abrir o saco do dia 21**: ver o pedido do site (`inspect-writes`) quando o dono reclamar à mão. Hoje o bot assume `user/bosscoinwallet/consumereward` (como nos vídeos) e verifica que o saldo sobe.
 2. **Escritas de transferências** (listar/retirar da lista, comprar): ainda por observar; pedem OK do dono.
-3. Confirmar que nos eventos de 6 slots o `MaxPlayersOnTransferlist` sobe para 6 (hipótese).
+3. ~~Confirmar que nos eventos de 6 slots o `MaxPlayersOnTransferlist` sobe para 6~~ — verificado em 2026-10-10.
 4. Ler o tópico do fórum "Osm API" e o artigo do suporte "What's considered cheating in OSM?" (manualmente, por causa do Anubis / 403).
 5. Se o dono conseguir mais exemplos de melhoramentos por nível do estádio (clube, liga, número), procurar padrão (§6).

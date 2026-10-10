@@ -17,8 +17,9 @@ import time
 from datetime import datetime
 from pathlib import Path
 
-from PySide6.QtCore import QLockFile, QObject, QPointF, QRectF, QSize, Qt, QTimer, Signal
-from PySide6.QtGui import QAction, QColor, QFont, QFontDatabase, QIcon, QImage, QPainter, QPalette, QPen, QPixmap
+from PySide6.QtCore import QLockFile, QObject, QPoint, QPointF, QRectF, QSize, Qt, QTimer, Signal
+from PySide6.QtSvg import QSvgRenderer
+from PySide6.QtGui import QAction, QColor, QFont, QFontDatabase, QIcon, QImage, QPainter, QPainterPath, QPalette, QPen, QPixmap
 from PySide6.QtWidgets import (QAbstractItemView, QApplication, QFrame, QGridLayout, QGroupBox, QHBoxLayout, QLabel,
                                QMainWindow, QMenu, QMessageBox, QProxyStyle, QPushButton, QScrollArea, QStackedWidget, QStyle,
                                QSystemTrayIcon, QTableWidget, QTableWidgetItem, QVBoxLayout, QWidget)
@@ -36,14 +37,24 @@ FONT = "Segoe UI"  # until Sora is loaded (load_font)
 ASSETS = Path(__file__).resolve().parent / "assets"
 COIN_FILE, FUNDS_FILE = ASSETS / "bosscoin.png", ASSETS / "clubfunds.png"  # the game's icons (owner accepted, 2026-10-10)
 PICTURES = {"training": ASSETS / "training.png", "doctor": ASSETS / "doctor.png", "lawyer": ASSETS / "lawyer.png",
-            "coins": COIN_FILE, "funds": FUNDS_FILE, "missions": ASSETS / "missions.png", "stadium": ASSETS / "stadium.png"}
+            "coins": COIN_FILE, "funds": FUNDS_FILE, "missions": ASSETS / "missions.png", "stadium": ASSETS / "stadium.png",
+            "timer": ASSETS / "timer.svg", "ball": ASSETS / "ball.svg"}  # waiting, and a club's match (owner, 2026-10-10)
 _pictures: dict[tuple[str, bool], QPixmap] = {}
 
 
 def picture(name: str, grey: bool = False) -> QPixmap:
     """A picture for the inside of a ring (empty if the file is missing); ``grey``: washed out, for "nobody"."""
     if (name, grey) not in _pictures:
-        image = QImage(str(PICTURES[name])).convertToFormat(QImage.Format_ARGB32)
+        path = PICTURES[name]
+        if path.suffix == ".svg":  # drawn at 128 px, then scaled down like the others
+            image = QImage(128, 128, QImage.Format_ARGB32)
+            image.fill(Qt.transparent)
+            svg = QPainter(image)
+            svg.setRenderHint(QPainter.Antialiasing)
+            QSvgRenderer(str(path)).render(svg)
+            svg.end()
+        else:
+            image = QImage(str(path)).convertToFormat(QImage.Format_ARGB32)
         if grey and not image.isNull():
             for y in range(image.height()):
                 for x in range(image.width()):
@@ -287,6 +298,22 @@ def fetch_logo(key: str, url: str) -> Path | None:
         return None
 
 
+_reach: dict[int, float] = {}
+
+
+def reach(pixmap: QPixmap) -> float:
+    """How far the drawn (not transparent) part of a picture goes from its centre, as a share of half its diagonal:
+    a picture is scaled by this to sit inside a ring, not over it (the training cone's wide base, owner 2026-10-10)."""
+    key = pixmap.cacheKey()
+    if key not in _reach:
+        image = pixmap.toImage()
+        w, h = image.width(), image.height()
+        far = max(((x - w / 2) ** 2 + (y - h / 2) ** 2 for y in range(0, h, 2) for x in range(0, w, 2)
+                   if image.pixelColor(x, y).alpha() > 40), default=0.0) ** 0.5
+        _reach[key] = far / max(1.0, ((w / 2) ** 2 + (h / 2) ** 2) ** 0.5) or 1.0
+    return _reach[key]
+
+
 class Ring(QWidget):
     """A ring (D-030). Trainings: the arc is the time gone by (the part a video skipped in light blue), the time left
     in the middle, full and green when ready. ``show_ring`` paints any other ring: the arc's share, its colour and the
@@ -340,7 +367,13 @@ class Ring(QWidget):
         hovering = self.hovered and self.hover
         inside = box.adjusted(self.pen / 2 + 3, self.pen / 2 + 3, -self.pen / 2 - 3, -self.pen / 2 - 3)
         if self.picture is not None and not self.picture.isNull() and not hovering:  # on hover: only the time
-            scaled = self.picture.scaled(inside.size().toSize(), Qt.KeepAspectRatio, Qt.SmoothTransformation)
+            pic = self.picture.size()  # its drawn part fits the circle inside the ring, so it never covers the arc
+            fit = inside.width() / (reach(self.picture) * (pic.width() ** 2 + pic.height() ** 2) ** 0.5)
+            scaled = self.picture.scaled(int(pic.width() * fit), int(pic.height() * fit), Qt.KeepAspectRatio,
+                                         Qt.SmoothTransformation)
+            path = QPainterPath()
+            path.addEllipse(inside)
+            painter.setClipPath(path)
             painter.drawPixmap(int(inside.center().x() - scaled.width() / 2), int(inside.center().y() - scaled.height() / 2), scaled)
             return
         text, colour = self.hover if hovering else (self.text, self.text_colour)
@@ -886,6 +919,8 @@ class Timeline(QWidget):
     ROW = 46
     NOW = 44
     TIME_WIDTH = 62
+    ICON = 26  # the event's picture (owner, 2026-10-10: bigger)
+    LOGO = 14  # the club's logo before its name on a club's event (owner, 2026-10-10: option A)
 
     def __init__(self):
         super().__init__()
@@ -893,10 +928,12 @@ class Timeline(QWidget):
         self.past: list[dict] = []
         self.now_text = ""
         self.colours: list[str] = []
+        self.logos: list[QPixmap | None] = []
         self.setMinimumHeight(260)
 
-    def set(self, timeline: dict, colours: list[str], now_text: str) -> None:
+    def set(self, timeline: dict, colours: list[str], now_text: str, logos: list[QPixmap | None] | None = None) -> None:
         self.future, self.past, self.colours, self.now_text = timeline["future"], timeline["past"], colours, now_text
+        self.logos = logos or []
         self.update()
 
     def paintEvent(self, _event) -> None:
@@ -913,8 +950,9 @@ class Timeline(QWidget):
                 break
             club = event.get("club")
             colour = self.colours[club] if club is not None and club < len(self.colours) else ACCENT
+            logo = self.logos[club] if club is not None and club < len(self.logos) else None
             self._row(painter, y, tr(event["left"]), tr(event["title"]), tr(event["sub"]), colour, 1.0, ACCENT_LIGHT,
-                      filled=False, icon=event.get("icon", ""), tint=club is not None)
+                      filled=False, icon=event.get("icon", ""), logo=logo)
         for index, entry in enumerate(self.past):
             y = centre + self.NOW / 2 + index * self.ROW
             if y + self.ROW > self.height():
@@ -926,8 +964,12 @@ class Timeline(QWidget):
         painter.setPen(Qt.NoPen)
         painter.setBrush(QColor(139, 140, 248, 60))
         painter.drawRoundedRect(pill, 10, 10)
-        painter.setBrush(QColor(ACCENT))
-        painter.drawEllipse(QRectF(line_x - 7, centre - 7, 14, 14))
+        if self.now_text == "à espera":  # the bot waits: the timer on the line (owner, 2026-10-10)
+            timer = picture("timer").scaled(self.ICON + 4, self.ICON + 4, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+            painter.drawPixmap(int(line_x - timer.width() / 2), int(centre - timer.height() / 2), timer)
+        else:
+            painter.setBrush(QColor(ACCENT))
+            painter.drawEllipse(QRectF(line_x - 7, centre - 7, 14, 14))
         painter.setPen(QColor(ACCENT_LIGHT))
         painter.setFont(QFont(FONT, 8, QFont.Bold))
         painter.drawText(QRectF(4, top_of_now, self.TIME_WIDTH, self.NOW), Qt.AlignRight | Qt.AlignVCenter, tr("AGORA"))
@@ -937,33 +979,30 @@ class Timeline(QWidget):
         painter.drawText(QRectF(line_x + 18, top_of_now, width - line_x - 24, self.NOW), Qt.AlignLeft | Qt.AlignVCenter, text)
 
     def _row(self, painter: QPainter, y: float, when: str, title: str, sub: str, colour: str, fade: float,
-             time_colour: str, filled: bool, icon: str = "", tint: bool = False) -> None:
+             time_colour: str, filled: bool, icon: str = "", logo: QPixmap | None = None) -> None:
         def tone(name: str) -> QColor:
             c = QColor(name)
             c.setAlphaF(fade)
             return c
 
         line_x = self.TIME_WIDTH + 14
-        text_x = line_x + 18
+        text_x = line_x + 22
         room = int(self.width() - text_x - 6)
         painter.setPen(tone(time_colour))
         painter.setFont(QFont(FONT, 10, QFont.Bold))
         painter.drawText(QRectF(0, y, self.TIME_WIDTH, self.ROW * 0.55), Qt.AlignRight | Qt.AlignVCenter, when)
         middle = QPointF(line_x, y + self.ROW * 0.275)
-        if icon:  # the kind of event as a small picture (owner, 2026-10-10); a club's own a little tinted
-            painter.setPen(QPen(tone(colour), 1.5) if tint else Qt.NoPen)
-            halo = QColor(colour if tint else BACKGROUND)
-            halo.setAlphaF(0.35 * fade if tint else 1.0)
-            painter.setBrush(halo)
-            painter.drawEllipse(middle, 12, 12)
+        if icon:  # the kind of event as a picture on the line (owner, 2026-10-10)
             painter.setOpacity(fade)
             if icon in ("cross", "card"):
                 painter.save()
-                painter.translate(middle.x() - 5.5, middle.y() - 6.5)
+                painter.translate(middle.x(), middle.y())
+                painter.scale(1.8, 1.8)
+                painter.translate(-5.5, -6.5)
                 Mark.draw(painter, icon)
                 painter.restore()
             else:
-                picture_ = picture(icon).scaled(17, 17, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+                picture_ = picture(icon).scaled(self.ICON, self.ICON, Qt.KeepAspectRatio, Qt.SmoothTransformation)
                 painter.drawPixmap(int(middle.x() - picture_.width() / 2), int(middle.y() - picture_.height() / 2), picture_)
             painter.setOpacity(1.0)
         else:
@@ -975,10 +1014,18 @@ class Timeline(QWidget):
         painter.drawText(QRectF(text_x, y, room, self.ROW * 0.55), Qt.AlignLeft | Qt.AlignVCenter,
                          painter.fontMetrics().elidedText(title, Qt.ElideRight, room))
         if sub:
+            sub_x = text_x
+            if logo is not None and not logo.isNull():  # whose event: the club's logo, small, before the line
+                small = logo.scaled(self.LOGO, self.LOGO, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+                painter.setOpacity(fade)
+                painter.drawPixmap(int(sub_x), int(y + self.ROW * 0.7 - small.height() / 2), small)
+                painter.setOpacity(1.0)
+                sub_x += self.LOGO + 4
             painter.setPen(tone(MUTED))
             painter.setFont(QFont(FONT, 8))
-            painter.drawText(QRectF(text_x, y + self.ROW * 0.5, room, self.ROW * 0.4), Qt.AlignLeft | Qt.AlignVCenter,
-                             painter.fontMetrics().elidedText(sub, Qt.ElideRight, room))
+            painter.drawText(QRectF(sub_x, y + self.ROW * 0.5, room - (sub_x - text_x), self.ROW * 0.4),
+                             Qt.AlignLeft | Qt.AlignVCenter,
+                             painter.fontMetrics().elidedText(sub, Qt.ElideRight, int(room - (sub_x - text_x))))
 
 
 class Spinner(QWidget):
@@ -1063,6 +1110,9 @@ class MainWindow(QMainWindow):
     """One window, three faces: the start screen (Abrir · Login · Sair), "loading" while the game is read, and the
     full board (it grows to it). Abrir starts the bot (owner, 2026-10-08); Iniciar/Parar/Login live in the menu
     "Bot" and in the tray icon."""
+
+    GAP = 14  # board: between the clubs and the right column
+    SIDE = 340  # board: the right column (boss coins, timeline)
 
     def __init__(self, app: QApplication):
         super().__init__()
@@ -1165,7 +1215,7 @@ class MainWindow(QMainWindow):
         whole.setContentsMargins(14, 12, 14, 14)  # club (owner, 2026-10-10)
         whole.setSpacing(12)
         outer = QHBoxLayout()
-        outer.setSpacing(14)
+        outer.setSpacing(self.GAP)
 
         main = QVBoxLayout()
         main.setSpacing(12)
@@ -1189,9 +1239,8 @@ class MainWindow(QMainWindow):
         inner.setAttribute(Qt.WA_TranslucentBackground)
         self.clubs_column = QVBoxLayout(inner)
         self.clubs_column.setContentsMargins(0, 0, 0, 0)
-        self.clubs_column.setSpacing(12)
-        self.clubs_column.addStretch(1)
-        scroll = QScrollArea()  # 3 or 4 clubs may not fit: the clubs scroll, the rest stays
+        self.clubs_column.setSpacing(12)  # no stretch: the cards share the spare height and end level with the timeline
+        self.clubs_scroll = scroll = QScrollArea()  # 3 or 4 clubs may not fit: the clubs scroll, the rest stays
         scroll.setWidgetResizable(True)
         scroll.setFrameShape(QFrame.NoFrame)
         scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
@@ -1236,7 +1285,7 @@ class MainWindow(QMainWindow):
         right = QWidget()
         right.setAttribute(Qt.WA_TranslucentBackground)
         right.setLayout(side)
-        right.setFixedWidth(340)
+        right.setFixedWidth(self.SIDE)
         outer.addWidget(right)
         return page
 
@@ -1247,7 +1296,7 @@ class MainWindow(QMainWindow):
         self.stop_action = QAction(style.standardIcon(QStyle.SP_MediaStop), tr("Parar"), self, triggered=self.stop_bot)
         self.login_action = QAction(tr("Login"), self, triggered=self.do_login)
         self.notices_action = QAction(tr("Avisos e erros"), self, triggered=self.show_notices)
-        self.reload_action = QAction(tr("Atualizar"), self, triggered=self.read_game)
+        self.reload_action = QAction(tr("Atualizar"), self, triggered=lambda: self.read_game(fresh=True))
         self.logs_action = QAction(tr("Pasta dos logs"), self, triggered=self.open_logs)
         self.failures_action = QAction(tr("Capturas das falhas"), self, triggered=self.open_failures)
         self.quit_action = QAction(tr("Sair"), self, triggered=self.quit_app)
@@ -1448,12 +1497,17 @@ class MainWindow(QMainWindow):
         if self.pages.currentIndex() == BOARD:
             self.read_game()
 
-    def read_game(self) -> None:
-        """Ver → Atualizar (and every 3 min): read the game now, GETs only, beside the bot and never waiting for it."""
+    def read_game(self, fresh: bool = False) -> None:
+        """Ver → Atualizar (and every 3 min): read the game now, GETs only, beside the bot and never waiting for it.
+        ``fresh`` (the menu): forget the slow reads kept for a while (squad values, fixtures) and read them again."""
         from osmbot.game.browser import STATE_FILE
 
         if self.reading or self.busy or not STATE_FILE.exists():
             return
+        if fresh:
+            from osmbot.game.clubinfo import forget
+
+            forget()
         self.reading = True
         self.refresh_state()
 
@@ -1529,8 +1583,9 @@ class MainWindow(QMainWindow):
             doing = view["timeline"]["now"] or "a trabalhar…"
         else:
             doing = "Parado · Bot → Iniciar para voltar a trabalhar"
-        colours = [soft(self._logo(club)[1] or ACCENT) for club in view["clubs"]]  # timers: half faded
-        self.timeline.set(view["timeline"], colours, doing)
+        logos = [self._logo(club) for club in view["clubs"]]
+        colours = [soft(colour or ACCENT) for _, colour in logos]  # timers: half faded
+        self.timeline.set(view["timeline"], colours, doing, [pixmap for pixmap, _ in logos])
 
     def _show_clubs(self, clubs: list[dict]) -> None:
         if len(self.panels) != len(clubs):
@@ -1538,10 +1593,20 @@ class MainWindow(QMainWindow):
                 panel.deleteLater()
             self.panels = [ClubCard() for _ in clubs]
             for index, panel in enumerate(self.panels):
-                self.clubs_column.insertWidget(index, panel)  # one per row (D-030); the stretch stays last
+                self.clubs_column.addWidget(panel, 1)  # one per row (D-030)
         for panel, club in zip(self.panels, clubs):
             panel.set_logo(*self._logo(club))  # first: the timers take the club's colour
             panel.show_club(club)
+        QTimer.singleShot(0, self._fit_width)  # once the cards are laid out
+
+    def _fit_width(self) -> None:
+        """Never narrower than a card (with room for the scroll bar): the window can't be made so narrow that the
+        cards' right side is cut off (owner, 2026-10-10). A window already narrower grows to it."""
+        widest = max((panel.minimumSizeHint().width() for panel in self.panels), default=0)
+        need = widest + self.clubs_scroll.verticalScrollBar().sizeHint().width()
+        self.clubs_scroll.setMinimumWidth(need)
+        margin = self.clubs_scroll.mapTo(self, QPoint(0, 0)).x()  # the same on the right of the boss coins
+        self.setMinimumWidth(margin + need + self.GAP + self.SIDE + margin)
 
     def _logo(self, club: dict) -> tuple[QPixmap | None, str | None]:
         """The club's logo and colour (match stripe, timeline dot); fetched in the background the first time (then kept on disk)."""

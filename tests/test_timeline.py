@@ -46,6 +46,7 @@ def test_the_future_soonest_first_with_the_club_and_what_is_due_now():
     assert ("0h30", "Treino J1, J2", 0) in titles  # same minute: one line
     assert ("2h00", "Amigável", 0) in titles  # 4 h before the match, only what is missing
     assert ("6h00", "Clube A vs Clube B", 0) in titles and rows[[t[1] for t in titles].index("Clube A vs Clube B")]["sub"] == "jogo · fora"
+    assert rows[[t[1] for t in titles].index("Clube A vs Clube B")]["icon"] == "ball"  # a club's match: the football
     assert ("2h00", "Médico: J4", 0) in titles and ("9h00", "Campo Clube A", 0) in titles
     assert [r["ts"] for r in rows] == sorted(r["ts"] for r in rows)
 
