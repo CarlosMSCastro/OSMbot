@@ -80,6 +80,8 @@ def main(argv: list[str] | None = None) -> None:
         try:
             from osmbot.gui.window import run_gui
         except ImportError as error:  # PySide6 missing (e.g. an old venv): the console menu still works
+            if sys.stdin is None:  # no console (OSMbot.exe): no menu to fall back to, show the error itself
+                raise
             print(f"Janela indisponível ({error}); abro o menu da consola. Para a janela: pip install -e .")
             from osmbot.menu import run_menu
 

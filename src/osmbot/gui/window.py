@@ -18,7 +18,6 @@ from datetime import datetime
 from pathlib import Path
 
 from PySide6.QtCore import QLockFile, QObject, QPoint, QPointF, QRectF, QSize, Qt, QTimer, Signal
-from PySide6.QtSvg import QSvgRenderer
 from PySide6.QtGui import QAction, QColor, QFont, QFontDatabase, QIcon, QImage, QPainter, QPainterPath, QPalette, QPen, QPixmap
 from PySide6.QtWidgets import (QAbstractItemView, QApplication, QFrame, QGridLayout, QGroupBox, QHBoxLayout, QLabel,
                                QMainWindow, QMenu, QMessageBox, QProxyStyle, QPushButton, QScrollArea, QStackedWidget, QStyle,
@@ -38,23 +37,15 @@ ASSETS = Path(__file__).resolve().parent / "assets"
 COIN_FILE, FUNDS_FILE = ASSETS / "bosscoin.png", ASSETS / "clubfunds.png"  # the game's icons (owner accepted, 2026-10-10)
 PICTURES = {"training": ASSETS / "training.png", "doctor": ASSETS / "doctor.png", "lawyer": ASSETS / "lawyer.png",
             "coins": COIN_FILE, "funds": FUNDS_FILE, "missions": ASSETS / "missions.png", "stadium": ASSETS / "stadium.png",
-            "timer": ASSETS / "timer.svg", "ball": ASSETS / "ball.svg"}  # waiting, and a club's match (owner, 2026-10-10)
+            "timer": ASSETS / "timer.png", "ball": ASSETS / "ball.png"}  # waiting, and a club's match (owner, 2026-10-10;
+# drawn from img/*.svg at 128 px: the portable build leaves Qt's svg support out)
 _pictures: dict[tuple[str, bool], QPixmap] = {}
 
 
 def picture(name: str, grey: bool = False) -> QPixmap:
     """A picture for the inside of a ring (empty if the file is missing); ``grey``: washed out, for "nobody"."""
     if (name, grey) not in _pictures:
-        path = PICTURES[name]
-        if path.suffix == ".svg":  # drawn at 128 px, then scaled down like the others
-            image = QImage(128, 128, QImage.Format_ARGB32)
-            image.fill(Qt.transparent)
-            svg = QPainter(image)
-            svg.setRenderHint(QPainter.Antialiasing)
-            QSvgRenderer(str(path)).render(svg)
-            svg.end()
-        else:
-            image = QImage(str(path)).convertToFormat(QImage.Format_ARGB32)
+        image = QImage(str(PICTURES[name])).convertToFormat(QImage.Format_ARGB32)
         if grey and not image.isNull():
             for y in range(image.height()):
                 for x in range(image.width()):

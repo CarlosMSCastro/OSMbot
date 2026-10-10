@@ -6,6 +6,20 @@ Este ficheiro é o **histórico de versões, para quem lê o repo**. O diário i
 
 ## [Por lançar]
 
+## [0.10.2] — 2026-10-10
+
+Linha do tempo com bola nos jogos e temporizador quando o bot está à espera; valor do plantel e janela corrigidos.
+
+### Alterado
+- **Linha do tempo:** ícones maiores; o logo do clube, pequeno, antes da linha de baixo (em vez do toque de cor); uma bola de futebol nos jogos de cada equipa; o temporizador em AGORA quando o bot está à espera.
+- **Cone do treino** dentro do círculo do temporizador.
+- **Cartões dos clubes** acabam alinhados com a linha do tempo.
+
+### Corrigido
+- **Valor do plantel** do próprio clube estava preso a uma leitura antiga; Ver → Atualizar volta a ler tudo do jogo.
+- **Cartões cortados à direita** em janelas estreitas: a janela tem agora uma largura mínima.
+- Sem a janela disponível, o `OSMbot.exe` mostra o erro verdadeiro em vez de um segundo erro.
+
 ## [0.10.1] — 2026-10-10
 
 Janela com imagens e ícones do jogo: treinos, médico, advogado, linha do tempo e diárias.
