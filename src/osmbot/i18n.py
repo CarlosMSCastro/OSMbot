@@ -88,8 +88,8 @@ WORDS = {
     "Oitavos-de-final": "Round of 16", "Quartos-de-final": "Quarter-finals", "Meias-finais": "Semi-finals",
     "Final": "Final", "Vencedor": "Winner",
     # daily rewards
-    "início de sessão por reclamar": "login reward to claim", "prémio do dia por reclamar": "daily prize to claim",
-    "prémio do dia ✓": "daily prize ✓", "prémio do dia —": "daily prize —",
+    "Início de sessão por reclamar": "Login reward to claim", "Prémio do dia por reclamar": "Daily prize to claim",
+    "Prémio do dia": "Daily prize",
     # timeline
     "já": "now", "Vídeos da loja": "Shop videos", "Acelerar treinos": "Speed up trainings",
     "Vídeos de dinheiro": "Money videos", "Reward cumulativo": "Cumulative reward", "Novo dia (diárias)": "New day (daily)",
@@ -98,7 +98,7 @@ WORDS = {
     "A treinar": "Training started", "Patrocinador assinado": "Sponsor signed", "Missões": "Missions",
     "Início de sessão": "Login reward", "Vídeos acumulados": "Cumulative videos",
     # what the bot is doing
-    "à espera": "waiting", "estádio": "stadium", "ler o jogo": "reading the game", "médico e advogado": "doctor and lawyer",
+    "à espera": "waiting", "por levantar": "to collect", "acaba em": "ends in", "não dá": "not allowed", "estádio": "stadium", "ler o jogo": "reading the game", "médico e advogado": "doctor and lawyer",
     "patrocinadores": "sponsors", "pré-jogo": "pre-match", "recolher e pôr treinos": "collecting and starting trainings",
     "recompensas": "rewards",
 }
@@ -120,21 +120,19 @@ PATTERNS = [(re.compile(pattern), replace) for pattern, replace in (
     (r"(\d+)\.º", lambda m: ordinal(m[1])),
     (r"(\d+) jogadores · média (.+)", lambda m: f"{m[1]} players · avg {m[2]}"),
     (r"(\d+) vagas? vazias? nos patrocinadores", lambda m: f"{m[1]} empty sponsor slot" + ("s" if m[1] != "1" else "")),
-    (r"Faltam (.+)", lambda m: f"{m[1]} left"),
     (r"(\d+) vagas? livres? na lista de transferências",
      lambda m: f"{m[1]} free slot{'s' if m[1] != '1' else ''} on the transfer list"),
     (r"(.+) vendido · (.+)", lambda m: f"{m[1]} sold · {m[2]}"),
     (r"(.+)/ronda", lambda m: f"{m[1]}/round"),
     (r"PRÉ-JOGO · (.+)", lambda m: f"PRE-MATCH · {m[1]}"),
-    (r"([✓○⏳◉]) (.+?)( \d+h\d+)?( por levantar)?", lambda m: f"{m[1]} {_w(m[2])}{m[3] or ''}{' to collect' if m[4] else ''}"),
     (r"(\d+) jogos?", lambda m: f"{m[1]} game{'s' if m[1] != '1' else ''}"),
     (r"(\d+) j", lambda m: f"{m[1]} g"),
     (r"1 jogo · não dá", lambda m: "1 game · not allowed"),
     (r"(\d+) jogos? · à espera", lambda m: f"{m[1]} game{'s' if m[1] != '1' else ''} · waiting"),
     (r"⚠ Cansados: (.+)", lambda m: f"⚠ Tired: {m[1]}"),
     # top bar, coins
-    (r"início de sessão ✓ \(dia (\d+)\)", lambda m: f"login ✓ (day {m[1]})"),
-    (r"missões (\d+)/(\d+)( ✓)?", lambda m: f"missions {m[1]}/{m[2]}{m[3] or ''}"),
+    (r"Início de sessão \(dia (\d+)\)", lambda m: f"Login (day {m[1]})"),
+    (r"Missões (\d+)/(\d+)", lambda m: f"Missions {m[1]}/{m[2]}"),
     (r"desde que o bot foi ligado \((.+)\)", lambda m: f"since the bot started ({m[1]})"),
     (r"A trabalhar desde (.+)", lambda m: f"Working since {m[1]}"),
     (r"Versão (.+)", lambda m: f"Version {m[1]}"),

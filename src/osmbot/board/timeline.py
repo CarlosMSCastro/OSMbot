@@ -85,12 +85,25 @@ def past_view(history: list[dict]) -> list[dict]:
         elif entry["kind"] in ("training_video", "money") and entry.get("count", 1) > 1:
             title = f"{title} ×{entry['count']}"
         sub = entry.get("sub") or ", ".join(entry.get("names") or [])
-        rows.append({"time": f"{datetime.fromtimestamp(entry['ts']):%H:%M}", "title": title, "sub": sub})
+        rows.append({"time": f"{datetime.fromtimestamp(entry['ts']):%H:%M}", "title": title, "sub": sub,
+                     "icon": icon_of(entry)})
     return rows
 
 
-def _event(ts: float, title: str, sub: str = "", club: int | None = None) -> dict:
-    return {"ts": ts, "title": title, "sub": sub, "club": club}
+PAST_ICONS = {"shop": "coins", "training_video": "training", "money": "funds", "collect": "training",
+              "train": "training", "stadium": "stadium", "sponsor": "funds", "reward": "missions"}
+MATCH_ICONS = {"Médico": "cross", "Advogado": "card"}  # the friendly and the analysis keep the dot
+
+
+def icon_of(entry: dict) -> str:
+    """The icon of a past entry in the timeline ("" = the plain dot)."""
+    if entry["kind"] == "match":
+        return MATCH_ICONS.get(entry["title"], "")
+    return PAST_ICONS.get(entry["kind"], "")
+
+
+def _event(ts: float, title: str, sub: str = "", club: int | None = None, icon: str = "") -> dict:
+    return {"ts": ts, "title": title, "sub": sub, "club": club, "icon": icon}
 
 
 def _clock(ts: float) -> str:
@@ -104,22 +117,23 @@ def future_events(snapshot: dict | None, now: float) -> list[dict]:
         return []
     events = []
     ads = snapshot.get("ads") or {}
-    for key, title, plural in (("shop", "Vídeos da loja", True), ("training", "Acelerar treinos", False),
-                               ("money", "Vídeos de dinheiro", True)):
+    for key, title, plural, icon in (("shop", "Vídeos da loja", True, "coins"), ("training", "Acelerar treinos", False, "training"),
+                                     ("money", "Vídeos de dinheiro", True, "funds")):
         info = ads.get(key) or {}
         if info.get("open"):
-            events.append(_event(now, title, "disponíveis" if plural else "disponível"))
+            events.append(_event(now, title, "disponíveis" if plural else "disponível", icon=icon))
         elif info.get("reopen") and info["reopen"] > now:
-            events.append(_event(info["reopen"], title, f"reabre às {_clock(info['reopen'])}"))
+            events.append(_event(info["reopen"], title, f"reabre às {_clock(info['reopen'])}", icon=icon))
     daily = snapshot.get("daily") or {}
     videos = daily.get("videos") or {}
     if videos.get("claimable"):
-        events.append(_event(now, "Reward cumulativo", "por reclamar"))
+        events.append(_event(now, "Reward cumulativo", "por reclamar", icon="missions"))
     elif videos.get("reopen") and videos["reopen"] > now:
-        events.append(_event(videos["reopen"], "Reward cumulativo", f"{videos.get('count', 0)}/{videos.get('threshold', '?')}"))
+        events.append(_event(videos["reopen"], "Reward cumulativo", f"{videos.get('count', 0)}/{videos.get('threshold', '?')}",
+                             icon="missions"))
     renews = (daily.get("login") or {}).get("renews")
     if renews and renews > now:
-        events.append(_event(renews, "Novo dia (diárias)"))
+        events.append(_event(renews, "Novo dia (diárias)", icon="missions"))
 
     for index, club in enumerate(snapshot.get("clubs") or []):
         name = club["name"]
@@ -132,7 +146,7 @@ def future_events(snapshot: dict | None, now: float) -> list[dict]:
                 groups.append((ends, [t["name"]]))
         for ts, names in groups:
             title = ("Recolher treino " if ts <= now else "Treino ") + ", ".join(names)
-            events.append(_event(max(ts, now), title, name, index))
+            events.append(_event(max(ts, now), title, name, index, "training"))
         match, nxt = club.get("match"), club.get("next") or {}
         if match and match > now:
             opponent = nxt.get("opponent")
@@ -144,13 +158,13 @@ def future_events(snapshot: dict | None, now: float) -> list[dict]:
                 events.append(_event(match - PREP_BEFORE, " e ".join(missing), name, index))
         for part, level, top, ends in (club.get("stadium") or {}).get("parts") or []:
             if ends and ends > now:
-                events.append(_event(ends, f"{part} {name}", f"{level}/{top} → {level + 1}/{top}", index))
+                events.append(_event(ends, f"{part} {name}", f"{level}/{top} → {level + 1}/{top}", index, "stadium"))
         for people, place in ((club.get("injured") or [], "Médico"), (club.get("suspended") or [], "Advogado")):
             for p in people:
                 if p.get("ready"):
-                    events.append(_event(now, f"{place}: levantar {p['name']}", name, index))
+                    events.append(_event(now, f"{place}: levantar {p['name']}", name, index, MATCH_ICONS[place]))
                 elif p.get("until") and p["until"] > now:
-                    events.append(_event(p["until"], f"{place}: {p['name']}", name, index))
+                    events.append(_event(p["until"], f"{place}: {p['name']}", name, index, MATCH_ICONS[place]))
     return sorted(events, key=lambda e: (e["ts"], e["title"]))
 
 

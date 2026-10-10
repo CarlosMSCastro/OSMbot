@@ -48,3 +48,12 @@ def test_the_future_soonest_first_with_the_club_and_what_is_due_now():
     assert ("6h00", "Clube A vs Clube B", 0) in titles and rows[[t[1] for t in titles].index("Clube A vs Clube B")]["sub"] == "jogo · fora"
     assert ("2h00", "Médico: J4", 0) in titles and ("9h00", "Campo Clube A", 0) in titles
     assert [r["ts"] for r in rows] == sorted(r["ts"] for r in rows)
+
+
+def test_each_kind_of_event_has_its_icon_in_the_timeline():
+    from osmbot.board.timeline import icon_of
+
+    assert [icon_of({"kind": k, "title": t}) for k, t in (("shop", ""), ("money", ""), ("collect", ""), ("stadium", ""),
+                                                          ("reward", ""), ("match", "Médico"), ("match", "Advogado"),
+                                                          ("match", "Amigável"))] == \
+        ["coins", "funds", "training", "stadium", "missions", "cross", "card", ""]

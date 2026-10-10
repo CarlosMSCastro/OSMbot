@@ -17,10 +17,10 @@ import time
 from datetime import datetime
 from pathlib import Path
 
-from PySide6.QtCore import QLockFile, QObject, QRectF, QSize, Qt, QTimer, Signal
+from PySide6.QtCore import QLockFile, QObject, QPointF, QRectF, QSize, Qt, QTimer, Signal
 from PySide6.QtGui import QAction, QColor, QFont, QFontDatabase, QIcon, QImage, QPainter, QPalette, QPen, QPixmap
 from PySide6.QtWidgets import (QAbstractItemView, QApplication, QFrame, QGridLayout, QGroupBox, QHBoxLayout, QLabel,
-                               QMainWindow, QMenu, QMessageBox, QPushButton, QScrollArea, QStackedWidget, QStyle,
+                               QMainWindow, QMenu, QMessageBox, QProxyStyle, QPushButton, QScrollArea, QStackedWidget, QStyle,
                                QSystemTrayIcon, QTableWidget, QTableWidgetItem, QVBoxLayout, QWidget)
 
 from osmbot import __version__
@@ -33,6 +33,25 @@ TEXT, MUTED, ACCENT, ACCENT_LIGHT, RING_TRACK = "#eef0ff", "#8f95b8", "#8b8cf8",
 BACKGROUND_FILE = Path(__file__).resolve().parent / "assets" / "fundo.jpg"  # the board's background picture (D-030)
 FONT_FILE = Path(__file__).resolve().parent / "assets" / "Sora.ttf"  # the window's typeface (owner, 2026-10-10; OFL)
 FONT = "Segoe UI"  # until Sora is loaded (load_font)
+ASSETS = Path(__file__).resolve().parent / "assets"
+COIN_FILE, FUNDS_FILE = ASSETS / "bosscoin.png", ASSETS / "clubfunds.png"  # the game's icons (owner accepted, 2026-10-10)
+PICTURES = {"training": ASSETS / "training.png", "doctor": ASSETS / "doctor.png", "lawyer": ASSETS / "lawyer.png",
+            "coins": COIN_FILE, "funds": FUNDS_FILE, "missions": ASSETS / "missions.png", "stadium": ASSETS / "stadium.png"}
+_pictures: dict[tuple[str, bool], QPixmap] = {}
+
+
+def picture(name: str, grey: bool = False) -> QPixmap:
+    """A picture for the inside of a ring (empty if the file is missing); ``grey``: washed out, for "nobody"."""
+    if (name, grey) not in _pictures:
+        image = QImage(str(PICTURES[name])).convertToFormat(QImage.Format_ARGB32)
+        if grey and not image.isNull():
+            for y in range(image.height()):
+                for x in range(image.width()):
+                    c = image.pixelColor(x, y)
+                    level = int(c.red() * 0.3 + c.green() * 0.59 + c.blue() * 0.11)
+                    image.setPixelColor(x, y, QColor(level, level, level, c.alpha() * 2 // 5))
+        _pictures[name, grey] = QPixmap.fromImage(image)
+    return _pictures[name, grey]
 LOGOS = Path.home() / ".osmbot" / "logos"
 TRAY_DOT = {True: "#9be22d", False: "#9a9a9a"}  # lime with a white ring: readable on the green logo at 16 px
 ROW_HEIGHT, HEADER_HEIGHT = 22, 24
@@ -51,7 +70,26 @@ STYLE = (
     f"QScrollBar:vertical {{ background: {BACKGROUND}; width: 10px; }}"
     f"QScrollBar::handle:vertical {{ background: {LINE}; border-radius: 4px; min-height: 30px; }}"
     "QScrollBar::add-line, QScrollBar::sub-line { height: 0; }"
+    f"QToolTip {{ background: #161b40; color: {TEXT}; border: 1px solid rgba(139, 140, 248, 110); padding: 5px 9px; }}"
 )
+
+
+class QuickTips(QProxyStyle):
+    """Hover messages show almost at once (owner, 2026-10-10); they take the window's colours from ``STYLE``."""
+
+    def styleHint(self, hint, option=None, widget=None, data=None):
+        if hint == QStyle.SH_ToolTip_WakeUpDelay:
+            return 60
+        if hint == QStyle.SH_ToolTip_FallAsleepDelay:
+            return 0
+        return super().styleHint(hint, option, widget, data)
+
+
+def soft(colour: str) -> str:
+    """The club's colour half faded, for timers still running (owner, 2026-10-10): a green club stays apart from the
+    bright green of "done"."""
+    c, grey = QColor(colour), QColor(MUTED)
+    return QColor((c.red() + grey.red()) // 2, (c.green() + grey.green()) // 2, (c.blue() + grey.blue()) // 2).name()
 
 
 def logo_path() -> Path:
@@ -260,13 +298,24 @@ class Ring(QWidget):
         self.pen, self.font_size = width, font
         self.text, self.colour, self.done, self.skipped = "", None, 0.0, 0.0
         self.arc, self.text_colour, self.emoji = ACCENT, TEXT, False
+        self.hover: tuple[str, str] | None = None  # (text, colour) in the middle while the mouse is over the ring
+        self.hovered = False
+        self.picture: QPixmap | None = None  # drawn inside the ring instead of the text (owner, 2026-10-10)
 
-    def set(self, text: str, colour: str | None, done: float, skipped: float = 0.0) -> None:
-        """A training: green and full when ready, else the accent colour (and light blue for the skipped part)."""
+    def set(self, text: str, colour: str | None, done: float, skipped: float = 0.0, timer: str = ACCENT) -> None:
+        """A training: green and full when ready, else the club's timer colour (light blue for the skipped part)."""
         ready = colour == GREEN
-        self.show_ring(text, 1.0 if ready else done, COLOURS[GREEN] if ready else ACCENT,
+        self.show_ring(text, 1.0 if ready else done, COLOURS[GREEN] if ready else timer,
                        COLOURS[GREEN] if ready else TEXT, 0.0 if ready else skipped)
         self.colour = colour
+
+    def enterEvent(self, _event) -> None:
+        self.hovered = True
+        self.update()
+
+    def leaveEvent(self, _event) -> None:
+        self.hovered = False
+        self.update()
 
     def show_ring(self, text: str, done: float, arc: str, text_colour: str, skipped: float = 0.0, emoji: bool = False) -> None:
         self.text, self.done, self.arc, self.text_colour, self.emoji = text, done, arc, text_colour, emoji
@@ -288,16 +337,25 @@ class Ring(QWidget):
         if self.skipped:
             painter.setPen(QPen(QColor(COLOURS[BLUE]), self.pen, Qt.SolidLine, Qt.RoundCap))
             painter.drawArc(box, start - int(own * 360 * 16), -int(self.skipped * 360 * 16))
-        painter.setPen(QColor(self.text_colour))
+        hovering = self.hovered and self.hover
+        inside = box.adjusted(self.pen / 2 + 3, self.pen / 2 + 3, -self.pen / 2 - 3, -self.pen / 2 - 3)
+        if self.picture is not None and not self.picture.isNull() and not hovering:  # on hover: only the time
+            scaled = self.picture.scaled(inside.size().toSize(), Qt.KeepAspectRatio, Qt.SmoothTransformation)
+            painter.drawPixmap(int(inside.center().x() - scaled.width() / 2), int(inside.center().y() - scaled.height() / 2), scaled)
+            return
+        text, colour = self.hover if hovering else (self.text, self.text_colour)
+        painter.setPen(QColor(colour))
         painter.setFont(QFont("Segoe UI Emoji", self.font_size + 7) if self.emoji else QFont(FONT, self.font_size, QFont.Bold))
-        painter.drawText(self.rect(), Qt.AlignCenter, self.text)
+        painter.drawText(self.rect(), Qt.AlignCenter, text)
 
 
 class RingCell(QWidget):
     """A ring with a few lines under it (name, detail...)."""
 
-    def __init__(self, size: int, width: int, font: int, lines: int = 2):
+    def __init__(self, size: int, width: int, font: int, lines: int = 2, cell_width: int = 0):
         super().__init__()
+        if cell_width:
+            self.setFixedWidth(cell_width)
         column = QVBoxLayout(self)
         column.setContentsMargins(0, 0, 0, 0)
         column.setSpacing(1)
@@ -316,10 +374,203 @@ class RingCell(QWidget):
             label.setVisible(bool(text))
 
 
-CARE_EMOJI = {"Médico": "🩺", "Advogado": "⚖️"}
-STADIUM_RING = {"moving": (ACCENT, TEXT), "top": (COLOURS[GREEN], COLOURS[GREEN]), "still": ("#4a5080", MUTED)}
-CARE_RING = {"none": (RING_TRACK, MUTED), "working": (ACCENT, TEXT), "ready": (COLOURS[GREEN], COLOURS[GREEN]),
-             "waiting": (COLOURS[YELLOW], COLOURS[YELLOW]), "blocked": ("#4a5080", MUTED)}
+class Mark(QWidget):
+    """The red cross of an injury or the red card of a suspension, by the player's name (owner, 2026-10-10)."""
+
+    def __init__(self, kind: str):
+        super().__init__()
+        self.kind = kind
+        self.setFixedSize(11, 13)
+
+    def paintEvent(self, _event) -> None:
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.Antialiasing)
+        self.draw(painter, self.kind)
+
+    @staticmethod
+    def draw(painter: QPainter, kind: str) -> None:
+        """The mark in an 11 x 13 box at the painter's origin."""
+        painter.setPen(Qt.NoPen)
+        painter.setBrush(QColor("#ff4d4d" if kind == "cross" else "#e8262b"))
+        if kind == "cross":
+            painter.drawRect(QRectF(3.5, 1.5, 4, 10))
+            painter.drawRect(QRectF(0.5, 4.5, 10, 4))
+        else:
+            painter.drawRoundedRect(QRectF(1.5, 0.5, 8, 12), 1.5, 1.5)
+
+
+class CareCell(QWidget):
+    """The doctor or the lawyer (owner, 2026-10-10): the picture in the ring (washed out with nobody); under it the
+    player with the cross / the red card and the games out; the time left in the middle on hover; what it is in a
+    hover message."""
+
+    def __init__(self, kind: str, width: int):
+        super().__init__()
+        self.kind = kind
+        self.setFixedWidth(width)
+        column = QVBoxLayout(self)
+        column.setContentsMargins(0, 0, 0, 0)
+        column.setSpacing(3)
+        self.ring = Ring()
+        column.addWidget(self.ring, 0, Qt.AlignHCenter)
+        row = QHBoxLayout()
+        row.setSpacing(4)
+        self.name = text_label(9)
+        self.mark = Mark("cross" if kind == "doctor" else "card")
+        self.games = text_label(9, True)
+        row.addStretch(1)
+        for widget in (self.name, self.mark, self.games):
+            row.addWidget(widget, 0, Qt.AlignVCenter)
+        row.addStretch(1)
+        self.under = QWidget()
+        self.under.setLayout(row)
+        row.setContentsMargins(0, 0, 0, 0)
+        column.addWidget(self.under)
+
+    def show_care(self, ring: dict, timer: str) -> None:
+        state = ring["state"]
+        nobody = state in ("none", "blocked")  # "not available": washed out (owner, 2026-10-10)
+        arc = {"working": timer, "ready": COLOURS[GREEN], "waiting": COLOURS[YELLOW]}.get(state, RING_TRACK)
+        share = {"working": ring["done"], "ready": 1.0, "waiting": 1.0}.get(state, 0.0)
+        self.ring.show_ring("", share, arc, TEXT)
+        self.ring.picture = picture(self.kind, grey=nobody)
+        self.ring.hover = None if state == "none" else (tr(ring["centre"]), arc if state != "blocked" else MUTED)
+        self.under.setVisible(state != "none")
+        self.name.setText(escape_text(ring["name"]))
+        self.games.setText(str(ring.get("games") or ""))
+        self.games.setStyleSheet(f"color:{TEXT};")
+        tip = tr(ring["label"]) + ("" if state == "none" else f" · {ring['name']} · {tr(ring['sub'])}")
+        self.setToolTip(tip + (f" · {tr('acaba em')} {ring['centre']}" if state == "working" else ""))
+
+
+class StepIcon(QWidget):
+    """The mark of a pre-match step, all the same size (owner, 2026-10-10): done (green with a tick), waiting for
+    the analyst (blue with a clock), to collect (yellow with "!"), still open (grey ring)."""
+
+    COLOURS = {"done": GREEN, "waiting": BLUE, "collect": YELLOW, "open": GREY, "progress": YELLOW}
+
+    def __init__(self, kind: str = "open"):
+        super().__init__()
+        self.kind = kind
+        self.setFixedSize(16, 16)
+
+    def paintEvent(self, _event) -> None:
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.Antialiasing)
+        colour = QColor(COLOURS[self.COLOURS[self.kind]])
+        box = QRectF(1, 1, 14, 14)
+        if self.kind in ("open", "progress"):  # a ring: still to do (grey) or under way (yellow)
+            painter.setPen(QPen(colour, 1.6))
+            painter.drawEllipse(box)
+            return
+        painter.setPen(Qt.NoPen)
+        painter.setBrush(colour)
+        painter.drawEllipse(box)
+        mark = QColor("#0b0f2a")
+        painter.setPen(QPen(mark, 1.8, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin))
+        if self.kind == "done":
+            painter.drawPolyline([QPointF(4.6, 8.2), QPointF(7.0, 10.6), QPointF(11.4, 5.6)])
+        elif self.kind == "waiting":
+            painter.drawLine(QPointF(8, 8), QPointF(8, 4.6))
+            painter.drawLine(QPointF(8, 8), QPointF(10.6, 9.4))
+        else:
+            painter.drawLine(QPointF(8, 4.2), QPointF(8, 8.8))
+            painter.drawPoint(QPointF(8, 11.4))
+
+
+class StepList(QWidget):
+    """Steps as rows (pre-match) or side by side (the daily rewards): one ``StepIcon`` and the text each."""
+
+    def __init__(self, vertical: bool, size: int, spacing: int):
+        super().__init__()
+        self.layout_ = QVBoxLayout(self) if vertical else QHBoxLayout(self)
+        self.layout_.setContentsMargins(0, 0, 0, 0)
+        self.layout_.setSpacing(spacing)
+        self.size = size
+        self.rows: list[tuple[QWidget, StepIcon, QLabel]] = []
+        self.none = text_label(size, colour=GREY)
+        self.none.setText("—")
+        self.layout_.addWidget(self.none)
+        if not vertical:
+            self.layout_.addStretch(1)
+
+    def show_steps(self, steps: list[tuple[str, str, str]]) -> None:
+        """(kind, text already translated, colour) per step."""
+        while len(self.rows) < len(steps):
+            row = QWidget()
+            line = QHBoxLayout(row)
+            line.setContentsMargins(0, 0, 0, 0)
+            line.setSpacing(8)
+            mark, text = StepIcon(), text_label(self.size)
+            line.addWidget(mark, 0, Qt.AlignVCenter)
+            line.addWidget(text, 1, Qt.AlignVCenter)
+            self.layout_.insertWidget(len(self.rows) + 1, row)
+            self.rows.append((row, mark, text))
+        self.none.setVisible(not steps)
+        for index, (row, mark, text) in enumerate(self.rows):
+            row.setVisible(index < len(steps))
+            if index < len(steps):
+                kind, words, colour = steps[index]
+                mark.kind = kind
+                mark.update()
+                text.setText(rich([(words, colour)]))
+
+
+def escape_text(text: str) -> str:
+    from html import escape
+
+    return escape(text)
+STADIUM_RING = {"top": (COLOURS[GREEN], COLOURS[GREEN]), "still": ("#4a5080", MUTED)}  # "moving": the timer colour
+
+
+def icon(path: Path, size: int) -> QLabel:
+    """One of the bundled pictures at ``size`` px (an empty label if the file is missing)."""
+    label = QLabel()
+    label.setFixedSize(size, size)
+    picture = QPixmap(str(path))
+    if not picture.isNull():
+        label.setPixmap(picture.scaled(size, size, Qt.KeepAspectRatio, Qt.SmoothTransformation))
+    label.setStyleSheet("background: transparent;")
+    return label
+
+
+class SaleArrow(QWidget):
+    """A small green arrow going up by the money while a sale is on the card (owner, 2026-10-10); who and how much
+    on hover."""
+
+    def __init__(self):
+        super().__init__()
+        self.setFixedSize(14, 22)
+        self.step = 0
+        self.timer = QTimer(self)
+        self.timer.timeout.connect(self._move)
+
+    def show_sales(self, sales: list[str]) -> None:
+        self.setVisible(bool(sales))
+        from html import escape
+
+        self.setToolTip("<br>".join(escape(tr(sale)) for sale in sales))
+        if sales and not self.timer.isActive():
+            self.timer.start(40)
+        elif not sales:
+            self.timer.stop()
+
+    def _move(self) -> None:
+        self.step = (self.step + 1) % 30
+        self.update()
+
+    def paintEvent(self, _event) -> None:
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.Antialiasing)
+        share = self.step / 30
+        colour = QColor(COLOURS[GREEN])
+        colour.setAlphaF(1 - share * 0.8)
+        y = self.height() - 4 - share * 8
+        painter.setPen(QPen(colour, 2.4, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin))
+        middle = self.width() / 2
+        painter.drawLine(int(middle), int(y), int(middle), int(y - 11))
+        painter.drawLine(int(middle - 5), int(y - 6), int(middle), int(y - 11))
+        painter.drawLine(int(middle + 5), int(y - 6), int(middle), int(y - 11))
 
 
 class ElidedLabel(QLabel):
@@ -342,18 +593,18 @@ class MatchStripe(QFrame):
 
     def __init__(self):
         super().__init__()
-        row = QHBoxLayout(self)
-        row.setContentsMargins(14, 5, 14, 7)
-        texts = QVBoxLayout()
-        texts.setSpacing(0)
+        grid = QGridLayout(self)  # the tag on top; "vs Clube" and "em 3h33" on one line under it (owner, 2026-10-10)
+        grid.setContentsMargins(14, 5, 14, 7)
+        grid.setHorizontalSpacing(10)
+        grid.setVerticalSpacing(0)
         self.tag = text_label(7, True)
         self.text = ElidedLabel()
         self.text.setFont(QFont(FONT, 10))
-        texts.addWidget(self.tag)
-        texts.addWidget(self.text)
         self.left = text_label(10)
-        row.addLayout(texts, 1)
-        row.addWidget(self.left, 0, Qt.AlignVCenter)
+        grid.addWidget(self.tag, 0, 0, 1, 2)
+        grid.addWidget(self.text, 1, 0, Qt.AlignBottom)
+        grid.addWidget(self.left, 1, 1, Qt.AlignRight | Qt.AlignBottom)
+        grid.setColumnStretch(0, 1)
         self.colour = ""
         self.set_colour(None)
 
@@ -394,6 +645,9 @@ def divider() -> QFrame:
     return line
 
 
+TRAINING_WIDTH = 104  # one column of the trainings and of the doctor/lawyer
+
+
 class ClubCard(QFrame):
     """One club (D-030), three columns: the club (name, match, value, money, sponsors, stadium) · the trainings as
     rings · the pre-match checklist with the tired, injured and suspended players under it."""
@@ -404,6 +658,7 @@ class ClubCard(QFrame):
         super().__init__()
         self.setObjectName("card")
         self.colour = ""
+        self.timer = ACCENT  # running timers: the club's colour half faded once the logo is in
         row = QHBoxLayout(self)
         row.setContentsMargins(0, 0, 0, 0)
         row.setSpacing(0)
@@ -418,13 +673,22 @@ class ClubCard(QFrame):
         head.addWidget(self.logo)
         titles = QVBoxLayout()
         titles.setSpacing(0)
-        self.name = text_label(16, True)
+        name_row = QHBoxLayout()  # the name, and the money against the right edge with its icon (owner, 2026-10-10)
+        name_row.setSpacing(6)
+        self.name = ElidedLabel()
+        self.name.setFont(QFont(FONT, 16, QFont.Bold))
+        self.sale = SaleArrow()
+        self.money = text_label(15, True)
+        name_row.addWidget(self.name, 1)
+        name_row.addWidget(self.sale, 0, Qt.AlignVCenter)
+        name_row.addWidget(icon(FUNDS_FILE, 28), 0, Qt.AlignVCenter)
+        name_row.addWidget(self.money, 0, Qt.AlignVCenter)
         self.header = text_label(9)
         paint(self.header, None)
         self.header.setStyleSheet(f"color:{MUTED};")
         self.cup = text_label(9)
         self.cup.setStyleSheet(f"color:{MUTED};")
-        titles.addWidget(self.name)
+        titles.addLayout(name_row)
         titles.addWidget(self.header)
         titles.addWidget(self.cup)
         head.addLayout(titles, 1)
@@ -433,25 +697,21 @@ class ClubCard(QFrame):
         self.match = MatchStripe()
         club.addWidget(self.match)
         club.addSpacing(4)
-        self.alert = text_label(9, True, YELLOW)
-        self.alert.setWordWrap(True)
-        club.addWidget(self.alert)
         self.facts = QGridLayout()
         self.facts.setHorizontalSpacing(10)
         self.facts.setVerticalSpacing(4)
         club.addLayout(self.facts)
         self.value = self._row(0, "Valor plantel")
-        self.money = self._row(1, "Dinheiro")
-        self.sales = text_label(8)  # a smaller line under the money, so the sale fits on one line with Sora
-        self.sales.setWordWrap(True)
-        self.facts.addWidget(self.sales, 2, 1, 1, 3)
-        self.sponsors = self._row(3, "Patrocinadores")
+        self.sponsors = self._row(1, "Patrocinadores")
+        self.alert = text_label(10, True, YELLOW)  # a free transfer-list slot, under the sponsors (owner, 2026-10-10)
+        self.alert.setWordWrap(True)
+        self.facts.addWidget(self.alert, 2, 0, 1, 4)
         club.addSpacing(6)
         club.addWidget(column_title("ESTÁDIO"))
         stadium = QHBoxLayout()  # three small rings: the part going up fills, the others stand still (owner, 2026-10-09)
-        stadium.setSpacing(22)
+        stadium.setSpacing(6)
         stadium.addStretch(1)
-        self.stadium_cells = [RingCell(54, 5, 9, lines=2) for _ in range(3)]
+        self.stadium_cells = [RingCell(54, 5, 9, lines=1, cell_width=92) for _ in range(3)]
         for cell in self.stadium_cells:
             stadium.addWidget(cell)
         stadium.addStretch(1)
@@ -469,11 +729,12 @@ class ClubCard(QFrame):
         trainings.addWidget(column_title("TREINOS"))
         self.rings = QHBoxLayout()
         self.rings.setSpacing(10)
+        self.rings.setAlignment(Qt.AlignLeft)  # in columns with the doctor and the lawyer under them
         trainings.addLayout(self.rings)
         trainings.addSpacing(10)
-        care = QHBoxLayout()  # the doctor and the lawyer under the trainings (owner, 2026-10-09)
-        care.setSpacing(24)
-        self.care_cells = [RingCell(62, 5, 9, lines=3) for _ in range(2)]
+        care = QHBoxLayout()  # the doctor and the lawyer under the trainings, in the same columns (owner, 2026-10-10)
+        care.setSpacing(10)
+        self.care_cells = [CareCell(kind, TRAINING_WIDTH) for kind in ("doctor", "lawyer")]
         for cell in self.care_cells:
             care.addWidget(cell)
         care.addStretch(1)
@@ -489,7 +750,7 @@ class ClubCard(QFrame):
         self.prep_title = column_title()
         prep.addWidget(self.prep_title)
         prep.addSpacing(4)
-        self.prep = text_label(11)
+        self.prep = StepList(vertical=True, size=10, spacing=9)  # one row per step: icon and text (owner, 2026-10-10)
         prep.addWidget(self.prep)
         prep.addSpacing(8)
         self.tired = text_label(9, colour=YELLOW)
@@ -506,7 +767,7 @@ class ClubCard(QFrame):
         title.setStyleSheet(f"color:{MUTED};")
         title.setText(tr(name))
         title.setFixedWidth(self.LABEL_WIDTH)
-        value = text_label(10)
+        value = text_label(10, True)
         value.setWordWrap(True)
         self.facts.addWidget(title, index, 0, Qt.AlignTop)
         self.facts.addWidget(value, index, 1, 1, 3)
@@ -523,7 +784,7 @@ class ClubCard(QFrame):
         and the border; the plain card until the logo is in."""
         if not colour or colour == self.colour:
             return
-        self.colour = colour
+        self.colour, self.timer = colour, soft(colour)
         c = QColor(colour)
         glow, border = (f"rgba({c.red()},{c.green()},{c.blue()},{alpha})" for alpha in (70, 90))
         self.setStyleSheet(f"QFrame#card {{ background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 {glow}, "
@@ -536,14 +797,13 @@ class ClubCard(QFrame):
         self.cup.setText(tr(f"🏆 {club['cup_line']}"))
         self.match.show_match(club["match"])
         self.alert.setVisible(bool(club["alert"]))
-        self.alert.setText(f"❗ {tr(club['alert'])}")
+        self.alert.setText(f"⚠ {tr(club['alert'])}")
         squad = club["squad"]  # the place in colour, the total in white; players and average on hover
-        self.value.setText(rich([(squad["place"], squad["colour"]), ("  " if squad["place"] else "", None),
-                                 (squad["total"], None if squad["place"] else GREY)]))
+        gap = "&nbsp;&nbsp;&nbsp;" if squad["place"] else ""
+        self.value.setText(rich([(squad["place"], squad["colour"])]) + gap + rich([(squad["total"], None if squad["place"] else GREY)]))
         self.value.setToolTip(tr(squad["tip"]))
-        self.money.setText(f"<b>{rich([(club['money'], None)])}</b>")
-        self.sales.setVisible(bool(club["sales"]))
-        self.sales.setText("<br>".join(rich([("✓ ", GREEN), (sale.removeprefix("✓ "), None)]).replace(" M<", "&nbsp;M<") for sale in club["sales"]))
+        self.money.setText(rich([(club["money"], None)]))
+        self.sale.show_sales(club["sales"])
         sponsors = club["sponsors"]
         self.sponsors.setText(rich([(sponsors["text"], sponsors["colour"])]))
         self.sponsors.setToolTip(tr(sponsors["tip"]))
@@ -551,27 +811,29 @@ class ClubCard(QFrame):
         for index, cell in enumerate(self.stadium_cells):
             cell.setVisible(index < len(rings))
             if index < len(rings):
-                ring = rings[index]
-                arc, text = STADIUM_RING[ring["state"]]
-                cell.ring.show_ring(ring["level"], ring["done"], arc, text)  # names and states go through say()
+                ring = rings[index]  # only the name under it; on hover the middle says MAX or the time left
                 moving = ring["state"] == "moving"
-                cell.say((ring["name"], TEXT if moving else MUTED), (ring["left"], COLOURS[BLUE] if moving else MUTED))
-                cell.setToolTip(tr(f"Faltam {ring['left']}") if moving else "")
+                arc, text = (self.timer, TEXT) if moving else STADIUM_RING[ring["state"]]
+                cell.ring.show_ring(ring["level"], ring["done"], arc, text)
+                cell.ring.hover = ((ring["left"], TEXT) if moving else ("MAX", COLOURS[GREEN]) if ring["state"] == "top"
+                                   else None)
+                cell.say((ring["name"], TEXT if moving else MUTED))
         for cell, ring in zip(self.care_cells, club["care"]):
-            arc, text = CARE_RING[ring["state"]]
-            share = {"working": ring["done"], "ready": 1.0, "waiting": 1.0}.get(ring["state"], 0.0)
-            nobody = ring["state"] == "none"  # nobody: the emoji of each one instead of "—" (owner, 2026-10-09)
-            cell.ring.show_ring(CARE_EMOJI[ring["label"]] if nobody else tr(ring["centre"]), share, arc, text, emoji=nobody)
-            cell.say((ring["label"], TEXT), (ring["name"], MUTED if ring["state"] == "none" else text), (ring["sub"], MUTED))
+            cell.show_care(ring, self.timer)
         self.prep_title.setText(tr(club["prep_title"]))
-        self.prep.setText("<br>".join(rich([step]) for step in club["prep"]["steps"]) or rich([("—", GREY)]))
+        self._show_prep(club["prep"]["steps"])
         self._show_trainings(club["trainings"])
         self.tired.setVisible(bool(club["tired"]))
         self.tired.setText(tr(f"⚠ Cansados: {club['tired']}"))
 
+    def _show_prep(self, steps: list) -> None:
+        self.prep.show_steps([(kind, tr(name) + (f" {tr(extra)}" if extra else ""), StepIcon.COLOURS[kind])
+                              for kind, name, extra in steps])
+
     def _show_trainings(self, rows: list) -> None:
         while len(self.ring_cells) < len(rows):
             cell = QWidget()
+            cell.setFixedWidth(TRAINING_WIDTH)
             column = QVBoxLayout(cell)
             column.setContentsMargins(0, 0, 0, 0)
             column.setSpacing(2)
@@ -586,7 +848,9 @@ class ClubCard(QFrame):
             if index >= len(rows):
                 continue
             player, position, left, colour, done, skipped = rows[index]
-            ring.set(tr(left), colour, done, skipped)
+            ring.set(tr(left), colour, done, skipped, self.timer)  # the cone inside; the time on hover (owner, 2026-10-10)
+            ring.picture = picture("training")
+            ring.hover = (tr(left), COLOURS[GREEN] if colour == GREEN else TEXT)
             name.setText(player)
             pos.setText(tr(position))
 
@@ -649,13 +913,15 @@ class Timeline(QWidget):
                 break
             club = event.get("club")
             colour = self.colours[club] if club is not None and club < len(self.colours) else ACCENT
-            self._row(painter, y, tr(event["left"]), tr(event["title"]), tr(event["sub"]), colour, 1.0, ACCENT_LIGHT, filled=False)
+            self._row(painter, y, tr(event["left"]), tr(event["title"]), tr(event["sub"]), colour, 1.0, ACCENT_LIGHT,
+                      filled=False, icon=event.get("icon", ""), tint=club is not None)
         for index, entry in enumerate(self.past):
             y = centre + self.NOW / 2 + index * self.ROW
             if y + self.ROW > self.height():
                 break
             fade = max(0.18, 1 - 0.16 * (index + 1))
-            self._row(painter, y, entry["time"], tr(entry["title"]), tr(entry["sub"]), MUTED, fade, MUTED, filled=True)
+            self._row(painter, y, entry["time"], tr(entry["title"]), tr(entry["sub"]), MUTED, fade, MUTED, filled=True,
+                      icon=entry.get("icon", ""))
         pill = QRectF(4, top_of_now + 3, width - 8, self.NOW - 6)
         painter.setPen(Qt.NoPen)
         painter.setBrush(QColor(139, 140, 248, 60))
@@ -671,7 +937,7 @@ class Timeline(QWidget):
         painter.drawText(QRectF(line_x + 18, top_of_now, width - line_x - 24, self.NOW), Qt.AlignLeft | Qt.AlignVCenter, text)
 
     def _row(self, painter: QPainter, y: float, when: str, title: str, sub: str, colour: str, fade: float,
-             time_colour: str, filled: bool) -> None:
+             time_colour: str, filled: bool, icon: str = "", tint: bool = False) -> None:
         def tone(name: str) -> QColor:
             c = QColor(name)
             c.setAlphaF(fade)
@@ -683,9 +949,27 @@ class Timeline(QWidget):
         painter.setPen(tone(time_colour))
         painter.setFont(QFont(FONT, 10, QFont.Bold))
         painter.drawText(QRectF(0, y, self.TIME_WIDTH, self.ROW * 0.55), Qt.AlignRight | Qt.AlignVCenter, when)
-        painter.setPen(QPen(tone(colour), 2.5))
-        painter.setBrush(tone(colour) if filled else QColor(BACKGROUND))
-        painter.drawEllipse(QRectF(line_x - 5, y + self.ROW * 0.275 - 5, 10, 10))
+        middle = QPointF(line_x, y + self.ROW * 0.275)
+        if icon:  # the kind of event as a small picture (owner, 2026-10-10); a club's own a little tinted
+            painter.setPen(QPen(tone(colour), 1.5) if tint else Qt.NoPen)
+            halo = QColor(colour if tint else BACKGROUND)
+            halo.setAlphaF(0.35 * fade if tint else 1.0)
+            painter.setBrush(halo)
+            painter.drawEllipse(middle, 12, 12)
+            painter.setOpacity(fade)
+            if icon in ("cross", "card"):
+                painter.save()
+                painter.translate(middle.x() - 5.5, middle.y() - 6.5)
+                Mark.draw(painter, icon)
+                painter.restore()
+            else:
+                picture_ = picture(icon).scaled(17, 17, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+                painter.drawPixmap(int(middle.x() - picture_.width() / 2), int(middle.y() - picture_.height() / 2), picture_)
+            painter.setOpacity(1.0)
+        else:
+            painter.setPen(QPen(tone(colour), 2.5))
+            painter.setBrush(tone(colour) if filled else QColor(BACKGROUND))
+            painter.drawEllipse(QRectF(line_x - 5, y + self.ROW * 0.275 - 5, 10, 10))
         painter.setPen(tone(TEXT))
         painter.setFont(QFont(FONT, 10))
         painter.drawText(QRectF(text_x, y, room, self.ROW * 0.55), Qt.AlignLeft | Qt.AlignVCenter,
@@ -891,8 +1175,8 @@ class MainWindow(QMainWindow):
         bar.setContentsMargins(18, 9, 18, 9)
         bar.setSpacing(14)
         bar.addWidget(column_title("DIÁRIAS"))
-        self.daily = text_label(10)
-        bar.addWidget(self.daily)
+        self.daily = StepList(vertical=False, size=10, spacing=18)  # the same icons as the pre-match (owner, 2026-10-10)
+        bar.addWidget(self.daily, 1)
         bar.addStretch(1)
         self.state_dot = text_label(10)
         self.state_text = text_label(10)
@@ -922,20 +1206,24 @@ class MainWindow(QMainWindow):
         side.setSpacing(14)
         coins = QFrame()
         coins.setObjectName("coins")
-        box = QVBoxLayout(coins)
-        box.setContentsMargins(20, 14, 20, 14)
+        across = QHBoxLayout(coins)  # the numbers on the left, the boss coin big on the right (owner, 2026-10-10)
+        across.setContentsMargins(20, 14, 16, 14)
+        box = QVBoxLayout()
         box.setSpacing(0)
         box.addWidget(column_title("BOSS COINS"))
         line = QHBoxLayout()
+        line.setSpacing(8)
         self.coins = text_label(28, True, YELLOW)
         self.coins_jump = text_label(14, True, GREEN)
         line.addWidget(self.coins)
-        line.addWidget(self.coins_jump, 0, Qt.AlignBottom)
+        line.addWidget(self.coins_jump, 0, Qt.AlignVCenter)
         line.addStretch()
         box.addLayout(line)
         self.coins_since = text_label(9)
         self.coins_since.setStyleSheet(f"color:{MUTED};")
         box.addWidget(self.coins_since)
+        across.addLayout(box, 1)
+        across.addWidget(icon(COIN_FILE, 64), 0, Qt.AlignVCenter)
         side.addWidget(coins)
         timeline = QFrame()
         timeline.setObjectName("card")
@@ -1236,12 +1524,12 @@ class MainWindow(QMainWindow):
         self.coins.setText(account["coins"])
         self.coins_jump.setText(account["jump"])
         self.coins_since.setText(tr(account["since"]))
-        self.daily.setText("&nbsp;&nbsp;&nbsp;".join(rich([part]) for part in view["daily"]) or rich([("—", GREY)]))
+        self.daily.show_steps([(kind, tr(text), colour) for kind, text, colour in view["daily"]])
         if running:
             doing = view["timeline"]["now"] or "a trabalhar…"
         else:
             doing = "Parado · Bot → Iniciar para voltar a trabalhar"
-        colours = [(self._logo(club)[1] or ACCENT) for club in view["clubs"]]
+        colours = [soft(self._logo(club)[1] or ACCENT) for club in view["clubs"]]  # timers: half faded
         self.timeline.set(view["timeline"], colours, doing)
 
     def _show_clubs(self, clubs: list[dict]) -> None:
@@ -1252,8 +1540,8 @@ class MainWindow(QMainWindow):
             for index, panel in enumerate(self.panels):
                 self.clubs_column.insertWidget(index, panel)  # one per row (D-030); the stretch stays last
         for panel, club in zip(self.panels, clubs):
+            panel.set_logo(*self._logo(club))  # first: the timers take the club's colour
             panel.show_club(club)
-            panel.set_logo(*self._logo(club))
 
     def _logo(self, club: dict) -> tuple[QPixmap | None, str | None]:
         """The club's logo and colour (match stripe, timeline dot); fetched in the background the first time (then kept on disk)."""
@@ -1344,7 +1632,7 @@ def run_gui() -> None:
     app = QApplication.instance() or QApplication(sys.argv[:1])
     app.setApplicationName("OSMbot")
     app.setQuitOnLastWindowClosed(False)  # the X hides the window while the bot works; the tray keeps it alive
-    app.setStyle("Fusion")
+    app.setStyle(QuickTips("Fusion"))
     app.setPalette(dark_palette())
     load_font()
     app.setFont(QFont(FONT, 9))

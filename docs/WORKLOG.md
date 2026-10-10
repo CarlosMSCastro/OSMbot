@@ -15,6 +15,29 @@ Entradas mais recentes primeiro. Cada sessão: o que se fez · o que ficou por f
   - estádio: o círculo não enchia porque a duração ficava "desconhecida" quando a obra era vista pela 1.ª vez com menos de 4 h (janela aberta a meio, vídeo −2h). O temporizador do jogo não tem início (`probe` a `timers`: só `currentTimestamp`/`finishedTimestamp`). Agora: 3h45–4h = evento (4 h), resto até 18 h = normal (18 h). Dica "Faltam X".
   - 289 testes; captura da janela real conferida.
 - **Versão 0.10.0** (pedido do dono): `pyproject`, `__init__`, `CHANGELOG`; `dist` reconstruído; notas em `dist/release-notes-v0.10.0.md`.
+- **3.ª ronda de correções (dono), por lançar (sem versão nem commit, pedido do dono):**
+  - mensagens de hover no estilo da janela (`QToolTip` em `STYLE`) e quase instantâneas (`QuickTips`: 60 ms);
+  - valor do plantel e patrocinadores a negrito; mais espaço entre "1.º" e o total; patrocinadores completos a branco (já não a verde);
+  - dinheiro sai das linhas e vai para a linha do nome, encostado à direita, com o ícone `clubfunds.png`; sem "Dinheiro";
+  - venda: seta verde animada (`SaleArrow`) ao lado do dinheiro enquanto a venda está no cartão; quem e quanto no hover (resposta do dono: "Só a seta, texto no hover");
+  - vaga livre na lista de transferências: por baixo dos patrocinadores, a amarelo, com ⚠;
+  - boss coins: +X centrado na altura do número; `bosscoin.png` grande à direita (D-033);
+  - todos os temporizadores (anéis de treinos, médico/advogado, estádio a subir, bolinhas do futuro na linha do tempo) na cor do clube meio apagada (`soft`: média com o cinzento `MUTED`); verde só quando acaba (resposta do dono: "Anéis e linha do tempo");
+  - estádio: só o nome por baixo; ao meio o nível; no hover "MAX" a verde (cheio) ou o tempo que falta (a subir); parado cinzento, sem hover; células de largura fixa (espaçamento igual);
+  - faixa do jogo: "em 18h11" na mesma linha que "vs Clube";
+  - 289 testes; captura da janela real conferida (o hover não aparece nas capturas).
+- **4.ª ronda (dono), também por lançar:**
+  - dinheiro maior (15 pt) e ícone maior (28 px);
+  - treinos: o cone (`training.png`) dentro do anel; o tempo só no hover (ou "pronto"); colunas de largura fixa (`TRAINING_WIDTH`) e alinhadas à esquerda, com médico e advogado por baixo nas mesmas colunas;
+  - médico e advogado (`CareCell`): a figura recortada em círculo (o maior possível, resposta do dono) dentro do anel; desbotada sem ninguém ou com suspensão de 1 jogo; por baixo o jogador + cruz vermelha / cartão vermelho (`Mark`) + só o número de jogos (resposta do dono); sem "Médico"/"Advogado" por baixo (vai no hover, com o resto); no hover do anel, o tempo que falta / "pronto" / "à espera" / "não dá". Saem os emojis 🩺 e ⚖️;
+  - pré-jogo: uma linha por passo com ícone desenhado do mesmo tamanho (`StepIcon`: verde com visto, azul com relógio, amarelo com "!", anel cinzento) e mais espaço entre linhas; a vista passa a dar `(tipo, nome, extra)`;
+  - 289 testes; capturas conferidas.
+- **5.ª ronda (dono), por lançar:**
+  - pré-jogo em letra 10 (com 8 passos, "Análise por levantar" ficava cortado); `StepList` serve o pré-jogo e as diárias;
+  - diárias com os mesmos ícones (anel amarelo = missões a meio) e maiúscula inicial ("Início de sessão (dia 12)", "Missões 2/3", "Prémio do dia"); sem "✓" no texto;
+  - linha do tempo com ícones no lugar das bolinhas (`icon_of`, `PAST_ICONS`): moedas (vídeos da loja), cone (treinos e vídeo de treino), dinheiro (vídeos de dinheiro, patrocinador), missões (diárias, reward cumulativo, novo dia), estádio, cruz (médico), cartão (advogado); amigável/análise/jogo mantêm a bolinha; eventos de um clube com um aro leve na cor dele;
+  - 290 testes; captura conferida.
+- **Versão 0.10.1** (pedido do dono: commit e release): rondas 3–5 juntas; `pyproject`, `__init__`, `CHANGELOG`; notas em `dist/release-notes-v0.10.1.md`.
 
 ## 2026-10-09 (cont. 3) — Casa: médico corrigido, transferências guardadas, janela nova
 

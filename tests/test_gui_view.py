@@ -58,7 +58,7 @@ def test_squad_value_place_is_green_at_the_top_red_at_the_bottom_yellow_between(
 
 
 def test_sponsors_say_only_the_money_and_warn_of_an_empty_slot_on_hover():
-    assert sponsor_view({"slots": 4, "revenue": 1_120_000}) == {"text": "1,12 M/ronda", "colour": GREEN, "tip": ""}
+    assert sponsor_view({"slots": 4, "revenue": 1_120_000}) == {"text": "1,12 M/ronda", "colour": None, "tip": ""}
     assert sponsor_view({"slots": 3, "revenue": 900_000}) == {"text": "⚠ 900 k/ronda", "colour": YELLOW,
                                                               "tip": "1 vaga vazia nos patrocinadores"}
 
@@ -78,9 +78,9 @@ def test_the_part_going_up_has_a_bar_when_its_length_is_known():
 def test_pre_match_checklist_shows_done_waiting_and_open_points():
     prep = club_view(club(), NOW)["prep"]
     assert set(prep) == {"steps"}  # no percentage, only the marks (owner, 2026-10-09)
-    assert prep["steps"] == [("✓ Amigável", GREEN), ("⏳ Análise 0h10", BLUE), ("○ Onze", GREY)]
+    assert prep["steps"] == [("done", "Amigável", ""), ("waiting", "Análise", "0h10"), ("open", "Onze", "")]
     later = club_view(club(), NOW + 700)["prep"]
-    assert later["steps"][1] == ("◉ Análise por levantar", YELLOW)
+    assert later["steps"][1] == ("collect", "Análise", "por levantar")
 
 
 def test_injured_and_suspended_players_with_the_doctor_timer():
@@ -97,8 +97,8 @@ def test_daily_rewards_and_the_accumulated_videos():
              "missions": {"total": 3, "claimed": 2, "day_pending": False},
              "videos": {"count": 3, "threshold": 10, "claimable": False, "reopen": None}}
     parts, videos = daily_view(daily, NOW)
-    assert parts == [("início de sessão ✓ (dia 5)", GREEN), ("missões 2/3", YELLOW), ("prémio do dia —", GREY),
-                     ("novo dia em 1h00", BLUE)]
+    assert parts == [("done", "Início de sessão (dia 5)", GREEN), ("progress", "Missões 2/3", YELLOW),
+                     ("open", "Prémio do dia", GREY), ("waiting", "Novo dia em 1h00", BLUE)]
     assert videos == {"text": "3/10", "colour": None, "done": 0.3}
     assert daily_view(None, NOW) == ([], None)
 

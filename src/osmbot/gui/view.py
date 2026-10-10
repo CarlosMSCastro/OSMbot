@@ -65,15 +65,18 @@ def care_ring(label: str, people: list[dict], now: float, lawyer: bool = False) 
     first = next((p for p in people if p.get("until") or p.get("ready")), people[0])
     name = first["name"] + (f" +{len(people) - 1}" if len(people) > 1 else "")
     games = f"{first['games']} jogo{'s' if first['games'] != 1 else ''}"
+    count = first["games"]  # games out: shown as the number by the cross / the red card (owner, 2026-10-10)
     if first.get("ready"):
-        return {"label": label, "state": "ready", "centre": "pronto", "name": name, "sub": "a levantar", "done": 1.0}
+        return {"label": label, "state": "ready", "centre": "pronto", "name": name, "sub": "a levantar", "done": 1.0,
+                "games": count}
     if first.get("until") and first["until"] > now:
         return {"label": label, "state": "working", "centre": span(first["until"] - now), "name": name, "sub": games,
-                "done": _done(first["until"] - now, CASE_SECONDS)}
-    if lawyer and first["games"] < 2:
-        return {"label": label, "state": "blocked", "centre": "1 j", "name": name, "sub": "1 jogo · não dá", "done": 0.0}
-    return {"label": label, "state": "waiting", "centre": f"{first['games']} j", "name": name, "sub": f"{games} · à espera",
-            "done": 0.0}
+                "done": _done(first["until"] - now, CASE_SECONDS), "games": count}
+    if lawyer and count < 2:
+        return {"label": label, "state": "blocked", "centre": "não dá", "name": name, "sub": "1 jogo · não dá", "done": 0.0,
+                "games": count}
+    return {"label": label, "state": "waiting", "centre": "à espera", "name": name, "sub": f"{games} · à espera",
+            "done": 0.0, "games": count}
 
 
 TOP_PLACES, BOTTOM_PLACES = 2, 3  # squad value: 1st-2nd green, the last 3 red, yellow in between (owner, 2026-10-10)
@@ -97,7 +100,7 @@ def sponsor_view(sponsors: dict | None) -> dict:
     empty = SPONSOR_SLOTS - sponsors["slots"]
     text = f"{money(sponsors['revenue'])}/ronda"
     if empty <= 0:
-        return {"text": text, "colour": GREEN, "tip": ""}
+        return {"text": text, "colour": None, "tip": ""}  # white, not green (owner, 2026-10-10)
     plural = "s" if empty > 1 else ""
     return {"text": f"⚠ {text}", "colour": YELLOW, "tip": f"{empty} vaga{plural} vazia{plural} nos patrocinadores"}
 
@@ -142,16 +145,16 @@ def club_view(club: dict, now: float, shortened: dict | None = None) -> dict:
             still.append((f"{name} {level}/{top}", GREEN if level >= top else None))
 
     prep = club.get("prep") or {}
-    steps = []
+    steps = []  # (kind, name, extra): the window draws one icon per kind, all the same size (owner, 2026-10-10)
     for name, done, analyst in prep.get("steps") or []:
         if done:
-            steps.append((f"✓ {name}", GREEN))
+            steps.append(("done", name, ""))
         elif analyst and analyst > now:
-            steps.append((f"⏳ {name} {span(analyst - now)}", BLUE))
+            steps.append(("waiting", name, span(analyst - now)))
         elif analyst:
-            steps.append((f"◉ {name} por levantar", YELLOW))
+            steps.append(("collect", name, "por levantar"))
         else:
-            steps.append((f"○ {name}", GREY))
+            steps.append(("open", name, ""))
 
     trainings = []
     for t in club.get("trainings", []):
@@ -184,25 +187,27 @@ def club_view(club: dict, now: float, shortened: dict | None = None) -> dict:
                      care_ring("Advogado", club.get("suspended") or [], now, lawyer=True)]}
 
 
-def daily_view(daily: dict | None, now: float) -> tuple[list[tuple[str, str]], dict | None]:
-    """The daily rewards as (text, colour) pieces, and the accumulated-videos row (or None)."""
+def daily_view(daily: dict | None, now: float) -> tuple[list[tuple[str, str, str]], dict | None]:
+    """The daily rewards as (kind, text, colour) pieces, and the accumulated-videos row (or None). The kind is the
+    icon the window draws, as in the pre-match list (owner, 2026-10-10)."""
     daily = daily or {}
-    parts: list[tuple[str, str]] = []
+    parts: list[tuple[str, str, str]] = []
     login = daily.get("login")
     if login:
-        parts.append(("início de sessão por reclamar", YELLOW) if login["claimable"]
-                     else (f"início de sessão ✓ (dia {login['day']})", GREEN))
+        parts.append(("collect", "Início de sessão por reclamar", YELLOW) if login["claimable"]
+                     else ("done", f"Início de sessão (dia {login['day']})", GREEN))
     missions = daily.get("missions")
     if missions and missions["total"]:
         finished = missions["claimed"] >= missions["total"]
-        parts.append((f"missões {missions['claimed']}/{missions['total']}" + (" ✓" if finished else ""), GREEN if finished else YELLOW))
+        parts.append(("done", f"Missões {missions['claimed']}/{missions['total']}", GREEN) if finished
+                     else ("progress", f"Missões {missions['claimed']}/{missions['total']}", YELLOW))
         if missions["day_pending"]:
-            parts.append(("prémio do dia por reclamar", YELLOW))
+            parts.append(("collect", "Prémio do dia por reclamar", YELLOW))
         else:
-            parts.append(("prémio do dia ✓", GREEN) if finished else ("prémio do dia —", GREY))
+            parts.append(("done", "Prémio do dia", GREEN) if finished else ("open", "Prémio do dia", GREY))
     renews = (login or {}).get("renews")
     if renews and renews > now:
-        parts.append((f"novo dia em {span(renews - now)}", BLUE))
+        parts.append(("waiting", f"Novo dia em {span(renews - now)}", BLUE))
     videos = daily.get("videos")
     row = None
     if videos:
@@ -320,6 +325,6 @@ def board_view(snapshot: dict | None, stats: dict | None, now: float, doing: dic
     return {"clubs": [club_view(c, now, shortened) for c in snapshot["clubs"]],
             "account": account_view(snapshot, stats, now), "next": next_check(snapshot, now),
             "doing": doing_view(snapshot, doing, now),
-            "daily": [piece for piece in daily if not piece[0].startswith("novo dia")],  # the new day is on the timeline
+            "daily": [piece for piece in daily if piece[0] != "waiting"],  # the new day is on the timeline
             "timeline": {"future": future_view(snapshot, now), "past": past_view(history or []),
                          "now": (doing or {}).get("text") or ""}}

@@ -143,7 +143,7 @@ def test_the_stadium_rings_the_doctor_and_the_top_says_only_since_when_the_bot_w
     from osmbot.gui.window import ACCENT, BOARD
 
     now = time.time()
-    club = {**NOW_SNAPSHOT["clubs"][0], "stadium": {"parts": [("Treinos", 3, 3, None), ("Campo", 1, 3, now + 9 * 3600)],
+    club = {**NOW_SNAPSHOT["clubs"][0], "sales": [{"name": "Jogador 7", "price": 2_000_000}], "stadium": {"parts": [("Treinos", 3, 3, None), ("Campo", 1, 3, now + 9 * 3600)],
                                                     "until": now + 9 * 3600, "lengths": {"Campo": 18 * 3600}}}
     snapshot = {**NOW_SNAPSHOT, "clubs": [club], "ads": {"shop": {"open": True}}}
     hold = threading.Event()
@@ -154,11 +154,14 @@ def test_the_stadium_rings_the_doctor_and_the_top_says_only_since_when_the_bot_w
         window.on_board({"snapshot": snapshot, "status": "A TRABALHAR", "notices": [],
                          "doing": {"text": "vídeo da loja 8/9", "kind": "shop", "count": 8}, "stats": {"start": now}})
         still, going = window.panels[0].stadium_cells[:2]
-        assert going.ring.text == "1/3" and going.lines[0].text() == "Campo" and going.lines[1].text() in ("9h00", "8h59")
-        assert abs(going.ring.done - 0.5) < 0.01 and going.ring.arc == ACCENT
-        assert still.ring.text == "3/3" and still.lines[1].text() == "no máximo"
+        assert going.ring.text == "1/3" and going.lines[0].text() == "Campo" and len(going.lines) == 1  # only the name
+        assert going.ring.hover[0] in ("9h00", "8h59")  # the time left in the middle on hover (owner, 2026-10-10)
+        assert abs(going.ring.done - 0.5) < 0.01 and going.ring.arc == ACCENT  # the club's colour once its logo is in
+        assert still.ring.text == "3/3" and still.ring.hover[0] == "MAX"
+        assert not window.panels[0].sale.isHidden() and "Jogador 7" in window.panels[0].sale.toolTip()  # the sale arrow
         doctor, lawyer = window.panels[0].care_cells
-        assert doctor.ring.text == "🩺" and doctor.ring.emoji and doctor.lines[1].text() == "ninguém"
+        assert doctor.ring.picture is not None and doctor.ring.hover is None and doctor.under.isHidden()  # nobody: washed out
+        assert doctor.toolTip() == "Médico"
         assert window.timeline.now_text == "vídeo da loja 8/9"
         assert window.state_text.text().startswith("A trabalhar desde")
     finally:

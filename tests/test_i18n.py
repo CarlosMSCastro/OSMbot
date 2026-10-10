@@ -23,7 +23,7 @@ def test_whole_texts_and_texts_with_names_and_numbers(english):
     assert tr("2.º Campeonato") == "2nd in the league" and tr("11.º Campeonato") == "11th in the league"
     assert tr("🏆 Quartos-de-final") == "🏆 Quarter-finals"
     assert tr("vs Clube B (14.º)") == "vs Clube B (14th)"
-    assert tr("✓ Amigável") == "✓ Friendly" and tr("◉ Análise por levantar") == "◉ Analysis to collect"
+    assert tr("Amigável") == "Friendly" and tr("por levantar") == "to collect"
     assert tr("Real Betis pôs Rice no médico (8 h)") == "Real Betis sent Rice to the doctor (8 h)"
     assert tr("Médico (levantar): o jogo não aceitou o pedido (404); fica por fazer à mão até se ver o pedido certo") \
         == "Doctor (collect): the game refused the request (404); left to do by hand until the right request is seen"

@@ -6,6 +6,25 @@ Este ficheiro é o **histórico de versões, para quem lê o repo**. O diário i
 
 ## [Por lançar]
 
+## [0.10.1] — 2026-10-10
+
+Janela com imagens e ícones do jogo: treinos, médico, advogado, linha do tempo e diárias.
+
+### Alterado
+- **Treinos, médico e advogado com imagens:** o cone dentro de cada treino e as figuras do médico e do árbitro dentro dos círculos; o tempo que falta aparece ao passar o rato. Por baixo do médico e do advogado, o jogador com a cruz vermelha ou o cartão vermelho e os jogos de fora; sem ninguém, a figura fica desbotada. Médico e advogado ficam alinhados com os treinos.
+- **Linha do tempo com ícones** em vez das bolinhas (boss coin, treino, dinheiro, missões, estádio, cruz do médico, cartão do advogado), com um toque da cor do clube.
+- **Temporizadores na cor do clube**, meio apagada; o verde fica só para o que acabou.
+- **Cartão do clube:**
+  - o dinheiro passa para a linha do nome, à direita, maior e com ícone;
+  - uma seta verde a subir quando um jogador é vendido (quem e por quanto ao passar o rato);
+  - a vaga livre na lista de transferências aparece por baixo dos patrocinadores;
+  - valor do plantel e patrocinadores a negrito (patrocinadores a branco);
+  - "em 3h33" na mesma linha que o adversário.
+- **Estádio:** só o nome por baixo de cada círculo; ao passar o rato, "MAX" ou o tempo que falta; espaçamento igual.
+- **Pré-jogo e diárias** com ícones novos, todos do mesmo tamanho; diárias com maiúscula inicial.
+- **Boss coins** com o ícone grande à direita e o "+X" centrado.
+- **Mensagens ao passar o rato** no estilo da janela e quase instantâneas.
+
 ## [0.10.0] — 2026-10-10
 
 Cartão do clube mais limpo: valor do plantel e patrocinadores com aviso, estádio que enche com o tempo, barra de cima a toda a largura.
