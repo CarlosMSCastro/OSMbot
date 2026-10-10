@@ -139,9 +139,9 @@ def club_view(club: dict, now: float, shortened: dict | None = None) -> dict:
         skipped = min(done, max(shortened.get(t.get("id"), 0), 0) / BAR_SECONDS)
         trainings.append((t["name"], t["pos"], "pronto" if ready else span(left), GREEN if ready else BLUE, done, skipped))
 
-    match = None  # the stripe of the next match (D-030): green at home, red away
+    match = None  # the stripe of the next match (D-030), in the club's colour
     if nxt:
-        match = {"text": f"vs {nxt['opponent']}{rank}", "home": nxt["side"] == "H",
+        match = {"text": f"vs {nxt['opponent']}{rank}",
                  "tag": ("CASA" if nxt["side"] == "H" else "FORA") + (" · TAÇA" if nxt["cup"] else ""), "danger": nxt["danger"], "left": span(club["match"] - now) if club.get("match") else ""}
     header = f"{club.get('ranking') or '?'}.º Campeonato"  # and the cup on a line of its own (owner, 2026-10-09)
     cup_line = cup[:1].upper() + cup[1:]

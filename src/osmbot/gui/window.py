@@ -18,7 +18,7 @@ from datetime import datetime
 from pathlib import Path
 
 from PySide6.QtCore import QLockFile, QObject, QRectF, QSize, Qt, QTimer, Signal
-from PySide6.QtGui import QAction, QColor, QFont, QIcon, QImage, QPainter, QPalette, QPen, QPixmap
+from PySide6.QtGui import QAction, QColor, QFont, QFontDatabase, QIcon, QImage, QPainter, QPalette, QPen, QPixmap
 from PySide6.QtWidgets import (QAbstractItemView, QApplication, QFrame, QGridLayout, QGroupBox, QHBoxLayout, QLabel,
                                QMainWindow, QMenu, QMessageBox, QPushButton, QScrollArea, QStackedWidget, QStyle,
                                QSystemTrayIcon, QTableWidget, QTableWidgetItem, QVBoxLayout, QWidget)
@@ -31,6 +31,8 @@ COLOURS = {GREEN: "#5cd17a", BLUE: "#7cc4ff", YELLOW: "#f5c542", GREY: "#8f95b8"
 BACKGROUND, CARD, LINE = "#0b0f2a", "rgba(16, 20, 50, 232)", "#2d3366"  # night-stadium blues (D-030)
 TEXT, MUTED, ACCENT, ACCENT_LIGHT, RING_TRACK = "#eef0ff", "#8f95b8", "#8b8cf8", "#b9baff", "#2a2f5a"
 BACKGROUND_FILE = Path(__file__).resolve().parent / "assets" / "fundo.jpg"  # the board's background picture (D-030)
+FONT_FILE = Path(__file__).resolve().parent / "assets" / "Sora.ttf"  # the window's typeface (owner, 2026-10-10; OFL)
+FONT = "Segoe UI"  # until Sora is loaded (load_font)
 LOGOS = Path.home() / ".osmbot" / "logos"
 TRAY_DOT = {True: "#9be22d", False: "#9a9a9a"}  # lime with a white ring: readable on the green logo at 16 px
 ROW_HEIGHT, HEADER_HEIGHT = 22, 24
@@ -58,6 +60,14 @@ def logo_path() -> Path:
     if here.exists():
         return here
     return Path(__file__).resolve().parents[3] / "tools" / "assets" / "osmbot.ico"
+
+
+def load_font() -> None:
+    """Sora for the whole window, shipped with the bot; Segoe UI stays if the file cannot be loaded."""
+    global FONT
+    families = QFontDatabase.applicationFontFamilies(QFontDatabase.addApplicationFont(str(FONT_FILE)))
+    if families:
+        FONT = families[0]
 
 
 def dark_palette() -> QPalette:
@@ -196,7 +206,7 @@ def rich(pieces: list[tuple[str, str | None]]) -> str:
 def text_label(size: int = 9, bold: bool = False, colour: str | None = None) -> QLabel:
     label = QLabel()
     label.setTextFormat(Qt.RichText)
-    font = QFont("Segoe UI", size)
+    font = QFont(FONT, size)
     font.setBold(bold)
     label.setFont(font)
     paint(label, colour, bold)
@@ -204,13 +214,15 @@ def text_label(size: int = 9, bold: bool = False, colour: str | None = None) -> 
 
 
 def logo_colour(image: QImage) -> str:
-    """The logo's main colour (for the stripe on top of the card): the most common strong colour, ignoring
-    transparent, white, black and grey pixels."""
+    """The logo's main colour (card, match stripe, timeline dot): the most common strong colour inside the shield,
+    ignoring transparent, white, black and grey pixels. Only the middle is read: every OSM logo has the same gold
+    frame, which would otherwise win."""
     from collections import Counter
 
     counts: Counter = Counter()
-    for y in range(0, image.height(), 2):
-        for x in range(0, image.width(), 2):
+    width, height = image.width(), image.height()
+    for y in range(int(height * 0.25), int(height * 0.8), 2):
+        for x in range(int(width * 0.25), int(width * 0.75), 2):
             c = image.pixelColor(x, y)
             if c.alpha() < 200 or c.saturation() < 70 or c.value() < 50:
                 continue
@@ -277,7 +289,7 @@ class Ring(QWidget):
             painter.setPen(QPen(QColor(COLOURS[BLUE]), self.pen, Qt.SolidLine, Qt.RoundCap))
             painter.drawArc(box, start - int(own * 360 * 16), -int(self.skipped * 360 * 16))
         painter.setPen(QColor(self.text_colour))
-        painter.setFont(QFont("Segoe UI Emoji", self.font_size + 7) if self.emoji else QFont("Segoe UI", self.font_size, QFont.Bold))
+        painter.setFont(QFont("Segoe UI Emoji", self.font_size + 7) if self.emoji else QFont(FONT, self.font_size, QFont.Bold))
         painter.drawText(self.rect(), Qt.AlignCenter, self.text)
 
 
@@ -326,7 +338,7 @@ class ElidedLabel(QLabel):
 
 class MatchStripe(QFrame):
     """The next match (D-030): a small "CASA"/"FORA" tag in the corner, "vs Clube (8.º)" on one line and "em 3h33";
-    green at home, red away; ⚠ for a direct rival (owner, 2026-10-09)."""
+    painted in the club's colour (from its logo), the same home or away (owner, 2026-10-10); ⚠ for a direct rival."""
 
     def __init__(self):
         super().__init__()
@@ -336,20 +348,32 @@ class MatchStripe(QFrame):
         texts.setSpacing(0)
         self.tag = text_label(7, True)
         self.text = ElidedLabel()
-        self.text.setFont(QFont("Segoe UI", 10))
+        self.text.setFont(QFont(FONT, 10))
         texts.addWidget(self.tag)
         texts.addWidget(self.text)
         self.left = text_label(10)
         row.addLayout(texts, 1)
         row.addWidget(self.left, 0, Qt.AlignVCenter)
+        self.colour = ""
+        self.set_colour(None)
+
+    def set_colour(self, colour: str | None) -> None:
+        """The club's colour, darkened enough for white text on top (the accent until the logo is in)."""
+        c = QColor(colour or ACCENT)
+        hue, sat, val, _ = c.getHsv()
+        start = QColor.fromHsv(hue, sat, min(val, 150))
+        name = start.name()
+        if name == self.colour:
+            return
+        self.colour = name
+        end = f"rgba({start.red()},{start.green()},{start.blue()},40)"
+        self.setStyleSheet(f"MatchStripe {{ border-radius: 8px; background: qlineargradient(x1:0, y1:0, x2:1, y2:0, "
+                           f"stop:0 {name}, stop:1 {end}); }} QLabel {{ background: transparent; color: #f2f2f7; }}")
 
     def show_match(self, match: dict | None) -> None:
         self.setVisible(bool(match))
         if not match:
             return
-        start, end = ("#1f7a4a", "rgba(31,122,74,40)") if match["home"] else ("#8a2236", "rgba(138,34,54,40)")
-        self.setStyleSheet(f"MatchStripe {{ border-radius: 8px; background: qlineargradient(x1:0, y1:0, x2:1, y2:0, "
-                           f"stop:0 {start}, stop:1 {end}); }} QLabel {{ background: transparent; color: #f2f2f7; }}")
         self.tag.setText(tr(match["tag"]))
         self.tag.setStyleSheet("color: rgba(255,255,255,170); letter-spacing: 1px;")
         self.text.setText(("⚠ " if match["danger"] else "") + tr(match["text"]))
@@ -379,6 +403,7 @@ class ClubCard(QFrame):
     def __init__(self):
         super().__init__()
         self.setObjectName("card")
+        self.colour = ""
         row = QHBoxLayout(self)
         row.setContentsMargins(0, 0, 0, 0)
         row.setSpacing(0)
@@ -417,7 +442,7 @@ class ClubCard(QFrame):
         club.addLayout(self.facts)
         self.value = self._row(0, "Valor plantel")
         self.money = self._row(1, "Dinheiro")
-        self.sales = text_label(9)
+        self.sales = text_label(8)  # a smaller line under the money, so the sale fits on one line with Sora
         self.sales.setWordWrap(True)
         self.facts.addWidget(self.sales, 2, 1, 1, 3)
         self.sponsors = self._row(3, "Patrocinadores")
@@ -487,9 +512,23 @@ class ClubCard(QFrame):
         self.facts.addWidget(value, index, 1, 1, 3)
         return value
 
-    def set_logo(self, pixmap: QPixmap | None, _colour: str | None = None) -> None:
+    def set_logo(self, pixmap: QPixmap | None, colour: str | None = None) -> None:
+        self.match.set_colour(colour)
+        self.set_colour(colour)
         if pixmap is not None and not pixmap.isNull():
             self.logo.setPixmap(pixmap.scaled(48, 48, Qt.KeepAspectRatio, Qt.SmoothTransformation))
+
+    def set_colour(self, colour: str | None) -> None:
+        """The club's colour, kept discreet (owner, 2026-10-10, option C): a thin line on top, a soft glow under it
+        and the border; the plain card until the logo is in."""
+        if not colour or colour == self.colour:
+            return
+        self.colour = colour
+        c = QColor(colour)
+        glow, border = (f"rgba({c.red()},{c.green()},{c.blue()},{alpha})" for alpha in (70, 90))
+        self.setStyleSheet(f"QFrame#card {{ background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 {glow}, "
+                           f"stop:0.25 {CARD}, stop:1 {CARD}); border: 1px solid {border}; "
+                           f"border-top: 3px solid {colour}; border-radius: 14px; }}")
 
     def show_club(self, club: dict) -> None:
         self.name.setText(club["name"])
@@ -502,7 +541,7 @@ class ClubCard(QFrame):
         self.value.setText(rich([(value, colour)]))
         self.money.setText(f"<b>{rich([(club['money'], None)])}</b>")
         self.sales.setVisible(bool(club["sales"]))
-        self.sales.setText("<br>".join(rich([("✓ ", GREEN), (sale.removeprefix("✓ "), None)]) for sale in club["sales"]))
+        self.sales.setText("<br>".join(rich([("✓ ", GREEN), (sale.removeprefix("✓ "), None)]).replace(" M<", "&nbsp;M<") for sale in club["sales"]))
         self.sponsors.setText(rich([club["sponsors"]]))
         rings = club["stadium_rings"]
         for index, cell in enumerate(self.stadium_cells):
@@ -619,10 +658,10 @@ class Timeline(QWidget):
         painter.setBrush(QColor(ACCENT))
         painter.drawEllipse(QRectF(line_x - 7, centre - 7, 14, 14))
         painter.setPen(QColor(ACCENT_LIGHT))
-        painter.setFont(QFont("Segoe UI", 8, QFont.Bold))
+        painter.setFont(QFont(FONT, 8, QFont.Bold))
         painter.drawText(QRectF(4, top_of_now, self.TIME_WIDTH, self.NOW), Qt.AlignRight | Qt.AlignVCenter, tr("AGORA"))
         painter.setPen(QColor(TEXT))
-        painter.setFont(QFont("Segoe UI", 10, QFont.Bold))
+        painter.setFont(QFont(FONT, 10, QFont.Bold))
         text = painter.fontMetrics().elidedText(tr(self.now_text), Qt.ElideRight, int(width - line_x - 30))
         painter.drawText(QRectF(line_x + 18, top_of_now, width - line_x - 24, self.NOW), Qt.AlignLeft | Qt.AlignVCenter, text)
 
@@ -637,18 +676,18 @@ class Timeline(QWidget):
         text_x = line_x + 18
         room = int(self.width() - text_x - 6)
         painter.setPen(tone(time_colour))
-        painter.setFont(QFont("Segoe UI", 10, QFont.Bold))
+        painter.setFont(QFont(FONT, 10, QFont.Bold))
         painter.drawText(QRectF(0, y, self.TIME_WIDTH, self.ROW * 0.55), Qt.AlignRight | Qt.AlignVCenter, when)
         painter.setPen(QPen(tone(colour), 2.5))
         painter.setBrush(tone(colour) if filled else QColor(BACKGROUND))
         painter.drawEllipse(QRectF(line_x - 5, y + self.ROW * 0.275 - 5, 10, 10))
         painter.setPen(tone(TEXT))
-        painter.setFont(QFont("Segoe UI", 10))
+        painter.setFont(QFont(FONT, 10))
         painter.drawText(QRectF(text_x, y, room, self.ROW * 0.55), Qt.AlignLeft | Qt.AlignVCenter,
                          painter.fontMetrics().elidedText(title, Qt.ElideRight, room))
         if sub:
             painter.setPen(tone(MUTED))
-            painter.setFont(QFont("Segoe UI", 8))
+            painter.setFont(QFont(FONT, 8))
             painter.drawText(QRectF(text_x, y + self.ROW * 0.5, room, self.ROW * 0.4), Qt.AlignLeft | Qt.AlignVCenter,
                              painter.fontMetrics().elidedText(sub, Qt.ElideRight, room))
 
@@ -788,7 +827,7 @@ class MainWindow(QMainWindow):
         right = QVBoxLayout()
         right.setSpacing(6)
         title = QLabel("OSMbot")
-        title.setFont(QFont("Segoe UI", 16, QFont.Bold))
+        title.setFont(QFont(FONT, 16, QFont.Bold))
         right.addWidget(title)
         right.addWidget(coloured(f"Versão {__version__}", GREY))
         text = QLabel(tr("Trabalha por ti no Online Soccer Manager: treinos, vídeos, estádio, patrocinadores, amigável e "
@@ -1208,7 +1247,7 @@ class MainWindow(QMainWindow):
             panel.set_logo(*self._logo(club))
 
     def _logo(self, club: dict) -> tuple[QPixmap | None, str | None]:
-        """The club's logo and stripe colour; fetched in the background the first time (then kept on disk)."""
+        """The club's logo and colour (match stripe, timeline dot); fetched in the background the first time (then kept on disk)."""
         key, url = club["logo_key"], club.get("logo")
         if key in self.logos:
             return self.logos[key] or (None, None)
@@ -1298,7 +1337,8 @@ def run_gui() -> None:
     app.setQuitOnLastWindowClosed(False)  # the X hides the window while the bot works; the tray keeps it alive
     app.setStyle("Fusion")
     app.setPalette(dark_palette())
-    app.setFont(QFont("Segoe UI", 9))
+    load_font()
+    app.setFont(QFont(FONT, 9))
     app.setStyleSheet(STYLE)
     (Path.home() / ".osmbot").mkdir(parents=True, exist_ok=True)
     load_language()

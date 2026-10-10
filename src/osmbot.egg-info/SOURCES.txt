@@ -2,6 +2,7 @@ README.md
 pyproject.toml
 src/osmbot/__init__.py
 src/osmbot/cli.py
+src/osmbot/i18n.py
 src/osmbot/logs.py
 src/osmbot/menu.py
 src/osmbot/models.py
@@ -13,6 +14,7 @@ src/osmbot.egg-info/requires.txt
 src/osmbot.egg-info/top_level.txt
 src/osmbot/board/__init__.py
 src/osmbot/board/info.py
+src/osmbot/board/timeline.py
 src/osmbot/game/__init__.py
 src/osmbot/game/ads.py
 src/osmbot/game/browser.py
@@ -22,6 +24,7 @@ src/osmbot/game/dashboard.py
 src/osmbot/game/loop.py
 src/osmbot/game/medical.py
 src/osmbot/game/prematch.py
+src/osmbot/game/refusals.py
 src/osmbot/game/rewards.py
 src/osmbot/game/sales.py
 src/osmbot/game/slots.py
@@ -29,9 +32,13 @@ src/osmbot/game/sponsors.py
 src/osmbot/game/stadium.py
 src/osmbot/game/status.py
 src/osmbot/game/trainings.py
+src/osmbot/game/transfers.py
 src/osmbot/gui/__init__.py
 src/osmbot/gui/view.py
 src/osmbot/gui/window.py
+src/osmbot/gui/assets/Sora-OFL.txt
+src/osmbot/gui/assets/Sora.ttf
+src/osmbot/gui/assets/fundo.jpg
 src/osmbot/medical/__init__.py
 src/osmbot/medical/policy.py
 src/osmbot/prematch/__init__.py
@@ -48,6 +55,8 @@ src/osmbot/theory/specialists.py
 src/osmbot/theory/tactics.py
 src/osmbot/training/__init__.py
 src/osmbot/training/policy.py
+src/osmbot/transfers/__init__.py
+src/osmbot/transfers/history.py
 tests/test_ads.py
 tests/test_board_info.py
 tests/test_build_portable.py
@@ -56,12 +65,14 @@ tests/test_dashboard.py
 tests/test_fitness.py
 tests/test_gui_view.py
 tests/test_gui_window.py
+tests/test_i18n.py
 tests/test_inspect_writes.py
 tests/test_logs.py
 tests/test_loop.py
 tests/test_medical.py
 tests/test_menu.py
 tests/test_prematch.py
+tests/test_refusals.py
 tests/test_rewards.py
 tests/test_slots.py
 tests/test_specialists.py
@@ -69,5 +80,7 @@ tests/test_sponsors.py
 tests/test_stadium.py
 tests/test_status.py
 tests/test_tactics.py
+tests/test_timeline.py
 tests/test_training_policy.py
 tests/test_trainings.py
+tests/test_transfers.py

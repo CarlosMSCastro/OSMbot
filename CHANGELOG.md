@@ -6,6 +6,15 @@ Este ficheiro é o **histórico de versões, para quem lê o repo**. O diário i
 
 ## [Por lançar]
 
+## [0.9.7] — 2026-10-10
+
+Janela com letra nova (Sora) e cartões com as cores de cada clube.
+
+### Alterado
+- **Cores do clube:** a faixa do próximo jogo deixa de ser verde em casa / vermelha fora e passa a ter a cor do clube, tirada do logótipo ("CASA"/"FORA" fica como etiqueta). O cartão de cada clube leva a mesma cor de forma discreta: risca no topo, brilho leve e contorno. A cor é lida no interior do escudo (todos os logótipos do OSM têm a mesma moldura dourada) e é a mesma no cartão, na faixa e na linha do tempo.
+- **Letra Sora** em toda a janela (licença OFL, vai dentro do programa; se não carregar, fica a Segoe UI).
+- A linha da venda, por baixo do dinheiro, cabe numa só linha.
+
 ## [0.9.6] — 2026-10-09
 
 Janela nova com linha do tempo e em inglês; o bot já não repete pedidos que o jogo recusou; médico corrigido; transferências guardadas para estudo.

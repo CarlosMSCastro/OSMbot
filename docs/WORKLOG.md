@@ -2,6 +2,13 @@
 
 Entradas mais recentes primeiro. Cada sessão: o que se fez · o que ficou por fazer · próximo passo.
 
+## 2026-10-10 — Correções à janela
+
+- **Faixa do próximo jogo (pedido do dono):** deixa de ser verde em casa / vermelha fora; passa a ter a cor do clube, tirada do logótipo (a mesma da bolinha na linha do tempo), escurecida para o texto branco se ler. "CASA"/"FORA" fica só como etiqueta. Até o logótipo chegar, usa o roxo da janela. `gui/window.py` (`MatchStripe.set_colour`), D-030 atualizada. 287 testes.
+- **Tipo de letra:** maquetes com 12 letras (janela real, dados de teste, fora do repo); o dono escolheu a **Sora** (OFL). Vai dentro do programa: `gui/assets/Sora.ttf` + `Sora-OFL.txt`; `load_font()` em `run_gui`, Segoe UI se falhar.
+- **Cartão com as cores do clube:** 4 maquetes (A brilho de cima · B duas cores · C discreto · D forte); o dono escolheu a **C**: risca de 3 px no topo na cor do clube, brilho leve até 1/4 do cartão e contorno na cor (`ClubCard.set_colour`). A cor é lida só no interior do escudo (todos os logótipos do OSM têm a mesma moldura dourada, que ganhava) e é a mesma no cartão, na faixa do jogo e na bolinha da linha do tempo. Linha da venda em letra 8, para caber numa linha com a Sora. Visto numa captura da janela real com dados de teste.
+- **Versão 0.9.7** (pedido do dono): `pyproject`, `__init__`, `CHANGELOG`; `dist` reconstruído (portátil, zip, instalador); notas em `dist/release-notes-v0.9.7.md`.
+
 ## 2026-10-09 (cont. 3) — Casa: médico corrigido, transferências guardadas, janela nova
 
 - **Médico (pergunta do dono):** o bot nunca levantou o médico; 3 tentativas com 404 (09:13, 17:26, 19:31). Com `inspect-writes`, o dono levantou à mão: o pedido é `PUT api/v1/…/doctortreatments/{id}/claim` (o bot usava `v1.1`). Corrigido em `game/medical.py`; `DISCOVERY.md` §3 passa a *Verificado*. Advogado: mesma base, ainda por confirmar.
