@@ -6,6 +6,18 @@ Este ficheiro é o **histórico de versões, para quem lê o repo**. O diário i
 
 ## [Por lançar]
 
+## [0.10.0] — 2026-10-10
+
+Cartão do clube mais limpo: valor do plantel e patrocinadores com aviso, estádio que enche com o tempo, barra de cima a toda a largura.
+
+### Alterado
+- **Barra de cima a toda a largura:** os boss coins começam à mesma altura que o primeiro clube.
+- **Valor do plantel:** o lugar na liga por valor a cores (1.º e 2.º a verde, os 3 últimos a vermelho, amarelo pelo meio) e o valor total a branco; ao passar o rato, o número de jogadores e a média.
+- **Patrocinadores:** só o valor por ronda ("1,12 M/ronda"); se faltar algum dos 4, aparece ⚠ e, ao passar o rato, quantas vagas estão vazias.
+
+### Corrigido
+- **Estádio:** o círculo da parte a subir já enche com o tempo, mesmo quando a janela abre a meio da obra (o jogo só dá a hora do fim; sem outra pista, conta-se uma obra normal de 18 h). Ao passar o rato, mostra o tempo que falta.
+
 ## [0.9.7] — 2026-10-10
 
 Janela com letra nova (Sora) e cartões com as cores de cada clube.

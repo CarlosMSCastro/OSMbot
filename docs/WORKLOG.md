@@ -8,6 +8,13 @@ Entradas mais recentes primeiro. Cada sessão: o que se fez · o que ficou por f
 - **Tipo de letra:** maquetes com 12 letras (janela real, dados de teste, fora do repo); o dono escolheu a **Sora** (OFL). Vai dentro do programa: `gui/assets/Sora.ttf` + `Sora-OFL.txt`; `load_font()` em `run_gui`, Segoe UI se falhar.
 - **Cartão com as cores do clube:** 4 maquetes (A brilho de cima · B duas cores · C discreto · D forte); o dono escolheu a **C**: risca de 3 px no topo na cor do clube, brilho leve até 1/4 do cartão e contorno na cor (`ClubCard.set_colour`). A cor é lida só no interior do escudo (todos os logótipos do OSM têm a mesma moldura dourada, que ganhava) e é a mesma no cartão, na faixa do jogo e na bolinha da linha do tempo. Linha da venda em letra 8, para caber numa linha com a Sora. Visto numa captura da janela real com dados de teste.
 - **Versão 0.9.7** (pedido do dono): `pyproject`, `__init__`, `CHANGELOG`; `dist` reconstruído (portátil, zip, instalador); notas em `dist/release-notes-v0.9.7.md`.
+- **2.ª ronda de correções (dono):**
+  - barra das diárias a toda a largura (boss coins ao nível do 1.º clube; coluna da direita sem margem);
+  - valor do plantel: lugar a cores (1.º–2.º verde, 3 últimos vermelho, resto amarelo; `squad_view`) + total a branco; dica com jogadores e média. `squad_value` passa a dar também jogadores e n.º de equipas (leituras antigas com 3 valores aceites, nunca a vermelho);
+  - patrocinadores: só "X/ronda"; com vaga vazia, ⚠ e dica "N vaga(s) vazia(s) nos patrocinadores" (`sponsor_view`);
+  - estádio: o círculo não enchia porque a duração ficava "desconhecida" quando a obra era vista pela 1.ª vez com menos de 4 h (janela aberta a meio, vídeo −2h). O temporizador do jogo não tem início (`probe` a `timers`: só `currentTimestamp`/`finishedTimestamp`). Agora: 3h45–4h = evento (4 h), resto até 18 h = normal (18 h). Dica "Faltam X".
+  - 289 testes; captura da janela real conferida.
+- **Versão 0.10.0** (pedido do dono): `pyproject`, `__init__`, `CHANGELOG`; `dist` reconstruído; notas em `dist/release-notes-v0.10.0.md`.
 
 ## 2026-10-09 (cont. 3) — Casa: médico corrigido, transferências guardadas, janela nova
 

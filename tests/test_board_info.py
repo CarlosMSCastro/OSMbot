@@ -29,7 +29,7 @@ def test_cup_phase_next_round_eliminated_winner_and_out_of_the_cup():
 
 def test_squad_value_place_total_and_average():
     values = {1: (588_000_000, 20), 4: (592_000_000, 20), 6: (79_000_000, 23)}
-    assert squad_value(values, 1) == (2, 588_000_000, 29_400_000.0)
+    assert squad_value(values, 1) == (2, 588_000_000, 29_400_000.0, 20, 3)
     assert squad_value(values, 99) is None
 
 

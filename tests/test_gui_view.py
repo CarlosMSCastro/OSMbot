@@ -2,7 +2,7 @@ import tomllib
 from pathlib import Path
 
 import osmbot
-from osmbot.gui.view import care_ring, stadium_rings
+from osmbot.gui.view import RED, care_ring, sponsor_view, squad_view, stadium_rings
 from osmbot.gui.view import BLUE, GREEN, GREY, YELLOW, account_view, board_view, club_view, daily_view, next_check
 
 NOW = 1_000_000.0
@@ -18,7 +18,7 @@ def club(**changes):
                       {"id": 2, "name": "Jogador 24", "pos": "GR", "finish": NOW - 60, "claimed": False}],
         "tired": [{"id": 9, "name": "Jogador 5", "pos": "DEF", "fitness": 68}],
         "next": {"opponent": "Clube B", "rank": 4, "side": "H", "danger": True, "cup": False},
-        "cup": ("quartos-de-final", "in"), "value": (2, 588_700_000, 29_435_000.0),
+        "cup": ("quartos-de-final", "in"), "value": (2, 588_700_000, 29_435_000.0, 20, 18),
         "free_slots": 1, "sales": [{"name": "Jogador 7", "price": 166_664_480}],
         "prep": {"pct": 35, "steps": [("Amigável", True, None), ("Análise", False, NOW + 600), ("Onze", False, None)]},
         "injured": [{"name": "Jogador 3", "games": 6, "until": NOW + 3600, "ready": False}],
@@ -42,14 +42,25 @@ def test_the_card_header_says_the_opponent_home_or_away_and_warns_of_a_direct_ri
 
 def test_league_cup_and_squad_value_and_one_money_line_with_the_sales():
     view = club_view(club(), NOW)
-    assert view["facts"] == [("Liga", "3.º", None), ("Taça", "quartos-de-final", None),
-                             ("Valor do plantel", "2.º · 588,7 M · média 29,43 M", None)]
+    assert view["facts"] == [("Liga", "3.º", None), ("Taça", "quartos-de-final", None)]
+    assert view["squad"] == {"place": "2.º", "colour": GREEN, "total": "588,7 M", "tip": "20 jogadores · média 29,43 M"}
     assert view["money"] == "10,3 M"  # funds and savings together (owner, 2026-10-08)
     assert view["sales"] == ["✓ Jogador 7 vendido · +166,66 M"]
     assert view["alert"] == "1 vaga livre na lista de transferências"
     assert club_view(club(free_slots=0), NOW)["alert"] == ""
     out = club_view(club(cup=("eliminado nos oitavos-de-final", "out"), value=None), NOW)
-    assert out["facts"][1][2] == GREY and out["facts"][2][1:] == ("—", GREY)
+    assert out["facts"][1][2] == GREY and out["squad"]["total"] == "—"
+
+
+def test_squad_value_place_is_green_at_the_top_red_at_the_bottom_yellow_between():
+    assert [squad_view((place, 1, 1.0, 20, 18))["colour"] for place in (1, 2, 3, 15, 16, 18)] ==         [GREEN, GREEN, YELLOW, YELLOW, RED, RED]
+    assert squad_view((17, 1, 1.0))["colour"] == YELLOW  # an older reading without the league size: never red
+
+
+def test_sponsors_say_only_the_money_and_warn_of_an_empty_slot_on_hover():
+    assert sponsor_view({"slots": 4, "revenue": 1_120_000}) == {"text": "1,12 M/ronda", "colour": GREEN, "tip": ""}
+    assert sponsor_view({"slots": 3, "revenue": 900_000}) == {"text": "⚠ 900 k/ronda", "colour": YELLOW,
+                                                              "tip": "1 vaga vazia nos patrocinadores"}
 
 
 def test_stadium_has_the_parts_standing_still_and_the_one_going_up_with_its_time():

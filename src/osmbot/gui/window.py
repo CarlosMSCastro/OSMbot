@@ -537,12 +537,16 @@ class ClubCard(QFrame):
         self.match.show_match(club["match"])
         self.alert.setVisible(bool(club["alert"]))
         self.alert.setText(f"❗ {tr(club['alert'])}")
-        _, value, colour = club["facts"][2]
-        self.value.setText(rich([(value, colour)]))
+        squad = club["squad"]  # the place in colour, the total in white; players and average on hover
+        self.value.setText(rich([(squad["place"], squad["colour"]), ("  " if squad["place"] else "", None),
+                                 (squad["total"], None if squad["place"] else GREY)]))
+        self.value.setToolTip(tr(squad["tip"]))
         self.money.setText(f"<b>{rich([(club['money'], None)])}</b>")
         self.sales.setVisible(bool(club["sales"]))
         self.sales.setText("<br>".join(rich([("✓ ", GREEN), (sale.removeprefix("✓ "), None)]).replace(" M<", "&nbsp;M<") for sale in club["sales"]))
-        self.sponsors.setText(rich([club["sponsors"]]))
+        sponsors = club["sponsors"]
+        self.sponsors.setText(rich([(sponsors["text"], sponsors["colour"])]))
+        self.sponsors.setToolTip(tr(sponsors["tip"]))
         rings = club["stadium_rings"]
         for index, cell in enumerate(self.stadium_cells):
             cell.setVisible(index < len(rings))
@@ -552,6 +556,7 @@ class ClubCard(QFrame):
                 cell.ring.show_ring(ring["level"], ring["done"], arc, text)  # names and states go through say()
                 moving = ring["state"] == "moving"
                 cell.say((ring["name"], TEXT if moving else MUTED), (ring["left"], COLOURS[BLUE] if moving else MUTED))
+                cell.setToolTip(tr(f"Faltam {ring['left']}") if moving else "")
         for cell, ring in zip(self.care_cells, club["care"]):
             arc, text = CARE_RING[ring["state"]]
             share = {"working": ring["done"], "ready": 1.0, "waiting": 1.0}.get(ring["state"], 0.0)
@@ -872,8 +877,10 @@ class MainWindow(QMainWindow):
         """The board (D-030): on the stadium picture, the daily rewards and the bot's state on top; the clubs on the
         left (one per row, scrolling when 3 or 4 don't fit); the boss coins and the timeline on the right."""
         page = Backdrop()
-        outer = QHBoxLayout(page)
-        outer.setContentsMargins(14, 12, 14, 14)
+        whole = QVBoxLayout(page)  # the top bar across the whole width: the boss coins start level with the first
+        whole.setContentsMargins(14, 12, 14, 14)  # club (owner, 2026-10-10)
+        whole.setSpacing(12)
+        outer = QHBoxLayout()
         outer.setSpacing(14)
 
         main = QVBoxLayout()
@@ -891,7 +898,8 @@ class MainWindow(QMainWindow):
         self.state_text = text_label(10)
         bar.addWidget(self.state_dot)
         bar.addWidget(self.state_text)
-        main.addWidget(top)
+        whole.addWidget(top)
+        whole.addLayout(outer, 1)
 
         inner = QWidget()
         inner.setAttribute(Qt.WA_TranslucentBackground)
@@ -910,6 +918,7 @@ class MainWindow(QMainWindow):
         outer.addLayout(main, 1)
 
         side = QVBoxLayout()
+        side.setContentsMargins(0, 0, 0, 0)  # level with the clubs and the top bar
         side.setSpacing(14)
         coins = QFrame()
         coins.setObjectName("coins")

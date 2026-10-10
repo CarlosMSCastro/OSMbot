@@ -76,6 +76,32 @@ def care_ring(label: str, people: list[dict], now: float, lawyer: bool = False) 
             "done": 0.0}
 
 
+TOP_PLACES, BOTTOM_PLACES = 2, 3  # squad value: 1st-2nd green, the last 3 red, yellow in between (owner, 2026-10-10)
+
+
+def squad_view(value: tuple | None) -> dict:
+    """The squad value: the place by value in colour, the total in white; players and average on hover."""
+    if not value:
+        return {"place": "", "colour": GREY, "total": "—", "tip": ""}
+    place, total, average, *more = value  # (place, total, average, players, teams); older readings had only 3
+    players, teams = more if more else (round(total / average) if average else 0, 0)
+    colour = GREEN if place <= TOP_PLACES else RED if teams and place > teams - BOTTOM_PLACES else YELLOW
+    return {"place": f"{place}.º", "colour": colour, "total": money(total),
+            "tip": f"{players} jogadores · média {money(round(average))}"}
+
+
+def sponsor_view(sponsors: dict | None) -> dict:
+    """Only the money per round; with an empty slot, ⚠ and the empty slots said on hover (owner, 2026-10-10)."""
+    if not sponsors:
+        return {"text": "—", "colour": GREY, "tip": ""}
+    empty = SPONSOR_SLOTS - sponsors["slots"]
+    text = f"{money(sponsors['revenue'])}/ronda"
+    if empty <= 0:
+        return {"text": text, "colour": GREEN, "tip": ""}
+    plural = "s" if empty > 1 else ""
+    return {"text": f"⚠ {text}", "colour": YELLOW, "tip": f"{empty} vaga{plural} vazia{plural} nos patrocinadores"}
+
+
 def club_view(club: dict, now: float, shortened: dict | None = None) -> dict:
     """One club's card (D-026): header, Liga · Taça · Valor do plantel, money and sales, sponsors, stadium,
     pre-match checklist, trainings, tired starters, injured and suspended players."""
@@ -93,11 +119,8 @@ def club_view(club: dict, now: float, shortened: dict | None = None) -> dict:
         subtitle.append((f"{club.get('league') or ''}{when}".strip(" ·"), GREY))
 
     cup, state = club.get("cup") or ("—", "none")
-    value = club.get("value")
     facts = [("Liga", f"{club.get('ranking') or '?'}.º", None),
-             ("Taça", cup, {"out": GREY, "won": GREEN, "none": GREY}.get(state)),
-             ("Valor do plantel", f"{value[0]}.º · {money(value[1])} · média {money(round(value[2]))}" if value else "—",
-              None if value else GREY)]
+             ("Taça", cup, {"out": GREY, "won": GREEN, "none": GREY}.get(state))]
 
     free = club.get("free_slots") or 0
     alert = f"{free} vaga{'s' if free > 1 else ''} livre{'s' if free > 1 else ''} na lista de transferências" if free else ""
@@ -106,8 +129,7 @@ def club_view(club: dict, now: float, shortened: dict | None = None) -> dict:
     sales = [f"✓ {s['name']} vendido · +{money(s['price'])}" for s in club.get("sales") or []]
 
     sponsors = club.get("sponsors")
-    sponsor_row = ((f"{sponsors['slots']}/{SPONSOR_SLOTS} · {money(sponsors['revenue'])}/ronda",
-                    GREEN if sponsors["slots"] >= SPONSOR_SLOTS else YELLOW) if sponsors else ("—", GREY))
+    sponsor_row = sponsor_view(sponsors)
 
     still, moving = [], []
     lengths = (club.get("stadium") or {}).get("lengths") or {}
@@ -150,7 +172,7 @@ def club_view(club: dict, now: float, shortened: dict | None = None) -> dict:
 
     return {"name": club["name"], "logo": club.get("logo"), "logo_key": club.get("logo_key") or club["name"],
             "subtitle": subtitle, "facts": facts, "alert": alert, "header": header, "cup_line": cup_line, "match": match, "prep_title": prep_title,
-            "money": _money(total), "sales": sales, "sponsors": sponsor_row,
+            "money": _money(total), "sales": sales, "sponsors": sponsor_row, "squad": squad_view(club.get("value")),
             "stadium": {"still": still, "moving": moving},
             "prep": {"steps": steps},
             "trainings": trainings,

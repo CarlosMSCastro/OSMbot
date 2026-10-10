@@ -75,13 +75,14 @@ _upgrade_lengths: dict[int, float | None] = {}  # timer id -> total length, deci
 
 
 def upgrade_length(timer_id: int, left: float) -> float | None:
-    """How long a stadium upgrade lasts in all: the game gives only its end. More than 4 h left: a normal 18 h one;
-    just under 4 h: an event one that has just started; otherwise unknown (None: the board shows only the time)."""
+    """How long a stadium upgrade lasts in all: the game gives only its end (the timer has no start). Just under 4 h
+    left: an event one that has just started; otherwise taken as a normal 18 h one, so the ring fills with the time
+    (owner, 2026-10-10); more than 18 h: unknown (None)."""
     if timer_id not in _upgrade_lengths:
-        if UPGRADE_EVENT < left <= UPGRADE_NORMAL:
-            _upgrade_lengths[timer_id] = UPGRADE_NORMAL
-        elif UPGRADE_EVENT - JUST_STARTED < left <= UPGRADE_EVENT:
+        if UPGRADE_EVENT - JUST_STARTED < left <= UPGRADE_EVENT:
             _upgrade_lengths[timer_id] = UPGRADE_EVENT
+        elif left <= UPGRADE_NORMAL:
+            _upgrade_lengths[timer_id] = UPGRADE_NORMAL
         else:
             _upgrade_lengths[timer_id] = None
     return _upgrade_lengths[timer_id]

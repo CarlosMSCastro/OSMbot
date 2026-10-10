@@ -51,13 +51,14 @@ def cup_phase(rounds: list[dict], matches: list[dict], team_id: int, week: int) 
     return (names[later[0]], "in") if later else ("vencedor", "won")
 
 
-def squad_value(values: dict[int, tuple[int, int]], team_id: int) -> tuple[int, int, float] | None:
-    """(place in the league by total squad value, total, average per player) from {team id: (total, players)}."""
+def squad_value(values: dict[int, tuple[int, int]], team_id: int) -> tuple[int, int, float, int, int] | None:
+    """(place in the league by total squad value, total, average per player, players, teams in the league) from
+    {team id: (total, players)}."""
     if team_id not in values:
         return None
     order = sorted(values, key=lambda t: -values[t][0])
     total, count = values[team_id]
-    return order.index(team_id) + 1, total, total / max(1, count)
+    return order.index(team_id) + 1, total, total / max(1, count), count, len(values)
 
 
 def track_sales(state: dict, listed: dict[int, dict], squad: set[int]) -> dict:

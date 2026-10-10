@@ -264,5 +264,5 @@ def test_the_length_of_a_stadium_upgrade_is_guessed_from_its_end(monkeypatch):
     hours = 3600
     assert dashboard.upgrade_length(1, 14 * hours) == 18 * hours  # more than 4 h left: a normal one
     assert dashboard.upgrade_length(2, 4 * hours - 60) == 4 * hours  # an event one, just started
-    assert dashboard.upgrade_length(3, 2 * hours) is None  # could be either: only the time is shown
+    assert dashboard.upgrade_length(3, 2 * hours) == 18 * hours  # could be either: taken as a normal one
     assert dashboard.upgrade_length(1, 3 * hours) == 18 * hours  # decided the first time it is seen
