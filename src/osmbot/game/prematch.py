@@ -2,7 +2,7 @@
 (writes, owner's rule in THEORY.md section 6; requests observed 2026-10-08, DISCOVERY.md section 3).
 
 The game's own pre-match checklist (``matchpreparation``) says what is done. A friendly is played at once
-(4 boss coins); the analyst takes an hour, so one sent this week also counts while it is still working, and when
+(4 boss coins each, 4 before each match, owner 2026-10-11); the analyst takes an hour, so one sent this week also counts while it is still working, and when
 the hour is over it has to be collected for the checklist to count it (observed 2026-10-09).
 A refused request is noted and not repeated this round (D-032): a refused opponent is left out, the others are tried.
 """
@@ -11,8 +11,8 @@ from __future__ import annotations
 import random
 import time
 
-from osmbot.game import refusals
-from osmbot.prematch.policy import LEAD, friendly_choices, in_window, needs_analysis, needs_friendly, next_opponent
+from osmbot.game import clubinfo, refusals
+from osmbot.prematch.policy import FRIENDLIES_PER_MATCH, LEAD, friendly_choices, friendlies_missing, in_window, needs_analysis, next_opponent
 
 FRIENDLY_PRODUCT = 62  # bosscoinproducts: "Friendly"
 FRIENDLY_PRICE = 4  # boss coins
@@ -20,7 +20,8 @@ SPY_TIMER_SETTING = 60  # gamesettings: "SpyInstructionTimer"
 ANALYST_SECONDS = 3600  # SpyInstructionTimer: 60 min
 NEXT_MATCH_TIMER = 14  # timers: "Your next match"
 PAUSE_BETWEEN_WRITES = 1.5  # seconds
-MAX_TRIES = 3  # friendly attempts per club per pass (a refused opponent moves on to another)
+MAX_REFUSALS = 3  # refused friendlies per club per pass before giving up until the next pass (each moves on to another club)
+GAP_BETWEEN_FRIENDLIES = (3, 8)  # × PAUSE_BETWEEN_WRITES: a few seconds between friendlies, not a burst
 API_V11 = "https://web-api.onlinesoccermanager.com/api/v1.1"
 COUNTS = {"friendlies": 0, "analyses": 0, "collected": 0}
 
@@ -30,34 +31,48 @@ def _match_time(client, base: str) -> float | None:
     return next((t["finishedTimestamp"] for t in timers if t["type"] == NEXT_MATCH_TIMER), None)
 
 
-def _play_friendly(client, team: dict, base: str, league: str, week: int, confirm: bool, log, rng) -> int:
-    _, wallet = client.get("user/bosscoinwallet")
-    if wallet["amount"] < FRIENDLY_PRICE:
-        log(f"! {team['name']}: sem boss coins para o amigável ({wallet['amount']}); fica por fazer")
+def _play_friendlies(client, team: dict, base: str, league: str, week: int, confirm: bool, log, rng) -> int:
+    """Play the friendlies still missing before the match (4 in all, the owner's included; THEORY.md section 6)."""
+    _, matches = client.get(f"{league}/matches/filter")
+    missing = friendlies_missing(matches, team["id"], week)
+    if not missing:
         return 0
     _, teams = client.get(f"{league}/teams")
-    _, matches = client.get(f"{league}/matches/filter")
     names = {t["id"]: t["name"] for t in teams}
     choices = friendly_choices(teams, matches, team["id"], week)
     every = len(choices)
     choices = [c for c in choices if not refusals.blocked(f"amigável:{base}:{c}", week=week)]
     rng.shuffle(choices)
-    for opponent in choices[:MAX_TRIES]:
-        if not confirm:
-            log(f"{team['name']}: faria 1 amigável contra {names[opponent]}")
+    if not confirm:
+        if choices:
+            log(f"{team['name']}: faria {min(missing, len(choices))} amigável(eis) contra {', '.join(names[c] for c in choices[:missing])}")
+        return 0
+    played = refused = 0
+    for opponent in choices:
+        if played == missing or refused == MAX_REFUSALS:
+            break
+        _, wallet = client.get("user/bosscoinwallet")
+        if wallet["amount"] < FRIENDLY_PRICE:
+            log(f"! {team['name']}: sem boss coins para o amigável ({wallet['amount']}); "
+                f"{missing - played} de {FRIENDLIES_PER_MATCH} ficam por fazer")
             return 0
+        if played:
+            time.sleep(PAUSE_BETWEEN_WRITES * rng.uniform(*GAP_BETWEEN_FRIENDLIES))
         status, body = client.post(f"{base}/matches", {"opponentId": opponent, "productId": FRIENDLY_PRODUCT})
         time.sleep(PAUSE_BETWEEN_WRITES)
         if status == 200 and isinstance(body, dict):
+            played += 1
             COUNTS["friendlies"] += 1
+            clubinfo.forget_fixtures(league)  # the card counts them from the fixtures: show this one now
             mine_home = body.get("homeTeamId") == team["id"]
             score = (f"{body.get('homeGoals')}-{body.get('awayGoals')}" if mine_home
                      else f"{body.get('awayGoals')}-{body.get('homeGoals')}")
             log(f"Amigável: {team['name']} {score} {names[opponent]}")
-            return 0
+            continue
         if not refusals.is_refusal(status):
             log(f"Amigável: {team['name']} contra {names[opponent]} falhou ({status})")
             return 1
+        refused += 1
         refusals.refuse(f"amigável:{base}:{opponent}", log, f"Amigável: {team['name']} contra {names[opponent]} recusado ({status}); "
                         "não volto a tentar este clube nesta jornada", week=week)
     if not every:
@@ -133,8 +148,7 @@ def prepare_club(client, team: dict, base: str, confirm: bool, now: float, log=p
     _, prep = client.get(f"{base}/matchpreparation")
     steps = prep.get("steps") or []
     failures = 0
-    if needs_friendly(steps):
-        failures += _play_friendly(client, team, base, league, week, confirm, log, rng)
+    failures += _play_friendlies(client, team, base, league, week, confirm, log, rng)
     status, sent = client.get(f"{base}/spyinstructions")  # 404 when nothing was sent
     sent = sent if status == 200 and isinstance(sent, list) else []
     wake = None

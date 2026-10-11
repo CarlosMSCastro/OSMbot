@@ -1,5 +1,5 @@
 from osmbot.game import prematch
-from osmbot.prematch.policy import LEAD, friendly_choices, in_window, needs_analysis, needs_friendly, next_opponent
+from osmbot.prematch.policy import LEAD, friendly_choices, friendlies_missing, in_window, needs_analysis, next_opponent
 
 TEAM = {"id": 1, "name": "Club"}
 LEAGUE = "leagues/9"
@@ -23,12 +23,11 @@ def test_only_in_the_last_4_hours_before_the_match():
     assert not in_window(None, NOW)
 
 
-def test_a_friendly_is_needed_only_while_the_checklist_point_is_open():
-    assert needs_friendly([step(7, 0)])
-    assert not needs_friendly([step(7, 1)])
-    assert not needs_friendly([step(7, 2)])  # the owner played two
-    assert not needs_friendly([step(7, 0, enabled=False)])
-    assert not needs_friendly([])
+def test_four_friendlies_before_each_match_the_owners_included():
+    assert friendlies_missing([], 1, 14) == 4
+    played = [match(14, 1, 2, kind=2), match(14, 3, 1, kind=2), match(13, 1, 4, kind=2), match(14, 1, 5)]
+    assert friendlies_missing(played, 1, 14) == 2  # last round's and the league match don't count
+    assert friendlies_missing(played + [match(14, 1, 6, kind=2), match(14, 7, 1, kind=2)], 1, 14) == 0
 
 
 def test_an_analyst_sent_this_week_counts_while_still_working():
@@ -53,20 +52,21 @@ def test_friendly_opponents_exclude_the_club_and_this_weeks_friendlies():
 
 
 class FakeClient:
-    def __init__(self, steps, match_in=3600, coins=100, sent=None, post_status=200):
+    def __init__(self, steps, match_in=3600, coins=100, sent=None, post_status=200, clubs=6, friendlies=1):
         self.steps, self.coins, self.sent, self.post_status = steps, coins, sent, post_status
         self.match = NOW + match_in
+        self.clubs, self.friendlies = clubs, friendlies
         self.posts, self.puts = [], []
 
     def get(self, path):
-        teams = [{"id": i, "name": f"T{i}"} for i in range(1, 5)]
+        teams = [{"id": i, "name": f"T{i}"} for i in range(1, self.clubs + 1)]
         data = {
             f"{BASE}/timers": [{"type": 14, "finishedTimestamp": self.match}],
             LEAGUE: {"weekNr": 14},
             f"{BASE}/matchpreparation": {"steps": self.steps},
-            "user/bosscoinwallet": {"amount": self.coins},
+            "user/bosscoinwallet": {"amount": self.coins - 4 * sum(1 for p, _ in self.posts if p.endswith("/matches"))},
             f"{LEAGUE}/teams": teams,
-            f"{LEAGUE}/matches/filter": [match(14, 1, 2, kind=2), match(15, 1, 3)],
+            f"{LEAGUE}/matches/filter": [match(14, 1, 2 + i, kind=2) for i in range(self.friendlies)] + [match(15, 1, 3)],
         }
         if path == f"{BASE}/spyinstructions":
             return (200, self.sent) if self.sent else (404, "")
@@ -85,6 +85,9 @@ class FirstRng:
     def shuffle(self, items):
         pass
 
+    def uniform(self, low, high):
+        return low
+
 
 def prepare(client, confirm=True):
     lines = []
@@ -98,18 +101,24 @@ def test_nothing_before_the_4_hours_and_it_wakes_up_then():
     assert client.posts == []
 
 
-def test_plays_one_friendly_and_sends_the_analyst_to_the_next_opponent():
-    client = FakeClient([step(7, 0), step(5, 0)])
+def test_plays_the_missing_friendlies_and_sends_the_analyst_to_the_next_opponent():
+    client = FakeClient([step(7, 1), step(5, 0)])  # the owner played 1: 3 to go
     (failures, _), lines = prepare(client)
     assert failures == 0
-    assert client.posts == [(f"{BASE}/matches", {"opponentId": 3, "productId": 62}),
-                            (f"{BASE}/spyinstructions", {"instructionTeamId": 3, "timerGameSettingId": 60})]
-    assert prematch.COUNTS == {"friendlies": 1, "analyses": 1, "collected": 0}
+    assert client.posts == [(f"{BASE}/matches", {"opponentId": c, "productId": 62}) for c in (3, 4, 5)] +         [(f"{BASE}/spyinstructions", {"instructionTeamId": 3, "timerGameSettingId": 60})]
+    assert prematch.COUNTS == {"friendlies": 3, "analyses": 1, "collected": 0}
     assert "Amigável: Club 2-0 T3" in lines
 
 
+def test_coins_for_only_some_of_the_friendlies():
+    client = FakeClient([step(7, 0), step(5, 1)], friendlies=0, coins=9)
+    _, lines = prepare(client)
+    assert [form["opponentId"] for _, form in client.posts] == [2, 3]
+    assert "! Club: sem boss coins para o amigável (1); 2 de 4 ficam por fazer" in lines
+
+
 def test_what_the_owner_already_did_is_left_alone():
-    client = FakeClient([step(7, 1), step(5, 0)], sent=[{"weekNr": 14}])
+    client = FakeClient([step(7, 1), step(5, 0)], sent=[{"weekNr": 14}], friendlies=4)
     assert prepare(client)[0] == (0, None)
     assert client.posts == []
 
@@ -125,15 +134,15 @@ def test_simulation_writes_nothing():
     client = FakeClient([step(7, 0), step(5, 0)])
     _, lines = prepare(client, confirm=False)
     assert client.posts == []
-    assert "Club: faria 1 amigável contra T3" in lines
+    assert "Club: faria 3 amigável(eis) contra T3, T4, T5" in lines
 
 
 def test_a_refused_friendly_tries_another_opponent_and_a_server_error_is_a_failure():
     client = FakeClient([step(7, 0), step(5, 1)], post_status=400)
     assert prepare(client)[0] == (0, None)
-    assert [form["opponentId"] for _, form in client.posts] == [3, 4]
+    assert [form["opponentId"] for _, form in client.posts] == [3, 4, 5]  # 3 refusals: wait for the next pass
     prepare(client)  # the next pass: the refused clubs are not asked again this round (D-032)
-    assert [form["opponentId"] for _, form in client.posts] == [3, 4]
+    assert [form["opponentId"] for _, form in client.posts] == [3, 4, 5, 6]
     from osmbot.game import refusals
 
     refusals.FILE.unlink()
@@ -143,10 +152,10 @@ def test_a_refused_friendly_tries_another_opponent_and_a_server_error_is_a_failu
 
 def test_the_analyst_is_collected_when_its_hour_is_over_and_waited_for_before():
     running = [{"id": 5, "weekNr": 14, "countdownTimer": {"finishedTimestamp": NOW + 600, "isClaimed": False}}]
-    client = FakeClient([step(7, 1), step(5, 0)], sent=running)
+    client = FakeClient([step(7, 1), step(5, 0)], sent=running, friendlies=4)
     assert prepare(client)[0] == (0, NOW + 600) and client.posts == []
     over = [{"id": 5, "weekNr": 14, "countdownTimer": {"finishedTimestamp": NOW - 60, "isClaimed": False}}]
-    client = FakeClient([step(7, 1), step(5, 0)], sent=over)
+    client = FakeClient([step(7, 1), step(5, 0)], sent=over, friendlies=4)
     (failures, _), lines = prepare(client)
     assert client.puts == ["https://web-api.onlinesoccermanager.com/api/v1.1/leagues/9/teams/1/spyinstructions/5/claim"]
     assert failures == 0 and "Análise: Club levantou o analista" in lines

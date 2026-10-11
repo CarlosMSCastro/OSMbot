@@ -1,6 +1,6 @@
 # Project Brief
 
-*Última atualização: 2026-10-08*
+*Última atualização: 2026-10-11*
 
 ## Objetivo
 
@@ -19,10 +19,10 @@
 | 9 | **Aviso de condição física** dos titulares (`THEORY.md` §16) | **Feito** (quadro) |
 | 10 | Transferências automáticas | **Próxima grande funcionalidade, depois do 1.0** (dono, 2026-10-09): o dono vai dar a teoria de gestão de plantel primeiro; escritas novas pedem OK |
 | 11 | Aviso de jogadores novos "SALE" no mercado (`THEORY.md` §7.7) | Por fazer |
-| 12a | **Amigável e análise do adversário**: 4 h antes de cada jogo, se o dono ainda não os fez; amigável contra qualquer clube, analista ao próximo adversário (`THEORY.md` §6, D-025) | **Feito** (visto em real em 2026-10-11: amigável, enviar e levantar o analista) |
+| 12a | **Amigáveis e análise do adversário**: 4 h antes de cada jogo, se o dono ainda não os fez; **4 amigáveis** (dono, 2026-10-11) contra quaisquer clubes, analista ao próximo adversário (`THEORY.md` §6, D-025) | **Feito** (visto em real em 2026-10-11: amigável, enviar e levantar o analista) |
 | 12b | **Médico e advogado**: lesionados e suspensos tratados e levantados sozinhos (`THEORY.md` §18) | **Feito** (0.9.3; médico visto em real a pôr e a levantar, 2026-10-09–11; advogado por ver, precisa de um suspenso de 2+ jogos) |
 | 12 | **Amigáveis em quantidade** com as boss coins dos vídeos (~25 por equipa por jornada, `THEORY.md` §6) | **Posta de lado** (dono, 2026-10-09): 10 amigáveis (40 coins) subiram só ~1,5–2 M o valor do plantel; não compensa |
-| 13 | **Preço máximo de venda dos jogadores caros**: estudar no histórico de transferências até onde se consegue vender (dono, 2026-10-09) | **A recolher dados** (D-029): o bot guarda as transferências das ligas 1 vez por dia; até ~70 M€ de preço máximo vende-se ao máximo; acima de 100 M€ ainda não há vendas para estudar. Desde a 0.10.3 o registo do bot guarda, para cada listagem do dono, a hora em que foi posta à venda e, quando vende, quanto demorou e a percentagem do máximo |
+| 13 | **Preço máximo de venda dos jogadores caros**: estudar no histórico de transferências até onde se consegue vender (dono, 2026-10-09) | **A recolher dados** (D-029): o bot guarda as transferências das ligas 1 vez por dia; numa liga já se vendeu **ao máximo até ~167 M€**; a 75 % até ~155 M€; as vendas chegam em lotes (numa liga a cada ~2 h) e cada lote leva só uma parte da lista, sem ser pelo preço (2026-10-11, `DISCOVERY.md` §3). Desde a 0.10.3 o registo do bot guarda, para cada listagem do dono, a hora em que foi posta à venda e, quando vende, quanto demorou e a percentagem do máximo; desde a 0.10.4 regista também cada passagem do motor de transferências em cada liga (D-034) |
 | 14 | **Quanto melhora a equipa com os amigáveis**: medir ao certo e em média o ganho por amigável, para decidir subir o número por equipa (liga-se ao 12; dono, 2026-10-09) | **Posta de lado** com o 12 (dono, 2026-10-09: o ganho medido à mão não compensa) |
 
 Os vídeos têm limites impostos pelo servidor (detalhe em `THEORY.md` §12); o bot respeita-os sempre, salta algumas janelas da **loja** de propósito (os de treino e de dinheiro vêem-se sempre, D-021) e nunca forja a recompensa (D-012, regra 8).

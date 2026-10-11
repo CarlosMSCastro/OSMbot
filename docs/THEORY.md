@@ -136,6 +136,9 @@ Implementado em `plan_training` / `pick_trainee`:
   - **"Feito" (dono, 2026-10-08):** pelo menos 1 amigável **desde o último jogo dessa equipa**. Se o dono já fez um para este jogo, o bot não faz outro.
   - **Todas as equipas (dono, 2026-10-08):** vale para todas as equipas da conta, em qualquer liga, de 1 a 4 (há 4 lugares). Regra geral do projeto, não só desta: nada é fixo a clubes ou ligas.
   - **Para mais tarde (dono, 2026-10-08):** se isto funcionar bem, talvez **5 amigáveis por dia**. Não construir agora.
+  - **4 amigáveis por dia (dono, 2026-10-11):** o bot passa a fazer **4 amigáveis** por equipa antes de cada jogo (em vez de 1), e a checklist da janela mostra **"Amigáveis (1)", "(2)"… até "(4)"**; o ponto fica verde **logo com o 1.º** (como no jogo), mas o bot faz os 4 na mesma. Substitui o "1 amigável" acima.
+    - **[S]** Contam os amigáveis **desde o último jogo da equipa** (os do dono incluídos); o bot faz os que faltarem até 4, na mesma janela das **4 h antes do jogo**, contra clubes diferentes, ao acaso (o jogo só deixa 1 por clube por jornada), com uma pausa de alguns segundos entre eles.
+    - **[S]** Sem boss coins para todos: faz os que der (4 cada) e avisa.
   - **Observado e autorizado (2026-10-08, D-025):** pedidos em `DISCOVERY.md` §3. Construído em `prematch/policy.py` e `game/prematch.py`:
     - "Feito" é o que diz a checklist do jogo (`matchpreparation`). A análise só conta lá depois da hora do analista; por isso um analista já enviado nesta jornada também conta (o dono contava que passasse a 1/1 sozinha; **não passa**: é preciso **levantar o analista** quando acaba, `DISCOVERY.md` §3, observado a 2026-10-09).
     - **[S]** O adversário do amigável é **ao acaso** entre os clubes da liga ainda sem amigável nesta jornada (o dono diz que é indiferente; ao acaso evita um padrão de máquina). Se o jogo recusar, tenta outro (até 3).

@@ -80,7 +80,7 @@ WORDS = {
     "Treinos": "Training", "Campo": "Pitch", "Capacidade": "Capacity", "no máximo": "at max", "parado": "idle",
     "Médico": "Doctor", "Advogado": "Lawyer", "ninguém": "nobody", "pronto": "ready", "a levantar": "to collect",
     "ATA": "FWD", "MED": "MID", "DEF": "DEF", "GR": "GK", "—": "—",
-    "Amigável": "Friendly", "Análise": "Analysis", "Onze": "Line-up", "Posições": "Positions", "Em forma": "Fit",
+    "Amigável": "Friendly", "Amigáveis": "Friendlies", "Análise": "Analysis", "Onze": "Line-up", "Posições": "Positions", "Em forma": "Fit",
     "Banco": "Bench", "Especialistas": "Specialists", "4 treinos": "4 trainings",
     "pré-eliminatória": "preliminary round", "32 avos-de-final": "round of 64", "16 avos-de-final": "round of 32",
     "oitavos-de-final": "round of 16", "quartos-de-final": "quarter-finals", "meias-finais": "semi-finals",
@@ -143,7 +143,8 @@ PATTERNS = [(re.compile(pattern), replace) for pattern, replace in (
     (r"Treino (.+)", lambda m: f"Training {m[1]}"),
     (r"jogo · (casa|fora)( · taça)?", lambda m: f"match · {'home' if m[1] == 'casa' else 'away'}{' · cup' if m[2] else ''}"),
     (r"Jogo (.+)", lambda m: f"Match {m[1]}"),
-    (r"(Amigável|Análise) e (Amigável|Análise)", lambda m: f"{_w(m[1])} and {_w(m[2])}"),
+    (r"(Amigável|Amigáveis|Análise) e (Amigável|Amigáveis|Análise)", lambda m: f"{_w(m[1])} and {_w(m[2])}"),
+    (r"Amigáveis \((\d+)\)", lambda m: f"Friendlies ({m[1]})"),
     (r"(Treinos|Campo|Capacidade) (.+)", lambda m: f"{_w(m[1])} {m[2]}"),
     (r"(Médico|Advogado): levantar (.+)", lambda m: f"{_w(m[1])}: collect {m[2]}"),
     (r"(Médico|Advogado): (.+)", lambda m: f"{_w(m[1])}: {m[2]}"),
@@ -183,6 +184,9 @@ PATTERNS = [(re.compile(pattern), replace) for pattern, replace in (
      lambda m: f"Sale: {m[1]} ({m[2]}) sold for {m[3]}" + (f" ({m[4]}% of the maximum ≈ {m[5]})" if m[4] else "")
      + f"; for sale since {m[6].replace('antes de o bot começar a seguir', 'before the bot started following')}, sold by {m[7]}"
      + (f", took {m[8]}" if m[8] else "")),
+    (r"Motor de transferências \((.+)\): (passou|sem descida de preços) entre (\S+) e (\S+); vendidos (\d+) de (\d+) à venda \(teus: (\d+) de (\d+)\)",
+     lambda m: f"Transfer engine ({m[1]}): {'went round' if m[2] == 'passou' else 'no price drop'} between {m[3]} and {m[4]}; "
+               f"sold {m[5]} of {m[6]} for sale (yours: {m[7]} of {m[8]})"),
     (r"Parou: (.+)", lambda m: f"Stopped: {m[1]}"),
     # refused requests (D-032)
     (r"(Médico|Advogado) \(levantar\): o jogo recusou (.+) \((\d+)\); volto a tentar na próxima jornada",

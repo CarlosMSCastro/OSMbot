@@ -4,7 +4,15 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-PT/1.1.0/); 
 
 Este ficheiro é o **histórico de versões, para quem lê o repo**. O diário interno de cada sessão de trabalho está em [`docs/WORKLOG.md`](docs/WORKLOG.md).
 
-## [Por lançar]
+## [0.10.4] — 2026-10-11
+
+4 amigáveis antes de cada jogo e registo do motor de transferências.
+
+### Alterado
+- **4 amigáveis antes de cada jogo** (eram 1), contando os que fizeres à mão; na checklist do pré-jogo aparece "Amigáveis (0)" a "(4)", verde logo com o 1.º. Sem boss coins para todos, faz os que der e avisa.
+
+### Adicionado
+- **Registo do motor de transferências:** em cada liga, o bot regista quando o jogo passa a comprar jogadores, o que estava à venda (preço, % do máximo, idade, posição) e o que foi vendido ou retirado, em `logs/<PC>/transferencias/motor/`, e uma linha no registo do bot. Só leitura; serve para estudar com o tempo quanto se vende a cada preço.
 
 ## [0.10.3] — 2026-10-11
 

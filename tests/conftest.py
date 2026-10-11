@@ -87,6 +87,9 @@ def _isolated_from_the_game(monkeypatch, tmp_path):
     monkeypatch.setattr(medical, "COUNTS", {"doctor": 0, "lawyer": 0, "collected": 0})
     monkeypatch.setattr(medical, "PAUSE_BETWEEN_WRITES", 0)
     monkeypatch.setattr(sales, "SALES_FILE", tmp_path / "sales.json")
+    from osmbot.game import market
+
+    monkeypatch.setattr(market, "STATE_FILE", tmp_path / "mercado.json")
 
     class _NoClient:
         def __init__(self, *args, **kwargs):

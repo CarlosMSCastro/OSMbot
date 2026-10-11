@@ -108,6 +108,7 @@ O bot ganha uma janela de programa em **PySide6 (Qt)**, para a **0.9.0**. **Só 
 No modo ativo, para **todas as equipas** da conta: quando faltarem 4 horas ou menos para o próximo jogo, se a checklist do jogo ainda não tiver amigável, o bot faz **1** (4 boss coins, adversário indiferente); se ainda não houver análise, envia o analista ao próximo adversário. Nunca antes das 4 h e nunca por cima do que o dono já fez. Regras em `THEORY.md` §6; pedidos observados com `inspect-writes` em `DISCOVERY.md` §3. Mais amigáveis por dia (talvez 5) ficam para depois.
 **Porquê:** pedido do dono ("Podes avançar com o código"), que faz estes dois pontos sempre, mas quer as últimas horas livres para os confrontos diretos.
 
+**Alterada pelo dono em 2026-10-11:** **4 amigáveis** por equipa antes de cada jogo, em vez de 1 (os do dono contam), na mesma janela das 4 h; a checklist da janela mostra "Amigáveis (N)", verde a partir do 1.º (o bot faz os 4 na mesma) (`THEORY.md` §6).
 ### D-026 · Quadro da janela revisto (0.9.3) · Aceite · 2026-10-08
 Revê o aspeto de D-024; o resto de D-024 mantém-se. Respostas do dono, 2026-10-08:
 - **Clubes em grelha 2×2** (até 4). **Cabeçalho:** logótipo do jogo, nome grande, faixa com a cor tirada do logótipo.
@@ -173,3 +174,7 @@ A janela usa imagens dadas pelo dono: o **boss coin** (arte do OSM/Gamebasics), 
 |---|---|---|---|
 | D-008 | Git / repo no GitHub | — | **Do dono.** Ele faz commits, pulls e tudo o que é git/GitHub. O Claude só ajuda com mensagens de commit e versões quando pedido |
 | D-018 | Histórico de estatísticas unificado entre as 3 máquinas | — | Pedido em 2026-09-28 (boss coins, vídeos, horas); por desenhar. O resumo atual é só por execução |
+### D-034 · Registo das passagens do motor de transferências · Aceite · 2026-10-11
+A cada leitura do quadro (3 em 3 min), o bot compara a lista de transferências de cada liga com a anterior (só leitura; estado em `~/.osmbot/mercado.json`). Quando os jogadores postos pelo jogo (clubes de fora da liga) baixam de preço, ou um jogador de um treinador sai da lista, grava um registo em `logs/<PC>/transferencias/motor/<liga>.jsonl` (uma linha JSON por mudança): entre que leituras foi, quantos preços do jogo desceram, o que estava à venda na leitura antes (preço, valor, % do máximo, idade, posição, ratings, desde quando, se é do dono) e o que saiu, separado em **vendido** (aparece nas transferências da liga; 1 GET só quando alguém sai) e **retirado**. No registo do bot, uma linha: "Motor de transferências (liga): passou entre HH:MM e HH:MM; vendidos X de Y à venda (teus: A de B)". Código: `transfers/engine.py` (puro), `game/market.py`. Nada é decidido a partir disto; serve para estudar com o tempo a probabilidade de venda por preço e por % do máximo, dentro e fora de eventos.
+**Porquê:** pedido do dono ("configura os logs das transferências como achares útil para tirarmos conclusões com o tempo"), depois da pesquisa no fórum (`DISCOVERY.md` §6c: motor 8×/dia, venda por sorte com probabilidade por preço e taxa). A hipótese "o jogo baixa os seus preços a cada passagem" fica por confirmar com estes registos.
+

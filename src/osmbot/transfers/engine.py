@@ -1,0 +1,82 @@
+"""Watch the game's transfer engine in one league, from reads of its transfer list (D-034). Pure: no network.
+
+The game buys players listed by managers a few times a day ("8 times a day at random intervals", staff;
+DISCOVERY.md section 6c) and, on each of those rounds, lowers a little the price of the players it listed itself
+(clubs from outside the league, ``team.isForeignTeam``). So, between two reads of the list:
+
+- a game listing that is cheaper than before = the engine went round (hypothesis to check with these records);
+- a manager's listing that is gone = sold (if it shows in the league's transfers) or taken off the list.
+
+Each change is one record: when (between which two reads), what was for sale at the read before (price, value,
+age, ratings, whose), and what left. With time this says how likely a sale is per price and per % of the maximum.
+"""
+from __future__ import annotations
+
+GAP = 15 * 60  # s: reads further apart than this can't place a round well; the record says so ("lacuna")
+MAX_PRICE = 2.5  # the game's maximum asking price ≈ 2.5 × value (THEORY.md 7.5)
+
+
+def _row(item: dict, owner: int | None) -> dict:
+    player, team = item.get("player") or {}, item.get("team") or {}
+    value = player.get("value") or 0
+    price = item.get("price") or 0
+    return {"anuncio": item["id"], "jogador": player.get("id"), "equipa": item.get("teamId"),
+            "utilizador": bool(team.get("userId")), "dono": bool(owner) and team.get("userId") == owner,
+            "preco": price, "valor": value, "do_maximo": round(price / (MAX_PRICE * value), 3) if value else None,
+            "idade": player.get("age"), "pos": player.get("position"), "ovr": player.get("statOvr"),
+            "att": player.get("statAtt"), "def": player.get("statDef"), "desde": item.get("timeStampForSale")}
+
+
+def split(market: list[dict], owner: int | None = None) -> tuple[dict[str, int], dict[str, dict]]:
+    """({game listing id: price}, {manager listing id: row}). Keys are text, to survive a JSON round trip."""
+    game, people = {}, {}
+    for item in market:
+        if (item.get("team") or {}).get("isForeignTeam"):
+            game[str(item["id"])] = item.get("price") or 0
+        else:
+            people[str(item["id"])] = _row(item, owner)
+    return game, people
+
+
+def observe(state: dict | None, market: list[dict], now: float, owner: int | None = None) -> tuple[dict, dict | None]:
+    """The new state of the league and, when something changed since the last read, the record of it."""
+    game, people = split(market, owner)
+    new_state = {"t": now, "jogo": game, "pessoas": people}
+    if not state:  # the first read only learns what is listed
+        return new_state, None
+    before_game, before_people = state.get("jogo") or {}, state.get("pessoas") or {}
+    drops = sum(1 for key, price in game.items() if key in before_game and price < before_game[key])
+    gone = [key for key in before_people if key not in people]
+    if not drops and not gone:
+        return new_state, None
+    record = {"t": now, "antes": state.get("t"), "lacuna": now - (state.get("t") or 0) > GAP,
+              "descidas": drops, "jogo_novos": sum(1 for key in game if key not in before_game),
+              "jogo_saidos": sum(1 for key in before_game if key not in game),
+              "a_venda": list(before_people.values()), "sairam": [before_people[key]["jogador"] for key in gone]}
+    return new_state, record
+
+
+def classify(record: dict, transfers: list[dict], slack: float = 120.0) -> dict:
+    """Split the players that left the list into sold (seen in the league's transfers between the two reads,
+    give or take ``slack`` seconds) and taken off; keeps the time of each sale."""
+    start, end = (record.get("antes") or 0) - slack, record["t"] + slack
+    sold = {}
+    for row in transfers:
+        player = (row.get("player") or {}).get("id")
+        if player in record["sairam"] and start <= (row.get("timestamp") or 0) <= end:
+            sold[player] = row.get("timestamp")
+    return {**record, "vendidos": [{"jogador": p, "quando": t} for p, t in sold.items()],
+            "retirados": [p for p in record["sairam"] if p not in sold]}
+
+
+def describe(record: dict, league: str, clock) -> str:
+    """The log line: when the engine went round, how many managers' players were for sale, how many sold
+    (and how many of them were the owner's)."""
+    listed = [r for r in record["a_venda"] if r["utilizador"]]
+    sold = {s["jogador"] for s in record.get("vendidos", [])}
+    mine = [r for r in listed if r["dono"]]
+    mine_sold = sum(1 for r in mine if r["jogador"] in sold)
+    when = f"entre {clock(record['antes'])} e {clock(record['t'])}"
+    seen = "passou" if record["descidas"] else "sem descida de preços"
+    return (f"Motor de transferências ({league}): {seen} {when}; vendidos {len(sold)} de {len(listed)} à venda "
+            f"(teus: {mine_sold} de {len(mine)})")

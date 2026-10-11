@@ -10,14 +10,16 @@ from __future__ import annotations
 import time
 
 from osmbot.board.info import cup_phase, next_match, squad_value
-from osmbot.game import sales
+from osmbot.game import market as market_watch, sales
 from osmbot.medical.policy import open_cases
+from osmbot.prematch.policy import friendlies_played
 
 FIXTURES_FOR = 10 * 60.0
 VALUES_FOR = 3600.0
 CHECKLIST = [(7, "Amigável"), (5, "Análise"), (0, "Onze"), (2, "Posições"), (3, "Em forma"), (1, "Banco"),
              (4, "Especialistas"), (6, "4 treinos")]  # matchpreparation step types, in the card's order
 ANALYSIS_STEP = 5
+FRIENDLY_STEP = 7
 _cache: dict[tuple, tuple[float, object]] = {}
 
 
@@ -33,6 +35,11 @@ def _cached(key: tuple, seconds: float, read):
 def forget() -> None:
     """Drop the kept reads, so the next board read asks the game again (Ver → Atualizar)."""
     _cache.clear()
+
+
+def forget_fixtures(league: str) -> None:
+    """Read the league's fixtures again next time (the bot just played a friendly)."""
+    _cache.pop(("matches", league), None)
 
 
 def _list(client, path: str) -> list:
@@ -104,6 +111,13 @@ def club_extra(client, team: dict, base: str, players: list[dict], slot, market:
                                      "value": values_now[item["player"]["id"]], "since": item.get("timeStampForSale")}
               for item in market if item["player"]["id"] in squad}
     sold = sales.update(f"{league}/{team['id']}", listed, squad, team.get("name", "?"))
+    owner = next((t.get("userId") for t in teams if t["id"] == team["id"]), None)
+    try:  # the engine records (D-034): never in the way of the card
+        market_watch.watch(client, got[0][1]["id"], got[0][1].get("name", ""), market, owner)
+    except OSError:
+        raise
+    except Exception:
+        pass
     free = max(0, slot.maximum - slot.listed) if slot else 0
 
     status, prep = got[2]
@@ -116,6 +130,9 @@ def club_extra(client, team: dict, base: str, players: list[dict], slot, market:
             analyst = timer["finishedTimestamp"]
     steps = [(name, done.get(kind, False), analyst if kind == ANALYSIS_STEP and not done.get(kind) else None)
              for kind, name in CHECKLIST]
+    friendlies = friendlies_played(matches, team["id"], week)  # owner, 2026-10-11: "Amigáveis (1)" … "(4)", green from the 1st
+    steps = [(f"Amigáveis ({friendlies})", friendlies >= 1, None) if kind == FRIENDLY_STEP else step
+             for (kind, _), step in zip(CHECKLIST, steps)]
 
     by_id = {p["id"]: p for p in players}
     injured = [{**p, "unavailable": by_id.get(p["id"], p).get("unavailable")} for p in _as_list(got[4])]

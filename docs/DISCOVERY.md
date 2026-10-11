@@ -117,6 +117,12 @@ Legenda: **[V]** verificado por nós · **[R]** reportado por fonte de terceiros
 - **[V]** Nas transferências feitas (`leagues/{L}/transfers`) não há a data em que o jogador foi listado.
 - **[V] (2026-10-10)** Na lista de transferências (`GET leagues/{L}/teams/{T}/transferplayers/0`) cada jogador tem `timeStampForSale`: a hora em que foi posto à venda (as listagens do dono de hoje às 13:16–17:42 e uma de ontem às 09:14 batem com o que ele fez). Também `price`, `type`, `transferPrice`, `variableFee`, `boosted` (por apurar). O bot usa-o para medir quanto demora cada venda.
 - **[V] Estudo dos 100 M€ (2026-10-10, 204 transferências guardadas, 91 vendas de utilizadores):** nenhuma venda com preço máximo (2,5 × `value`) acima de **68 M€**; a mais cara foi 68,1 M€, ao máximo. Das 91 vendas, **69 (76%) ao máximo exato** e as outras entre 52% e 96% do máximo (os vendedores pediram menos); a proporção ao máximo é igual abaixo de 30 M€ (75%) e entre 30 e 70 M€ (78%). Todas compradas por clubes do jogo de fora da liga. O preço pago nunca passa de 2,5 × `value`. **Acima de 70 M€ ainda não há dados**; a regra dos 75% (`THEORY.md` §7.5) continua sem confirmação nem desmentido.
+- **[V] Primeiras vendas acima de 100 M€ (gravação de 2026-10-11, 332 transferências, 165 vendas de utilizadores):** 3 do dono a **75 %** do máximo, todas vendidas (máximos de 154,6, 143,8 e 117,7 M€); e uma de outro utilizador a **100 %** de um máximo de 104,1 M€ (mais uma a 100 % de 98,2 M€). Logo, a ~104 M€ ainda se vende ao máximo; a 75 % vende-se pelo menos até ~155 M€. Onde fica o limite (se houver) entre 104 e 155 M€: **por apurar**. Não muda `THEORY.md` (é do dono).
+- **[V] As vendas aos clubes do jogo acontecem em lotes:** numa liga, 91 das 99 vendas de utilizadores caíram em minutos partilhados (17 vendas às 17:18 de 10/10, 16 às 19:52, 9 às 13:48 e às 16:34); na outra, 33 de 66. **[H]** Os compradores passam pela liga de tempos a tempos e levam uma parte da lista, não tudo: 2 jogadores do dono a 100 % do máximo (77,8 e 92,4 M€) e 2 a 75 % (116 e 142 M€) estão listados há ~25–29 h e ficaram de fora de vários lotes. Por isso o tempo até vender depende sobretudo de quando passa o lote, e um jogador que não vende num lote não prova que o preço é alto demais.
+- **[V] Atualização 2026-10-11 21:25 (leitura ao vivo das 2 ligas):** numa liga, 45 vendas de utilizadores em 24 h, quase todas a **100 %**, incluindo **6 com máximo acima de 100 M€ (até 167,4 M€)**: a ~167 M€ ainda se vende ao máximo, o que desmente, nesta liga, a ideia de só vender acima de 100 M€ a 75 %. Lotes regulares, **a cada ~2 h** (09:49, 11:35, 13:37, 15:26, 18:01, 20:10), com 7 a 12 vendas cada. Na outra liga, 16 vendas, lotes irregulares (o maior intervalo foi de ~6 h) e quase só de quem vende abaixo do máximo.
+- **[V]** Cada lote leva só uma parte: na 1.ª liga há ~20 listagens de utilizadores a 100 % à espera há 1–37 h (máximos de 39 a 211 M€), enquanto outras iguais foram compradas. Na 2.ª liga, as do dono a 100 % (78 e 92 M€) estão à espera há 32 h e as a 75 % (116 e 142 M€) há 28 h: baixar para 75 % não as fez vender mais depressa. **[H]** A escolha dentro de cada lote parece aleatória ou depende de algo que ainda não vimos (posição, idade, liga); não é o preço.
+- **[V]** A lista de transferências da liga (`transferplayers/0`) também mostra jogadores de clubes do jogo de fora da liga (`teamId` alto) à venda a ~50–70 % do máximo; não contam para o estudo (são para comprar, não vendas de utilizadores).
+- **Atenção:** os dados de 10–11/10 são do evento **Transfer Madness** (§6b: "mais hipótese de venda"). Os lotes a cada ~2 h e as vendas ao máximo até 167 M€ podem ser do evento; repetir a análise num fim de semana sem evento antes de tirar conclusões.
 - `gamesettings` também tem `MaxDoctorTreatmentsPerRound` = 0 (significado por apurar: sem limite?).
 
 ## 4. Regras do jogo/ToS relevantes
@@ -173,6 +179,28 @@ Bate com a medição do dono (THEORY §6: 10 amigáveis numa jornada = ~1,5–2 
 | **31** | **Extreme Training** | progressão extrema (ao recolher) em cada treino e amigável; treinos 3 h (universal 2 h) |
 
 **[H]** "ao recolher" sugere que a progressão do amigável conta quando se recolhe, como nos treinos; por verificar.
+
+**Calendário pela API (2026-10-11, *Verificado*, só leitura):** 12 GETs prováveis (`events`, `user/events`, `campaigns`, `user/campaigns`, `promotions`, `user/promotions`, `liveevents`, `weekendevents`, `gameevents`, `user/gameevents`, `activeevents`, `events/active`) dão todos 404, e o jogo não mostra o calendário (dono). O calendário só existe no fórum (publicado pela staff ~25–30 do mês anterior). Um evento ativo só se vê pelos efeitos nas regras, p. ex. `MaxPlayersOnTransferlist` = 6 em `gamesettings` no Transfer Madness.
+
+## 6c. Transferências e treino: pesquisa no fórum oficial (2026-10-11)
+
+Lido no Chrome (só leitura, sem sessão). "Staff" = equipa do OSM no fórum (SpecialOne, gestor de comunidade FC Eddie_NL).
+
+| Afirmação | Nível | Fonte |
+|---|---|---|
+| O jogo compra os jogadores dos utilizadores por **sorte**, com uma probabilidade que combina o **preço pedido** e a **taxa de subida** (preço ÷ valor) | Reportado (staff, 2021–2023) | [pesquisa "increase rate" no fórum](https://forum.onlinesoccermanager.com/search?term=%22increase%20rate%22&in=titlesposts) |
+| **O preço absoluto pesa mais:** "um máximo de 80 M tem muito mais hipóteses do que um preço acima de 160 M, mesmo que este esteja a 1,5× e o de 80 M a 2,5×" | Reportado (staff, 2022-12) | idem ("Locked Transfers") |
+| O motor de transferências passa **8 vezes por dia, a intervalos aleatórios**; em cada passagem baixa um pouco o preço dos jogadores de fora da liga (é assim que se vê se passou) | Reportado (staff, 2025-11) | idem, pesquisa "transfer engine" ("No transfers have happened…") |
+| Jogadores **100+ de rating** quase não vendem fora dos eventos de transferências | Reportado (staff, 2025-11 e 2026-04) | idem |
+| Nos eventos (Transfer Madness / Rush / Deadline Day): **mais hipótese de venda e mais jogadores comprados em cada passagem**; 6 vagas | Reportado (calendário oficial) | [fórum 67089](https://forum.onlinesoccermanager.com/topic/67089/monthly-weekend-events-schedule) |
+| **Perto do fim da liga vende-se pior** (a probabilidade foi mudada para isso em 2022) | Reportado (staff, 2022-05 e 2026-04) | idem, pesquisa "increase rate" ("Game Updates") |
+| Teste do staff para ver se a conta vende: comprar um jogador barato (< 2 M) e listá-lo ao máximo; deve vender em < 24 h | Reportado (staff, 2021-05) | idem ("No transfers!") |
+| Jogadores mais velhos vendem pior; listar ao máximo baixa a hipótese | Opinião de jogadores (2025–2026) | [fórum 76375](https://forum.onlinesoccermanager.com/topic/76375/tips) e pesquisa "selling chance" |
+| Experiente = 30+ anos (para as dicas de equipa do jogo) | Reportado (gestor de comunidade, 2026-01, "acho eu") | fórum 76375 |
+| **Treino:** progride menos com a idade, com o rating, e quanto mais vezes se treina o mesmo jogador na mesma jornada; eventos mudam isto. Campo de treino nível 3 = +50 % face ao nível 0 (+25 % face ao 2) | Reportado (gestor de comunidade, 2024-07) | [fórum 72752](https://forum.onlinesoccermanager.com/topic/72752/how-is-the-training-progress-bonus-calculated-by-upgrading-the-training-ground) |
+| Na lista de transferências, a partir de 100 de rating o custo em BC sobe 1 por cada 10 pontos (0–99: 1 BC; 100–109: 2 BC…). **O que custa** não está claro (listar? comprar?) | Opinião de jogador (2024-11) | pesquisa "amigáveis" no fórum PT ("O Conquistador") |
+
+**Comparação com o que medimos (§3, 10–11/10, durante o Transfer Madness):** os lotes a cada ~2 h batem com "8 vezes por dia"; vender ao máximo até 167 M€ bate com "mais hipótese nos eventos". Fora do evento, o staff diz que acima de 100 de rating quase não se vende, e que o preço absoluto conta mais do que a % do máximo: baixar de 100 % para 75 % ajuda pouco a 140 M€. **[H]** O bot pode detetar cada passagem do motor pela descida de preço dos jogadores de fora da liga (só leitura). Desde 2026-10-11 regista-o (D-034, `logs/<PC>/transferencias/motor/`); confirmar a hipótese quando houver registos (as descidas devem coincidir com as horas das vendas).
 
 ## 7. Próximos passos de descoberta
 

@@ -3,6 +3,7 @@ from __future__ import annotations
 
 LEAD = 4 * 3600  # act only when the match is this close: before that the owner may still do it himself (owner, 2026-10-08)
 FRIENDLY_STEP = 7  # matchpreparation step "Play 1 Friendly"
+FRIENDLIES_PER_MATCH = 4  # owner, 2026-10-11: 4 friendlies before each match (THEORY.md section 6)
 ANALYSIS_STEP = 5  # matchpreparation step "Analyse your opponent"
 LEAGUE_MATCH, CUP_MATCH, FRIENDLY_MATCH = 0, 1, 2  # matchType in matches/filter (1 = cup: hypothesis)
 
@@ -20,8 +21,13 @@ def step_done(steps: list[dict], step_type: int) -> bool:
     return step.get("progressAmount", 0) >= step.get("completionAmount", 1)
 
 
-def needs_friendly(steps: list[dict]) -> bool:
-    return not step_done(steps, FRIENDLY_STEP)
+def friendlies_played(matches: list[dict], team_id: int, week: int) -> int:
+    """Friendlies the club already played this round (since its last match), the owner's included."""
+    return sum(1 for m in matches if m["matchType"] == FRIENDLY_MATCH and m["weekNr"] == week and _involves(m, team_id))
+
+
+def friendlies_missing(matches: list[dict], team_id: int, week: int) -> int:
+    return max(0, FRIENDLIES_PER_MATCH - friendlies_played(matches, team_id, week))
 
 
 def needs_analysis(steps: list[dict], sent: list[dict], week: int) -> bool:
