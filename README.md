@@ -2,7 +2,7 @@
 
 Exploração de um bot para o **Online Soccer Manager** (Gamebasics).
 
-> **Estado (0.9.3):** o bot trabalha sozinho no Windows (treinos, estádio, patrocinadores, vídeos da loja, de treino e de dinheiro, recompensas diárias, amigável e análise do adversário 4 h antes de cada jogo, médico e advogado, aviso de vagas e de vendas na lista de transferências), numa **janela de programa** com ícone junto ao relógio (o quadro de consola continua disponível). Ver [`CHANGELOG.md`](CHANGELOG.md) e [`docs/`](docs/).
+> **Estado (0.10.3):** o bot trabalha sozinho no Windows (treinos, estádio, patrocinadores, vídeos da loja, de treino e de dinheiro, recompensas diárias, amigável e análise do adversário 4 h antes de cada jogo, médico e advogado, aviso de vagas e de vendas na lista de transferências, histórico de transferências das ligas), numa **janela de programa** em português ou inglês, com ícone junto ao relógio (o quadro de consola continua disponível). Ver [`CHANGELOG.md`](CHANGELOG.md) e [`docs/`](docs/).
 
 ## Aviso
 
@@ -34,9 +34,8 @@ O comando `login` abre uma janela de Firefox a sério (não Chromium — o popup
 `osmbot` sem argumentos (ou o `OSMbot.exe` da pasta portátil, que não abre consola) abre a **janela** (D-024, só Windows por agora):
 
 - abre pequena, com **Abrir**, **Login** e **Sair**. Num PC novo, começa pelo Login;
-- **Abrir** mostra "A carregar o jogo…", põe o bot a trabalhar e a janela cresce para o **quadro** (D-026): os clubes em grelha 2×2 (próximo jogo, liga, taça, valor do plantel, dinheiro e vendas, patrocinadores, estádio, pré-jogo, treinos, cansados, lesionados e suspensos) e, em baixo, as boss coins e os contadores da conta;
-- menu **Bot**: Iniciar, Parar (pára na pausa seguinte), Login, Sair. Menu **Ver**: Avisos e erros, Atualizar quadro, Pasta dos logs, Capturas das falhas;
-- a barra de baixo mostra o estado e a próxima verificação;
+- **Abrir** mostra "A carregar o jogo…", põe o bot a trabalhar e a janela cresce para o **quadro** (D-030): em cima as diárias e "A trabalhar desde"; um cartão por clube na cor do clube (próximo jogo, liga, taça, valor do plantel, dinheiro e vendas, patrocinadores, estádio, treinos, médico e advogado, pré-jogo); à direita as boss coins e a linha do tempo (o que vem a seguir por cima do "agora", o que o bot já fez por baixo). O quadro relê o jogo de 3 em 3 min;
+- menu **Bot**: Iniciar, Parar (pára na pausa seguinte), Login, Sair. Menu **Ver**: Atualizar, Avisos e erros, Pasta dos logs, Capturas das falhas. Menu **Idioma / Language**: Português ou English (D-031). Menu **Ajuda**: Sobre;
 - com o bot a trabalhar, fechar a janela (X) **só a esconde**: o **ícone junto ao relógio** (logótipo com bolinha verde a trabalhar, cinzenta parado) volta a abri-la. Para sair: Bot → Sair, ou o ícone → Sair. Sem notificações do Windows.
 
 O resto é por comandos:

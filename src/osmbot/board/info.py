@@ -61,16 +61,24 @@ def squad_value(values: dict[int, tuple[int, int]], team_id: int) -> tuple[int, 
     return order.index(team_id) + 1, total, total / max(1, count), count, len(values)
 
 
-def track_sales(state: dict, listed: dict[int, dict], squad: set[int]) -> dict:
-    """Follow one club's transfer list between reads. ``listed``: {player id: {"name", "price"}} on the list now;
-    ``squad``: the club's player ids now. A player that left the list AND the squad was sold (at the listed price,
-    which is what reaches the club's money, owner 2026-10-09). A sale stays on the card until the owner fills a slot
-    again: each new listing clears the oldest sale. Returns the new state {"listed": ..., "sales": [...]}."""
+def track_sales(state: dict, listed: dict[int, dict], squad: set[int], now: float | None = None) -> dict:
+    """Follow one club's transfer list between reads. ``listed``: {player id: {"name", "price", "value"}} on the list
+    now; ``squad``: the club's player ids now. A player that left the list AND the squad was sold (at the listed
+    price, which is what reaches the club's money, owner 2026-10-09). A sale stays on the card until the owner fills
+    a slot again: each new listing clears the oldest sale. Returns the new state {"listed": ..., "sales": [...]} and,
+    for the log, what happened since the last read: "new_listings" and "new_sales".
+
+    Times (owner, 2026-10-10, for the 100 M€ study): each listing keeps "since", when it was listed (the game's
+    ``timeStampForSale`` when given; else the read that first saw it, None when already listed at the very first
+    read); each sale has "since" and "sold", the read that saw it gone (as close as the bot's reads, a few minutes)."""
     before = {int(k): v for k, v in (state.get("listed") or {}).items()}
+    first = state.get("listed") is None  # the very first read only learns what is listed
+    listed = {pid: {**item, "since": item.get("since") or (None if first else before.get(pid, {"since": now}).get("since"))}
+              for pid, item in listed.items()}
     sales = list(state.get("sales") or [])
-    if state.get("listed") is not None:  # the very first read only learns what is listed
-        sales += [{"name": item["name"], "price": item["price"]} for pid, item in before.items()
-                  if pid not in listed and pid not in squad]
-        new = sum(1 for pid in listed if pid not in before)
-        sales = sales[new:]
-    return {"listed": listed, "sales": sales}
+    new_listings, new_sales = [], []
+    if not first:
+        new_sales = [{**item, "sold": now} for pid, item in before.items() if pid not in listed and pid not in squad]
+        new_listings = [item for pid, item in listed.items() if pid not in before]
+        sales = (sales + new_sales)[len(new_listings):]
+    return {"listed": listed, "sales": sales, "new_listings": new_listings, "new_sales": new_sales}

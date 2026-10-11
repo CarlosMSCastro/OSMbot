@@ -177,6 +177,12 @@ PATTERNS = [(re.compile(pattern), replace) for pattern, replace in (
     (r"(.+): sem boss coins para o amigável \((\d+)\); fica por fazer", lambda m: f"{m[1]}: not enough boss coins for the friendly ({m[2]}); not done"),
     (r"(.+): não sei quem é o próximo adversário; análise fica por fazer", lambda m: f"{m[1]}: next opponent unknown; analysis not done"),
     (r"(.+): nenhum clube disponível para amigável nesta jornada", lambda m: f"{m[1]}: no club available for a friendly this round"),
+    (r"Lista de transferências: (.+) \((.+)\) à venda por (.+?)(?: \((\d+)% do máximo ≈ (.+)\))?$",
+     lambda m: f"Transfer list: {m[1]} ({m[2]}) for sale at {m[3]}" + (f" ({m[4]}% of the maximum ≈ {m[5]})" if m[4] else "")),
+    (r"Venda: (.+) \((.+)\) vendido por (.+?)(?: \((\d+)% do máximo ≈ (.+)\))?; à venda desde (.+), vendido até ([^,]+)(?:, demorou (.+))?$",
+     lambda m: f"Sale: {m[1]} ({m[2]}) sold for {m[3]}" + (f" ({m[4]}% of the maximum ≈ {m[5]})" if m[4] else "")
+     + f"; for sale since {m[6].replace('antes de o bot começar a seguir', 'before the bot started following')}, sold by {m[7]}"
+     + (f", took {m[8]}" if m[8] else "")),
     (r"Parou: (.+)", lambda m: f"Stopped: {m[1]}"),
     # refused requests (D-032)
     (r"(Médico|Advogado) \(levantar\): o jogo recusou (.+) \((\d+)\); volto a tentar na próxima jornada",

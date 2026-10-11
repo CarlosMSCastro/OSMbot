@@ -99,9 +99,11 @@ def club_extra(client, team: dict, base: str, players: list[dict], slot, market:
     values = {**values, team["id"]: (sum(p.get("value") or 0 for p in players), len(players))}  # own squad: fresh
 
     squad = {p["id"] for p in players}
-    listed = {item["player"]["id"]: {"name": item["player"].get("name", "?"), "price": item.get("price") or 0}
+    values_now = {p["id"]: p.get("value") or 0 for p in players}
+    listed = {item["player"]["id"]: {"name": item["player"].get("name", "?"), "price": item.get("price") or 0,
+                                     "value": values_now[item["player"]["id"]], "since": item.get("timeStampForSale")}
               for item in market if item["player"]["id"] in squad}
-    sold = sales.update(f"{league}/{team['id']}", listed, squad)
+    sold = sales.update(f"{league}/{team['id']}", listed, squad, team.get("name", "?"))
     free = max(0, slot.maximum - slot.listed) if slot else 0
 
     status, prep = got[2]

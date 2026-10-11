@@ -6,6 +6,13 @@ Este ficheiro é o **histórico de versões, para quem lê o repo**. O diário i
 
 ## [Por lançar]
 
+## [0.10.3] — 2026-10-11
+
+Hora das vendas no registo do bot, para estudar até onde se vendem os jogadores caros.
+
+### Adicionado
+- **Lista de transferências no registo:** cada jogador que pões à venda fica registado com o preço e a percentagem do preço máximo (≈ 2,5 × o valor). Quando vende, o registo diz por quanto, desde quando estava à venda, quando foi vendido e quanto demorou. A hora de entrada vem do próprio jogo; a hora da venda tem a precisão das leituras do bot (3 min).
+
 ## [0.10.2] — 2026-10-10
 
 Linha do tempo com bola nos jogos e temporizador quando o bot está à espera; valor do plantel e janela corrigidos.

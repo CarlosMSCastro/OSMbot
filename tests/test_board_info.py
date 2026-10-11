@@ -37,8 +37,30 @@ def test_a_sale_is_a_listed_player_gone_from_the_squad_and_stays_until_a_slot_is
     state = track_sales({}, {7: {"name": "A", "price": 100}, 8: {"name": "B", "price": 50}}, {7, 8, 9})
     assert state["sales"] == []  # the first read only learns what is listed
     state = track_sales(state, {8: {"name": "B", "price": 50}}, {8, 9})  # A left the list and the squad: sold
-    assert state["sales"] == [{"name": "A", "price": 100}]
+    assert [(s["name"], s["price"]) for s in state["sales"]] == [("A", 100)]
     state = track_sales(state, {}, {8, 9})  # B taken off the list but still in the squad: not a sale
-    assert state["sales"] == [{"name": "A", "price": 100}]
+    assert [(s["name"], s["price"]) for s in state["sales"]] == [("A", 100)] and state["new_sales"] == []
     state = track_sales(state, {9: {"name": "C", "price": 70}}, {8, 9})  # the owner lists another: the sale goes away
     assert state["sales"] == []
+
+
+def test_listing_and_sale_times_for_the_log():
+    from osmbot.game.sales import describe
+
+    state = track_sales({}, {7: {"name": "A", "price": 100, "value": 40}}, {7, 8}, now=1000.0)
+    assert state["listed"][7]["since"] is None  # already listed before the bot looked: unknown
+    state = track_sales(state, {7: {"name": "A", "price": 100, "value": 40},
+                                8: {"name": "B", "price": 75_000_000, "value": 40_000_000}}, {7, 8}, now=2000.0)
+    assert state["listed"][8]["since"] == 2000.0 and [i["name"] for i in state["new_listings"]] == ["B"]
+    assert describe("Clube", state) == ["Lista de transferências: B (Clube) à venda por 75 M (75% do máximo ≈ 100 M)"]
+    state = track_sales(state, {7: {"name": "A", "price": 100, "value": 40}}, {7}, now=2000.0 + 5 * 3600 + 12 * 60)
+    assert state["new_sales"][0]["since"] == 2000.0 and state["listed"][7]["since"] is None  # kept from read to read
+    line = describe("Clube", state)[0]
+    assert line.startswith("Venda: B (Clube) vendido por 75 M (75% do máximo ≈ 100 M); à venda desde ") and line.endswith("demorou 5h12")
+
+
+def test_the_games_listing_time_wins():
+    state = track_sales({}, {7: {"name": "A", "price": 100, "since": 500.0}}, {7}, now=1000.0)
+    assert state["listed"][7]["since"] == 500.0  # timeStampForSale: known even at the very first read
+    state = track_sales(state, {}, set(), now=4000.0)
+    assert state["new_sales"][0]["since"] == 500.0 and state["new_sales"][0]["sold"] == 4000.0
