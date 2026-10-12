@@ -14,6 +14,7 @@ import os
 import sys
 import threading
 import time
+import traceback
 from datetime import datetime
 from pathlib import Path
 
@@ -1426,7 +1427,7 @@ class MainWindow(QMainWindow):
     def start_bot(self) -> None:
         if self.running() or self.busy:
             return
-        from osmbot.game.loop import run_active
+        from osmbot.game.loop import _log, run_active
 
         self.stopping = False
         self.started_at = time.time()
@@ -1438,8 +1439,13 @@ class MainWindow(QMainWindow):
                 run_active(False, board=self.bridge.board.emit)
             except SystemExit as stop:
                 reason = stop.code if isinstance(stop.code, str) else ("Parou: ver o registo" if stop.code else "")
-            except BaseException as error:  # never die silently: say it in the window
+            except BaseException as error:  # never die silently: say it in the window and in the log
                 reason = f"Parou: erro ({error})"
+                where = traceback.extract_tb(error.__traceback__)[-1]
+                try:
+                    _log(f"{reason} em {Path(where.filename).name}:{where.lineno}")
+                except Exception:
+                    pass
             self.bridge.finished.emit(reason)
 
         self.worker = threading.Thread(target=work, name="osmbot-loop", daemon=True)

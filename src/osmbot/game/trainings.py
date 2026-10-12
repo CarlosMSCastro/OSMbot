@@ -161,13 +161,13 @@ def run_train(confirm: bool, limit: int | None = None) -> int:
             setting = next((g["id"] for g in settings if g["name"] == TRAINING_SETTING_NAME), None)
             _, league = client.get(f"leagues/{team['leagueId']}")
             week = league["weekNr"]  # the last round played: a session started now carries this number
-            done = round_sessions(sessions, _recorded(base, week), week)
+            rotation = round_sessions(sessions, _recorded(base, week), week)
             status, forecasts = client.get(f"{base}/trainingforecasts")
             forecast = {f["playerId"]: f["forecast"] for f in forecasts} if status == 200 and isinstance(forecasts, list) else {}
             ready = ready_sessions(sessions, time.time())
             # Preview assumes the ready sessions get collected first; a real run only uses truly free slots.
             considered = sessions if confirm else [s for s in sessions if s not in ready]
-            plan = plan_new_trainings(players, considered, listed, done)
+            plan = plan_new_trainings(players, considered, listed, rotation)
             note = ""
             if ready:
                 note = (" (ainda ha %d treino(s) por recolher: corre 'osmbot recolher' primeiro)" if confirm
@@ -179,7 +179,7 @@ def run_train(confirm: bool, limit: int | None = None) -> int:
                     break
                 label = f"{player.name} ({POSITIONS[int(player.position)]}, {player.age} anos, rating {player.rating})"
                 extra = (f" · previsão {forecast[player.id]}" if player.id in forecast else "") + \
-                    f" · {done.get(player.id, 0) + 1}.º treino na jornada"  # data to judge the rotation (owner, 2026-10-12)
+                    f" · {rotation.get(player.id, 0) + 1}.º treino na jornada"  # data to judge the rotation (owner, 2026-10-12)
                 if not confirm:
                     print(f"  iniciaria: {label}{extra}")
                     continue

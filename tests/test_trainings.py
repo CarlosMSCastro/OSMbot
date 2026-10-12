@@ -78,3 +78,33 @@ def test_the_round_record_starts_again_with_a_new_round():
     assert _recorded("b", 7) == {"501": 10, "502": 11}
     _record("b", 8, 503, 10)
     assert _recorded("b", 7) == {} and _recorded("b", 8) == {"503": 10}
+
+
+def test_run_train_starts_several_sessions_and_records_them(monkeypatch):
+    """Regression (0.11.0): the round counts reused the name of the int counter, so the first success crashed."""
+    import osmbot.game.client as client_module
+    from osmbot.game import trainings
+
+    base = "leagues/1/teams/2"
+    players = [dict(api_player(1, 1, att=90), name="A"), dict(api_player(2, 2, ovr=90), name="B")]
+    replies = {
+        "user/accounts": {"teamSlots": {"1": {"team": {"id": 2, "leagueId": 1, "name": "T"}}}},
+        f"{base}/trainingsessions/ongoing": [], f"{base}/players": players, f"{base}/transferplayers/0": [],
+        "leagues/1/gamesettings": [{"id": 9, "name": trainings.TRAINING_SETTING_NAME}],
+        "leagues/1": {"weekNr": 7}, f"{base}/trainingforecasts": [],
+    }
+    posted = []
+
+    class FakeClient:
+        def get(self, path):
+            return 200, replies[path]
+
+        def post(self, path, body):
+            posted.append(body["playerId"])
+            return 200, {"id": 500 + len(posted)}
+
+    monkeypatch.setattr(client_module, "OsmClient", FakeClient)
+    monkeypatch.setattr(trainings, "PAUSE_BETWEEN_WRITES", 0)
+    assert trainings.run_train(confirm=True) == 0
+    assert sorted(posted) == [1, 2]
+    assert trainings._recorded(base, 7) == {"501": posted[0], "502": posted[1]}

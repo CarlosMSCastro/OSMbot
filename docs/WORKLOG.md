@@ -2,6 +2,13 @@
 
 Entradas mais recentes primeiro. Cada sessão: o que se fez · o que ficou por fazer · próximo passo.
 
+## 2026-10-12 — Bot parado de noite (0.11.0, Windows)
+
+- **Sintoma** (screenshot do dono, DESKTOP-KAM70RR): "Parou: erro (unsupported operand type(s) for +=: 'dict' and 'int')"; o registo acaba às 03:06:01, logo a seguir ao 1.º treino posto com a 0.11.0 (Marmoush).
+- **Causa:** em `run_train` a contagem da rotação (`round_sessions`) reutilizou o nome `done`, que já era o contador de treinos postos; o `done += 1` depois do 1.º POST com sucesso rebentava. Os testes não corriam `run_train` em modo real.
+- **Correção:** dicionário renomeado para `rotation` (`game/trainings.py`); teste novo com cliente falso (2 treinos postos e gravados), que falha com o código antigo. A janela passa a escrever a paragem no registo, com ficheiro:linha (antes só aparecia na janela; a lista "Avisos e erros" ficava vazia). 310 testes.
+- **Próximo passo:** o dono lança a correção (versão 0.11.1?), reconstrói o `dist` e volta a ligar o bot no DESKTOP-KAM70RR.
+
 ## 2026-10-12 — Boss coins por dia, revisão do que nos atrasa (0.11.0, Mac)
 
 - **Boss coins por dia** (pergunta do dono, contado nos logs): 05/10 7 · 06/10 24 · 07/10 121 · 08/10 178 · 09/10 198 · 10/10 195 · 11/10 105 (meio dia); 828 no total, ~190/dia com o bot o dia inteiro. Contas de sustentabilidade feitas com o dono (liga ~350, 3 estágios = 80, 4 amigáveis/dia ≈ 28 coins/dia por equipa): dá para 4 equipas.
