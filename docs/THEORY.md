@@ -95,7 +95,7 @@ Implementado em `plan_training` / `pick_trainee`:
 - **Exceção (dono, 2026-10-04): guarda-redes treinam sempre o melhor, independentemente da idade.** O limite de 30+ aplica-se só a jogadores de campo.
 - **[S]** Jogadores com forecast ≤ 0 (previsão do servidor: nada a ganhar) também são excluídos, quando essa informação existe.
 - **Rotação entre titulares (dono, 2026-10-12):** treinar o mesmo jogador outra vez na mesma jornada rende menos e a quebra só desaparece com o jogo (fórum, `DISCOVERY.md` §6b/§6c; nos logs, o Haaland deu +38 na 1.ª sessão depois de um jogo e +11–13 nas seguintes). Por isso cada treino vai para o **titular** (onze, `lineup` 1–11) da posição com **menos sessões nesta jornada**; entre iguais, o melhor. **Desempate (dono, 2026-10-12):** entre iguais, o que tem **mais expectativa de melhorar** (a previsão do jogo, `trainingforecasts`); só depois o melhor. Nos logs, os jogadores de 115 ganham 2–3× menos por treino do que os de 104–110, e a previsão do jogo diz o mesmo (Donnarumma 115 → 13, D. Henderson 104 → 29). A previsão não conta as repetições na jornada: por isso continua primeiro a rotação. Quando todos já treinaram, volta ao melhor e assim por diante. Valem as mesmas exclusões (lesionados, listados, 30+ exceto GR). **[S]** Sem titular elegível na posição (p. ex. todos 30+), a mesma regra no resto do plantel. **[S]** A jornada é o `weekNr` da liga (a última jogada): as sessões contam-se pelas que o bot **viu** nesse PC (as que pôs e as que encontrou a decorrer ou por recolher, as do dono e as do outro PC incluídas; desde 2026-10-12) e pelas que estão a decorrer. Perdem-se só as que o outro PC pôs e recolheu antes de desligar (o jogo não guarda histórico, `DISCOVERY.md` §3). O bot regista em cada treino a previsão do jogo e o progresso ao recolher, para se medir se a rotação compensa.
-- **Treinador universal (5): fora de âmbito.** O dono não o usa por padrão: só ganha um às vezes e usa-o situacionalmente. Não automatizar.
+- **Treinador universal (5):** só com os itens que vão expirar (§20, D-039). Comprá-lo com boss coins continua fora de âmbito.
 
 ## 6. Preparação do jogo (checklist)
 
@@ -482,7 +482,7 @@ Há **3 componentes** a melhorar, cada um com **níveis 0, 1, 2 e 3**:
 
 **Limites do jogo (regra geral)**
 - O inventário tem um limite por item (`inventoryLimit`, catálogos `actionrewards` e `rewards`). O bot **não reclama** se o item ficasse acima do limite.
-- Nunca se usam os itens do inventário (isso exige escolhas: jogador, posição...). É decisão do dono.
+- Nunca se usam os itens do inventário (isso exige escolhas: jogador, posição...). É decisão do dono. **Exceção (D-039):** os que vão expirar usam-se 4 h antes (§20).
 - O bot respeita o jogo: sem pedidos repetidos para o que o jogo recusou.
 
 ## 18. Médico e advogado
@@ -502,3 +502,15 @@ Há **3 componentes** a melhorar, cada um com **níveis 0, 1, 2 e 3**:
 - **Começar logo com o clube de maior valor do plantel** da liga (ao criar a liga, o jogo deixa escolher o clube). Como as automações tornam tudo mais eficiente (treinos, amigáveis, vídeos, poupança), quanto mais cedo o plantel for o melhor, **mais depressa ganha distância** para os outros.
 - **Estágios: até 3 por época** (10 + 20 + 50 = 80 coins). Os 3 seguintes (100, 200, 500) são exponencialmente mais caros; com a distância ganha cedo, deixam de ser precisos.
 - Conta do dono: com ~190 boss coins por dia, a liga (~350), os 3 estágios (80) e os amigáveis (≈28 coins por dia por equipa) dá para **4 equipas**.
+
+## 20. Inventário: usar o que vai expirar
+
+*Fonte: o dono, 2026-10-12 ("há itens que eu perco porque me esqueço"; perder = expirar sem usar). Pedidos em `DISCOVERY.md` §3 (lidos no código da web; o 1.º uso do treinador universal feito e visto a 2026-10-12). Substitui, para estes itens, o "nunca se usam itens" do §17 (D-039).*
+
+- **Que itens:** só os que **expiram** (o jogo dá-lhes prazo, 7 dias depois de entrarem): **treinadores universais** (24 h, 48 h) e **sacos** (p. ex. o do início de sessão). As **trocas de posição** e a **progressão** não expiram: continuam **manuais**, nunca as usa o bot.
+- **Quando:** **4 h antes de expirar** (o dono: "3 ou 4 horas"), o bot usa o item sozinho. **24 h antes**, a janela avisa junto ao ícone do inventário.
+- **Treinador universal: que equipa.** É por equipa (dura 24/48 h a contar da ativação). Vai para a equipa com **mais a ganhar**: a de maior previsão do jogo para o treinador universal (`forecastUniversal`) entre os jogadores que ele pode treinar (regra abaixo); empate → a de **pior plantel** (o dono: "ou a que tiver em pior lugar/pior plantel"; em geral coincidem, porque os de rating mais baixo ganham mais por treino). **[S]** Uma equipa com um treinador universal já ativo não recebe outro; se nenhuma estiver livre, o bot avisa e o item expira. **[S]** Só nas ligas que deixam usar itens (`consumablesAllowed`).
+- **Treinador universal: quem treina** (dono: "concordo"): a regra do §5 mas **de qualquer posição**: titular, menos sessões nesta jornada, maior previsão para o treinador universal; fora quem já treina, está à venda, lesionado ou tem 30+ (GR de qualquer idade). Sessões de 6 h (`TrainingUniversalSession`); quando uma acaba e é recolhida, entra outro, enquanto o treinador estiver ativo. **[S]** Sem titular possível, o resto do plantel com as mesmas exclusões. No 1.º uso (2026-10-12, escolha do Claude com o OK do dono): um defesa titular de 24 anos da equipa 1 (a outra equipa não tinha titular possível: todos a treinar, à venda ou 30+).
+- **Sacos:** abrir 4 h antes de expirar. O que sai fica no inventário (se expirar, entra nesta mesma regra); os **boss coins** que saem vão logo para a carteira, como faz o site.
+- **Janela:** o ícone do inventário do jogo na barra de cima, com o número de itens; amarelo quando algo expira em menos de 24 h; ao passar o rato, a lista com o tempo que falta a cada um. O treinador universal ativo aparece como um círculo **ao lado do médico e do advogado** (não na linha dos treinos, para não estragar o quadro).
+

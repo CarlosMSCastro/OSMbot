@@ -4,6 +4,18 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-PT/1.1.0/); 
 
 Este ficheiro é o **histórico de versões, para quem lê o repo**. O diário interno de cada sessão de trabalho está em [`docs/WORKLOG.md`](docs/WORKLOG.md).
 
+## [0.11.6] — 2026-10-12
+
+O inventário deixa de perder itens: o que vai expirar é usado a tempo.
+
+### Adicionado
+- **Itens que expiram usados 4 h antes:** os **treinadores universais** vão para a equipa com mais a ganhar (a de pior plantel, se empatar) e treinam, enquanto duram, o titular de qualquer posição pela rotação dos treinos; os **sacos** abrem-se e os boss coins que saírem vão para a carteira. Trocas de posição e progressão continuam à mão.
+- **Inventário na barra de cima**, com o ícone do jogo e o número de itens; um ponto amarelo quando algo expira em menos de 24 h; ao passar o rato, cada item e o tempo que lhe falta.
+- **Treinador universal no quadro**, ao lado do médico e do advogado, só enquanto está ativo: quem treina e o tempo que falta; a sessão aparece também na linha do tempo.
+
+### Corrigido
+- Os vídeos de treino nunca escolhem a sessão do treinador universal (o botão dele não é conhecido).
+
 ## [0.11.5] — 2026-10-12
 
 Calendário de eventos na janela e as diárias explicadas ao passar o rato.

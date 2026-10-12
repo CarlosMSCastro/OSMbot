@@ -12,6 +12,7 @@ from osmbot.board.timeline import future_view, past_view
 from osmbot.events.calendar import effect_text, span_of
 from osmbot.game.ads import MAX_PER_BURST, MAX_TRAINING_VIDEOS, VIDEO_SAVES
 from osmbot.game.dashboard import BAR_SECONDS, SPONSOR_SLOTS, coin_jump, money, span, wake_events
+from osmbot.inventory.policy import WARN_BEFORE
 from osmbot.rewards.texts import amount, mission_text, prize_text
 
 GREEN, BLUE, YELLOW, GREY, RED, ORANGE = "green", "blue", "yellow", "grey", "red", "orange"
@@ -84,6 +85,54 @@ def care_ring(label: str, people: list[dict], now: float, lawyer: bool = False) 
                 "games": count}
     return {"label": label, "state": "waiting", "centre": "à espera", "name": name, "sub": f"{games} · à espera",
             "done": 0.0, "games": count}
+
+
+UNIVERSAL_SESSION = 6 * 3600  # TrainingUniversalSession: 360 min
+
+
+def universal_ring(universal: dict | None, now: float) -> dict:
+    """The universal trainer beside the doctor and the lawyer (owner, 2026-10-12), only while it is active: who it
+    trains and the time left (green when the session is ready to collect), or nobody yet."""
+    until = (universal or {}).get("until")
+    if not until or until <= now:
+        return {"label": "Treinador universal", "state": "none", "centre": "—", "name": "", "sub": "", "done": 0.0}
+    active = f"ativo até {datetime.fromtimestamp(until):%H:%M}"
+    session = (universal or {}).get("session")
+    if not session:
+        return {"label": "Treinador universal", "state": "waiting", "centre": "livre", "name": "ninguém", "sub": active, "done": 0.0}
+    if session["claimed"] or session["finish"] <= now:
+        return {"label": "Treinador universal", "state": "ready", "centre": "pronto", "name": session["name"], "sub": active,
+                "done": 1.0}
+    return {"label": "Treinador universal", "state": "working", "centre": span(session["finish"] - now), "name": session["name"],
+            "sub": active, "done": _done(session["finish"] - now, UNIVERSAL_SESSION)}
+
+
+def inventory_view(items: list[dict] | None, now: float, lang: str = "pt") -> dict | None:
+    """The top bar's inventory (owner, 2026-10-12): how many items, yellow when one expires within 24 h, and on hover
+    each kind of item with its count and the time left (the soonest of its kind). None when it could not be read."""
+    if items is None:
+        return None
+    kinds: dict[str, dict] = {}
+    for item in items:
+        kind = kinds.setdefault(item["action"], {**item, "count": 0, "expires": None})
+        kind["count"] += 1
+        if item.get("expires") and (kind["expires"] is None or item["expires"] < kind["expires"]):
+            kind["expires"] = item["expires"]
+    rows, warn = [], False
+    for kind in sorted(kinds.values(), key=lambda k: (k["expires"] is None, k["expires"] or 0)):
+        name = prize_text({"type": kind["type"], "value": kind["value"], "action": kind["action"]}, lang)
+        if kind["type"] == 12:  # universal trainer: its hours, not the bare value
+            name = _say(lang, f"treinador universal {round(kind['value'] / 60)} h", f"universal trainer {round(kind['value'] / 60)} h")
+        count = f"{kind['count']}× " if kind["count"] > 1 else ""
+        left = kind["expires"] - now if kind["expires"] else None
+        soon = left is not None and left <= WARN_BEFORE
+        warn = warn or soon
+        when = (_say(lang, "não expira", "never expires") if left is None else
+                _say(lang, f"expira em {span(max(0, left))}", f"expires in {span(max(0, left))}"))
+        rows.append((prize_icon(kind), f"{count}{name} · {when}", YELLOW if soon else None if left else GREY))
+    if not rows:
+        rows = [(None, _say(lang, "Inventário vazio", "Inventory empty"), GREY)]
+    return {"count": len(items), "warn": warn, "rows": rows}
 
 
 TOP_PLACES, BOTTOM_PLACES = 2, 3  # squad value: 1st-2nd green, the last 3 red, yellow in between (owner, 2026-10-10)
@@ -191,7 +240,8 @@ def club_view(club: dict, now: float, shortened: dict | None = None) -> dict:
             "suspended": _people(club.get("suspended") or [], "no advogado", now),
             "stadium_rings": stadium_rings(club.get("stadium"), now),
             "care": [care_ring("Médico", club.get("injured") or [], now),
-                     care_ring("Advogado", club.get("suspended") or [], now, lawyer=True)]}
+                     care_ring("Advogado", club.get("suspended") or [], now, lawyer=True)],
+            "universal": universal_ring(club.get("universal"), now)}
 
 
 def _daily_parts(daily: dict, now: float) -> list[tuple[str, str, str, str]]:
@@ -216,7 +266,7 @@ def _daily_parts(daily: dict, now: float) -> list[tuple[str, str, str, str]]:
     return parts
 
 
-PRIZE_ICONS = {1: "coins", 8: "funds", 9: "training"}  # the window's pictures; any other prize: the missions one
+PRIZE_ICONS = {1: "coins", 8: "funds", 9: "training", 12: "universal", 13: "inventory"}  # the window's pictures; any other prize: the missions one
 
 
 def prize_icon(prize: dict | None) -> str:
@@ -445,5 +495,6 @@ def board_view(snapshot: dict | None, stats: dict | None, now: float, doing: dic
             "doing": doing_view(snapshot, doing, now),
             "daily": [piece for piece in daily if piece[0] != "waiting"],  # the new day is on the timeline
             "event": calendar_view(snapshot.get("calendar"), now, lang),
+            "inventory": inventory_view(snapshot.get("inventory"), now, lang),
             "timeline": {"future": future_view(snapshot, now), "past": past_view(history or []),
                          "now": (doing or {}).get("text") or ""}}

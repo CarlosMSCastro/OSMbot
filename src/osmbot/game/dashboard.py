@@ -19,6 +19,7 @@ from datetime import datetime
 
 from osmbot.game.ads import SHOP_ACTION, TRAINING_ACTION, VIDEO_SAVES, money_state
 from osmbot.game.slots import SlotStatus, count_listed
+from osmbot.inventory.policy import UNIVERSAL_TRAINER, active_until
 from osmbot.theory.fitness import YELLOW_BELOW, tired_starters
 
 POSITIONS = {1: "ATA", 2: "MED", 3: "DEF", 4: "GR"}
@@ -125,8 +126,13 @@ def collect(client) -> dict:
             "trainings": [
                 {"id": s["id"], "name": s["player"]["name"], "pos": POSITIONS.get(s["player"]["position"], "?"),
                  "finish": s["countdownTimer"]["finishedTimestamp"], "claimed": s["countdownTimer"]["isClaimed"]}
-                for s in sorted(sessions, key=lambda s: s["trainer"])
+                for s in sorted(sessions, key=lambda s: s["trainer"]) if s["trainer"] != UNIVERSAL_TRAINER
             ],
+            "universal": {  # the universal trainer (THEORY.md section 20): beside the doctor and the lawyer
+                "until": active_until(timers, time.time()),
+                "session": next(({"id": s["id"], "name": s["player"]["name"], "finish": s["countdownTimer"]["finishedTimestamp"],
+                                  "claimed": s["countdownTimer"]["isClaimed"]}
+                                 for s in sessions if s["trainer"] == UNIVERSAL_TRAINER), None)},
         }
         try:  # an event going on in this league: what it changed in the game's settings (D-038)
             from osmbot.game.events import check_league
@@ -164,10 +170,24 @@ def collect(client) -> dict:
         account_part = pool.submit(read_account)
         clubs = list(pool.map(lambda item: read_club(*item), teams))
         ads, daily = account_part.result()
+    try:
+        from osmbot.game.inventory import inventory_items
+
+        inventory = inventory_items(client)
+    except OSError:
+        raise
+    except Exception:
+        inventory = None
     from osmbot.game.events import calendar_events, calendar_months
 
     return {"coins": wallet.get("amount"), "clubs": clubs, "ads": ads, "daily": daily, "read_at": started,
-            "events": calendar_events(started), "calendar": calendar_months()}
+            "events": calendar_events(started), "calendar": calendar_months(), "inventory": inventory}
+
+
+def _universal(club: dict) -> list[dict]:
+    """The universal trainer's session, as a training to collect (the bot collects it with the others)."""
+    session = (club.get("universal") or {}).get("session")
+    return [session] if session else []
 
 
 def wake_events(snapshot: dict | None, now: float) -> list[tuple[str, float]]:
@@ -175,7 +195,7 @@ def wake_events(snapshot: dict | None, now: float) -> list[tuple[str, float]]:
     if not snapshot:
         return []
     events = []
-    unclaimed = [t["finish"] for c in snapshot["clubs"] for t in c["trainings"] if not t["claimed"]]
+    unclaimed = [t["finish"] for c in snapshot["clubs"] for t in c["trainings"] + _universal(c) if not t["claimed"]]
     if any(finish <= now for finish in unclaimed):  # finished while the bot was busy (e.g. videos): collect it now
         events.append(("treino por recolher", now))
     finishes = [finish for finish in unclaimed if finish > now]

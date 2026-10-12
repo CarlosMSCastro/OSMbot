@@ -147,7 +147,9 @@ def future_events(snapshot: dict | None, now: float) -> list[dict]:
     for index, club in enumerate(snapshot.get("clubs") or []):
         name = club["name"]
         groups: list[tuple[float, list[str]]] = []  # trainings ending within a minute of each other: one line
-        for t in sorted((t for t in club.get("trainings") or [] if not t.get("claimed")), key=lambda t: t["finish"]):
+        universal = [(club.get("universal") or {}).get("session")]  # its session ends like a training (THEORY.md section 20)
+        for t in sorted((t for t in (club.get("trainings") or []) + [u for u in universal if u] if not t.get("claimed")),
+                        key=lambda t: t["finish"]):
             ends = max(t["finish"], now)
             if groups and ends - groups[-1][0] <= 60:
                 groups[-1][1].append(t["name"])

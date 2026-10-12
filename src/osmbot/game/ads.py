@@ -153,8 +153,9 @@ def pick_session(candidates: list[tuple[str, dict]], now: float) -> tuple[str, d
     """The session that should get the next -2h video: the one with the MOST time left, so all of
     them end up finishing around the same time (owner's choice, 2026-10-05). Sessions with less
     than 2h left are skipped (the video would be partly wasted). ``candidates`` = (club name, session)."""
-    usable = [(club, s) for club, s in candidates
-              if not s["countdownTimer"]["isClaimed"] and s["countdownTimer"]["finishedTimestamp"] - now >= VIDEO_SAVES]
+    usable = [(club, s) for club, s in candidates  # not the universal trainer's (trainer 5): its page button is not known
+              if s.get("trainer") in COACH_TITLES and not s["countdownTimer"]["isClaimed"]
+              and s["countdownTimer"]["finishedTimestamp"] - now >= VIDEO_SAVES]
     if not usable:
         return None
     return max(usable, key=lambda c: c[1]["countdownTimer"]["finishedTimestamp"])

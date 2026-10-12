@@ -26,6 +26,7 @@ from osmbot.game.ads import (MAX_PER_BURST, MAX_TRAINING_VIDEOS, SHOP_ACTION, TR
                              watch_with_retry)
 from osmbot.game.dashboard import Screen, collect, machine_name, render, span, summary_text, wake_events
 from osmbot.game.slots import describe, newly_free, read_slots
+from osmbot.game import inventory as inventory_module
 from osmbot.game import medical as medical_module
 from osmbot.game import prematch as prematch_module
 from osmbot.game import sponsors as sponsors_module
@@ -34,6 +35,7 @@ from osmbot.game import savings as savings_module
 from osmbot.game import events as events_module
 from osmbot.game import stadium as stadium_module
 from osmbot.board import timeline
+from osmbot.game.inventory import run_inventory
 from osmbot.game.medical import run_medical
 from osmbot.game.transfers import save_transfers
 from osmbot.game.prematch import run_prematch
@@ -338,7 +340,8 @@ def run_active(dry_run: bool = False, *, claim=run_claim, train=run_train, finis
                sponsors=lambda confirm: run_sponsors(confirm), rewards=lambda confirm: run_rewards(confirm),
                prematch=lambda confirm: run_prematch(confirm), medical=lambda confirm: run_medical(confirm),
                transfers=lambda: save_transfers(log=_log), savings=lambda confirm: run_savings(confirm),
-               events=lambda: events_module.refresh(log=_log), snapshot=None, use_screen: bool | None = None,
+               events=lambda: events_module.refresh(log=_log), inventory=lambda confirm: run_inventory(confirm, log=_log),
+               snapshot=None, use_screen: bool | None = None,
                sleep=time.sleep, clock=time.time, rng=random, board=None) -> None:
     """Loop until Ctrl+C (or ``request_stop``) or the first failure. With ``dry_run`` do one simulated pass and show the board once.
 
@@ -368,6 +371,7 @@ def run_active(dry_run: bool = False, *, claim=run_claim, train=run_train, finis
     rewards_module.COUNTS.update(login=0, missions=0, videos=0)
     prematch_module.COUNTS.update(friendlies=0, analyses=0, collected=0)
     medical_module.COUNTS.update(doctor=0, lawyer=0, collected=0)
+    inventory_module.COUNTS.update(universal=0, bags=0, sessions=0)
     savings_module.COUNTS["deposits"] = 0
     machine = machine_name()
     if board:
@@ -411,7 +415,7 @@ def run_active(dry_run: bool = False, *, claim=run_claim, train=run_train, finis
     def counts() -> tuple:
         return (COUNTS["claimed"], COUNTS["started"], stadium_module.COUNTS["upgrades"], sponsors_module.COUNTS["signed"],
                 *rewards_module.COUNTS.values(), *prematch_module.COUNTS.values(),
-                *medical_module.COUNTS.values(), savings_module.COUNTS["deposits"])
+                *medical_module.COUNTS.values(), *inventory_module.COUNTS.values(), savings_module.COUNTS["deposits"])
 
     try:
         _log("Simulação (uma passagem)" if dry_run else "Bot ligado")
@@ -513,6 +517,20 @@ def run_active(dry_run: bool = False, *, claim=run_claim, train=run_train, finis
                         _log(f"Médico/advogado: erro ({error}); volto a tentar")
                     if changed(before):
                         refresh_board()
+                inventory_times: list[float] = []
+                if inventory:
+                    _now("inventário")
+                    before = counts()
+                    try:  # an extra: the items that would expire, and the universal trainer's player (THEORY.md section 20)
+                        inventory_failed, inventory_times = _quiet(inventory, not dry_run)
+                        if inventory_failed:
+                            _log(f"Inventário: {inventory_failed} falha(s); volto a tentar")
+                    except OSError:
+                        raise
+                    except Exception as error:
+                        _log(f"Inventário: erro ({error}); volto a tentar")
+                    if changed(before):
+                        refresh_board()
                 if transfers:
                     try:  # read-only: the league transfers, once a day, for the price study (D-029)
                         transfers()
@@ -543,7 +561,7 @@ def run_active(dry_run: bool = False, *, claim=run_claim, train=run_train, finis
                 events = wake_events(last_snapshot, clock())
                 times = [ts for _, ts in events] or finish_times()
                 times = times + [t for t in stadium_times + reward_times + prematch_times + medical_times + savings_times
-                                 if t > clock()]
+                                 + inventory_times if t > clock()]
                 events = sorted(events + [("depósito na poupança", t) for t in savings_times if t > clock()], key=lambda e: e[1])
                 wait = next_wait(times, clock(), rng.uniform(*JITTER))
                 if ads_failed:

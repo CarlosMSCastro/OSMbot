@@ -15,7 +15,7 @@
 | 5 | **Aviso de slots de venda livres** (4 normalmente, 6 em eventos) | **Feito** (janela, consola e registo) |
 | 6 | **Estádio**: começar a melhoria seguinte quando há dinheiro (`THEORY.md` §15) | **Feito** |
 | 7 | **Patrocinadores**: a melhor proposta em cada espaço livre (`THEORY.md` §15) | **Feito** |
-| 8 | **Recompensas diárias**: início de sessão, 3 missões, prémio do dia e vídeos acumulados; ficam no inventário, nunca se usam itens (`THEORY.md` §17, D-020) | **Feito** (0.8.0; visto em real: início de sessão, missões e prémio do dia) |
+| 8 | **Recompensas diárias**: início de sessão, 3 missões, prémio do dia e vídeos acumulados; ficam no inventário; só se usam os itens que vão expirar, 4 h antes (`THEORY.md` §17 e §20, D-020, D-039) | **Feito** (0.8.0; visto em real: início de sessão, missões e prémio do dia) |
 | 8a | **Poupança**: depositar tudo 5 min antes de cada jogo (`THEORY.md` §13, D-035) | **Feito** (0.11.0, por ver em real) |
 | 9 | **Aviso de condição física** dos titulares (`THEORY.md` §16) | **Feito** (quadro) |
 | 10 | Transferências automáticas | **Próxima grande funcionalidade, depois do 1.0** (dono, 2026-10-09): o dono vai dar a teoria de gestão de plantel primeiro; escritas novas pedem OK |
@@ -24,6 +24,7 @@
 | 12b | **Médico e advogado**: lesionados e suspensos tratados e levantados sozinhos (`THEORY.md` §18) | **Feito** (0.9.3; médico visto em real a pôr e a levantar, 2026-10-09–11; advogado por ver, precisa de um suspenso de 2+ jogos) |
 | 12 | **Amigáveis em quantidade** com as boss coins dos vídeos (~25 por equipa por jornada, `THEORY.md` §6) | **Posta de lado** (dono, 2026-10-09): 10 amigáveis (40 coins) subiram só ~1,5–2 M o valor do plantel; não compensa |
 | 13 | **Preço máximo de venda dos jogadores caros**: estudar no histórico de transferências até onde se consegue vender (dono, 2026-10-09) | **A recolher dados** (D-029): o bot guarda as transferências das ligas 1 vez por dia; numa liga já se vendeu **ao máximo até ~167 M€**; a 75 % até ~155 M€; as vendas chegam em lotes (numa liga a cada ~2 h) e cada lote leva só uma parte da lista, sem ser pelo preço (2026-10-11, `DISCOVERY.md` §3). Desde a 0.10.3 o registo do bot guarda, para cada listagem do dono, a hora em que foi posta à venda e, quando vende, quanto demorou e a percentagem do máximo; desde a 0.10.4 regista também cada passagem do motor de transferências em cada liga (D-034) |
+| 8a | **Inventário**: usar os itens que vão expirar (treinadores universais, sacos) e avisar 24 h antes (`THEORY.md` §20, D-039) | **Feito** (0.11.6; visto em real: ativar o treinador universal e treinar com ele; abrir um saco ainda por ver) |
 | 13a | **Calendário de eventos**: o do mês, lido do fórum, e o evento em curso, visto nas definições do jogo (D-038) | **Feito** (0.11.4; lido em real: os 10 eventos de outubro; na janela, com o calendário do mês, desde a 0.11.5) |
 | 14 | **Quanto melhora a equipa com os amigáveis**: medir ao certo e em média o ganho por amigável, para decidir subir o número por equipa (liga-se ao 12; dono, 2026-10-09) | **Posta de lado** com o 12 (dono, 2026-10-09: o ganho medido à mão não compensa) |
 

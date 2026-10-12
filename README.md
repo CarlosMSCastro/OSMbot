@@ -2,7 +2,7 @@
 
 Exploração de um bot para o **Online Soccer Manager** (Gamebasics).
 
-> **Estado (0.11.5):** o bot trabalha sozinho no Windows (treinos em rotação entre os titulares, primeiro quem tem mais a ganhar, depósito na poupança antes de cada jogo, estádio, patrocinadores, vídeos da loja, de treino e de dinheiro, recompensas diárias, 4 amigáveis ao longo do dia antes de cada jogo e análise do adversário 4 h antes, médico e advogado, aviso de vagas e de vendas na lista de transferências, histórico de transferências das ligas, registo do motor de transferências e dos jogadores "SALE", calendário de eventos lido do fórum e mostrado na janela, e registos para estudar treinos, amigáveis, médico e advogado), numa **janela de programa** em português ou inglês, com ícone junto ao relógio (o quadro de consola continua disponível). Ver [`CHANGELOG.md`](CHANGELOG.md) e [`docs/`](docs/).
+> **Estado (0.11.6):** o bot trabalha sozinho no Windows (treinos em rotação entre os titulares, primeiro quem tem mais a ganhar, depósito na poupança antes de cada jogo, estádio, patrocinadores, vídeos da loja, de treino e de dinheiro, recompensas diárias, itens do inventário usados antes de expirarem (treinador universal, sacos), 4 amigáveis ao longo do dia antes de cada jogo e análise do adversário 4 h antes, médico e advogado, aviso de vagas e de vendas na lista de transferências, histórico de transferências das ligas, registo do motor de transferências e dos jogadores "SALE", calendário de eventos lido do fórum e mostrado na janela, e registos para estudar treinos, amigáveis, médico e advogado), numa **janela de programa** em português ou inglês, com ícone junto ao relógio (o quadro de consola continua disponível). Ver [`CHANGELOG.md`](CHANGELOG.md) e [`docs/`](docs/).
 
 ## Aviso
 
@@ -34,7 +34,7 @@ O comando `login` abre uma janela de Firefox a sério (não Chromium — o popup
 `osmbot` sem argumentos (ou o `OSMbot.exe` da pasta portátil, que não abre consola) abre a **janela** (D-024, só Windows por agora):
 
 - abre pequena, com **Abrir**, **Login** e **Sair**. Num PC novo, começa pelo Login;
-- **Abrir** mostra "A carregar o jogo…", põe o bot a trabalhar e a janela cresce para o **quadro** (D-030): em cima as diárias (ao passar o rato: o prémio de hoje, as missões e o prémio do dia), o próximo evento (ao passar o rato, o calendário do mês) e "A trabalhar desde"; um cartão por clube na cor do clube (próximo jogo, liga, taça, valor do plantel, dinheiro e vendas, patrocinadores, estádio, treinos, médico e advogado, pré-jogo); à direita as boss coins e a linha do tempo (o que vem a seguir por cima do "agora", o que o bot já fez por baixo). O quadro relê o jogo de 3 em 3 min;
+- **Abrir** mostra "A carregar o jogo…", põe o bot a trabalhar e a janela cresce para o **quadro** (D-030): em cima as diárias (ao passar o rato: o prémio de hoje, as missões e o prémio do dia), o próximo evento (ao passar o rato, o calendário do mês), o inventário (ao passar o rato, o que expira e quando) e "A trabalhar desde"; um cartão por clube na cor do clube (próximo jogo, liga, taça, valor do plantel, dinheiro e vendas, patrocinadores, estádio, treinos, médico e advogado, pré-jogo); à direita as boss coins e a linha do tempo (o que vem a seguir por cima do "agora", o que o bot já fez por baixo). O quadro relê o jogo de 3 em 3 min;
 - menu **Bot**: Iniciar, Parar (pára na pausa seguinte), Login, Sair. Menu **Ver**: Atualizar, Avisos e erros, Pasta dos logs, Capturas das falhas. Menu **Idioma / Language**: Português ou English (D-031). Menu **Ajuda**: Sobre;
 - com o bot a trabalhar, fechar a janela (X) **só a esconde**: o **ícone junto ao relógio** (logótipo com bolinha verde a trabalhar, cinzenta parado) volta a abri-la. Para sair: Bot → Sair, ou o ícone → Sair. Sem notificações do Windows.
 
@@ -50,7 +50,7 @@ O resto é por comandos:
 | `osmbot status`, `treinos`, `slots` | Só leitura |
 | `osmbot recolher`, `treinar` | Escrevem na conta; `--simular` mostra o plano |
 | `osmbot pasta-logs [pasta do repo]` | Mostra ou escolhe o repo para onde vai o registo (`logs/<PC>/`), se não for encontrado sozinho; copia o registo antigo |
-| `osmbot recompensas` | Reclama as recompensas diárias (início de sessão, missões, vídeos acumulados); ficam no inventário; `--simular` mostra o plano |
+| `osmbot recompensas` | Reclama as recompensas diárias (início de sessão, missões, vídeos acumulados); ficam no inventário (no modo ativo, o que vai expirar usa-se 4 h antes); `--simular` mostra o plano |
 
 Só **uma máquina com o bot ligado de cada vez**. O registo fica em `~/.osmbot/bot.log` e também no repo, em `logs/<nome do PC>/AAAA-MM-DD.log` (D-022), para o ver noutra máquina depois do teu commit/push. O bot encontra o repo sozinho (D-023): o código de onde corre, ou uma pasta `OSMbot` ao lado da pasta do bot ou na pasta pessoal, `Documents` ou `Desktop`. Só se o repo estiver noutro sítio: `osmbot pasta-logs <pasta do repo>`.
 

@@ -40,7 +40,8 @@ ASSETS = Path(__file__).resolve().parent / "assets"
 COIN_FILE, FUNDS_FILE = ASSETS / "bosscoin.png", ASSETS / "clubfunds.png"  # the game's icons (owner accepted, 2026-10-10)
 PICTURES = {"training": ASSETS / "training.png", "doctor": ASSETS / "doctor.png", "lawyer": ASSETS / "lawyer.png",
             "coins": COIN_FILE, "funds": FUNDS_FILE, "missions": ASSETS / "missions.png", "stadium": ASSETS / "stadium.png",
-            "timer": ASSETS / "timer.png", "ball": ASSETS / "ball.png"}  # waiting, and a club's match (owner, 2026-10-10;
+            "timer": ASSETS / "timer.png", "ball": ASSETS / "ball.png", "inventory": ASSETS / "inventory.png",
+            "universal": ASSETS / "universal.png"}  # waiting, and a club's match (owner, 2026-10-10;
 # drawn from img/*.svg at 128 px: the portable build leaves Qt's svg support out)
 _pictures: dict[tuple[str, bool], QPixmap] = {}
 
@@ -444,6 +445,7 @@ class CareCell(QWidget):
         row.setSpacing(4)
         self.name = text_label(9)
         self.mark = Mark("cross" if kind == "doctor" else "card")
+        self.mark.setVisible(kind != "universal")
         self.games = text_label(9, True)
         row.addStretch(1)
         for widget in (self.name, self.mark, self.games):
@@ -463,6 +465,8 @@ class CareCell(QWidget):
         self.ring.picture = picture(self.kind, grey=nobody)
         self.ring.hover = None if state == "none" else (tr(ring["centre"]), arc if state != "blocked" else MUTED)
         self.under.setVisible(state != "none")
+        if self.kind == "universal":  # only while it is active (owner, 2026-10-12)
+            self.setVisible(state != "none")
         self.name.setText(escape_text(ring["name"]))
         self.games.setText(str(ring.get("games") or ""))
         self.games.setStyleSheet(f"color:{TEXT};")
@@ -676,6 +680,42 @@ class EventPopup(QFrame):
 
     def leaveEvent(self, _event) -> None:
         QTimer.singleShot(200, self.parent_label.maybe_hide)
+
+
+class InventoryBadge(QWidget):
+    """The top bar's inventory (owner, 2026-10-12): the game's bag icon and how many items; a yellow dot and count
+    when something expires within 24 h; on hover each item with the time it has left."""
+
+    def __init__(self):
+        super().__init__()
+        row = QHBoxLayout(self)
+        row.setContentsMargins(0, 0, 0, 0)
+        row.setSpacing(5)
+        self.icon = icon(PICTURES["inventory"], 20)
+        self.count = text_label(10)
+        row.addWidget(self.icon, 0, Qt.AlignVCenter)
+        row.addWidget(self.count, 0, Qt.AlignVCenter)
+        self.warn = False
+        self.setVisible(False)
+
+    def show_inventory(self, view: dict | None) -> None:
+        self.setVisible(bool(view))
+        if not view:
+            return
+        if view["warn"] != self.warn or self.icon.pixmap().isNull():
+            self.warn = view["warn"]
+            bag = QPixmap(str(PICTURES["inventory"])).scaled(40, 40, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+            if self.warn:  # a yellow dot on the bag's corner, as the game marks news
+                painter = QPainter(bag)
+                painter.setRenderHint(QPainter.Antialiasing)
+                painter.setPen(QPen(QColor(BACKGROUND), 3))
+                painter.setBrush(QColor(COLOURS[YELLOW]))
+                painter.drawEllipse(QRectF(24, 1, 15, 15))
+                painter.end()
+            bag.setDevicePixelRatio(2)
+            self.icon.setPixmap(bag)
+        self.count.setText(rich([(str(view["count"]), YELLOW if view["warn"] else GREY)]))
+        self.setToolTip(tip_html(view["rows"]))
 
 
 class EventLabel(QLabel):
@@ -937,7 +977,8 @@ class ClubCard(QFrame):
         care = QHBoxLayout()  # the doctor and the lawyer under the trainings, in the same columns (owner, 2026-10-10)
         care.setSpacing(10)
         self.care_cells = [CareCell(kind, TRAINING_WIDTH) for kind in ("doctor", "lawyer")]
-        for cell in self.care_cells:
+        self.universal_cell = CareCell("universal", TRAINING_WIDTH)  # beside them, while active (owner, 2026-10-12)
+        for cell in (*self.care_cells, self.universal_cell):
             care.addWidget(cell)
         care.addStretch(1)
         trainings.addLayout(care)
@@ -1022,6 +1063,7 @@ class ClubCard(QFrame):
                 cell.say((ring["name"], TEXT if moving else MUTED))
         for cell, ring in zip(self.care_cells, club["care"]):
             cell.show_care(ring, self.timer)
+        self.universal_cell.show_care(club["universal"], self.timer)
         self.prep_title.setText(tr(club["prep_title"]))
         self._show_prep(club["prep"]["steps"])
         self._show_trainings(club["trainings"])
@@ -1402,6 +1444,9 @@ class MainWindow(QMainWindow):
         bar.addSpacing(10)
         self.event_label = EventLabel()  # after the dailies, where there is room (owner, 2026-10-12)
         bar.addWidget(self.event_label)
+        bar.addSpacing(14)
+        self.inventory = InventoryBadge()  # the game's inventory bag, yellow when something expires within 24 h
+        bar.addWidget(self.inventory)
         bar.addStretch(1)
         self.state_dot = text_label(10)
         self.state_text = text_label(10)
@@ -1767,6 +1812,7 @@ class MainWindow(QMainWindow):
         self.coins_since.setText(tr(account["since"]))
         self.daily.show_steps([(kind, tr(text), colour, tip) for kind, text, colour, tip in view["daily"]])  # tip: rows
         self.event_label.show_calendar(view["event"])
+        self.inventory.show_inventory(view["inventory"])
         if running:
             doing = view["timeline"]["now"] or "a trabalhar…"
         else:

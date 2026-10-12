@@ -73,6 +73,7 @@ def _isolated_from_the_game(monkeypatch, tmp_path):
     monkeypatch.setattr(loop, "run_prematch", lambda confirm: (0, []))
     monkeypatch.setattr(loop, "run_medical", lambda confirm: (0, []))
     monkeypatch.setattr(loop, "run_savings", lambda confirm: (0, []))
+    monkeypatch.setattr(loop, "run_inventory", lambda confirm, log=None: (0, []))
     monkeypatch.setattr(loop, "collect", lambda client: None)
 
     from osmbot.game import rewards

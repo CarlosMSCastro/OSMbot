@@ -98,7 +98,7 @@ WORDS = {
     "A treinar": "Training started", "Depósito na poupança": "Savings deposit", "Patrocinador assinado": "Sponsor signed", "Missões": "Missions",
     "Início de sessão": "Login reward", "Vídeos acumulados": "Cumulative videos",
     # what the bot is doing
-    "à espera": "waiting", "por levantar": "to collect", "acaba em": "ends in", "não dá": "not allowed", "estádio": "stadium", "ler o jogo": "reading the game", "médico e advogado": "doctor and lawyer",
+    "à espera": "waiting", "por levantar": "to collect", "acaba em": "ends in", "não dá": "not allowed", "estádio": "stadium", "ler o jogo": "reading the game", "médico e advogado": "doctor and lawyer", "inventário": "inventory", "Treinador universal": "Universal trainer", "livre": "free",
     "patrocinadores": "sponsors", "pré-jogo": "pre-match", "recolher e pôr treinos": "collecting and starting trainings",
     "recompensas": "rewards", "poupança": "savings",
 }
@@ -113,6 +113,7 @@ def _w(text: str) -> str:
 PATTERNS = [(re.compile(pattern), replace) for pattern, replace in (
     # card
     (r"(\d+)\.º Campeonato", lambda m: f"{ordinal(m[1])} in the league"),
+    (r"ativo até (\d\d:\d\d)", lambda m: f"active until {m[1]}"),
     (r"🏆 (.+)", lambda m: f"🏆 {_w(m[1])}"),
     (r"[Ee]liminado nos (.+)", lambda m: f"Out in the {_w(m[1])}"),
     (r"vs (.+) \((\d+)\.º\)", lambda m: f"vs {m[1]} ({ordinal(m[2])})"),
