@@ -4,6 +4,21 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-PT/1.1.0/); 
 
 Este ficheiro é o **histórico de versões, para quem lê o repo**. O diário interno de cada sessão de trabalho está em [`docs/WORKLOG.md`](docs/WORKLOG.md).
 
+## [0.11.2] — 2026-10-12
+
+Amigáveis ao longo do dia e analista levantado logo que acaba.
+
+### Alterado
+- **Amigáveis:** os 4 amigáveis de cada jogo deixam de esperar pelas últimas 4 h: o 1.º faz-se a partir de 16 h antes do jogo, o 2.º de 12 h, o 3.º de 8 h e o 4.º de 4 h. Se o PC esteve desligado, faz logo os que estão em atraso. Os que fizeres à mão contam.
+- **Analista:** é levantado assim que acaba, a qualquer hora (antes só nas últimas 4 h). Enviá-lo continua só nas últimas 4 h.
+- **Linha do tempo:** mostra a hora do próximo amigável ("já" quando está em atraso) e a da análise.
+
+## [0.11.1] — 2026-10-12
+
+### Corrigido
+- **O bot parava ao pôr o 1.º treino** ("unsupported operand type(s) for +=: 'dict' and 'int'"), desde a 0.11.0.
+- **Uma paragem por erro fica no registo** (com o ficheiro e a linha), e não só na janela.
+
 ## [0.11.0] — 2026-10-12
 
 Treinos em rotação entre os titulares, dinheiro na poupança antes de cada jogo, menos leituras com a janela fechada.

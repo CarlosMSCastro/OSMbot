@@ -1,6 +1,6 @@
 # Project Brief
 
-*Última atualização: 2026-10-11*
+*Última atualização: 2026-10-12*
 
 ## Objetivo
 
@@ -20,7 +20,7 @@
 | 9 | **Aviso de condição física** dos titulares (`THEORY.md` §16) | **Feito** (quadro) |
 | 10 | Transferências automáticas | **Próxima grande funcionalidade, depois do 1.0** (dono, 2026-10-09): o dono vai dar a teoria de gestão de plantel primeiro; escritas novas pedem OK |
 | 11 | Aviso de jogadores novos "SALE" no mercado (`THEORY.md` §7.7) | Por fazer |
-| 12a | **Amigáveis e análise do adversário**: 4 h antes de cada jogo, se o dono ainda não os fez; **4 amigáveis** (dono, 2026-10-11) contra quaisquer clubes, analista ao próximo adversário (`THEORY.md` §6, D-025) | **Feito** (visto em real em 2026-10-11: amigável, enviar e levantar o analista) |
+| 12a | **Amigáveis e análise do adversário**: o que o dono ainda não fez; **4 amigáveis** (dono, 2026-10-11) contra quaisquer clubes, **distribuídos pelo dia** (16/12/8/4 h antes do jogo, 0.11.2, D-036); analista ao próximo adversário nas últimas 4 h, **levantado logo que acaba** (`THEORY.md` §6, D-025, D-036) | **Feito** (visto em real em 2026-10-11: amigável, enviar e levantar o analista) |
 | 12b | **Médico e advogado**: lesionados e suspensos tratados e levantados sozinhos (`THEORY.md` §18) | **Feito** (0.9.3; médico visto em real a pôr e a levantar, 2026-10-09–11; advogado por ver, precisa de um suspenso de 2+ jogos) |
 | 12 | **Amigáveis em quantidade** com as boss coins dos vídeos (~25 por equipa por jornada, `THEORY.md` §6) | **Posta de lado** (dono, 2026-10-09): 10 amigáveis (40 coins) subiram só ~1,5–2 M o valor do plantel; não compensa |
 | 13 | **Preço máximo de venda dos jogadores caros**: estudar no histórico de transferências até onde se consegue vender (dono, 2026-10-09) | **A recolher dados** (D-029): o bot guarda as transferências das ligas 1 vez por dia; numa liga já se vendeu **ao máximo até ~167 M€**; a 75 % até ~155 M€; as vendas chegam em lotes (numa liga a cada ~2 h) e cada lote leva só uma parte da lista, sem ser pelo preço (2026-10-11, `DISCOVERY.md` §3). Desde a 0.10.3 o registo do bot guarda, para cada listagem do dono, a hora em que foi posta à venda e, quando vende, quanto demorou e a percentagem do máximo; desde a 0.10.4 regista também cada passagem do motor de transferências em cada liga (D-034) |
@@ -37,7 +37,7 @@ Fora do alcance: táticas. O dono aplica a sua teoria de jogo ele mesmo; está r
 - [x] Alcance escolhido (D-002) e postura de risco definida (D-004).
 - [x] Forma como o jogo comunica verificada com o dono presente (`DISCOVERY.md`).
 - [x] Stack escolhida: Python (D-001); Firefox/Playwright só para login e vídeos, HTTP para o resto.
-- [x] O bot recolhe e treina sozinho, vê vídeos dentro dos limites do jogo, trata do estádio, dos patrocinadores, das recompensas diárias e, 4 h antes de cada jogo, do amigável e da análise do adversário.
+- [x] O bot recolhe e treina sozinho, vê vídeos dentro dos limites do jogo, trata do estádio, dos patrocinadores, das recompensas diárias e, antes de cada jogo, dos amigáveis (ao longo do dia) e da análise do adversário (4 h antes).
 - [x] Funciona em Windows sem instalar o ambiente de desenvolvimento (D-016).
 - [ ] Corre vários dias seguidos sem intervenção (por validar).
 - [x] Funciona no PC da empresa e no pessoal, instalado (verificado pelo dono, 2026-10-09).

@@ -2,7 +2,7 @@
 
 Exploração de um bot para o **Online Soccer Manager** (Gamebasics).
 
-> **Estado (0.11.0):** o bot trabalha sozinho no Windows (treinos em rotação entre os titulares, depósito na poupança antes de cada jogo, estádio, patrocinadores, vídeos da loja, de treino e de dinheiro, recompensas diárias, 4 amigáveis e análise do adversário 4 h antes de cada jogo, médico e advogado, aviso de vagas e de vendas na lista de transferências, histórico de transferências das ligas e registo do motor de transferências), numa **janela de programa** em português ou inglês, com ícone junto ao relógio (o quadro de consola continua disponível). Ver [`CHANGELOG.md`](CHANGELOG.md) e [`docs/`](docs/).
+> **Estado (0.11.2):** o bot trabalha sozinho no Windows (treinos em rotação entre os titulares, depósito na poupança antes de cada jogo, estádio, patrocinadores, vídeos da loja, de treino e de dinheiro, recompensas diárias, 4 amigáveis ao longo do dia antes de cada jogo e análise do adversário 4 h antes, médico e advogado, aviso de vagas e de vendas na lista de transferências, histórico de transferências das ligas e registo do motor de transferências), numa **janela de programa** em português ou inglês, com ícone junto ao relógio (o quadro de consola continua disponível). Ver [`CHANGELOG.md`](CHANGELOG.md) e [`docs/`](docs/).
 
 ## Aviso
 
@@ -44,7 +44,7 @@ O resto é por comandos:
 |---|---|
 | `osmbot menu` | O menu antigo, na consola (Iniciar, Login, Sair), com o quadro em texto |
 | `osmbot login` | Abre o Firefox para entrares; fecha a janela para guardar a sessão |
-| `osmbot ativo` | **Modo ativo**: recolhe e treina quando os treinos acabam, sobe o estádio, assina patrocinadores, vê os vídeos (loja, treino, dinheiro), reclama as recompensas diárias, faz 4 amigáveis e a análise do adversário 4 h antes de cada jogo (o que ainda não estiver feito), põe os lesionados no médico e os suspensos no advogado, e avisa de vagas na lista de transferências; quadro em tempo real. Ctrl+C para parar |
+| `osmbot ativo` | **Modo ativo**: recolhe e treina quando os treinos acabam, sobe o estádio, assina patrocinadores, vê os vídeos (loja, treino, dinheiro), reclama as recompensas diárias, faz 4 amigáveis ao longo do dia antes de cada jogo e a análise do adversário 4 h antes (o que ainda não estiver feito; o analista é levantado logo que acaba), põe os lesionados no médico e os suspensos no advogado, e avisa de vagas na lista de transferências; quadro em tempo real. Ctrl+C para parar |
 | `osmbot ativo --simular` | Uma passagem sem escrever nada |
 | `osmbot ativo --sem-anuncios` / `--sem-quadro` | Sem vídeos / linhas simples em vez do quadro |
 | `osmbot status`, `treinos`, `slots` | Só leitura |
