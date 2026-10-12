@@ -4,6 +4,15 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-PT/1.1.0/); 
 
 Este ficheiro é o **histórico de versões, para quem lê o repo**. O diário interno de cada sessão de trabalho está em [`docs/WORKLOG.md`](docs/WORKLOG.md).
 
+## [0.11.4] — 2026-10-12
+
+Calendário de eventos sozinho.
+
+### Adicionado
+- **Calendário de eventos:** o bot lê sozinho, no fórum oficial, o calendário do mês que a equipa do OSM publica (Transfer Madness, Intense Friendlies…). Lê o mês atual se faltar e, a partir do dia 25, o seguinte; no máximo uma vez por dia, com o Firefox do bot escondido. A linha do tempo mostra o evento em curso e os dos próximos 7 dias.
+- **Evento no jogo:** de hora a hora o bot vê nas definições do jogo o que um evento mudou (treinos de 2 h, 6 vagas de venda, analista de 15 min…) e diz no registo quando começa e acaba.
+- Registos em `logs/<PC>/eventos/` (o calendário e as mudanças).
+
 ## [0.11.3] — 2026-10-12
 
 Treinos para quem tem mais a ganhar, rotação que não se perde ao mudar de PC, e registos para estudar o jogo.

@@ -128,6 +128,14 @@ def collect(client) -> dict:
                 for s in sorted(sessions, key=lambda s: s["trainer"])
             ],
         }
+        try:  # an event going on in this league: what it changed in the game's settings (D-038)
+            from osmbot.game.events import check_league
+
+            club["event"] = check_league(client, team["leagueId"], leagues.get(team["name"], {}).get("name", ""))
+        except OSError:
+            raise
+        except Exception:
+            club["event"] = []
         try:  # the card's extras (D-026): a problem here never hides the rest of the board
             from osmbot.game.clubinfo import club_extra
 
@@ -156,7 +164,10 @@ def collect(client) -> dict:
         account_part = pool.submit(read_account)
         clubs = list(pool.map(lambda item: read_club(*item), teams))
         ads, daily = account_part.result()
-    return {"coins": wallet.get("amount"), "clubs": clubs, "ads": ads, "daily": daily, "read_at": started}
+    from osmbot.game.events import calendar_events
+
+    return {"coins": wallet.get("amount"), "clubs": clubs, "ads": ads, "daily": daily, "read_at": started,
+            "events": calendar_events(started)}
 
 
 def wake_events(snapshot: dict | None, now: float) -> list[tuple[str, float]]:

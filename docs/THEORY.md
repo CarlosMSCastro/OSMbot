@@ -239,6 +239,7 @@ Observações:
 - **O jogo acaba por vender os jogadores a bots, independentemente do preço** (afirmação do dono). Por isso pedir o máximo não atrasa a venda.
 - **Os 75% são do preço máximo permitido** (não do valor de mercado). Exemplo do dono: o preço máximo do Jogador 1 é **111 M€** (o dono foi ver ao jogo), por isso pediria 75% disso ≈ **83,25 M€**.
 - **Motivo (experiência do dono):** acima de 100 M€ fica **muito mais difícil vender pelo preço máximo**.
+- **É probabilidade, não um limite (dono, 2026-10-12):** em dezenas de épocas, os jogadores caros **acabam sempre por se vender**; fora dos eventos só demoram mais (dados em `DISCOVERY.md` §3).
 - **Multiplicador confirmado (2026-09-27): ≈2,5×.** Pontos de dados (valor → preço máximo):
   - Jogador 1: 44,0 M€ → 111 M€ = **2,52×**
   - Jogador 18: 7,9 M€ → 20,0 M€ = **2,53×**

@@ -31,6 +31,7 @@ from osmbot.game import prematch as prematch_module
 from osmbot.game import sponsors as sponsors_module
 from osmbot.game import rewards as rewards_module
 from osmbot.game import savings as savings_module
+from osmbot.game import events as events_module
 from osmbot.game import stadium as stadium_module
 from osmbot.board import timeline
 from osmbot.game.medical import run_medical
@@ -336,7 +337,8 @@ def run_active(dry_run: bool = False, *, claim=run_claim, train=run_train, finis
                ads=lambda dry_run: _all_ads(dry_run), stadium=lambda confirm: run_stadium(confirm),
                sponsors=lambda confirm: run_sponsors(confirm), rewards=lambda confirm: run_rewards(confirm),
                prematch=lambda confirm: run_prematch(confirm), medical=lambda confirm: run_medical(confirm),
-               transfers=lambda: save_transfers(log=_log), savings=lambda confirm: run_savings(confirm), snapshot=None, use_screen: bool | None = None,
+               transfers=lambda: save_transfers(log=_log), savings=lambda confirm: run_savings(confirm),
+               events=lambda: events_module.refresh(log=_log), snapshot=None, use_screen: bool | None = None,
                sleep=time.sleep, clock=time.time, rng=random, board=None) -> None:
     """Loop until Ctrl+C (or ``request_stop``) or the first failure. With ``dry_run`` do one simulated pass and show the board once.
 
@@ -518,6 +520,13 @@ def run_active(dry_run: bool = False, *, claim=run_claim, train=run_train, finis
                         raise
                     except Exception as error:
                         _log(f"Transferências: erro ({error}); volto a tentar")
+                if events:
+                    try:  # the forum's schedule of events, only when a month is missing (D-038)
+                        events()
+                    except OSError:
+                        raise
+                    except Exception as error:
+                        _log(f"Calendário de eventos: erro ({error}); tento amanhã")
                 if ads:
                     try:
                         _quiet(ads, dry_run)

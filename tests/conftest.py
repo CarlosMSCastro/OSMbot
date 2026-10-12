@@ -98,6 +98,14 @@ def _isolated_from_the_game(monkeypatch, tmp_path):
     monkeypatch.setattr(savings, "COUNTS", {"deposits": 0})
     monkeypatch.setattr(savings, "PAUSE_BETWEEN_WRITES", 0)
     monkeypatch.setattr(trainings, "ROUNDS_FILE", tmp_path / "treinos.json")
+    from osmbot.game import events
+
+    monkeypatch.setattr(events, "real", {"refresh": events.refresh, "check_league": events.check_league}, raising=False)
+    monkeypatch.setattr(events, "FILE", tmp_path / "eventos.json")
+    monkeypatch.setattr(events, "refresh", lambda log=None, read=None, now=None: None)  # never opens the forum
+    monkeypatch.setattr(events, "check_league", lambda *args, **kwargs: [])
+    monkeypatch.setattr(events, "_last_check", {})
+    monkeypatch.setattr(events, "_active", {})
 
     class _NoClient:
         def __init__(self, *args, **kwargs):

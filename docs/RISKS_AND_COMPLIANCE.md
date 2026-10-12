@@ -52,6 +52,10 @@ O dono escolheu repo **e** Release públicos, ciente dos riscos:
 | Segredos | Varredura limpa (nenhum token, ID, email ou nome de manager); a sessão fica em `~/.osmbot`, fora do pacote |
 | Registo do bot em `logs/` (D-022, 2026-10-08) | **Público e completo**: nomes dos clubes e jogadores do dono, nome de cada PC, horas a que o bot corre. Aceite pelo dono. Tokens e e-mails apagados antes de escrever (regra 6) |
 
+## Fórum oficial: proteção contra leitores automáticos (D-038, 2026-10-12)
+
+O fórum (`forum.onlinesoccermanager.com`) tem o Anubis, que trava leitores automáticos. O bot lê lá o calendário de eventos com o seu Firefox, que passa essa proteção: **contorna uma proteção posta de propósito pelo OSM**, além dos ToS do jogo. Decidido pelo dono, sabendo disto. Mitigação: só quando falta um mês, 1 tentativa por dia no máximo (na prática 1–2 por mês), 1 página por tentativa, a uma hora ao acaso. O Anubis não está ligado à conta do jogo; o pior caso esperado é o fórum bloquear o IP por uns tempos.
+
 ## Segredos (obrigatório, repo público)
 
 Nunca versionar: passwords, cookies, tokens, `localStorage`/`sessionStorage`, dumps do StorageDump, ficheiros HAR com sessão, `.env*`, bases de dados com dados de conta (`*.db`). O `.gitignore` já cobre os padrões comuns; **verificar `git status` antes de cada commit.**

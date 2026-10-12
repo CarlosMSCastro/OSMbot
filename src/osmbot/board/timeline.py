@@ -136,6 +136,10 @@ def future_events(snapshot: dict | None, now: float) -> list[dict]:
     elif videos.get("reopen") and videos["reopen"] > now:
         events.append(_event(videos["reopen"], "Reward cumulativo", f"{videos.get('count', 0)}/{videos.get('threshold', '?')}",
                              icon="missions"))
+    for event in snapshot.get("events") or []:  # the forum's schedule (D-038): going on now, or within a week
+        first, last = datetime.fromtimestamp(event["start"]), datetime.fromtimestamp(event["end"] - 1)
+        days = f"{first:%d/%m}" + (f"–{last:%d/%m}" if last.date() != first.date() else "")
+        events.append(_event(max(event["start"], now), f"Evento: {event['nome']}", days, icon="missions"))
     renews = (daily.get("login") or {}).get("renews")
     if renews and renews > now:
         events.append(_event(renews, "Novo dia (diárias)", icon="missions"))

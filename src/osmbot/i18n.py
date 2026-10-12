@@ -189,6 +189,17 @@ PATTERNS = [(re.compile(pattern), replace) for pattern, replace in (
                f"sold {m[5]} of {m[6]} for sale (yours: {m[7]} of {m[8]})"),
     (r"SALE novos \((.+?)\): (\d+) · (.+?)(?: e mais (\d+))?$",
      lambda m: f"New SALE ({m[1]}): {m[2]} · {m[3].replace(' anos)', ' years)')}" + (f" and {m[4]} more" if m[4] else "")),
+    (r"Evento: (.+)", lambda m: f"Event: {m[1]}"),
+    (r"Evento no jogo \((.+?)\): acabou, tudo normal", lambda m: f"Event in the game ({m[1]}): over, all back to normal"),
+    (r"Evento no jogo \((.+?)\): (.+)", lambda m: f"Event in the game ({m[1]}): " + m[2].replace("treinador universal", "universal trainer")
+     .replace("treinos", "trainings").replace("estádio", "stadium").replace("analista", "analyst").replace("médico", "doctor")
+     .replace("advogado", "lawyer").replace("olheiro", "scout").replace("vagas de venda", "transfer list places")),
+    (r"Calendário de eventos de (\S+): (\d+) · (.+)", lambda m: f"Events calendar for {m[1]}: {m[2]} · {m[3]}"),
+    (r"Calendário de eventos: não consegui ler o fórum \((.+)\); tento amanhã",
+     lambda m: f"Events calendar: could not read the forum ({m[1]}); trying again tomorrow"),
+    (r"Calendário de eventos: o post do fórum mudou de formato; não percebi as datas",
+     lambda m: "Events calendar: the forum post changed format; could not read the dates"),
+    (r"Calendário de eventos: erro \((.+)\); tento amanhã", lambda m: f"Events calendar: error ({m[1]}); trying again tomorrow"),
     (r"Parou: (.+)", lambda m: f"Stopped: {m[1]}"),
     (r"Poupança: (.+) depositou (.+) antes do jogo \(poupança (.+)\)",
      lambda m: f"Savings: {m[1]} deposited {m[2]} before the match (savings {m[3]})"),
