@@ -4,6 +4,17 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-PT/1.1.0/); 
 
 Este ficheiro é o **histórico de versões, para quem lê o repo**. O diário interno de cada sessão de trabalho está em [`docs/WORKLOG.md`](docs/WORKLOG.md).
 
+## [0.11.0] — 2026-10-12
+
+Treinos em rotação entre os titulares, dinheiro na poupança antes de cada jogo, menos leituras com a janela fechada.
+
+### Alterado
+- **Treinos:** cada treino vai para o titular da posição que menos treinou nesta jornada, o melhor primeiro (antes era sempre o melhor da posição, mesmo no banco). Treinar o mesmo jogador várias vezes na mesma jornada rende cada vez menos. Cada linha "a treinar" do registo diz a previsão do jogo e se é o 1.º, 2.º… treino desse jogador na jornada.
+- **Janela escondida ou minimizada:** lê o jogo de 15 em 15 min (à vista continua de 3 em 3).
+
+### Adicionado
+- **Poupança:** 5 min antes de cada jogo o bot deposita na poupança o que estiver nos fundos, para render o juro do jogo. Aparece na linha do tempo.
+
 ## [0.10.4] — 2026-10-11
 
 4 amigáveis antes de cada jogo e registo do motor de transferências.

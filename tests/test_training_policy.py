@@ -1,5 +1,5 @@
 from osmbot.models import Player, Position
-from osmbot.training.policy import pick_trainee, plan_training
+from osmbot.training.policy import pick_trainee, plan_training, round_sessions
 
 
 def test_picks_best_of_the_position(make_player):
@@ -101,3 +101,34 @@ def test_from_api_maps_reported_fields():
     assert Player.from_api({**{"id": 1, "position": 1, "age": 20}, "unavailable": 2}).injured
     # injuryId alone does not mean injured (observed 2026-10-04)
     assert not Player.from_api({"id": 1, "position": 1, "age": 20, "injuryId": 27, "unavailable": 0}).injured
+
+
+def test_rotation_goes_to_the_starter_with_fewest_sessions_this_round(make_player):
+    star = make_player(Position.ATT, att=110, lineup=9)
+    second = make_player(Position.ATT, att=104, lineup=10)
+    bench = make_player(Position.ATT, att=115, lineup=15)  # better, but on the bench
+    squad = [star, second, bench]
+    assert pick_trainee(squad, Position.ATT, sessions={}) is star  # nobody trained yet: the best starter
+    assert pick_trainee(squad, Position.ATT, sessions={star.id: 1}) is second
+    assert pick_trainee(squad, Position.ATT, sessions={star.id: 1, second.id: 1}) is star  # all once: best again
+    assert pick_trainee(squad, Position.ATT) is bench  # without counts: the old rule (best of all)
+
+
+def test_rotation_falls_back_to_the_rest_without_an_eligible_starter(make_player):
+    old = make_player(Position.ATT, age=33, att=110, lineup=9)
+    bench_a = make_player(Position.ATT, att=100, lineup=15)
+    bench_b = make_player(Position.ATT, att=95, lineup=0)
+    assert pick_trainee([old, bench_a, bench_b], Position.ATT, sessions={bench_a.id: 1}) is bench_b
+
+
+def test_rotation_keeps_the_goalkeeper_rule(make_player):
+    keeper = make_player(Position.GK, age=34, deff=100, lineup=1)
+    spare = make_player(Position.GK, deff=60, lineup=12)
+    assert pick_trainee([keeper, spare], Position.GK, sessions={keeper.id: 3}) is keeper  # the only starter keeper
+
+
+def test_round_sessions_counts_each_session_once():
+    ongoing = [{"id": 1, "playerId": 10, "weekNr": 7}, {"id": 2, "playerId": 11, "weekNr": 7},
+               {"id": 3, "playerId": 12, "weekNr": 6}]  # started before the last match: another round
+    recorded = {"1": 10, "9": 10}  # the bot's own: session 1 is also ongoing, 9 already collected
+    assert round_sessions(ongoing, recorded, 7) == {10: 2, 11: 1}

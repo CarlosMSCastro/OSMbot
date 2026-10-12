@@ -95,12 +95,12 @@ WORDS = {
     "Vídeos de dinheiro": "Money videos", "Reward cumulativo": "Cumulative reward", "Novo dia (diárias)": "New day (daily)",
     "disponíveis": "available", "disponível": "available", "por reclamar": "to claim",
     "Vídeo de treino −2h": "Training video −2h", "Vídeo de dinheiro": "Money video", "Treinos recolhidos": "Trainings collected",
-    "A treinar": "Training started", "Patrocinador assinado": "Sponsor signed", "Missões": "Missions",
+    "A treinar": "Training started", "Depósito na poupança": "Savings deposit", "Patrocinador assinado": "Sponsor signed", "Missões": "Missions",
     "Início de sessão": "Login reward", "Vídeos acumulados": "Cumulative videos",
     # what the bot is doing
     "à espera": "waiting", "por levantar": "to collect", "acaba em": "ends in", "não dá": "not allowed", "estádio": "stadium", "ler o jogo": "reading the game", "médico e advogado": "doctor and lawyer",
     "patrocinadores": "sponsors", "pré-jogo": "pre-match", "recolher e pôr treinos": "collecting and starting trainings",
-    "recompensas": "rewards",
+    "recompensas": "rewards", "poupança": "savings",
 }
 
 _PART = {"campo": "pitch", "treinos": "training", "capacidade": "capacity"}
@@ -188,6 +188,12 @@ PATTERNS = [(re.compile(pattern), replace) for pattern, replace in (
      lambda m: f"Transfer engine ({m[1]}): {'went round' if m[2] == 'passou' else 'no price drop'} between {m[3]} and {m[4]}; "
                f"sold {m[5]} of {m[6]} for sale (yours: {m[7]} of {m[8]})"),
     (r"Parou: (.+)", lambda m: f"Stopped: {m[1]}"),
+    (r"Poupança: (.+) depositou (.+) antes do jogo \(poupança (.+)\)",
+     lambda m: f"Savings: {m[1]} deposited {m[2]} before the match (savings {m[3]})"),
+    (r"Poupança: (.+) depósito falhou \((\d+)\)", lambda m: f"Savings: {m[1]} deposit failed ({m[2]})"),
+    (r"Poupança: (.+) o dinheiro não ficou todo na poupança", lambda m: f"Savings: {m[1]} not all the money went into savings"),
+    (r"Poupança: o jogo recusou o depósito \((.+), (\d+)\); volto a tentar no próximo dia de jogo",
+     lambda m: f"Savings: the game refused the deposit ({m[1]}, {m[2]}); trying again on the next match day"),
     # refused requests (D-032)
     (r"(Médico|Advogado) \(levantar\): o jogo recusou (.+) \((\d+)\); volto a tentar na próxima jornada",
      lambda m: f"{_w(m[1])} (collect): the game refused {m[2]} ({m[3]}); trying again next round"),

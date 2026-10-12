@@ -14,6 +14,10 @@ def test_only_the_bots_actions_go_to_the_past():
                   "Amigável: Clube A contra Clube B falhou (500)", "Vídeos: erro (x); volto a tentar", "Bot ligado"):
         assert action(noise) is None
     assert action("Patrocinador: Ferro & Cia (10 rondas)")  # a name with "erro" inside is not a failure
+    assert action("Poupança: Clube A depositou 1,2 M antes do jogo (poupança 6,2 M)") == {
+        "kind": "savings", "title": "Depósito na poupança", "sub": "Clube A · 1,2 M"}
+    assert action("Poupança: Clube A depósito falhou (500)") is None
+    assert action("Haaland (ATA, 25 anos, rating 99): a treinar (200) · previsão 12 · 2.º treino na jornada")["names"] == ["Haaland"]
 
 
 def test_runs_of_the_same_thing_are_one_entry_and_newest_comes_first():

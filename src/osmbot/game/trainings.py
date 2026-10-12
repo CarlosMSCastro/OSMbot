@@ -7,10 +7,12 @@ the game, by default (``--simular`` makes them a dry run) (requests observed 202
 """
 from __future__ import annotations
 
+import json
 import time
+from pathlib import Path
 
 from osmbot.models import Player
-from osmbot.training.policy import plan_training
+from osmbot.training.policy import plan_training, round_sessions
 
 POSITIONS = {1: "ATA", 2: "MED", 3: "DEF", 4: "GR"}
 COUNTS = {"claimed": 0, "started": 0}  # successful writes in this run, for the board summary
@@ -56,16 +58,46 @@ def ready_sessions(sessions: list[dict], now: float) -> list[dict]:
     ]
 
 
-def plan_new_trainings(players: list[dict], sessions: list[dict], listed_ids: set[int]) -> dict[int, Player]:
+def plan_new_trainings(players: list[dict], sessions: list[dict], listed_ids: set[int],
+                       done: dict[int, int] | None = None) -> dict[int, Player]:
     """Which player each free trainer slot should train now (owner's policy, THEORY.md section 5).
 
     A slot is free when no session in ``sessions`` uses it. Players already in a session, and
-    players the owner has listed for sale, are never picked.
+    players the owner has listed for sale, are never picked. ``done``: sessions per player this round (rotation).
     """
     busy = {s["trainer"] for s in sessions}
     free = [t for t in ALL_TRAINERS if t not in busy]
     unavailable = {s["playerId"] for s in sessions} | set(listed_ids)
-    return plan_training([Player.from_api(p) for p in players], free, unavailable_ids=unavailable)
+    return plan_training([Player.from_api(p) for p in players], free, unavailable_ids=unavailable, sessions=done)
+
+
+ROUNDS_FILE = Path.home() / ".osmbot" / "treinos.json"  # per machine: the sessions the bot started this round
+
+
+def _recorded(base: str, week: int) -> dict[str, int]:
+    """Sessions (id -> player id) the bot started for this club in round ``week``; empty for an older round."""
+    try:
+        club = json.loads(ROUNDS_FILE.read_text(encoding="utf-8")).get(base) or {}
+    except (OSError, ValueError):
+        return {}
+    return club.get("sessions") or {} if club.get("week") == week else {}
+
+
+def _record(base: str, week: int, session_id, player_id: int) -> None:
+    try:
+        data = json.loads(ROUNDS_FILE.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        data = {}
+    club = data.get(base) or {}
+    if club.get("week") != week:
+        club = {"week": week, "sessions": {}}  # a new round: the count starts again
+    club["sessions"][str(session_id)] = player_id
+    data[base] = club
+    try:
+        ROUNDS_FILE.parent.mkdir(parents=True, exist_ok=True)
+        ROUNDS_FILE.write_text(json.dumps(data, indent=1), encoding="utf-8")
+    except OSError:
+        pass  # at worst the rotation counts only the ongoing sessions
 
 
 def _teams(client):
@@ -127,10 +159,15 @@ def run_train(confirm: bool, limit: int | None = None) -> int:
             listed = {x["player"]["id"] for x in market if x["player"]["id"] in mine}
             _, settings = client.get(f"leagues/{team['leagueId']}/gamesettings")
             setting = next((g["id"] for g in settings if g["name"] == TRAINING_SETTING_NAME), None)
+            _, league = client.get(f"leagues/{team['leagueId']}")
+            week = league["weekNr"]  # the last round played: a session started now carries this number
+            done = round_sessions(sessions, _recorded(base, week), week)
+            status, forecasts = client.get(f"{base}/trainingforecasts")
+            forecast = {f["playerId"]: f["forecast"] for f in forecasts} if status == 200 and isinstance(forecasts, list) else {}
             ready = ready_sessions(sessions, time.time())
             # Preview assumes the ready sessions get collected first; a real run only uses truly free slots.
             considered = sessions if confirm else [s for s in sessions if s not in ready]
-            plan = plan_new_trainings(players, considered, listed)
+            plan = plan_new_trainings(players, considered, listed, done)
             note = ""
             if ready:
                 note = (" (ainda ha %d treino(s) por recolher: corre 'osmbot recolher' primeiro)" if confirm
@@ -141,16 +178,21 @@ def run_train(confirm: bool, limit: int | None = None) -> int:
                     print("  (limite)")
                     break
                 label = f"{player.name} ({POSITIONS[int(player.position)]}, {player.age} anos, rating {player.rating})"
+                extra = (f" · previsão {forecast[player.id]}" if player.id in forecast else "") + \
+                    f" · {done.get(player.id, 0) + 1}.º treino na jornada"  # data to judge the rotation (owner, 2026-10-12)
                 if not confirm:
-                    print(f"  iniciaria: {label}")
+                    print(f"  iniciaria: {label}{extra}")
                     continue
                 if setting is None:
                     raise SystemExit("Duração do treino não encontrada nas definições do jogo; nada alterado")
-                status, _ = client.post(
+                status, body = client.post(
                     f"{base}/trainingsessions",
                     {"playerId": player.id, "trainer": trainer, "timerGameSettingId": setting},
                 )
-                print(f"  {label}: {'a treinar' if status == 200 else 'falhou'} ({status})")
+                print(f"  {label}: {'a treinar' if status == 200 else 'falhou'} ({status}){extra if status == 200 else ''}")
+                if status == 200:
+                    session_id = body.get("id") if isinstance(body, dict) else None
+                    _record(base, week, session_id or f"bot-{time.time():.0f}-{player.id}", player.id)
                 failed += status != 200
                 COUNTS["started"] += status == 200
                 done += 1

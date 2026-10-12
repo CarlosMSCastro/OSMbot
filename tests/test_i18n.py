@@ -29,6 +29,9 @@ def test_whole_texts_and_texts_with_names_and_numbers(english):
         == "Doctor (collect): the game refused the request (404); left to do by hand until the right request is seen"
     assert tr("Clube A: Jogador 5 (MED) com 72% de condição; convém descansar 1 jogo") \
         == "Clube A: Jogador 5 (MID) at 72% fitness; better rest 1 match"
+    assert tr("Poupança: Clube A depositou 1,2 M antes do jogo (poupança 6,2 M)") \
+        == "Savings: Clube A deposited 1,2 M before the match (savings 6,2 M)"
+    assert tr("Depósito na poupança") == "Savings deposit"
     assert tr("um texto sem tradução") == "um texto sem tradução"
 
 

@@ -30,6 +30,7 @@ from osmbot.game import medical as medical_module
 from osmbot.game import prematch as prematch_module
 from osmbot.game import sponsors as sponsors_module
 from osmbot.game import rewards as rewards_module
+from osmbot.game import savings as savings_module
 from osmbot.game import stadium as stadium_module
 from osmbot.board import timeline
 from osmbot.game.medical import run_medical
@@ -37,6 +38,7 @@ from osmbot.game.transfers import save_transfers
 from osmbot.game.prematch import run_prematch
 from osmbot.game.rewards import run_rewards
 from osmbot.game.sponsors import run_sponsors
+from osmbot.game.savings import run_savings
 from osmbot.game.stadium import run_stadium
 from osmbot.game.trainings import COUNTS, pending_finish_times, run_claim, run_train
 
@@ -334,7 +336,7 @@ def run_active(dry_run: bool = False, *, claim=run_claim, train=run_train, finis
                ads=lambda dry_run: _all_ads(dry_run), stadium=lambda confirm: run_stadium(confirm),
                sponsors=lambda confirm: run_sponsors(confirm), rewards=lambda confirm: run_rewards(confirm),
                prematch=lambda confirm: run_prematch(confirm), medical=lambda confirm: run_medical(confirm),
-               transfers=lambda: save_transfers(log=_log), snapshot=None, use_screen: bool | None = None,
+               transfers=lambda: save_transfers(log=_log), savings=lambda confirm: run_savings(confirm), snapshot=None, use_screen: bool | None = None,
                sleep=time.sleep, clock=time.time, rng=random, board=None) -> None:
     """Loop until Ctrl+C (or ``request_stop``) or the first failure. With ``dry_run`` do one simulated pass and show the board once.
 
@@ -364,6 +366,7 @@ def run_active(dry_run: bool = False, *, claim=run_claim, train=run_train, finis
     rewards_module.COUNTS.update(login=0, missions=0, videos=0)
     prematch_module.COUNTS.update(friendlies=0, analyses=0, collected=0)
     medical_module.COUNTS.update(doctor=0, lawyer=0, collected=0)
+    savings_module.COUNTS["deposits"] = 0
     machine = machine_name()
     if board:
         screen = None
@@ -406,7 +409,7 @@ def run_active(dry_run: bool = False, *, claim=run_claim, train=run_train, finis
     def counts() -> tuple:
         return (COUNTS["claimed"], COUNTS["started"], stadium_module.COUNTS["upgrades"], sponsors_module.COUNTS["signed"],
                 *rewards_module.COUNTS.values(), *prematch_module.COUNTS.values(),
-                *medical_module.COUNTS.values())
+                *medical_module.COUNTS.values(), savings_module.COUNTS["deposits"])
 
     try:
         _log("Simulação (uma passagem)" if dry_run else "Bot ligado")
@@ -423,6 +426,17 @@ def run_active(dry_run: bool = False, *, claim=run_claim, train=run_train, finis
                 _now("recolher e pôr treinos")
                 draw("A TRABALHAR")
                 ads_failed = False
+                savings_times: list[float] = []
+                if savings:
+                    _now("poupança")
+                    try:  # first thing in the pass: just before a match nothing may delay it (THEORY.md section 13)
+                        savings_failed, savings_times = _quiet(savings, not dry_run)
+                        if savings_failed:
+                            _log(f"Poupança: {savings_failed} falha(s); volto a tentar")
+                    except OSError:
+                        raise
+                    except Exception as error:
+                        _log(f"Poupança: erro ({error}); volto a tentar")
                 before = counts()
                 failed = _quiet(claim, not dry_run) + _quiet(train, not dry_run)
                 if changed(before):
@@ -519,7 +533,9 @@ def run_active(dry_run: bool = False, *, claim=run_claim, train=run_train, finis
                 tired_before = _check_fitness(last_snapshot, tired_before)
                 events = wake_events(last_snapshot, clock())
                 times = [ts for _, ts in events] or finish_times()
-                times = times + [t for t in stadium_times + reward_times + prematch_times + medical_times if t > clock()]
+                times = times + [t for t in stadium_times + reward_times + prematch_times + medical_times + savings_times
+                                 if t > clock()]
+                events = sorted(events + [("depósito na poupança", t) for t in savings_times if t > clock()], key=lambda e: e[1])
                 wait = next_wait(times, clock(), rng.uniform(*JITTER))
                 if ads_failed:
                     again = ads_wake(clock())

@@ -36,6 +36,7 @@ def make_player():
         id=None,
         name=None,
         injured=False,
+        lineup=0,
     ):
         pid = id if id is not None else next(_ids)
         return Player(
@@ -47,6 +48,7 @@ def make_player():
             stat_ovr=ovr,
             stat_def=deff,
             injured=injured,
+            lineup=lineup,
         )
 
     return _make
@@ -67,6 +69,7 @@ def _isolated_from_the_game(monkeypatch, tmp_path):
     monkeypatch.setattr(loop, "run_rewards", lambda confirm: (0, []))
     monkeypatch.setattr(loop, "run_prematch", lambda confirm: (0, []))
     monkeypatch.setattr(loop, "run_medical", lambda confirm: (0, []))
+    monkeypatch.setattr(loop, "run_savings", lambda confirm: (0, []))
     monkeypatch.setattr(loop, "collect", lambda client: None)
 
     from osmbot.game import rewards
@@ -90,6 +93,11 @@ def _isolated_from_the_game(monkeypatch, tmp_path):
     from osmbot.game import market
 
     monkeypatch.setattr(market, "STATE_FILE", tmp_path / "mercado.json")
+    from osmbot.game import savings, trainings
+
+    monkeypatch.setattr(savings, "COUNTS", {"deposits": 0})
+    monkeypatch.setattr(savings, "PAUSE_BETWEEN_WRITES", 0)
+    monkeypatch.setattr(trainings, "ROUNDS_FILE", tmp_path / "treinos.json")
 
     class _NoClient:
         def __init__(self, *args, **kwargs):

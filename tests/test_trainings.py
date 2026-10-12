@@ -28,9 +28,9 @@ def test_no_sessions_no_timer():
 from osmbot.game.trainings import plan_new_trainings, ready_sessions
 
 
-def api_player(pid, position, ovr=50, att=50, defe=50, age=25, unavailable=0):
+def api_player(pid, position, ovr=50, att=50, defe=50, age=25, unavailable=0, lineup=0):
     return {"id": pid, "position": position, "age": age, "statAtt": att, "statOvr": ovr, "statDef": defe,
-            "unavailable": unavailable, "injuryId": 0}
+            "unavailable": unavailable, "injuryId": 0, "lineup": lineup}
 
 
 def test_ready_sessions_skips_running_and_claimed():
@@ -62,3 +62,19 @@ def test_goalkeeper_trains_regardless_of_age():
 def test_outfield_age_limit_still_applies():
     players = [api_player(1, 1, att=90, age=30), api_player(2, 1, att=50, age=22)]
     assert plan_new_trainings(players, [], set())[1].id == 2
+
+
+def test_plan_rotates_among_starters_with_the_round_counts():
+    players = [api_player(1, 1, att=110, lineup=9), api_player(2, 1, att=100, lineup=10), api_player(3, 1, att=120, lineup=16)]
+    assert plan_new_trainings(players, [], set(), {1: 2, 2: 1})[1].id == 2
+    assert plan_new_trainings(players, [], set())[1].id == 3  # no counts: the best player, as before
+
+
+def test_the_round_record_starts_again_with_a_new_round():
+    from osmbot.game.trainings import _record, _recorded
+
+    _record("b", 7, 501, 10)
+    _record("b", 7, 502, 11)
+    assert _recorded("b", 7) == {"501": 10, "502": 11}
+    _record("b", 8, 503, 10)
+    assert _recorded("b", 7) == {} and _recorded("b", 8) == {"503": 10}

@@ -24,6 +24,7 @@ _ACTIONS = (  # (pattern, kind, text): kinds in MERGED join the previous entry o
     (re.compile(r"^(?P<name>[^:(]+) \(\w+, \d+ anos, rating \d+\): a treinar"), "train", "A treinar"),
     (re.compile(r"^(?P<club>.+): (?P<part>[^:]+): melhoria iniciada$"), "stadium", "Estádio"),
     (re.compile(r"^Patrocinador: (?P<what>.+)$"), "sponsor", "Patrocinador"),
+    (re.compile(r"^Poupança: (?P<club>.+) depositou (?P<what>.+?) antes do jogo"), "savings", "Depósito na poupança"),
     (re.compile(r"^(?P<what>(Amigável|Análise|Médico|Advogado): .+)$"), "match", ""),
     (re.compile(r"^(?P<what>(Missões|Início de sessão|Vídeos acumulados): .*reclamad.+)$"), "reward", ""),
 )
@@ -49,6 +50,8 @@ def action(message: str) -> dict | None:
             return {"kind": kind, "title": title, "names": [parts["club"]]}
         if kind == "stadium":
             return {"kind": kind, "title": f"Estádio: {parts['part']} a subir", "sub": parts["club"]}
+        if kind == "savings":
+            return {"kind": kind, "title": title, "sub": f"{parts['club']} · {parts['what']}"}
         if kind == "sponsor":
             return {"kind": kind, "title": "Patrocinador assinado", "sub": parts["what"]}
         if kind in ("match", "reward"):
@@ -91,7 +94,8 @@ def past_view(history: list[dict]) -> list[dict]:
 
 
 PAST_ICONS = {"shop": "coins", "training_video": "training", "money": "funds", "collect": "training",
-              "train": "training", "stadium": "stadium", "sponsor": "funds", "reward": "missions"}
+              "train": "training", "stadium": "stadium", "sponsor": "funds", "reward": "missions",
+              "savings": "funds"}
 MATCH_ICONS = {"Médico": "cross", "Advogado": "card"}  # the friendly and the analysis keep the dot
 
 

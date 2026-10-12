@@ -30,6 +30,11 @@ class Player:
     stat_ovr: int
     stat_def: int
     injured: bool = False
+    lineup: int = 0  # 1-11 starting eleven, 12-18 bench, 0 out (DISCOVERY.md section 3)
+
+    @property
+    def starter(self) -> bool:
+        return 1 <= self.lineup <= 11
 
     @property
     def rating(self) -> int:
@@ -54,4 +59,5 @@ class Player:
             stat_ovr=int(data.get("statOvr") or 0),
             stat_def=int(data.get("statDef") or 0),
             injured=int(data.get("unavailable") or 0) > 0,  # games out; injuryId is NOT a reliable flag
+            lineup=int(data.get("lineup") or 0),
         )

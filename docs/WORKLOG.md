@@ -2,6 +2,15 @@
 
 Entradas mais recentes primeiro. Cada sessão: o que se fez · o que ficou por fazer · próximo passo.
 
+## 2026-10-12 — Boss coins por dia, revisão do que nos atrasa (0.11.0, Mac)
+
+- **Boss coins por dia** (pergunta do dono, contado nos logs): 05/10 7 · 06/10 24 · 07/10 121 · 08/10 178 · 09/10 198 · 10/10 195 · 11/10 105 (meio dia); 828 no total, ~190/dia com o bot o dia inteiro. Contas de sustentabilidade feitas com o dono (liga ~350, 3 estágios = 80, 4 amigáveis/dia ≈ 28 coins/dia por equipa): dá para 4 equipas.
+- **Vídeos do telemóvel (médico, advogado, estádio):** opções explicadas (proxy para observar a app; Android ligado ao PC por USB; emulador desaconselhado; o Mac é Intel, não corre apps de iPhone). Nada construído; o dono decide.
+- **Revisão do bot → D-035:** dados dos logs (progresso por recolha) e `trainingforecasts` lidos (só leitura): o rating pesa mais; repetir o jogador na jornada rende ~2–3× menos (não 5–8×, como se disse primeiro: os +100–150 que apareciam eram bónus ao acaso). A previsão do jogo não mostra a quebra por repetição.
+- **Código:** `Player.lineup`/`starter`; `training/policy.py` (rotação, `round_sessions`); `game/trainings.py` (jornada da liga, `~/.osmbot/treinos.json`, previsão e "N.º treino na jornada" no log); `savings/policy.py` + `game/savings.py` (depósito, 2 PUTs no máximo se o dinheiro estiver repartido), ligado no início de cada passagem do `loop.py` e na linha do tempo/tradução; `gui/window.py` (`READ_HIDDEN_EVERY` = 15 min). 309 testes (PySide6 instalado no `.venv` do Mac).
+- **Ensaio real (só leitura):** com os treinadores livres, a regra nova trocaria o Haaland (no banco) pelo Díaz no Real Betis, e no FC Van o Marmoush e o Dalot (já treinados nesta jornada) pelo Zirkzee e o N'Dicka.
+- **Versão 0.11.0** (pedido do dono). **Por ver em real:** o 1.º depósito (linha "Poupança: … depositou …") e se um PUT com dinheiro nos dois lados deposita ou levanta (o código trata os dois casos). **Próximo passo:** o dono faz commit/push no Mac, pull no Windows, reconstrói o `dist` e corre a 0.11.0; com 3–4 dias de linhas "a treinar … previsão" e "recolhido (+N)", medir se a rotação compensa.
+
 ## 2026-10-11 — Revisão dos logs para o 1.0
 
 - **Versão 0.10.4** (pedido do dono): 4 amigáveis e registo do motor (D-034); `pyproject`, `__init__`, `CHANGELOG`, `README`; notas em `dist/release-notes-v0.10.4.md`; `dist` reconstruído. 298 testes.

@@ -94,6 +94,7 @@ Implementado em `plan_training` / `pick_trainee`:
 - Se o melhor tem 30+, usa-se o melhor dos restantes (confirmado).
 - **Exceção (dono, 2026-10-04): guarda-redes treinam sempre o melhor, independentemente da idade.** O limite de 30+ aplica-se só a jogadores de campo.
 - **[S]** Jogadores com forecast ≤ 0 (previsão do servidor: nada a ganhar) também são excluídos, quando essa informação existe.
+- **Rotação entre titulares (dono, 2026-10-12):** treinar o mesmo jogador outra vez na mesma jornada rende menos e a quebra só desaparece com o jogo (fórum, `DISCOVERY.md` §6b/§6c; nos logs, o Haaland deu +38 na 1.ª sessão depois de um jogo e +11–13 nas seguintes). Por isso cada treino vai para o **titular** (onze, `lineup` 1–11) da posição com **menos sessões nesta jornada**; entre iguais, o melhor. Quando todos já treinaram, volta ao melhor e assim por diante. Valem as mesmas exclusões (lesionados, listados, 30+ exceto GR). **[S]** Sem titular elegível na posição (p. ex. todos 30+), a mesma regra no resto do plantel. **[S]** A jornada é o `weekNr` da liga (a última jogada): as sessões contam-se pelas que o bot pôs nesse PC e pelas que estão a decorrer (as do dono incluídas). O bot regista em cada treino a previsão do jogo e o progresso ao recolher, para se medir se a rotação compensa.
 - **Treinador universal (5): fora de âmbito.** O dono não o usa por padrão: só ganha um às vezes e usa-o situacionalmente. Não automatizar.
 
 ## 6. Preparação do jogo (checklist)
@@ -422,6 +423,7 @@ Há **3 componentes** a melhorar, cada um com **níveis 0, 1, 2 e 3**:
   - Clube A: 5,45 M€ → 109k (2,00%)
   - Clube A (outro dia): 26,6 M€ → 534k (2,01%)
   - Clube B (outra liga): 3,8 M€ → 76k (2,00%)
+- **Depósito automático (dono, 2026-10-12):** **pouco antes de cada jogo**, o bot deposita na poupança tudo o que estiver nos fundos (patrocinadores, vendas), para o juro do fim do jogo contar. O dono pediu 2 min antes; ficou **5 min** (o bot acorda a essa hora e deposita antes de tudo o resto) e qualquer passagem nos últimos **15 min** também deposita, porque uma série de vídeos pode atrasar o acordar. Mais cedo não: o dono pode ainda tirar o dinheiro para comprar. Sem mínimo. Se o jogo recusar, não insiste até ao dia de jogo seguinte.
 - Consequência (nossa): a 2% por dia, dinheiro nos fundos do clube "custa" 2% por dia em juro perdido (50 M parados = 1 M/dia). Reforça o palpite do dono sobre o jogador fraco (§7.8): dinheiro preso num suplente valioso também não rende juro.
 
 ## 14. Notas de implementação (nossas)

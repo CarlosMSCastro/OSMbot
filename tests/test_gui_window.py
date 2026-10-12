@@ -136,6 +136,20 @@ def test_it_reads_the_game_every_3_minutes_only_on_the_board(window, monkeypatch
     assert reads == [1]
 
 
+def test_hidden_it_reads_only_every_15_minutes(window, monkeypatch):
+    from osmbot.gui import window as module
+
+    reads, now = [], {"t": 10_000.0}
+    monkeypatch.setattr(window, "read_game", lambda: reads.append(now["t"]))
+    monkeypatch.setattr(module.time, "time", lambda: now["t"])
+    window.go(module.BOARD)
+    window.hide()
+    for _ in range(6):  # 6 ticks of 3 minutes = 18 minutes
+        window.auto_read()
+        now["t"] += module.READ_EVERY
+    assert reads == [10_000.0, 10_000.0 + 5 * module.READ_EVERY]
+
+
 def test_the_stadium_rings_the_doctor_and_the_top_says_only_since_when_the_bot_works(window):
     import threading
     import time

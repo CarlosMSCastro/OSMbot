@@ -8,7 +8,7 @@
 
 | # | Automação | Estado |
 |---|---|---|
-| 1 | **Treinos**: recolher e voltar a pôr a treinar quando acabam (política em `THEORY.md` §5) | **Feito e em uso** (`osmbot ativo`) |
+| 1 | **Treinos**: recolher e voltar a pôr a treinar quando acabam (política em `THEORY.md` §5; rotação entre titulares desde a 0.11.0, D-035) | **Feito e em uso** (`osmbot ativo`) |
 | 2 | **Vídeos da loja** (1 boss coin cada, até 9 por hora): pagam os amigáveis (4 boss coins cada) | **Feito** |
 | 3 | **Vídeos de treino** (−2h cada, 4 por 3h): o treino acaba mais cedo e o ciclo volta a treinar mais cedo; regra "uniformizar"; nunca salta janelas (D-021) | **Feito** |
 | 4 | **Vídeos de dinheiro** (3 por dia: ~300k, ~600k, 3 boss coins) | **Feito** (no clube com mais poupança) |
@@ -16,6 +16,7 @@
 | 6 | **Estádio**: começar a melhoria seguinte quando há dinheiro (`THEORY.md` §15) | **Feito** |
 | 7 | **Patrocinadores**: a melhor proposta em cada espaço livre (`THEORY.md` §15) | **Feito** |
 | 8 | **Recompensas diárias**: início de sessão, 3 missões, prémio do dia e vídeos acumulados; ficam no inventário, nunca se usam itens (`THEORY.md` §17, D-020) | **Feito** (0.8.0; visto em real: início de sessão, missões e prémio do dia) |
+| 8a | **Poupança**: depositar tudo 5 min antes de cada jogo (`THEORY.md` §13, D-035) | **Feito** (0.11.0, por ver em real) |
 | 9 | **Aviso de condição física** dos titulares (`THEORY.md` §16) | **Feito** (quadro) |
 | 10 | Transferências automáticas | **Próxima grande funcionalidade, depois do 1.0** (dono, 2026-10-09): o dono vai dar a teoria de gestão de plantel primeiro; escritas novas pedem OK |
 | 11 | Aviso de jogadores novos "SALE" no mercado (`THEORY.md` §7.7) | Por fazer |

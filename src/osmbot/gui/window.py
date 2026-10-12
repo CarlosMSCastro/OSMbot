@@ -1082,6 +1082,7 @@ class NoticesWindow(QWidget):
 
 
 READ_EVERY = 180  # s: the window reads the board on its own this often (owner, 2026-10-09)
+READ_HIDDEN_EVERY = 900  # s: the same while the window is hidden or minimised (owner, 2026-10-12: fewer requests)
 READ_ERROR = "Não consegui ler o jogo"
 
 
@@ -1139,6 +1140,7 @@ class MainWindow(QMainWindow):
         self.clock = QTimer(self)
         self.clock.timeout.connect(self.render)
         self.clock.start(1000)
+        self.auto_read_at = 0.0
         self.reader = QTimer(self)
         self.reader.timeout.connect(self.auto_read)
         self.reader.start(READ_EVERY * 1000)
@@ -1484,9 +1486,15 @@ class MainWindow(QMainWindow):
 
     # ---- reading the game (any time), and the login -------------------------------------------------------------
     def auto_read(self) -> None:
-        """Every READ_EVERY seconds the board is read again, even while the bot is busy (a video, say)."""
-        if self.pages.currentIndex() == BOARD:
-            self.read_game()
+        """Every READ_EVERY seconds the board is read again, even while the bot is busy (a video, say);
+        with the window hidden (tray) or minimised, every READ_HIDDEN_EVERY seconds."""
+        if self.pages.currentIndex() != BOARD:
+            return
+        hidden = not self.isVisible() or self.isMinimized()
+        if hidden and time.time() - self.auto_read_at < READ_HIDDEN_EVERY - 5:
+            return
+        self.auto_read_at = time.time()
+        self.read_game()
 
     def read_game(self, fresh: bool = False) -> None:
         """Ver → Atualizar (and every 3 min): read the game now, GETs only, beside the bot and never waiting for it.
