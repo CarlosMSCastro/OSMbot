@@ -37,7 +37,7 @@ def test_the_future_soonest_first_with_the_club_and_what_is_due_now():
         "daily": {"login": {"renews": NOW + 8 * 3600}},
         "clubs": [{"name": "Clube A", "match": NOW + 6 * 3600,
                    "next": {"opponent": "Clube B", "side": "A", "cup": False},
-                   "prep": {"steps": [("Amigável", False, None), ("Análise", True, None)]},
+                   "prep": {"steps": [("Amigáveis (3)", True, None), ("Análise", True, None)]},
                    "trainings": [{"name": "J1", "finish": NOW + 1800, "claimed": False},
                                  {"name": "J2", "finish": NOW + 1830, "claimed": False},
                                  {"name": "J3", "finish": NOW - 10, "claimed": False}],
@@ -48,7 +48,7 @@ def test_the_future_soonest_first_with_the_club_and_what_is_due_now():
     titles = [(r["left"], r["title"], r["club"]) for r in rows]
     assert titles[:2] == [("já", "Recolher treino J3", 0), ("já", "Vídeos da loja", None)]
     assert ("0h30", "Treino J1, J2", 0) in titles  # same minute: one line
-    assert ("2h00", "Amigáveis", 0) in titles  # 4 h before the match, only what is missing
+    assert ("2h00", "Amigáveis", 0) in titles  # the 4th friendly 4 h before the match; the analysis is done
     assert ("6h00", "Clube A vs Clube B", 0) in titles and rows[[t[1] for t in titles].index("Clube A vs Clube B")]["sub"] == "jogo · fora"
     assert rows[[t[1] for t in titles].index("Clube A vs Clube B")]["icon"] == "ball"  # a club's match: the football
     assert ("2h00", "Médico: J4", 0) in titles and ("9h00", "Campo Clube A", 0) in titles
@@ -62,3 +62,15 @@ def test_each_kind_of_event_has_its_icon_in_the_timeline():
                                                           ("reward", ""), ("match", "Médico"), ("match", "Advogado"),
                                                           ("match", "Amigável"))] == \
         ["coins", "funds", "training", "stadium", "missions", "cross", "card", ""]
+
+
+def test_the_next_friendly_and_the_analysis_in_the_timeline():
+    def rows(played, analysed, match_in):
+        snapshot = {"clubs": [{"name": "A", "match": NOW + match_in,
+                               "prep": {"steps": [(f"Amigáveis ({played})", played >= 1, None), ("Análise", analysed, None)]}}]}
+        return [(r["left"], r["title"]) for r in future_view(snapshot, NOW) if r["title"] != "A vs ?" and r.get("club") == 0]
+
+    assert ("4h00", "Amigáveis") in rows(0, True, 20 * 3600) and ("16h00", "Análise") in rows(0, False, 20 * 3600)
+    assert ("já", "Amigáveis") in rows(1, True, 10 * 3600)  # the 2nd was due 2 h ago
+    assert ("2h00", "Amigáveis e Análise") in rows(3, False, 6 * 3600)
+    assert not [t for _, t in rows(4, True, 6 * 3600) if "Amig" in t]

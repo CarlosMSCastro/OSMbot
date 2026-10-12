@@ -8,6 +8,9 @@ Entradas mais recentes primeiro. Cada sessão: o que se fez · o que ficou por f
 - **Causa:** em `run_train` a contagem da rotação (`round_sessions`) reutilizou o nome `done`, que já era o contador de treinos postos; o `done += 1` depois do 1.º POST com sucesso rebentava. Os testes não corriam `run_train` em modo real.
 - **Correção:** dicionário renomeado para `rotation` (`game/trainings.py`); teste novo com cliente falso (2 treinos postos e gravados), que falha com o código antigo. A janela passa a escrever a paragem no registo, com ficheiro:linha (antes só aparecia na janela; a lista "Avisos e erros" ficava vazia). 310 testes.
 - **Próximo passo:** o dono lança a correção (versão 0.11.1?), reconstrói o `dist` e volta a ligar o bot no DESKTOP-KAM70RR.
+- **Rotação dos treinos entre PCs:** no FC Van repetiu Wharton, Dalot, D. Henderson e Marmoush ("1.º treino na jornada"), porque a conta é por PC e os treinos recolhidos desaparecem do jogo. Verificado que o jogo não dá histórico (`DISCOVERY.md` §3). Proposta ao dono, à espera: apontar também os treinos que o bot **vê** (por recolher), não só os que põe.
+- **Amigáveis e analista (pedido do dono):** amigáveis distribuídos pelo dia (16/12/8/4 h antes do jogo, [S]) e analista levantado logo que acaba, a qualquer hora; enviar o analista continua nas 4 h (`THEORY.md` §6). `prematch/policy.py` (`friendlies_due`, `next_friendly_at`), `game/prematch.py` (`prepare_club`), linha do tempo. 314 testes; simulação real (só leitura) correta. **Por lançar:** `dist` por reconstruir com o bot fechado.
+- **Plano de época (dono):** `THEORY.md` §19 (criar a liga ~350 coins, escolher o clube de maior valor, até 3 estágios).
 
 ## 2026-10-12 — Boss coins por dia, revisão do que nos atrasa (0.11.0, Mac)
 

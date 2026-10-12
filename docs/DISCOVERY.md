@@ -124,6 +124,7 @@ Legenda: **[V]** verificado por nós · **[R]** reportado por fonte de terceiros
 - **[V]** A lista de transferências da liga (`transferplayers/0`) também mostra jogadores de clubes do jogo de fora da liga (`teamId` alto) à venda a ~50–70 % do máximo; não contam para o estudo (são para comprar, não vendas de utilizadores).
 - **Atenção:** os dados de 10–11/10 são do evento **Transfer Madness** (§6b: "mais hipótese de venda"). Os lotes a cada ~2 h e as vendas ao máximo até 167 M€ podem ser do evento; repetir a análise num fim de semana sem evento antes de tirar conclusões.
 - `gamesettings` também tem `MaxDoctorTreatmentsPerRound` = 0 (significado por apurar: sem limite?).
+- **[V] (2026-10-12, só leitura) O jogo não mostra os treinos já recolhidos da jornada.** O serviço de treino da web (`training.js.v32583`) só tem 4 pedidos: `trainingsessions/ongoing` (GET), `trainingsessions` (POST, pôr), `.../{id}/boost` e `.../{id}/claim` (PUT); mais `trainingforecasts`. GETs testados: `trainingsessions` dá 405; `trainingsessions/history`, `/finished`, `/claimed`, `/week`, `players/{id}` (com e sem a equipa) e `players/{id}/trainingsessions` dão 404. `players` não traz sessões; `timers` só traz os temporizadores em curso; `teamtrainings` são os estágios e treinos secretos (`week` + `type` 1/2), não as sessões. Consequência: a contagem de treinos por jogador numa jornada só existe do lado do bot (D-035), e perde-se ao mudar de PC.
 
 ## 4. Regras do jogo/ToS relevantes
 

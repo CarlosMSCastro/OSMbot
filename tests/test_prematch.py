@@ -95,10 +95,27 @@ def prepare(client, confirm=True):
     return result, lines
 
 
-def test_nothing_before_the_4_hours_and_it_wakes_up_then():
-    client = FakeClient([step(7, 0), step(5, 0)], match_in=LEAD + 600)
+def test_nothing_before_the_first_friendly_time_and_it_wakes_up_then():
+    client = FakeClient([step(7, 0), step(5, 0)], match_in=16 * 3600 + 600, friendlies=0)
     assert prepare(client)[0] == (0, NOW + 600)
     assert client.posts == []
+
+
+def test_friendlies_are_spread_over_the_day_and_the_analysis_waits_for_the_4_hours():
+    client = FakeClient([step(7, 0), step(5, 0)], match_in=LEAD + 600, friendlies=1)  # 3 due by now, the owner played 1
+    assert prepare(client)[0] == (0, NOW + 600)  # back at 4 h: the 4th friendly and the analyst
+    assert [path for path, _ in client.posts] == [f"{BASE}/matches"] * 2
+
+
+def test_friendly_times_before_the_match():
+    from osmbot.prematch.policy import friendlies_due, next_friendly_at
+
+    match_time = NOW + 10 * 3600
+    assert friendlies_due(match_time, NOW) == 2 and friendlies_due(match_time, match_time - 60) == 4
+    assert friendlies_due(match_time, match_time) == 0 and friendlies_due(None, NOW) == 0
+    assert next_friendly_at(match_time, NOW, 2) == match_time - 8 * 3600
+    assert next_friendly_at(match_time, NOW, 1) is None  # the 2nd is due already
+    assert next_friendly_at(match_time, NOW, 4) is None
 
 
 def test_plays_the_missing_friendlies_and_sends_the_analyst_to_the_next_opponent():
@@ -159,3 +176,11 @@ def test_the_analyst_is_collected_when_its_hour_is_over_and_waited_for_before():
     (failures, _), lines = prepare(client)
     assert client.puts == ["https://web-api.onlinesoccermanager.com/api/v1.1/leagues/9/teams/1/spyinstructions/5/claim"]
     assert failures == 0 and "Análise: Club levantou o analista" in lines
+
+
+def test_a_finished_analyst_is_collected_at_any_hour():
+    over = [{"id": 5, "weekNr": 14, "countdownTimer": {"finishedTimestamp": NOW - 60, "isClaimed": False}}]
+    client = FakeClient([step(7, 0), step(5, 0)], sent=over, match_in=10 * 3600, friendlies=2)
+    (failures, wake), lines = prepare(client)
+    assert client.puts == ["https://web-api.onlinesoccermanager.com/api/v1.1/leagues/9/teams/1/spyinstructions/5/claim"]
+    assert failures == 0 and client.posts == [] and wake == NOW + 2 * 3600  # the 3rd friendly at 8 h before

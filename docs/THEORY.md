@@ -140,6 +140,8 @@ Implementado em `plan_training` / `pick_trainee`:
   - **4 amigáveis por dia (dono, 2026-10-11):** o bot passa a fazer **4 amigáveis** por equipa antes de cada jogo (em vez de 1), e a checklist da janela mostra **"Amigáveis (1)", "(2)"… até "(4)"**; o ponto fica verde **logo com o 1.º** (como no jogo), mas o bot faz os 4 na mesma. Substitui o "1 amigável" acima.
     - **[S]** Contam os amigáveis **desde o último jogo da equipa** (os do dono incluídos); o bot faz os que faltarem até 4, na mesma janela das **4 h antes do jogo**, contra clubes diferentes, ao acaso (o jogo só deixa 1 por clube por jornada), com uma pausa de alguns segundos entre eles.
     - **[S]** Sem boss coins para todos: faz os que der (4 cada) e avisa.
+  - **Amigáveis distribuídos pelo dia (dono, 2026-10-12):** os 4 amigáveis **podem ser distribuídos pelo dia**; já não esperam pela janela das 4 h. **[S]** O 1.º faz-se a partir de **16 h** antes do jogo, o 2.º a partir de **12 h**, o 3.º de **8 h** e o 4.º de **4 h**; se o PC esteve desligado, faz logo os que estão em atraso. Contam os do dono. Substitui a janela das 4 h só para os amigáveis.
+  - **Analista (dono, 2026-10-12):** **enviar** continua só nas últimas **4 h** antes do jogo. **Levantar:** assim que estiver pronto, **a qualquer hora**, recolhe-se.
   - **Observado e autorizado (2026-10-08, D-025):** pedidos em `DISCOVERY.md` §3. Construído em `prematch/policy.py` e `game/prematch.py`:
     - "Feito" é o que diz a checklist do jogo (`matchpreparation`). A análise só conta lá depois da hora do analista; por isso um analista já enviado nesta jornada também conta (o dono contava que passasse a 1/1 sozinha; **não passa**: é preciso **levantar o analista** quando acaba, `DISCOVERY.md` §3, observado a 2026-10-09).
     - **[S]** O adversário do amigável é **ao acaso** entre os clubes da liga ainda sem amigável nesta jornada (o dono diz que é indiferente; ao acaso evita um padrão de máquina). Se o jogo recusar, tenta outro (até 3).
@@ -490,3 +492,12 @@ Há **3 componentes** a melhorar, cada um com **níveis 0, 1, 2 e 3**:
 - **Médico:** **todos** os lesionados (onze, banco ou fora), **logo** que se lesionam. Pode usar-se **várias vezes por jornada** (às vezes tira 1 jogo, às vezes 4). Com 2 lesionados ao mesmo tempo, tenta os dois; se o jogo só deixar 1, o outro espera.
 - **Advogado:** a mesma lógica para os suspensos, mas **só 1 vez por jornada** por jogador. **Só com 2 ou mais jogos de suspensão:** com 1 jogo o jogo não deixa pôr no advogado (dono, 2026-10-09; coerente com §10, o advogado baixa para 1 jogo). O quadro mostra na mesma o suspenso.
 - Uma falha aqui nunca encrava as outras tarefas do bot; o quadro mostra a mudança logo a seguir (D-026).
+
+## 19. Plano de época: criar a liga e ganhar distância cedo
+
+*Fonte: o dono, 2026-10-12 (conversa sobre ganhar mais jogos e campeonatos; a conta das boss coins está em `WORKLOG.md`, 2026-10-12).*
+
+- **Criar a liga** em vez de entrar numa já a decorrer. Cada criação custa **~350 boss coins** em média.
+- **Começar logo com o clube de maior valor do plantel** da liga (ao criar a liga, o jogo deixa escolher o clube). Como as automações tornam tudo mais eficiente (treinos, amigáveis, vídeos, poupança), quanto mais cedo o plantel for o melhor, **mais depressa ganha distância** para os outros.
+- **Estágios: até 3 por época** (10 + 20 + 50 = 80 coins). Os 3 seguintes (100, 200, 500) são exponencialmente mais caros; com a distância ganha cedo, deixam de ser precisos.
+- Conta do dono: com ~190 boss coins por dia, a liga (~350), os 3 estágios (80) e os amigáveis (≈28 coins por dia por equipa) dá para **4 equipas**.

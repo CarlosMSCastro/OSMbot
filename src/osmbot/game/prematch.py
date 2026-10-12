@@ -1,9 +1,11 @@
-"""Friendly and opponent analysis, 4 hours before each match, only if the owner has not done them
+"""Friendlies spread over the day and opponent analysis 4 hours before each match, only what the owner has not done
 (writes, owner's rule in THEORY.md section 6; requests observed 2026-10-08, DISCOVERY.md section 3).
 
 The game's own pre-match checklist (``matchpreparation``) says what is done. A friendly is played at once
-(4 boss coins each, 4 before each match, owner 2026-10-11); the analyst takes an hour, so one sent this week also counts while it is still working, and when
-the hour is over it has to be collected for the checklist to count it (observed 2026-10-09).
+(4 boss coins each, 4 before each match, owner 2026-10-11; one more due at 16, 12, 8 and 4 hours before it, owner
+2026-10-12); the analyst takes an hour, so one sent this week also counts while it is still working, and when
+the hour is over it has to be collected for the checklist to count it (observed 2026-10-09): at any hour, as soon
+as it is ready (owner, 2026-10-12).
 A refused request is noted and not repeated this round (D-032): a refused opponent is left out, the others are tried.
 """
 from __future__ import annotations
@@ -12,7 +14,8 @@ import random
 import time
 
 from osmbot.game import clubinfo, refusals
-from osmbot.prematch.policy import FRIENDLIES_PER_MATCH, LEAD, friendly_choices, friendlies_missing, in_window, needs_analysis, next_opponent
+from osmbot.prematch.policy import (FRIENDLIES_PER_MATCH, LEAD, friendly_choices, friendlies_due, friendlies_missing,
+                                    friendlies_played, in_window, needs_analysis, next_friendly_at, next_opponent)
 
 FRIENDLY_PRODUCT = 62  # bosscoinproducts: "Friendly"
 FRIENDLY_PRICE = 4  # boss coins
@@ -31,12 +34,14 @@ def _match_time(client, base: str) -> float | None:
     return next((t["finishedTimestamp"] for t in timers if t["type"] == NEXT_MATCH_TIMER), None)
 
 
-def _play_friendlies(client, team: dict, base: str, league: str, week: int, confirm: bool, log, rng) -> int:
-    """Play the friendlies still missing before the match (4 in all, the owner's included; THEORY.md section 6)."""
+def _play_friendlies(client, team: dict, base: str, league: str, week: int, target: int, confirm: bool, log, rng) -> tuple[int, int]:
+    """Play the friendlies missing for ``target`` to be done this round (the owner's included; THEORY.md section 6).
+    Returns (failures, friendlies played this round now)."""
     _, matches = client.get(f"{league}/matches/filter")
-    missing = friendlies_missing(matches, team["id"], week)
+    before = friendlies_played(matches, team["id"], week)
+    missing = friendlies_missing(matches, team["id"], week, target)
     if not missing:
-        return 0
+        return 0, before
     _, teams = client.get(f"{league}/teams")
     names = {t["id"]: t["name"] for t in teams}
     choices = friendly_choices(teams, matches, team["id"], week)
@@ -46,7 +51,7 @@ def _play_friendlies(client, team: dict, base: str, league: str, week: int, conf
     if not confirm:
         if choices:
             log(f"{team['name']}: faria {min(missing, len(choices))} amigável(eis) contra {', '.join(names[c] for c in choices[:missing])}")
-        return 0
+        return 0, before
     played = refused = 0
     for opponent in choices:
         if played == missing or refused == MAX_REFUSALS:
@@ -54,8 +59,8 @@ def _play_friendlies(client, team: dict, base: str, league: str, week: int, conf
         _, wallet = client.get("user/bosscoinwallet")
         if wallet["amount"] < FRIENDLY_PRICE:
             log(f"! {team['name']}: sem boss coins para o amigável ({wallet['amount']}); "
-                f"{missing - played} de {FRIENDLIES_PER_MATCH} ficam por fazer")
-            return 0
+                f"{FRIENDLIES_PER_MATCH - before - played} de {FRIENDLIES_PER_MATCH} ficam por fazer")
+            return 0, before + played
         if played:
             time.sleep(PAUSE_BETWEEN_WRITES * rng.uniform(*GAP_BETWEEN_FRIENDLIES))
         status, body = client.post(f"{base}/matches", {"opponentId": opponent, "productId": FRIENDLY_PRODUCT})
@@ -71,13 +76,13 @@ def _play_friendlies(client, team: dict, base: str, league: str, week: int, conf
             continue
         if not refusals.is_refusal(status):
             log(f"Amigável: {team['name']} contra {names[opponent]} falhou ({status})")
-            return 1
+            return 1, before + played
         refused += 1
         refusals.refuse(f"amigável:{base}:{opponent}", log, f"Amigável: {team['name']} contra {names[opponent]} recusado ({status}); "
                         "não volto a tentar este clube nesta jornada", week=week)
     if not every:
         log(f"! {team['name']}: nenhum clube disponível para amigável nesta jornada")
-    return 0
+    return 0, before + played
 
 
 def _send_analyst(client, team: dict, base: str, league: str, week: int, confirm: bool, log) -> int:
@@ -138,33 +143,39 @@ def _collect_analyst(client, team: dict, base: str, sent: list[dict], week: int,
 
 
 def prepare_club(client, team: dict, base: str, confirm: bool, now: float, log=print, rng=random) -> tuple[int, float | None]:
-    """Friendly and analysis for one club when its match is 4 hours away or less. Returns (failures, time to wake at)."""
+    """One club: collect a finished analyst (any hour), the friendlies due by now, and the analysis when the match is
+    4 hours away or less. Returns (failures, time to wake at)."""
     match = _match_time(client, base)
-    if not in_window(match, now):
-        return 0, (match - LEAD if match and match - LEAD > now else None)
     league = base.rsplit("/teams/", 1)[0]
     _, info = client.get(league)
     week = info["weekNr"]
-    _, prep = client.get(f"{base}/matchpreparation")
-    steps = prep.get("steps") or []
-    failures = 0
-    failures += _play_friendlies(client, team, base, league, week, confirm, log, rng)
     status, sent = client.get(f"{base}/spyinstructions")  # 404 when nothing was sent
     sent = sent if status == 200 and isinstance(sent, list) else []
-    wake = None
-    if needs_analysis(steps, sent, week):
-        before = COUNTS["analyses"]
-        failures += _send_analyst(client, team, base, league, week, confirm, log)
-        if COUNTS["analyses"] > before:
-            wake = now + ANALYST_SECONDS  # come back when the hour is over, to collect it
-    else:
-        failed, wake = _collect_analyst(client, team, base, sent, week, now, confirm, log)
+    failures, wake = _collect_analyst(client, team, base, sent, week, now, confirm, log)
+    wakes = [wake]
+    if match is None or now >= match:
+        return failures, wake
+    due = friendlies_due(match, now)
+    played = 0
+    if due:
+        failed, played = _play_friendlies(client, team, base, league, week, due, confirm, log, rng)
         failures += failed
-    return failures, wake
+    wakes.append(next_friendly_at(match, now, played))
+    if not in_window(match, now):
+        wakes.append(match - LEAD)  # the analysis is sent only in the last 4 hours
+    else:
+        _, prep = client.get(f"{base}/matchpreparation")
+        if needs_analysis(prep.get("steps") or [], sent, week):
+            before = COUNTS["analyses"]
+            failures += _send_analyst(client, team, base, league, week, confirm, log)
+            if COUNTS["analyses"] > before:
+                wakes.append(now + ANALYST_SECONDS)  # come back when the hour is over, to collect it
+    ahead = [w for w in wakes if w and w > now]
+    return failures, min(ahead) if ahead else None
 
 
 def run_prematch(confirm: bool) -> tuple[int, list[float]]:
-    """Every club. Returns (failures, times to wake at: 4 hours before each match). Without ``confirm`` only shows the plan."""
+    """Every club. Returns (failures, times to wake at: next friendly, analysis window, analyst ready). Without ``confirm`` only shows the plan."""
     from osmbot.game.client import NeedsBrowserLogin, OsmClient
     from osmbot.game.trainings import _teams
 

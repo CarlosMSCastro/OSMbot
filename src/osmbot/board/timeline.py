@@ -10,10 +10,11 @@ import re
 from datetime import datetime
 
 from osmbot.game.dashboard import span
+from osmbot.prematch.policy import FRIENDLY_TIMES
 
 MERGE_WITHIN = 15 * 60  # s: the same kind of action this close to the last one joins it
 KEEP = 40  # past entries kept
-PREP_BEFORE = 4 * 3600  # the friendly and the analysis are done 4 h before the match (THEORY.md section 6)
+PREP_BEFORE = 4 * 3600  # the analysis is sent 4 h before the match (THEORY.md section 6)
 SIDES = {"H": "casa", "A": "fora"}
 
 _ACTIONS = (  # (pattern, kind, text): kinds in MERGED join the previous entry of the same kind
@@ -156,11 +157,19 @@ def future_events(snapshot: dict | None, now: float) -> list[dict]:
             opponent = nxt.get("opponent")
             sub = "jogo · " + SIDES.get(nxt.get("side"), "?") + (" · taça" if nxt.get("cup") else "")
             events.append(_event(match, f"{name} vs {opponent}" if opponent else f"Jogo {name}", sub, index, "ball"))
-            missing = ["Amigáveis" if step.startswith("Amigáve") else step
-                       for step, done, _ in (club.get("prep") or {}).get("steps") or []
-                       if (step.startswith("Amigáve") or step == "Análise") and not done]
-            if missing and match - PREP_BEFORE > now:
-                events.append(_event(match - PREP_BEFORE, " e ".join(missing), name, index))
+            steps = (club.get("prep") or {}).get("steps") or []
+            played = next((int(m[1]) for step, _, _ in steps if (m := re.match(r"Amigáveis \((\d+)\)", step))), None)
+            friendly = None  # the next friendly: one more due at 16/12/8/4 h before the match ("já" when overdue)
+            if played is not None and played < len(FRIENDLY_TIMES):
+                friendly = max(match - FRIENDLY_TIMES[played], now)
+            analysis = any(step == "Análise" and not done for step, done, _ in steps) and match - PREP_BEFORE > now
+            if friendly and analysis and friendly == match - PREP_BEFORE:
+                events.append(_event(friendly, "Amigáveis e Análise", name, index))
+            else:
+                if friendly:
+                    events.append(_event(friendly, "Amigáveis", name, index))
+                if analysis:
+                    events.append(_event(match - PREP_BEFORE, "Análise", name, index))
         for part, level, top, ends in (club.get("stadium") or {}).get("parts") or []:
             if ends and ends > now:
                 events.append(_event(ends, f"{part} {name}", f"{level}/{top} → {level + 1}/{top}", index, "stadium"))
