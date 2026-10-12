@@ -11,10 +11,13 @@ import time
 
 from osmbot.board.info import cup_phase, next_match, squad_value
 from osmbot.game import market as market_watch, sales
+from osmbot.game.specialists import check
 from osmbot.medical.policy import open_cases
 from osmbot.prematch.policy import friendlies_played
 
 FIXTURES_FOR = 10 * 60.0
+SPECIALISTS_STEP = 4  # matchpreparation step "Select specialists"
+RULE = "fora da regra"  # a step the game ticks but the owner's rule does not
 VALUES_FOR = 3600.0
 CHECKLIST = [(7, "Amigável"), (5, "Análise"), (0, "Onze"), (2, "Posições"), (3, "Em forma"), (1, "Banco"),
              (4, "Especialistas"), (6, "4 treinos")]  # matchpreparation step types, in the card's order
@@ -97,7 +100,8 @@ def club_extra(client, team: dict, base: str, players: list[dict], slot, market:
 
     league = base.rsplit("/teams/", 1)[0]
     got = get_many(client, [league, f"{league}/teams", f"{base}/matchpreparation",
-                            f"{base}/spyinstructions", f"{base}/players/injured", f"{base}/doctortreatments"])
+                            f"{base}/spyinstructions", f"{base}/players/injured", f"{base}/doctortreatments",
+                            f"{base}/specialists"])
     week = got[0][1]["weekNr"]
     teams = _as_list(got[1])
     matches = _cached(("matches", league), FIXTURES_FOR, lambda: _list(client, f"{league}/matches/filter"))
@@ -133,6 +137,10 @@ def club_extra(client, team: dict, base: str, players: list[dict], slot, market:
     friendlies = friendlies_played(matches, team["id"], week)  # owner, 2026-10-11: "Amigáveis (1)" … "(4)", green from the 1st
     steps = [(f"Amigáveis ({friendlies})", friendlies >= 1, None) if kind == FRIENDLY_STEP else step
              for (kind, _), step in zip(CHECKLIST, steps)]
+    status, current = got[6]  # the game ticks any 4 specialists; yellow when they are not the owner's rule (D-042)
+    wrong = check(players, current if status == 200 and isinstance(current, dict) else None)
+    if wrong:
+        steps = [(name, False, RULE) if kind == SPECIALISTS_STEP else step for (kind, name), step in zip(CHECKLIST, steps)]
 
     by_id = {p["id"]: p for p in players}
     injured = [{**p, "unavailable": by_id.get(p["id"], p).get("unavailable")} for p in _as_list(got[4])]

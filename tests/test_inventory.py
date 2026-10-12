@@ -149,11 +149,11 @@ def test_the_window_shows_the_inventory_and_the_universal_trainer():
              {"type": 7, "value": 1, "action": "Switch", "expires": None},
              {"type": 13, "value": 7, "action": "Bag", "expires": NOW + 100 * HOUR}]
     view = inventory_view(items, NOW)
-    assert view["count"] == 4 and view["warn"]
-    assert view["rows"] == [("universal", "treinador universal 24 h · expira em 3h00", YELLOW),
-                            ("inventory", "saco de prémios · expira em 100h00", None),
-                            ("missions", "2× troca de posição · não expira", GREY)]
+    assert view["warn"] and "count" not in view
+    assert view["rows"] == [("universal", "treinador universal 24 h · expira em 3 horas", YELLOW),
+                            ("inventory", "saco de prémios · expira em 4 dias e 4 horas", None)]  # only what expires
     assert not inventory_view(items[1:], NOW)["warn"] and inventory_view(None, NOW) is None
+    assert inventory_view(items[1:3], NOW)["rows"] == [(None, "Nada a expirar", GREY)]
     assert universal_ring(None, NOW)["state"] == "none"
     ring = universal_ring({"until": NOW + 20 * HOUR, "session": {"name": "P1", "finish": NOW + 3 * HOUR, "claimed": False}}, NOW)
     assert (ring["state"], ring["centre"], ring["name"], ring["done"]) == ("working", "3h00", "P1", 0.5)
@@ -180,3 +180,11 @@ def test_the_universal_trainer_s_session_is_on_the_timeline():
                                                                       "session": {"name": "P1", "finish": NOW + HOUR, "claimed": False}}}],
                 "ads": {}, "daily": {}}
     assert any(e["title"] == "Treino P1" for e in future_events(snapshot, NOW))
+
+
+def test_time_left_in_days_and_hours():
+    from osmbot.gui.view import time_left
+
+    assert time_left(37 * HOUR) == "1 dia e 13 horas" and time_left(48 * HOUR) == "2 dias"
+    assert time_left(HOUR + 5) == "1 hora" and time_left(40 * 60) == "40 min"
+    assert time_left(25 * HOUR, "en") == "1 day and 1 hour"

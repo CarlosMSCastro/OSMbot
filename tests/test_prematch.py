@@ -200,3 +200,21 @@ def test_each_friendly_is_recorded_with_what_it_changed(monkeypatch, tmp_path):
     assert row["n_na_jornada"] == 4 and row["resultado"] == "2-0"
     assert row["jogadores"] == [{"id": 50, "nome": "J", "pos": 2, "progresso_antes": 0, "att_antes": 1, "def_antes": 1,
                                  "ovr_antes": 1, "progresso_depois": 10, "att_depois": 1, "def_depois": 1, "ovr_depois": 1}]
+
+
+def test_eight_friendlies_during_an_intense_friendlies_and_never_after_it_ends():
+    from osmbot.prematch.policy import friendlies_due, friendly_deadlines, next_friendly_at
+
+    hour, match = 3600, 2_000_000_000.0
+    event = {"nome": "Intense Friendlies", "start": match - 30 * hour, "end": match + 20 * hour}
+    other = {"nome": "Training Camp Mania", "start": match - 30 * hour, "end": match + 20 * hour}
+    now = match - 15 * hour
+    assert friendlies_due(match, now) == 1 and friendlies_due(match, now, [other]) == 1  # 4 a day: 16 h passed
+    assert friendlies_due(match, now, [event]) == 1 and friendlies_due(match, match - 9 * hour, [event]) == 4
+    assert friendlies_due(match, match - 1, [event]) == 8
+    assert next_friendly_at(match, now, 1, [event]) == match - 14 * hour
+    ending = {**event, "end": match - 5 * hour}  # the event ends before the match: the rest by 1 h before its end
+    assert max(friendly_deadlines(match, now, [ending])) == match - 6 * hour
+    assert friendlies_due(match, match - 6 * hour, [ending]) == 8
+    later = {**event, "start": match - 2 * hour}  # not started yet: still 4
+    assert friendlies_due(match, now, [later]) == 1 and len(friendly_deadlines(match, now, [later])) == 4

@@ -36,6 +36,7 @@ from osmbot.game import events as events_module
 from osmbot.game import stadium as stadium_module
 from osmbot.board import timeline
 from osmbot.game.inventory import run_inventory
+from osmbot.game.matchlog import log_rounds
 from osmbot.game.medical import run_medical
 from osmbot.game.transfers import save_transfers
 from osmbot.game.prematch import run_prematch
@@ -341,6 +342,7 @@ def run_active(dry_run: bool = False, *, claim=run_claim, train=run_train, finis
                prematch=lambda confirm: run_prematch(confirm), medical=lambda confirm: run_medical(confirm),
                transfers=lambda: save_transfers(log=_log), savings=lambda confirm: run_savings(confirm),
                events=lambda: events_module.refresh(log=_log), inventory=lambda confirm: run_inventory(confirm, log=_log),
+               matches=lambda: log_rounds(log=_log),
                snapshot=None, use_screen: bool | None = None,
                sleep=time.sleep, clock=time.time, rng=random, board=None) -> None:
     """Loop until Ctrl+C (or ``request_stop``) or the first failure. With ``dry_run`` do one simulated pass and show the board once.
@@ -538,6 +540,13 @@ def run_active(dry_run: bool = False, *, claim=run_claim, train=run_train, finis
                         raise
                     except Exception as error:
                         _log(f"Transferências: erro ({error}); volto a tentar")
+                if matches:
+                    try:  # read-only: each round's matches, once, for the study (D-041)
+                        matches()
+                    except OSError:
+                        raise
+                    except Exception as error:
+                        _log(f"Registo dos jogos: erro ({error}); volto a tentar")
                 if events:
                     try:  # the forum's schedule of events, only when a month is missing (D-038)
                         events()

@@ -56,3 +56,19 @@ def pick_specialists(starters: Iterable[Player]) -> Specialists:
         free_kick_taker=pick_free_kick_taker(squad),
         corner_taker=pick_corner_taker(squad),
     )
+
+
+ROLES = {"captain": "captain", "penalty": "penalty_taker", "freekick": "free_kick_taker", "corners": "corner_taker"}  # game -> ours
+ROLE_NAMES = {"captain": "capitão", "penalty": "penáltis", "freekick": "livres", "corners": "cantos"}
+
+
+def wanted_slots(players: Iterable[Player]) -> dict[str, Optional[int]]:
+    """The lineup place (1-11) the owner's rule gives each role, as the game stores it (``specialists``: a place in
+    the eleven, not a player). A player out of the eleven is out of the specialists too (owner, 2026-10-12)."""
+    chosen = pick_specialists(p for p in players if p.starter)
+    return {role: (getattr(chosen, ours).lineup if getattr(chosen, ours) else None) for role, ours in ROLES.items()}
+
+
+def wrong_roles(current: dict, wanted: dict[str, Optional[int]]) -> list[str]:
+    """The roles whose place differs from the rule (a role the rule cannot fill is left as it is)."""
+    return [role for role, place in wanted.items() if place is not None and current.get(role) != place]

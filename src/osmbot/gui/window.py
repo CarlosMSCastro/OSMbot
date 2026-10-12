@@ -683,18 +683,16 @@ class EventPopup(QFrame):
 
 
 class InventoryBadge(QWidget):
-    """The top bar's inventory (owner, 2026-10-12): the game's bag icon and how many items; a yellow dot and count
-    when something expires within 24 h; on hover each item with the time it has left."""
+    """The top bar's inventory (owner, 2026-10-12): the game's bag icon, with a yellow dot when something expires
+    within 24 h; on hover only the items that expire, with the time they have left."""
 
     def __init__(self):
         super().__init__()
         row = QHBoxLayout(self)
         row.setContentsMargins(0, 0, 0, 0)
         row.setSpacing(5)
-        self.icon = icon(PICTURES["inventory"], 20)
-        self.count = text_label(10)
+        self.icon = icon(PICTURES["inventory"], 28)
         row.addWidget(self.icon, 0, Qt.AlignVCenter)
-        row.addWidget(self.count, 0, Qt.AlignVCenter)
         self.warn = False
         self.setVisible(False)
 
@@ -704,17 +702,16 @@ class InventoryBadge(QWidget):
             return
         if view["warn"] != self.warn or self.icon.pixmap().isNull():
             self.warn = view["warn"]
-            bag = QPixmap(str(PICTURES["inventory"])).scaled(40, 40, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+            bag = QPixmap(str(PICTURES["inventory"])).scaled(56, 56, Qt.KeepAspectRatio, Qt.SmoothTransformation)
             if self.warn:  # a yellow dot on the bag's corner, as the game marks news
                 painter = QPainter(bag)
                 painter.setRenderHint(QPainter.Antialiasing)
                 painter.setPen(QPen(QColor(BACKGROUND), 3))
                 painter.setBrush(QColor(COLOURS[YELLOW]))
-                painter.drawEllipse(QRectF(24, 1, 15, 15))
+                painter.drawEllipse(QRectF(36, 1, 18, 18))
                 painter.end()
             bag.setDevicePixelRatio(2)
             self.icon.setPixmap(bag)
-        self.count.setText(rich([(str(view["count"]), YELLOW if view["warn"] else GREY)]))
         self.setToolTip(tip_html(view["rows"]))
 
 
@@ -1444,10 +1441,10 @@ class MainWindow(QMainWindow):
         bar.addSpacing(10)
         self.event_label = EventLabel()  # after the dailies, where there is room (owner, 2026-10-12)
         bar.addWidget(self.event_label)
-        bar.addSpacing(14)
-        self.inventory = InventoryBadge()  # the game's inventory bag, yellow when something expires within 24 h
-        bar.addWidget(self.inventory)
         bar.addStretch(1)
+        self.inventory = InventoryBadge()  # on the right, by the bot's state (owner, 2026-10-12)
+        bar.addWidget(self.inventory)
+        bar.addSpacing(16)
         self.state_dot = text_label(10)
         self.state_text = text_label(10)
         bar.addWidget(self.state_dot)

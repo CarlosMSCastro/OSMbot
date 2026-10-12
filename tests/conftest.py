@@ -23,6 +23,12 @@ def _no_repo_logs(monkeypatch, tmp_path):
     from osmbot.game import rewards
 
     monkeypatch.setattr(rewards, "LOGIN_FILE", tmp_path / "inicio_sessao.json")  # nor today's login prize
+    from osmbot.game import events
+
+    monkeypatch.setattr(events, "FILE", tmp_path / "eventos.json")  # nor the owner's calendar of events
+    from osmbot.game import matchlog
+
+    monkeypatch.setattr(matchlog, "FILE", tmp_path / "jogos.json")  # nor the match log's state
 
 
 @pytest.fixture
@@ -74,6 +80,7 @@ def _isolated_from_the_game(monkeypatch, tmp_path):
     monkeypatch.setattr(loop, "run_medical", lambda confirm: (0, []))
     monkeypatch.setattr(loop, "run_savings", lambda confirm: (0, []))
     monkeypatch.setattr(loop, "run_inventory", lambda confirm, log=None: (0, []))
+    monkeypatch.setattr(loop, "log_rounds", lambda client=None, log=None: 0)
     monkeypatch.setattr(loop, "collect", lambda client: None)
 
     from osmbot.game import rewards

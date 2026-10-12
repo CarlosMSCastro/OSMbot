@@ -15,7 +15,7 @@ import time
 
 from osmbot import logs
 from osmbot.game import clubinfo, refusals
-from osmbot.prematch.policy import (FRIENDLIES_PER_MATCH, LEAD, friendly_choices, friendlies_due, friendlies_missing,
+from osmbot.prematch.policy import (LEAD, friendly_choices, friendly_event, friendlies_due, friendlies_missing,
                                     friendlies_played, in_window, needs_analysis, next_friendly_at, next_opponent)
 
 FRIENDLY_PRODUCT = 62  # bosscoinproducts: "Friendly"
@@ -51,7 +51,8 @@ def _changed(before: dict[int, dict], after: dict[int, dict]) -> list[dict]:
             for pid, now in after.items() if pid in before and any(before[pid][k] != now[k] for k in keys)]
 
 
-def _play_friendlies(client, team: dict, base: str, league: str, week: int, target: int, confirm: bool, log, rng) -> tuple[int, int]:
+def _play_friendlies(client, team: dict, base: str, league: str, week: int, target: int, confirm: bool, log, rng,
+                     event: str | None = None) -> tuple[int, int]:
     """Play the friendlies missing for ``target`` to be done this round (the owner's included; THEORY.md section 6).
     Returns (failures, friendlies played this round now)."""
     _, matches = client.get(f"{league}/matches/filter")
@@ -77,7 +78,7 @@ def _play_friendlies(client, team: dict, base: str, league: str, week: int, targ
         _, wallet = client.get("user/bosscoinwallet")
         if wallet["amount"] < FRIENDLY_PRICE:
             log(f"! {team['name']}: sem boss coins para o amigável ({wallet['amount']}); "
-                f"{FRIENDLIES_PER_MATCH - before - played} de {FRIENDLIES_PER_MATCH} ficam por fazer")
+                f"{target - before - played} de {target} ficam por fazer")
             return 0, before + played
         if played:
             time.sleep(PAUSE_BETWEEN_WRITES * rng.uniform(*GAP_BETWEEN_FRIENDLIES))
@@ -90,9 +91,9 @@ def _play_friendlies(client, team: dict, base: str, league: str, week: int, targ
             mine_home = body.get("homeTeamId") == team["id"]
             score = (f"{body.get('homeGoals')}-{body.get('awayGoals')}" if mine_home
                      else f"{body.get('awayGoals')}-{body.get('homeGoals')}")
-            log(f"Amigável: {team['name']} {score} {names[opponent]}")
+            log(f"Amigável: {team['name']} {score} {names[opponent]}" + (f" ({event})" if event else ""))
             later = _progress(client, base)
-            logs.record("amigaveis", {"clube": base, "semana": week, "n_na_jornada": before + played,
+            logs.record("amigaveis", {"clube": base, "semana": week, "n_na_jornada": before + played, "evento": event,
                                       "adversario": names[opponent], "resultado": score, "jogadores": _changed(progress, later)})
             progress = later or progress
             continue
@@ -154,6 +155,7 @@ def _collect_analyst(client, team: dict, base: str, sent: list[dict], week: int,
         if status == 200:
             COUNTS["collected"] += 1
             log(f"Análise: {team['name']} levantou o analista")
+            _note(client, base, week, now)  # the report, while the game gives it (D-041)
             return 0, None
         if refusals.is_refusal(status):
             refusals.refuse(key, log, f"! Análise (levantar): o jogo recusou ({team['name']}, {status}); volto a tentar na próxima jornada",
@@ -162,6 +164,18 @@ def _collect_analyst(client, team: dict, base: str, sent: list[dict], week: int,
         log(f"Análise: {team['name']} levantar o analista falhou ({status})")
         return 1, None
     return 0, None
+
+
+def _note(client, base: str, week: int, now: float) -> None:
+    """Keep the tactics and the analyst's report for the match log (reads only; never stops the pre-match)."""
+    try:
+        from osmbot.game.matchlog import note_prematch
+
+        note_prematch(client, base, week, now)
+    except OSError:
+        raise
+    except Exception:
+        pass
 
 
 def prepare_club(client, team: dict, base: str, confirm: bool, now: float, log=print, rng=random) -> tuple[int, float | None]:
@@ -177,15 +191,28 @@ def prepare_club(client, team: dict, base: str, confirm: bool, now: float, log=p
     wakes = [wake]
     if match is None or now >= match:
         return failures, wake
-    due = friendlies_due(match, now)
+    from osmbot.game.events import calendar_events
+
+    events = calendar_events(now)
+    due = friendlies_due(match, now, events)
     played = 0
     if due:
-        failed, played = _play_friendlies(client, team, base, league, week, due, confirm, log, rng)
+        failed, played = _play_friendlies(client, team, base, league, week, due, confirm, log, rng,
+                                          event=(friendly_event(events, now) or {}).get("nome"))
         failures += failed
-    wakes.append(next_friendly_at(match, now, played))
+    wakes.append(next_friendly_at(match, now, played, events))
     if not in_window(match, now):
         wakes.append(match - LEAD)  # the analysis is sent only in the last 4 hours
     else:
+        _note(client, base, week, now)  # the tactics the match will be played with (D-041)
+        from osmbot.game.specialists import fix_specialists
+
+        try:  # the specialists by the owner's rule, following any change of the eleven (D-042)
+            failures += fix_specialists(client, team, base, confirm, log)
+        except OSError:
+            raise
+        except Exception as error:
+            log(f"Especialistas ({team['name']}): erro ({error})")
         _, prep = client.get(f"{base}/matchpreparation")
         if needs_analysis(prep.get("steps") or [], sent, week):
             before = COUNTS["analyses"]

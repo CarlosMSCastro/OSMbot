@@ -4,6 +4,18 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-PT/1.1.0/); 
 
 Este ficheiro é o **histórico de versões, para quem lê o repo**. O diário interno de cada sessão de trabalho está em [`docs/WORKLOG.md`](docs/WORKLOG.md).
 
+## [0.11.7] — 2026-10-12
+
+Especialistas pela tua regra, 8 amigáveis no Intense Friendlies e o registo de todos os jogos.
+
+### Adicionado
+- **Especialistas:** nas últimas 4 h antes de cada jogo, o bot põe capitão, penáltis, livres e cantos pela tua regra (só corrige o que estiver diferente; o mesmo jogador pode ter vários papéis). Na checklist, "Especialistas" fica amarelo quando não seguem a regra.
+- **Intense Friendlies:** durante o evento, 8 amigáveis por jornada em vez de 4, cada um registado com o progresso dos jogadores e o nome do evento, para ver se compensa.
+- **Registo dos jogos** em `logs/<PC>/jogos/`: todos os jogos de liga e taça das tuas ligas, uma vez por jornada (resultado, árbitro e rigor, classificação, valor e média do onze das duas equipas, nota e golos de cada jogador); nos teus jogos também a tua tática antes do jogo. Na primeira vez, a época até agora (resultado e árbitro).
+
+### Alterado
+- **Inventário** à direita, junto ao estado do bot, maior e sem número; ao passar o rato, só o que expira, com o tempo em dias e horas ("1 dia e 13 horas").
+
 ## [0.11.6] — 2026-10-12
 
 O inventário deixa de perder itens: o que vai expirar é usado a tempo.

@@ -2,6 +2,21 @@
 
 Entradas mais recentes primeiro. Cada sessão: o que se fez · o que ficou por fazer · próximo passo.
 
+## 2026-10-12 — Pendentes por ordem: 1) calendário para agir
+
+- **Versão 0.11.7** (pedido do dono): ajuste do inventário, D-040, D-041, D-042; `pyproject`, `__init__`, `CHANGELOG`, `README`, `PROJECT_BRIEF` (8b, 9a, 9b), `RISKS_AND_COMPLIANCE`, regra 5 do `CLAUDE.md`; `dist` reconstruído; notas em `dist/release-notes-v0.11.7.md`. **A seguir:** ponto 4 (janela no Mac) e 5 (plano de época, só conversa), com mais calma (o dono: "tás a ir mt rápido").
+
+- **Lista acordada com o dono** (por ordem): 1) usar o calendário para agir; 2) registo dos jogos; 3) especialistas; 4) janela no Mac; 5) plano de época (só discussão).
+- **3) Feito (D-042):** especialistas pela regra nas últimas 4 h antes de cada jogo (`theory/specialists.wanted_slots`/`wrong_roles`, `game/specialists.py`, ligado em `prematch.prepare_club`); checklist a amarelo quando fora da regra (`clubinfo`, `view`). 1.ª gravação com OK do dono: livres de um clube corrigidos (200). Respostas do dono: vários papéis por jogador; lesionado sai do onze. 356 testes.
+- **2) Histórico:** a época até agora gravada de verdade (só leituras): 280 linhas em `logs/DESKTOP-KAM70RR/jogos/` (167 + 101 jogos com resultado e árbitro, `historico`; mais a última jornada completa, 12 jogos com notas).
+- **2) Feito (D-041):** registo de todos os jogos de liga e taça das ligas do dono, uma vez por jornada (`game/matchlog.py`: `note_prematch` nas últimas 4 h e ao levantar o analista guarda a tática e o relatório; `log_rounds` no ciclo, depois das transferências). Táticas dos outros clubes: 403 no jogo. Ensaio real com o registo desviado: 12 jogos (10 de liga numa liga, 2 de taça na outra), ~90 KB por jornada; as 2 linhas do dono no registo. 351 testes. **Por ver:** se `spyresults` responde antes do jogo (próxima jornada).
+- **1) Feito (D-040):** 8 amigáveis durante um Intense Friendlies, com o evento no registo `amigaveis/` (`prematch/policy.friendly_deadlines`, `friendly_event`; `game/prematch.prepare_club` lê o calendário; linha do tempo com as mesmas horas). Transfer Madness: nada, por decisão do dono. Os eventos de tempos curtos e de "mais progressão ao recolher" já são aproveitados (o bot lê os tempos do jogo e recolhe logo). Testes isolados do calendário verdadeiro (`conftest.py`). 348 testes. Primeiro caso real: Intense Friendlies a 24–25/10.
+
+## 2026-10-12 — Ajuste do inventário na janela (depois da 0.11.6)
+
+- **Pedido do dono:** ícone à direita, junto ao estado do bot, um pouco maior (28 px), sem número; ao passar o rato só os itens que expiram, com o tempo em dias e horas ("1 dia e 13 horas"). `gui/view.time_left`, `inventory_view`, `gui/window.InventoryBadge`; `THEORY.md` §20. 347 testes; print visto.
+- **Por lançar:** na próxima versão.
+
 ## 2026-10-12 — Inventário: usar o que vai expirar (Windows, depois da 0.11.5)
 
 - **Problema do dono:** itens que expiram sem serem usados. Lido no jogo: treinadores universais (24/48 h) e sacos expiram 7 dias depois de entrarem; trocas de posição e progressão não expiram.

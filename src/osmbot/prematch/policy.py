@@ -5,6 +5,9 @@ LEAD = 4 * 3600  # act only when the match is this close: before that the owner 
 FRIENDLY_STEP = 7  # matchpreparation step "Play 1 Friendly"
 FRIENDLIES_PER_MATCH = 4  # owner, 2026-10-11: 4 friendlies before each match (THEORY.md section 6)
 FRIENDLY_TIMES = (16 * 3600, 12 * 3600, 8 * 3600, 4 * 3600)  # spread over the day (owner, 2026-10-12): the k-th is due this long before the match [S]
+EVENT_FRIENDLY_TIMES = tuple(h * 3600 for h in (16, 14, 12, 10, 8, 6, 4, 2))  # 8 in an Intense Friendlies [S]
+EVENT_NAME = "intense friendlies"  # the event that brings 8 friendlies (owner, 2026-10-12); recognised by name [S]
+EVENT_MARGIN = 3600  # a friendly that would only fit after the event is played this long before it ends [S]
 ANALYSIS_STEP = 5  # matchpreparation step "Analyse your opponent"
 LEAGUE_MATCH, CUP_MATCH, FRIENDLY_MATCH = 0, 1, 2  # matchType in matches/filter (1 = cup: hypothesis)
 
@@ -14,18 +17,35 @@ def in_window(match_time: float | None, now: float) -> bool:
     return match_time is not None and match_time - LEAD <= now < match_time
 
 
-def friendlies_due(match_time: float | None, now: float) -> int:
-    """How many of the 4 friendlies should be played by now: one more at each of FRIENDLY_TIMES before the match."""
+def friendly_event(events: list[dict] | None, now: float) -> dict | None:
+    """The Intense Friendlies going on now (``events``: the forum's schedule with "start" and "end"), if any."""
+    return next((e for e in events or [] if EVENT_NAME in e.get("nome", "").lower() and e["start"] <= now < e["end"]), None)
+
+
+def friendly_deadlines(match_time: float, now: float, events: list[dict] | None = None) -> list[float]:
+    """When each friendly of the round becomes due: 4 at 16/12/8/4 h before the match; during an Intense Friendlies 8
+    at 16/14/.../2 h, none later than an hour before the event ends (THEORY.md section 6)."""
+    event = friendly_event(events, now)
+    if event is None:
+        return [match_time - before for before in FRIENDLY_TIMES]
+    return [min(match_time - before, event["end"] - EVENT_MARGIN) for before in EVENT_FRIENDLY_TIMES]
+
+
+def friendlies_due(match_time: float | None, now: float, events: list[dict] | None = None) -> int:
+    """How many friendlies should be played by now (4, or 8 in an Intense Friendlies), counting the deadlines passed."""
     if match_time is None or now >= match_time:
         return 0
-    return sum(1 for before in FRIENDLY_TIMES if match_time - before <= now)
+    return sum(1 for at in friendly_deadlines(match_time, now, events) if at <= now)
 
 
-def next_friendly_at(match_time: float | None, now: float, played: int) -> float | None:
+def next_friendly_at(match_time: float | None, now: float, played: int, events: list[dict] | None = None) -> float | None:
     """When the next friendly becomes due, if that is still ahead (None: all played, or one is due now)."""
-    if match_time is None or played >= len(FRIENDLY_TIMES):
+    if match_time is None:
         return None
-    at = match_time - FRIENDLY_TIMES[played]
+    deadlines = friendly_deadlines(match_time, now, events)
+    if played >= len(deadlines):
+        return None
+    at = deadlines[played]
     return at if at > now else None
 
 

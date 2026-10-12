@@ -107,32 +107,40 @@ def universal_ring(universal: dict | None, now: float) -> dict:
             "sub": active, "done": _done(session["finish"] - now, UNIVERSAL_SESSION)}
 
 
+def time_left(seconds: float, lang: str = "pt") -> str:
+    """Days and hours, as the owner reads it (2026-10-12): "1 dia e 13 horas", "13 horas", "40 min"."""
+    seconds = max(0, int(seconds))
+    days, hours, minutes = seconds // 86400, seconds % 86400 // 3600, seconds % 3600 // 60
+
+    def unit(n: int, pt: str, en: str) -> str:
+        return f"{n} {_say(lang, pt, en)}{'' if n == 1 else 's'}"
+
+    if days:
+        text = unit(days, "dia", "day")
+        return text + (_say(lang, " e ", " and ") + unit(hours, "hora", "hour") if hours else "")
+    if hours:
+        return unit(hours, "hora", "hour")
+    return f"{minutes} min"
+
+
 def inventory_view(items: list[dict] | None, now: float, lang: str = "pt") -> dict | None:
-    """The top bar's inventory (owner, 2026-10-12): how many items, yellow when one expires within 24 h, and on hover
-    each kind of item with its count and the time left (the soonest of its kind). None when it could not be read."""
+    """The top bar's inventory (owner, 2026-10-12): a yellow dot when an item expires within 24 h; on hover only the
+    items that expire, each with the time left in days and hours. None when it could not be read."""
     if items is None:
         return None
-    kinds: dict[str, dict] = {}
-    for item in items:
-        kind = kinds.setdefault(item["action"], {**item, "count": 0, "expires": None})
-        kind["count"] += 1
-        if item.get("expires") and (kind["expires"] is None or item["expires"] < kind["expires"]):
-            kind["expires"] = item["expires"]
     rows, warn = [], False
-    for kind in sorted(kinds.values(), key=lambda k: (k["expires"] is None, k["expires"] or 0)):
-        name = prize_text({"type": kind["type"], "value": kind["value"], "action": kind["action"]}, lang)
-        if kind["type"] == 12:  # universal trainer: its hours, not the bare value
-            name = _say(lang, f"treinador universal {round(kind['value'] / 60)} h", f"universal trainer {round(kind['value'] / 60)} h")
-        count = f"{kind['count']}× " if kind["count"] > 1 else ""
-        left = kind["expires"] - now if kind["expires"] else None
-        soon = left is not None and left <= WARN_BEFORE
+    for item in sorted((i for i in items if i.get("expires") and i["expires"] > now), key=lambda i: i["expires"]):
+        name = prize_text({"type": item["type"], "value": item["value"], "action": item["action"]}, lang)
+        if item["type"] == 12:  # universal trainer: its hours, not the bare value
+            name = _say(lang, f"treinador universal {round(item['value'] / 60)} h", f"universal trainer {round(item['value'] / 60)} h")
+        left = item["expires"] - now
+        soon = left <= WARN_BEFORE
         warn = warn or soon
-        when = (_say(lang, "não expira", "never expires") if left is None else
-                _say(lang, f"expira em {span(max(0, left))}", f"expires in {span(max(0, left))}"))
-        rows.append((prize_icon(kind), f"{count}{name} · {when}", YELLOW if soon else None if left else GREY))
+        rows.append((prize_icon(item), f"{name} · {_say(lang, 'expira em', 'expires in')} {time_left(left, lang)}",
+                     YELLOW if soon else None))
     if not rows:
-        rows = [(None, _say(lang, "Inventário vazio", "Inventory empty"), GREY)]
-    return {"count": len(items), "warn": warn, "rows": rows}
+        rows = [(None, _say(lang, "Nada a expirar", "Nothing expiring"), GREY)]
+    return {"warn": warn, "rows": rows}
 
 
 TOP_PLACES, BOTTOM_PLACES = 2, 3  # squad value: 1st-2nd green, the last 3 red, yellow in between (owner, 2026-10-10)
@@ -205,6 +213,8 @@ def club_view(club: dict, now: float, shortened: dict | None = None) -> dict:
     for name, done, analyst in prep.get("steps") or []:
         if done:
             steps.append(("done", name, ""))
+        elif analyst == "fora da regra":  # specialists not as the owner's rule: yellow (owner, 2026-10-12)
+            steps.append(("progress", name, ""))
         elif analyst and analyst > now:
             steps.append(("waiting", name, span(analyst - now)))
         elif analyst:
