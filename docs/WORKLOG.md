@@ -2,6 +2,15 @@
 
 Entradas mais recentes primeiro. Cada sessão: o que se fez · o que ficou por fazer · próximo passo.
 
+## 2026-10-12 — Calendário na janela e informação das diárias ao passar o rato (Windows)
+
+- **Revisão dos logs de hoje** (pedido do dono): a paragem das 03:06 no DESKTOP-KAM70RR foi o bug da 0.11.0 (já corrigido); ganhos 4–5× acima da previsão em alguns treinos (Donnarumma +63 vs 13, Marmoush +67 vs 14) por explicar até haver `treinos/`; as vendas a 100% do máximo demoram 22–28 h. O PC da empresa (DESKTOP-8OFGOB3) deixou de ser usado; o novo de lá ainda não passou logs.
+- **Release 0.11.4:** o `dist` deste PC tinha a 0.11.0; reconstruído com a 0.11.4 e notas em `dist/release-notes-v0.11.4.md`. Falta ao dono: `gh release create v0.11.4 …` (tag e release; a 0.11.1 também não tem).
+- **Calendário na barra de cima** (dono, 2.ª versão depois de ver prints): à frente das diárias, "Próximo evento: Super Staff · 14/10" (ou "Evento agora: … · até …"); ao passar o rato abre o mês inteiro como calendário (7 colunas Seg–Dom, uma linha por semana), o nome do evento no quadrado do dia a laranja (esbatido depois de passar), hoje com borda branca, sem legenda; os efeitos ao passar o rato no dia, em português por regras (`events/calendar.effect_text`) ou no original em inglês. `gui/view.calendar_view`, `game/events.calendar_months`, `snapshot["calendar"]`, `gui/window` (`MonthGrid`, `EventPopup`, `EventLabel`).
+- **Hover nas diárias** (dono): início de sessão = só o prémio de hoje, com ícone (boss coins, fundos…); depois de reclamado o jogo já não o mostra, por isso o bot guarda-o ao reclamar (`~/.osmbot/inicio_sessao.json`) e, sem isso, procura um item de início de sessão entrado hoje no inventário (`policy.login_today`). Missões = as 3 de hoje com o certo verde ou o círculo amarelo e o progresso. Prémio do dia = o de hoje e o de amanhã. `rewards/texts.py` (missões em português por regras, prémios por tipo), `policy.prize_index`/`mission_details`, `gui/view.daily_tips`, `gui/window.tip_html`. Prints feitos com a janela real fora do ecrã (uma leitura, só GETs). **Incidente:** um teste escreveu no `~/.osmbot/inicio_sessao.json` verdadeiro; apagado e isolado no `conftest.py`. 336 testes.
+- **Versão 0.11.5** (pedido do dono, depois de aprovar os prints): `pyproject`, `__init__`, `CHANGELOG`, `README`, `PROJECT_BRIEF`; `dist` reconstruído; notas em `dist/release-notes-v0.11.5.md`.
+- **Próximo passo:** o dono faz commit e o release; vê o calendário e os hovers ao vivo. Por ver: amanhã (dia 2 da semana) o prémio do dia aparece e é reclamado.
+
 ## 2026-10-12 — Bot parado de noite (0.11.0, Windows)
 
 - **Sintoma** (screenshot do dono, DESKTOP-KAM70RR): "Parou: erro (unsupported operand type(s) for +=: 'dict' and 'int')"; o registo acaba às 03:06:01, logo a seguir ao 1.º treino posto com a 0.11.0 (Marmoush).

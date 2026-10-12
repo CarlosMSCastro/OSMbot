@@ -20,6 +20,9 @@ def _no_repo_logs(monkeypatch, tmp_path):
     from osmbot.game import refusals
 
     monkeypatch.setattr(refusals, "FILE", tmp_path / "recusas.json")  # never the owner's notes of refused requests
+    from osmbot.game import rewards
+
+    monkeypatch.setattr(rewards, "LOGIN_FILE", tmp_path / "inicio_sessao.json")  # nor today's login prize
 
 
 @pytest.fixture

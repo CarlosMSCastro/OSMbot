@@ -113,6 +113,12 @@ def calendar_events(now: float | None = None, days: int = 7) -> list[dict]:
     return upcoming(list((_load().get("meses") or {}).values()), time.time() if now is None else now, days)
 
 
+def calendar_months() -> list[dict]:
+    """Every month of the schedule the bot has, oldest first (for the window's calendar)."""
+    months = _load().get("meses") or {}
+    return [months[key] for key in sorted(months)]
+
+
 def check_league(client, league_id: int, name: str = "", settings: list[dict] | None = None, log=None,
                  now: float | None = None) -> list[str]:
     """What an event changed in this league's settings (read at most once an hour); logged when it changes.

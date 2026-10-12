@@ -77,6 +77,48 @@ def mission_summary(user_missions: list[dict], catalogue: list[dict], refused: s
             "day_pending": bool(claim) and not is_daily(claim)}
 
 
+def prize_index(action_rewards: list[dict], rewards: list[dict]) -> dict[str, dict]:
+    """actionId -> {"type", "value", "action"} of its (first) reward, from the game's two catalogues."""
+    by_id = {r["id"]: r for r in rewards}
+    out: dict[str, dict] = {}
+    for row in action_rewards:
+        reward = by_id.get(row.get("rewardId"))
+        if reward and row["actionId"] not in out:
+            out[row["actionId"]] = {"type": reward.get("type"), "value": reward.get("value"), "action": row["actionId"]}
+    return out
+
+
+def login_today(track: list[dict], saved: dict | None, inventory: list[dict], day_start: float, prizes: dict[str, dict],
+                today: str) -> dict | None:
+    """Today's login prize, for the board's hover: the day the game offers to claim; once claimed (the track then
+    shows only the coming days), what the bot noted when it claimed it today (``saved``: {"day", "action"}), or an
+    item of a login reward the inventory got today (a bag stays there; coins and energy are spent at once)."""
+    action = next((d["actionId"] for d in track if d.get("isClaimable")), None)
+    if action is None and saved and saved.get("day") == today:
+        action = saved.get("action")
+    if action is None:
+        action = next((i["action"]["id"] for i in inventory if i["action"]["id"].startswith("DailyLogin")
+                       and (i.get("creationTimestamp") or 0) >= day_start), None)
+    return (prizes.get(action) or {"action": action}) if action else None
+
+
+def mission_details(user_missions: list[dict], catalogue: list[dict], prizes: dict[str, dict], now: float) -> dict:
+    """For the hover on the board: the three daily missions (the game's text, progress, goal, claimed), and the
+    week's day rewards from today on (day, prize, claimed); today's is the first when it is in the list."""
+    goals = {m["id"]: m for m in catalogue}
+    dailies = [{"text": goals.get(m["missionId"], {}).get("progressTypeTranslation") or "", "progress": m["progress"],
+                "goal": goals.get(m["missionId"], {}).get("threshold") or 0, "claimed": m["isClaimed"]}
+               for m in sorted((m for m in user_missions if is_daily(m)), key=lambda m: m["order"])]
+    today = today_index(user_missions, now)
+    week = []
+    for m in sorted((m for m in user_missions if not is_daily(m)), key=lambda m: m["sourceType"]):
+        if today is None or m["sourceType"] >= today:
+            action = goals.get(m["missionId"], {}).get("actionId")
+            week.append({"day": m["sourceType"], "prize": prizes.get(action) or ({"action": action} if action else None),
+                         "claimed": m["isClaimed"]})
+    return {"dailies": dailies, "today": today, "week": week}
+
+
 def has_room(action_id: str, action_rewards: list[dict], rewards: list[dict], inventory: list[dict]) -> bool:
     """False if the reward(s) of this action would take an inventory item above the game's own limit.
     An action the catalogues do not list is allowed: the game itself refuses what it cannot take."""

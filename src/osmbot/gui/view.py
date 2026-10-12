@@ -6,13 +6,20 @@ a video skipped), yellow = needs attention, grey = labels / nothing going on, re
 """
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import date, datetime, timedelta
 
 from osmbot.board.timeline import future_view, past_view
+from osmbot.events.calendar import effect_text, span_of
 from osmbot.game.ads import MAX_PER_BURST, MAX_TRAINING_VIDEOS, VIDEO_SAVES
 from osmbot.game.dashboard import BAR_SECONDS, SPONSOR_SLOTS, coin_jump, money, span, wake_events
+from osmbot.rewards.texts import amount, mission_text, prize_text
 
-GREEN, BLUE, YELLOW, GREY, RED = "green", "blue", "yellow", "grey", "red"
+GREEN, BLUE, YELLOW, GREY, RED, ORANGE = "green", "blue", "yellow", "grey", "red", "orange"
+
+
+def _say(lang: str, pt: str, en: str) -> str:
+    """The hover texts made here from the game's own words (the window's ``tr`` only knows fixed Portuguese texts)."""
+    return pt if lang == "pt" else en
 
 
 def _money(amount: int | None) -> str:
@@ -187,27 +194,78 @@ def club_view(club: dict, now: float, shortened: dict | None = None) -> dict:
                      care_ring("Advogado", club.get("suspended") or [], now, lawyer=True)]}
 
 
+def _daily_parts(daily: dict, now: float) -> list[tuple[str, str, str, str]]:
+    """(which, kind, text, colour) per piece; "which" says what its hover is about."""
+    parts: list[tuple[str, str, str, str]] = []
+    login = daily.get("login")
+    if login:
+        parts.append(("login", "collect", "Início de sessão por reclamar", YELLOW) if login["claimable"]
+                     else ("login", "done", f"Início de sessão (dia {login['day']})", GREEN))
+    missions = daily.get("missions")
+    if missions and missions["total"]:
+        finished = missions["claimed"] >= missions["total"]
+        parts.append(("missions", "done", f"Missões {missions['claimed']}/{missions['total']}", GREEN) if finished
+                     else ("missions", "progress", f"Missões {missions['claimed']}/{missions['total']}", YELLOW))
+        if missions["day_pending"]:
+            parts.append(("day", "collect", "Prémio do dia por reclamar", YELLOW))
+        else:
+            parts.append(("day", "done", "Prémio do dia", GREEN) if finished else ("day", "open", "Prémio do dia", GREY))
+    renews = (login or {}).get("renews")
+    if renews and renews > now:
+        parts.append(("renews", "waiting", f"Novo dia em {span(renews - now)}", BLUE))
+    return parts
+
+
+PRIZE_ICONS = {1: "coins", 8: "funds", 9: "training"}  # the window's pictures; any other prize: the missions one
+
+
+def prize_icon(prize: dict | None) -> str:
+    return PRIZE_ICONS.get((prize or {}).get("type"), "missions")
+
+
+def daily_tips(daily: dict | None, lang: str = "pt") -> dict[str, list[tuple[str | None, str, str | None]]]:
+    """The hover of each daily piece (owner, 2026-10-12), as rows of (icon, text, colour); the icon is a picture
+    of the window ("coins", "funds"...) or a step mark ("done", "progress"). Login: only today's prize. Missions:
+    the three of today, done or not, with their progress. Day reward: today's, and tomorrow's."""
+    daily = daily or {}
+    tips = {}
+    login = daily.get("login")
+    if login:
+        prize = login.get("today")
+        if prize:
+            claim = _say(lang, " (por reclamar)", " (to claim)") if login.get("claimable") else ""
+            tips["login"] = [(prize_icon(prize), _say(lang, "Hoje: ", "Today: ") + prize_text(prize, lang) + claim, None)]
+        else:
+            tips["login"] = [(None, _say(lang, "Hoje: prémio por saber", "Today: prize not known"), GREY)]
+    missions = daily.get("missions")
+    if missions:
+        dailies = missions.get("dailies") or []
+        if dailies:
+            tips["missions"] = [("done" if m["claimed"] else "progress",
+                                 f"{mission_text(m['text'], lang)} ({amount(m['progress'], m['goal'])})", None) for m in dailies]
+        week = missions.get("week") or []
+        today = missions.get("today")
+        first = next((d for d in week if d["day"] == today), None)
+        if first:
+            state = (_say(lang, "reclamado", "claimed") if first["claimed"] else
+                     _say(lang, "por reclamar", "to claim") if missions.get("day_pending") else
+                     _say(lang, "depois das 3 missões", "after the 3 missions"))
+            rows = [(prize_icon(first["prize"]), _say(lang, "Hoje: ", "Today: ") + f"{prize_text(first['prize'], lang)} ({state})", None)]
+        else:
+            rows = [(None, _say(lang, "Hoje não há prémio do dia", "No daily prize today"), GREY)]
+        tomorrow = next((d for d in week if today is not None and d["day"] == today + 1), None)
+        if tomorrow:
+            rows.append((prize_icon(tomorrow["prize"]), _say(lang, "Amanhã: ", "Tomorrow: ") + prize_text(tomorrow["prize"], lang), GREY))
+        if week or dailies:
+            tips["day"] = rows
+    return tips
+
+
 def daily_view(daily: dict | None, now: float) -> tuple[list[tuple[str, str, str]], dict | None]:
     """The daily rewards as (kind, text, colour) pieces, and the accumulated-videos row (or None). The kind is the
     icon the window draws, as in the pre-match list (owner, 2026-10-10)."""
     daily = daily or {}
-    parts: list[tuple[str, str, str]] = []
-    login = daily.get("login")
-    if login:
-        parts.append(("collect", "Início de sessão por reclamar", YELLOW) if login["claimable"]
-                     else ("done", f"Início de sessão (dia {login['day']})", GREEN))
-    missions = daily.get("missions")
-    if missions and missions["total"]:
-        finished = missions["claimed"] >= missions["total"]
-        parts.append(("done", f"Missões {missions['claimed']}/{missions['total']}", GREEN) if finished
-                     else ("progress", f"Missões {missions['claimed']}/{missions['total']}", YELLOW))
-        if missions["day_pending"]:
-            parts.append(("collect", "Prémio do dia por reclamar", YELLOW))
-        else:
-            parts.append(("done", "Prémio do dia", GREEN) if finished else ("open", "Prémio do dia", GREY))
-    renews = (login or {}).get("renews")
-    if renews and renews > now:
-        parts.append(("waiting", f"Novo dia em {span(renews - now)}", BLUE))
+    parts = [piece[1:] for piece in _daily_parts(daily, now)]
     videos = daily.get("videos")
     row = None
     if videos:
@@ -315,16 +373,77 @@ def doing_view(snapshot: dict | None, doing: dict | None, now: float) -> str:
     return f"agora: {doing['text']}" + (f" · a seguir: {following}" if following else "")
 
 
+MONTH_NAMES = {"pt": "Janeiro Fevereiro Março Abril Maio Junho Julho Agosto Setembro Outubro Novembro Dezembro".split(),
+               "en": "January February March April May June July August September October November December".split()}
+
+
+def _days(event: dict) -> str:
+    start, end = date.fromisoformat(event["inicio"]), date.fromisoformat(event["fim"])
+    if start == end:
+        return f"{start:%d/%m}"
+    return f"{start:%d}–{end:%d/%m}" if start.month == end.month else f"{start:%d/%m}–{end:%d/%m}"
+
+
+def calendar_view(months: list[dict] | None, now: float, lang: str = "pt") -> dict | None:
+    """The events' calendar (owner, 2026-10-12): in the top bar, the event going on or the next one; on hover,
+    each whole month as a calendar (a row per week, Monday first), the event's name on its days (orange) and its
+    effects on hover over the day. This month (or the last one the bot has, if older) and any later month it has.
+    None without a schedule."""
+    events = []
+    for month in months or []:
+        for event in month.get("eventos") or []:
+            start, end = span_of(event)
+            events.append({**event, "start": start, "end": end})
+    if not events:
+        return None
+    events.sort(key=lambda e: e["start"])
+    today = datetime.fromtimestamp(now).date()
+    going = next((e for e in events if e["start"] <= now < e["end"]), None)
+    coming = next((e for e in events if e["start"] > now), None)
+    if going:
+        label = [(_say(lang, "Evento agora: ", "Event now: "), GREY), (going["nome"], ORANGE),
+                 (_say(lang, " · até ", " · until ") + f"{date.fromisoformat(going['fim']):%d/%m}", None)]
+    elif coming:
+        label = [(_say(lang, "Próximo evento: ", "Next event: "), GREY), (coming["nome"], ORANGE), (f" · {_days(coming)}", None)]
+    else:
+        label = [(_say(lang, "Sem eventos marcados", "No events scheduled"), GREY)]
+    keys = sorted(m["mes"] for m in months if m.get("eventos"))
+    shown = []
+    for key in [k for k in keys if k >= f"{today:%Y-%m}"] or keys[-1:]:
+        first = date.fromisoformat(key + "-01")
+        last = (first + timedelta(days=32)).replace(day=1) - timedelta(days=1)
+        weeks, day = [], first - timedelta(days=first.weekday())
+        while day <= last:
+            week = []
+            for _ in range(7):
+                if first <= day <= last:
+                    found = [e for e in events if e["inicio"] <= day.isoformat() <= e["fim"]]
+                    week.append({"day": day.day, "today": day == today, "past": day < today,
+                                 "events": [{"name": e["nome"], "when": _days(e),
+                                             "effects": [effect_text(line, lang) for line in e.get("efeitos") or []]}
+                                            for e in found]})
+                else:
+                    week.append(None)
+                day += timedelta(days=1)
+            weeks.append(week)
+        shown.append({"title": f"{MONTH_NAMES[lang if lang in MONTH_NAMES else 'en'][first.month - 1]} {first.year}", "weeks": weeks})
+    return {"label": label, "months": shown,
+            "weekdays": _say(lang, "Seg Ter Qua Qui Sex Sáb Dom", "Mon Tue Wed Thu Fri Sat Sun").split()}
+
+
 def board_view(snapshot: dict | None, stats: dict | None, now: float, doing: dict | None = None,
-               history: list[dict] | None = None) -> dict | None:
+               history: list[dict] | None = None, lang: str = "pt") -> dict | None:
     """Everything the window shows for one moment (None while there is nothing read yet)."""
     if not snapshot:
         return None
     shortened = (stats or {}).get("shortened") or {}
-    daily, _ = daily_view(snapshot.get("daily"), now)
+    tips = daily_tips(snapshot.get("daily"), lang)
+    daily = [(kind, text, colour, tips.get(which, []))
+             for which, kind, text, colour in _daily_parts(snapshot.get("daily") or {}, now)]
     return {"clubs": [club_view(c, now, shortened) for c in snapshot["clubs"]],
             "account": account_view(snapshot, stats, now), "next": next_check(snapshot, now),
             "doing": doing_view(snapshot, doing, now),
             "daily": [piece for piece in daily if piece[0] != "waiting"],  # the new day is on the timeline
+            "event": calendar_view(snapshot.get("calendar"), now, lang),
             "timeline": {"future": future_view(snapshot, now), "past": past_view(history or []),
                          "now": (doing or {}).get("text") or ""}}

@@ -33,6 +33,41 @@ LABELS = {"TrainingSession": "treinos", "TrainingUniversalSession": "treinador u
           "ScoutInstructionTimer": "olheiro", "MaxPlayersOnTransferlist": "vagas de venda"}
 
 
+_H = r"(\d+(?::\d+)?)\s*H"  # "2H", "1:30H"
+_MORE = {"higher": "Mais progressão", "extra": "Progressão extra", "extreme": "Progressão extrema"}
+EFFECTS_PT = (  # the staff's lines (English) in Portuguese, for the window's calendar; a line with no rule stays as it is
+    (rf"(?:faster trainers|faster training|training timers): (?:normal trainers )?{_H}(?: normal trainers)? and "
+     rf"(?:universal trainer )?{_H}(?: universal trainer)?", lambda m: f"Treinos de {m[1]} h; treinador universal {m[2]} h"),
+    (rf"more progression and faster trainings: {_H} regular trainers, {_H} universal trainer",
+     lambda m: f"Mais progressão; treinos de {m[1]} h, treinador universal {m[2]} h"),
+    (r"(higher|extra|extreme) training progression(?: \(when claiming\))? with every (training and friendly|friendly)",
+     lambda m: f"{_MORE[m[1].lower()]} de treino em cada " + ("treino e amigável" if "training" in m[2].lower() else "amigável")),
+    (r"higher training progression, when claiming results, for old players", lambda m: "Mais progressão de treino para jogadores velhos"),
+    (rf"(?:faster stadium upgrades|shorter timers when upgrading your stadium) \({_H}\)", lambda m: f"Estádio mais rápido ({m[1]} h)"),
+    (r"higher sale chance and more players added by engine on each transfer round",
+     lambda m: "Vende-se mais e o motor põe mais jogadores em cada ronda"),
+    (r"possible to put up to (\d+) players on transfer list", lambda m: f"Até {m[1]} jogadores na lista de transferências"),
+    (rf"faster scout: {_H} instead of {_H}", lambda m: f"Olheiro em {m[1]} h em vez de {m[2]} h"),
+    (r"faster analyst: (\d+)\s*min to bring a report", lambda m: f"Analista em {m[1]} min"),
+    (rf"shorter timers for doctor and lawyer: {_H}", lambda m: f"Médico e advogado em {m[1]} h"),
+    (r"scouted players less expensive", lambda m: "Jogadores do olheiro mais baratos"),
+    (r"legend players will be added on transfer list", lambda m: "Lendas na lista de transferências"),
+    (r"training camp and (.+) are cheaper and more powerful", lambda m: f"Training Camp e {m[1]} mais baratos e mais fortes"),
+)
+_EFFECTS_PT = [(re.compile(pattern, re.I), words) for pattern, words in EFFECTS_PT]
+
+
+def effect_text(line: str, lang: str = "pt") -> str:
+    """One of an event's lines in the window's language."""
+    line = " ".join(line.split())
+    if lang == "pt":
+        for pattern, words in _EFFECTS_PT:
+            found = pattern.fullmatch(line)
+            if found:
+                return words(found)
+    return line
+
+
 def text_of(content: str) -> str:
     """A forum post (HTML) as plain lines."""
     text = re.sub(r"<br\s*/?>", "\n", content)

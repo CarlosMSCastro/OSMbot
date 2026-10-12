@@ -19,16 +19,18 @@ from datetime import datetime
 from pathlib import Path
 
 from PySide6.QtCore import QLockFile, QObject, QPoint, QPointF, QRectF, QSize, Qt, QTimer, Signal
-from PySide6.QtGui import QAction, QColor, QFont, QFontDatabase, QIcon, QImage, QPainter, QPainterPath, QPalette, QPen, QPixmap
+from PySide6.QtGui import (QAction, QColor, QCursor, QFont, QFontDatabase, QIcon, QImage, QPainter, QPainterPath, QPalette, QPen,
+                           QPixmap)
 from PySide6.QtWidgets import (QAbstractItemView, QApplication, QFrame, QGridLayout, QGroupBox, QHBoxLayout, QLabel,
-                               QMainWindow, QMenu, QMessageBox, QProxyStyle, QPushButton, QScrollArea, QStackedWidget, QStyle,
-                               QSystemTrayIcon, QTableWidget, QTableWidgetItem, QVBoxLayout, QWidget)
+                               QMainWindow, QMenu, QMessageBox, QProxyStyle, QPushButton, QScrollArea, QSizePolicy, QStackedWidget, QStyle,
+                               QSystemTrayIcon, QTableWidget, QTableWidgetItem, QToolTip, QVBoxLayout, QWidget)
 
 from osmbot import __version__
 from osmbot.i18n import LANGUAGES, language, load_language, set_language, tr
-from osmbot.gui.view import BLUE, GREEN, GREY, RED, YELLOW, board_view
+from osmbot.gui.view import BLUE, GREEN, GREY, ORANGE, RED, YELLOW, board_view
 
-COLOURS = {GREEN: "#5cd17a", BLUE: "#7cc4ff", YELLOW: "#f5c542", GREY: "#8f95b8", RED: "#ff6b6b", None: "#eef0ff"}
+COLOURS = {GREEN: "#5cd17a", BLUE: "#7cc4ff", YELLOW: "#f5c542", GREY: "#8f95b8", RED: "#ff6b6b", ORANGE: "#ff9f43",
+           None: "#eef0ff"}
 BACKGROUND, CARD, LINE = "#0b0f2a", "rgba(16, 20, 50, 232)", "#2d3366"  # night-stadium blues (D-030)
 TEXT, MUTED, ACCENT, ACCENT_LIGHT, RING_TRACK = "#eef0ff", "#8f95b8", "#8b8cf8", "#b9baff", "#2a2f5a"
 BACKGROUND_FILE = Path(__file__).resolve().parent / "assets" / "fundo.jpg"  # the board's background picture (D-030)
@@ -519,8 +521,8 @@ class StepList(QWidget):
         if not vertical:
             self.layout_.addStretch(1)
 
-    def show_steps(self, steps: list[tuple[str, str, str]]) -> None:
-        """(kind, text already translated, colour) per step."""
+    def show_steps(self, steps: list[tuple]) -> None:
+        """(kind, text already translated, colour) per step, and optionally its hover text (lines)."""
         while len(self.rows) < len(steps):
             row = QWidget()
             line = QHBoxLayout(row)
@@ -535,10 +537,185 @@ class StepList(QWidget):
         for index, (row, mark, text) in enumerate(self.rows):
             row.setVisible(index < len(steps))
             if index < len(steps):
-                kind, words, colour = steps[index]
+                kind, words, colour = steps[index][:3]
                 mark.kind = kind
                 mark.update()
                 text.setText(rich([(words, colour)]))
+                row.setToolTip(tip_html(steps[index][3]) if len(steps[index]) > 3 else "")
+
+
+_tip_icons: dict[str, str] = {}
+
+
+def tip_icon(name: str) -> str:
+    """A file the hover texts can show (Qt's rich text takes pictures by path): the window's own pictures, and the
+    step marks drawn once into the temp folder."""
+    if name in PICTURES:
+        return PICTURES[name].as_posix()
+    if name not in _tip_icons:
+        import tempfile
+
+        folder = Path(tempfile.gettempdir()) / "osmbot-icons"
+        folder.mkdir(exist_ok=True)
+        mark = StepIcon(name)
+        pixmap = QPixmap(32, 32)
+        pixmap.fill(Qt.transparent)
+        painter = QPainter(pixmap)
+        painter.scale(2, 2)
+        mark.render(painter, QPoint(0, 0))
+        painter.end()
+        pixmap.save(str(folder / f"{name}.png"))
+        _tip_icons[name] = (folder / f"{name}.png").as_posix()
+    return _tip_icons[name]
+
+
+def tip_html(rows: list[tuple[str | None, str, str | None]]) -> str:
+    """Hover rows (icon, text, colour) as rich text: a small picture before each text."""
+    from html import escape
+
+    if not rows:
+        return ""
+    lines = []
+    for picture_name, text, colour in rows:
+        image = f"<img src='{tip_icon(picture_name)}' width='16' height='16' style='vertical-align:middle'>&nbsp;" if picture_name else ""
+        lines.append(f"<tr><td style='padding:2px 0'>{image}<span style='color:{COLOURS.get(colour, COLOURS[None])}'>{escape(text)}</span></td></tr>")
+    return "<table cellspacing='0' cellpadding='0'>" + "".join(lines) + "</table>"
+
+
+class MonthGrid(QWidget):
+    """One month of the events' calendar (owner, 2026-10-12): a row per week, Monday first; an event's day is
+    orange with the event's name in it (faded once gone by), today has a white edge; its effects on hover."""
+    WIDTH, HEIGHT, GAP, TITLE, HEAD = 108, 70, 4, 26, 20
+
+    def __init__(self):
+        super().__init__()
+        self.setMouseTracking(True)
+        self.month: dict = {"title": "", "weeks": []}
+        self.weekdays: list[str] = []
+
+    def show_month(self, month: dict, weekdays: list[str]) -> None:
+        self.month, self.weekdays = month, weekdays
+        self.setFixedSize(7 * (self.WIDTH + self.GAP) - self.GAP,
+                          self.TITLE + self.HEAD + len(month["weeks"]) * (self.HEIGHT + self.GAP) - self.GAP)
+        self.update()
+
+    def _box(self, row: int, column: int) -> QRectF:
+        return QRectF(column * (self.WIDTH + self.GAP), self.TITLE + self.HEAD + row * (self.HEIGHT + self.GAP), self.WIDTH, self.HEIGHT)
+
+    def mouseMoveEvent(self, event) -> None:
+        point = event.position()
+        for row, week in enumerate(self.month["weeks"]):
+            for column, cell in enumerate(week):
+                if cell and cell["events"] and self._box(row, column).contains(point):
+                    text = "\n\n".join("\n".join([f"{e['name']} ({e['when']})", *e["effects"]]) for e in cell["events"])
+                    QToolTip.showText(event.globalPosition().toPoint(), text, self)
+                    return
+        QToolTip.hideText()
+
+    def paintEvent(self, _event) -> None:
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.Antialiasing)
+        title = QFont(FONT, 11)
+        title.setBold(True)
+        painter.setFont(title)
+        painter.setPen(QColor(TEXT))
+        painter.drawText(QRectF(2, 0, self.width(), self.TITLE - 6), Qt.AlignLeft | Qt.AlignVCenter, self.month["title"])
+        painter.setFont(QFont(FONT, 8))
+        painter.setPen(QColor(MUTED))
+        for column, name in enumerate(self.weekdays):
+            painter.drawText(QRectF(column * (self.WIDTH + self.GAP), self.TITLE, self.WIDTH, self.HEAD - 4), Qt.AlignCenter, name)
+        orange = QColor(COLOURS[ORANGE])
+        for row, week in enumerate(self.month["weeks"]):
+            for column, cell in enumerate(week):
+                if not cell:
+                    continue
+                box = self._box(row, column)
+                faded = cell["past"]
+                if cell["events"]:
+                    fill = QColor(orange)
+                    fill.setAlpha(90 if faded else 235)
+                else:
+                    fill = QColor(RING_TRACK)
+                    fill.setAlpha(120 if faded else 255)
+                painter.setPen(QPen(QColor(TEXT), 2) if cell["today"] else Qt.NoPen)
+                painter.setBrush(fill)
+                painter.drawRoundedRect(box.adjusted(1, 1, -1, -1), 6, 6)
+                ink = QColor("#1a1206") if cell["events"] and not faded else QColor(TEXT if not faded else MUTED)
+                painter.setPen(ink)
+                painter.setFont(QFont(FONT, 8))
+                painter.drawText(box.adjusted(7, 4, -6, -4), Qt.AlignLeft | Qt.AlignTop, str(cell["day"]))
+                if cell["events"]:
+                    name = QFont(FONT, 8)
+                    name.setBold(True)
+                    painter.setFont(name)
+                    painter.drawText(box.adjusted(6, 18, -6, -3), Qt.AlignLeft | Qt.AlignTop | Qt.TextWordWrap,
+                                     "\n".join(e["name"] for e in cell["events"]))
+
+
+class EventPopup(QFrame):
+    """What opens over the top bar's event: the month (or months) of the calendar, side by side."""
+
+    def __init__(self):
+        super().__init__(None, Qt.ToolTip | Qt.FramelessWindowHint)
+        self.setObjectName("calendar")
+        self.setStyleSheet("QFrame#calendar { background: #161b40; border: 1px solid rgba(139, 140, 248, 110); border-radius: 10px; }")
+        self.row = QHBoxLayout(self)
+        self.row.setContentsMargins(16, 12, 16, 16)
+        self.row.setSpacing(24)
+        self.grids: list[MonthGrid] = []
+
+    def show_view(self, view: dict) -> None:
+        while len(self.grids) < len(view["months"]):
+            self.grids.append(MonthGrid())
+            self.row.addWidget(self.grids[-1], 0, Qt.AlignTop)
+        for index, grid in enumerate(self.grids):
+            grid.setVisible(index < len(view["months"]))
+            if index < len(view["months"]):
+                grid.show_month(view["months"][index], view["weekdays"])
+        self.adjustSize()
+
+    def leaveEvent(self, _event) -> None:
+        QTimer.singleShot(200, self.parent_label.maybe_hide)
+
+
+class EventLabel(QLabel):
+    """The top bar's event (owner, 2026-10-12): the one going on or the next, with its date; the calendar opens
+    while the mouse is over it (and stays while the mouse is on the calendar)."""
+
+    def __init__(self):
+        super().__init__()
+        self.setTextFormat(Qt.RichText)
+        self.setFont(QFont(FONT, 10))
+        self.setCursor(Qt.PointingHandCursor)
+        self.popup = EventPopup()
+        self.popup.parent_label = self
+        self.view: dict | None = None
+        self.setVisible(False)
+
+    def show_calendar(self, view: dict | None) -> None:
+        self.view = view
+        self.setVisible(bool(view))
+        if view:
+            self.setText(rich(view["label"]))
+            if self.popup.isVisible():
+                self.popup.show_view(view)
+
+    def enterEvent(self, _event) -> None:
+        if not self.view:
+            return
+        self.popup.show_view(self.view)
+        where = self.mapToGlobal(QPoint(0, self.height() + 6))
+        screen = (self.screen() or QApplication.primaryScreen()).availableGeometry()  # the calendar is wide: keep it on screen
+        where.setX(max(screen.left() + 8, min(where.x(), screen.right() - self.popup.width() - 8)))
+        self.popup.move(where)
+        self.popup.show()
+
+    def leaveEvent(self, _event) -> None:
+        QTimer.singleShot(200, self.maybe_hide)
+
+    def maybe_hide(self) -> None:
+        if not self.underMouse() and not self.popup.geometry().contains(QCursor.pos()):
+            self.popup.hide()
 
 
 def escape_text(text: str) -> str:
@@ -1220,7 +1397,11 @@ class MainWindow(QMainWindow):
         bar.setSpacing(14)
         bar.addWidget(column_title("DIÁRIAS"))
         self.daily = StepList(vertical=False, size=10, spacing=18)  # the same icons as the pre-match (owner, 2026-10-10)
-        bar.addWidget(self.daily, 1)
+        self.daily.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Preferred)  # never squeezed by the event beside it
+        bar.addWidget(self.daily)
+        bar.addSpacing(10)
+        self.event_label = EventLabel()  # after the dailies, where there is room (owner, 2026-10-12)
+        bar.addWidget(self.event_label)
         bar.addStretch(1)
         self.state_dot = text_label(10)
         self.state_text = text_label(10)
@@ -1575,7 +1756,8 @@ class MainWindow(QMainWindow):
             return
         running = self.running()
         view = board_view(self.payload.get("snapshot"), self.payload.get("stats") if running else None, now,
-                          self.payload.get("doing") if running else None, self.payload.get("history") if running else None)
+                          self.payload.get("doing") if running else None, self.payload.get("history") if running else None,
+                          language())
         if not view:
             return
         self._show_clubs(view["clubs"])
@@ -1583,7 +1765,8 @@ class MainWindow(QMainWindow):
         self.coins.setText(account["coins"])
         self.coins_jump.setText(account["jump"])
         self.coins_since.setText(tr(account["since"]))
-        self.daily.show_steps([(kind, tr(text), colour) for kind, text, colour in view["daily"]])
+        self.daily.show_steps([(kind, tr(text), colour, tip) for kind, text, colour, tip in view["daily"]])  # tip: rows
+        self.event_label.show_calendar(view["event"])
         if running:
             doing = view["timeline"]["now"] or "a trabalhar…"
         else:

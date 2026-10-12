@@ -164,10 +164,10 @@ def collect(client) -> dict:
         account_part = pool.submit(read_account)
         clubs = list(pool.map(lambda item: read_club(*item), teams))
         ads, daily = account_part.result()
-    from osmbot.game.events import calendar_events
+    from osmbot.game.events import calendar_events, calendar_months
 
     return {"coins": wallet.get("amount"), "clubs": clubs, "ads": ads, "daily": daily, "read_at": started,
-            "events": calendar_events(started)}
+            "events": calendar_events(started), "calendar": calendar_months()}
 
 
 def wake_events(snapshot: dict | None, now: float) -> list[tuple[str, float]]:

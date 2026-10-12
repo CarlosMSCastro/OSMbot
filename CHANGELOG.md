@@ -4,6 +4,17 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-PT/1.1.0/); 
 
 Este ficheiro é o **histórico de versões, para quem lê o repo**. O diário interno de cada sessão de trabalho está em [`docs/WORKLOG.md`](docs/WORKLOG.md).
 
+## [0.11.5] — 2026-10-12
+
+Calendário de eventos na janela e as diárias explicadas ao passar o rato.
+
+### Adicionado
+- **Próximo evento na barra de cima**, à frente das diárias ("Próximo evento: Super Staff · 14/10", ou "Evento agora: … · até …"). Ao passar o rato abre o **mês inteiro como calendário**: o nome do evento no quadrado do dia, a laranja; hoje com borda branca. Passando o rato num dia de evento, os efeitos (em português ou inglês, como a janela).
+- **Diárias ao passar o rato:** no início de sessão, o prémio de hoje com o ícone (boss coins, fundos…); nas missões, as 3 de hoje, feitas (certo verde) ou não (círculo amarelo), com o progresso; no prémio do dia, o de hoje e o de amanhã.
+
+### Corrigido
+- As diárias da barra de cima já não ficam cortadas quando há pouco espaço.
+
 ## [0.11.4] — 2026-10-12
 
 Calendário de eventos sozinho.

@@ -7,11 +7,14 @@ respected: no claim that would overfill an inventory slot, and a refused claim i
 """
 from __future__ import annotations
 
+import json
 import time
+from datetime import datetime, timezone
+from pathlib import Path
 
 from osmbot.game import refusals
-from osmbot.rewards.policy import (VIDEO_COUNTER_ACTION, day_key, has_room, is_daily, mission_summary, next_claim,
-                                   wallet_path)
+from osmbot.rewards.policy import (VIDEO_COUNTER_ACTION, day_key, has_room, is_daily, login_today, mission_details,
+                                   mission_summary, next_claim, prize_index, wallet_path)
 
 PAUSE_BETWEEN_WRITES = 1.5  # seconds
 MAX_MISSION_CLAIMS = 10  # per pass
@@ -20,8 +23,10 @@ COUNTS = {"login": 0, "missions": 0, "videos": 0}  # claimed in this run
 _day_done: set[frozenset] = set()  # days whose day reward was already asked for (one per day)
 _said: set[str] = set()  # "inventory full" notes already given
 _catalogue: list[dict] = []  # the mission catalogue: it hardly ever changes, read once per run
+_prizes: dict[str, dict] = {}  # actionId -> prize, from the reward catalogues: read once per run (board hover)
 _unspent: dict[int, str] = {}  # login rewards the bot claimed but failed to spend: reward id -> action (tried again)
 _missions_read: list = [0.0, None]  # [when, body] of the last missions read
+LOGIN_FILE = Path.home() / ".osmbot" / "inicio_sessao.json"  # today's login prize, noted when the bot claims it
 MISSIONS_FRESH = 5 * 60.0  # the board may reuse a missions read this recent (the claims always read anew)
 
 
@@ -43,6 +48,12 @@ def catalogue(client) -> list[dict]:
     if not _catalogue:
         _catalogue.extend(client.get("missions")[1])
     return _catalogue
+
+
+def prizes(client) -> dict[str, dict]:
+    if not _prizes:
+        _prizes.update(prize_index(client.get(f"{API_V11}/actionrewards")[1], client.get(f"{API_V11}/rewards")[1]))
+    return _prizes
 
 
 def _room(client, action_id: str) -> bool:
@@ -116,6 +127,7 @@ def claim_login(client, confirm: bool, log=print) -> int:
         log(f"Início de sessão: falha ao reclamar ({status})")
         return failures + 1
     COUNTS["login"] += 1
+    _note_login(today.get("actionId"))
     time.sleep(PAUSE_BETWEEN_WRITES)
     for item in (r for r in client.get("user/userrewards")[1] if r["id"] not in known):
         action = item["action"]["id"]
@@ -124,6 +136,30 @@ def claim_login(client, confirm: bool, log=print) -> int:
             continue
         failures += _spend(client, item["id"], action, coins_before, item["reward"]["value"], log)
     return failures
+
+
+def _note_login(action: str | None) -> None:
+    """Keep today's login prize for the board (the game stops showing it once claimed)."""
+    if not action:
+        return
+    try:
+        LOGIN_FILE.parent.mkdir(parents=True, exist_ok=True)
+        LOGIN_FILE.write_text(json.dumps({"day": refusals.game_day(), "action": action}), encoding="utf-8")
+    except OSError:
+        pass
+
+
+def _noted_login() -> dict | None:
+    try:
+        return json.loads(LOGIN_FILE.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return None
+
+
+def _game_day_start(now: float) -> float:
+    """When today's game day began (04:00 UTC)."""
+    day = datetime.strptime(refusals.game_day(now), "%Y-%m-%d").replace(hour=4, tzinfo=timezone.utc)
+    return day.timestamp()
 
 
 def claim_missions(client, confirm: bool, log=print, clock=time.time) -> int:
@@ -191,9 +227,19 @@ def daily_state(client, clock=time.time) -> dict:
     except Exception:
         pass
     try:
+        known = prizes(client)
+    except Exception:
+        known = {}
+    try:
+        out["login"]["today"] = login_today(state.get("rewardTrackDays") or [], _noted_login(), client.get("user/userrewards")[1],
+                                            _game_day_start(clock()), known, refusals.game_day(clock()))
+    except Exception:
+        pass
+    try:
         state = read_missions(client, MISSIONS_FRESH, clock)
         refused = {m["id"] for m in state if refusals.blocked(f"missão:{m['id']}")}
         out["missions"] = mission_summary(state, catalogue(client), refused, _day_done, clock())
+        out["missions"].update(mission_details(state, catalogue(client), known, clock()))
     except Exception:
         pass
     try:

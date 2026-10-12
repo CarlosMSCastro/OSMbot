@@ -198,3 +198,69 @@ def test_doctor_and_lawyer_rings():
     one = care_ring("Advogado", [{"name": "J8", "games": 1}], NOW, lawyer=True)
     assert (one["state"], one["sub"]) == ("blocked", "1 jogo · não dá")  # the game refuses a 1-game suspension
     assert care_ring("Advogado", [{"name": "J8", "games": 3}], NOW, lawyer=True)["state"] == "waiting"
+
+
+def test_daily_hover_texts():
+    from osmbot.gui.view import daily_tips
+
+    daily = {"login": {"claimable": False, "day": 21, "renews": NOW + 3600, "today": {"type": 1, "value": 5}},
+             "missions": {"total": 3, "claimed": 1, "day_pending": False, "today": 2,
+                          "dailies": [{"text": "Train any player", "progress": 2, "goal": 2, "claimed": True},
+                                      {"text": "Spend Club Funds", "progress": 10, "goal": 5_000_000, "claimed": False}],
+                          "week": [{"day": 2, "prize": {"type": 15, "value": 2}, "claimed": False},
+                                   {"day": 3, "prize": {"type": 8, "value": 3_000_000}, "claimed": False}]}}
+    tips = daily_tips(daily)
+    assert tips["login"] == [("coins", "Hoje: 5 boss coins", None)]
+    assert tips["missions"] == [("done", "Treinar um jogador (2/2)", None), ("progress", "Gastar fundos do clube (0 M/5 M)", None)]
+    assert tips["day"] == [("missions", "Hoje: 2 de energia (depois das 3 missões)", None),
+                           ("funds", "Amanhã: pacote de 3 M de fundos", GREY)]
+    assert daily_tips(daily, "en")["missions"][0] == ("done", "Train any player (2/2)", None)
+    daily["missions"]["today"] = 1  # the week's day 1: the game lists no prize for it
+    assert daily_tips(daily)["day"] == [(None, "Hoje não há prémio do dia", GREY), ("missions", "Amanhã: 2 de energia", GREY)]
+    pieces = board_view({"clubs": [], "coins": 1, "ads": {}, "daily": daily}, None, NOW)["daily"]
+    assert [p[3][0][1] for p in pieces] == ["Hoje: 5 boss coins", "Treinar um jogador (2/2)", "Hoje não há prémio do dia"]
+
+
+def test_events_calendar_for_the_top_bar():
+    from datetime import datetime
+
+    from osmbot.gui.view import ORANGE, calendar_view
+
+    months = [{"mes": "2026-10", "eventos": [
+        {"inicio": "2026-10-10", "fim": "2026-10-11", "nome": "Transfer Madness", "efeitos": ["Possible to put up to 6 players on transfer list"]},
+        {"inicio": "2026-10-14", "fim": "2026-10-14", "nome": "Super Staff", "efeitos": ["Faster Analyst: 15min to bring a report"]}]}]
+    now = datetime(2026, 10, 12, 20).timestamp()
+    view = calendar_view(months, now)
+    assert view["label"] == [("Próximo evento: ", GREY), ("Super Staff", ORANGE), (" · 14/10", None)]
+    month, = view["months"]
+    assert month["title"] == "Outubro 2026" and len(month["weeks"]) == 5  # 1 Oct is a Thursday, 31 a Saturday
+    assert month["weeks"][0][:3] == [None, None, None] and month["weeks"][0][3]["day"] == 1
+    cells = {c["day"]: c for week in month["weeks"] for c in week if c}
+    assert len(cells) == 31 and cells[12]["today"] and cells[10]["past"]
+    assert cells[10]["events"] == [{"name": "Transfer Madness", "when": "10–11/10", "effects": ["Até 6 jogadores na lista de transferências"]}]
+    assert cells[13]["events"] == []
+    during = calendar_view(months, datetime(2026, 10, 14, 9).timestamp(), "en")
+    assert during["label"][0] == ("Event now: ", GREY) and during["months"][0]["title"] == "October 2026"
+    assert calendar_view(None, now) is None
+
+
+def test_every_effect_of_the_october_schedule_reads_in_portuguese():
+    from osmbot.events.calendar import effect_text
+
+    lines = ["Legend players will be added on Transfer List",
+             "Higher Training Progression (when claiming) with every Training and Friendly",
+             "Faster stadium upgrades (4H)", "More progression and faster trainings: 5H regular trainers, 4H Universal Trainer",
+             "Higher sale chance and more players added by engine on each transfer round",
+             "Possible to put up to 6 players on transfer list", "Faster Scout: 2H instead of 16H",
+             "Faster Analyst: 15min to bring a report", "Shorter timers for Doctor and lawyer: 3H",
+             "Faster trainers: Normal trainers 2H and Universal Trainer 1:30H",
+             "Higher training progression, when claiming results, for old players",
+             "Faster training: 2H normal trainers and 1:30H Universal Trainer", "Scouted players less expensive",
+             "Extra Training Progression with every Friendly", "Shorter timers when upgrading your stadium (4H)",
+             "Training timers: 4H normal trainers and 3H Universal Trainer",
+             "Extreme Training Progression (when claiming) with every Training and Friendly",
+             "Faster training: 3H normal trainers and 2H Universal Trainer"]
+    for line in lines:
+        assert effect_text(line) != line, line
+    assert effect_text("Faster trainers: Normal trainers 2H and Universal Trainer 1:30H") == "Treinos de 2 h; treinador universal 1:30 h"
+    assert effect_text("Extra Training Progression with every Friendly") == "Progressão extra de treino em cada amigável"

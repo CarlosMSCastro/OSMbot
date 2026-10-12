@@ -1,4 +1,6 @@
-﻿import pytest
+﻿import json
+
+import pytest
 
 from osmbot.game import rewards
 from osmbot.rewards.policy import day_key, has_room, is_daily, mission_summary, next_claim, today_index, wallet_path
@@ -239,8 +241,11 @@ def test_the_accumulated_videos_reward_goes_to_the_inventory_only_at_the_thresho
 
 def test_daily_state_for_the_board():
     state = rewards.daily_state(FakeGame(claimed={10, 11, 12}, counter=(7, 10), cap_open=False), clock=lambda: DAY3)
-    assert state["login"] == {"claimable": True, "day": 15, "renews": 2_000_000_000}
-    assert state["missions"] == {"claimed": 3, "total": 3, "day_pending": True}
+    assert state["login"] == {"claimable": True, "day": 15, "renews": 2_000_000_000, "today": {"action": "DailyLoginEnergy_1"}}
+    missions = state["missions"]
+    assert {k: missions[k] for k in ("claimed", "total", "day_pending")} == {"claimed": 3, "total": 3, "day_pending": True}
+    assert [d["claimed"] for d in missions["dailies"]] == [True, True, True] and missions["today"] == 3
+    assert [d["day"] for d in missions["week"]] == [3, 4]  # today's day reward first, never the days gone by
     assert state["videos"]["count"] == 7 and not state["videos"]["claimable"]
 
 
@@ -279,3 +284,40 @@ def test_the_video_counter_has_no_reopen_time_while_its_cap_is_not_reached():
             return super().get(path)
 
     assert rewards.daily_state(Open(counter=(3, 10)), clock=lambda: DAY3)["videos"]["reopen"] is None
+
+
+def test_prize_and_mission_texts_for_the_board_hover():
+    from osmbot.rewards.policy import prize_index
+    from osmbot.rewards.texts import amount, mission_text, prize_text
+
+    prizes = prize_index([{"actionId": "DailyMissionsRewardCF_3M", "rewardId": 1}, {"actionId": "DailyLoginBossCoin_5", "rewardId": 2}],
+                         [{"id": 1, "type": 8, "value": 3_000_000}, {"id": 2, "type": 1, "value": 5}])
+    assert prize_text(prizes["DailyMissionsRewardCF_3M"]) == "pacote de 3 M de fundos"
+    assert prize_text(prizes["DailyLoginBossCoin_5"], "en") == "5 boss coins"
+    assert prize_text({"action": "DailyMissionsRewardUT_48H"}) == "UT_48H" and prize_text(None) == "—"
+    assert mission_text("Buy�any Defender rated 85+") == "Comprar um defesa com rating 85+"
+    assert mission_text("Buy any player via the Scout") == "Comprar um jogador pelo olheiro"
+    assert mission_text("Buy any Goalkeeper for 10M+") == "Comprar um guarda-redes por 10 M+"
+    assert mission_text("Train any GK") == "Treinar um GR" and mission_text("Start training any CDM") == "Pôr a treinar um CDM"
+    assert mission_text("Spend Club Funds") == "Gastar fundos do clube"
+    assert mission_text(" Buy any player for 5M+", "en") == "Buy any player for 5M+"
+    assert mission_text("Something new") == "Something new"
+    assert amount(111_824_555, 5_000_000) == "5 M/5 M" and amount(1, 2) == "1/2"
+
+
+def test_today_s_login_prize_after_it_was_claimed():
+    from osmbot.rewards.policy import login_today
+
+    prizes = {"DailyLoginBossCoin_5": {"type": 1, "value": 5, "action": "DailyLoginBossCoin_5"}}
+    later = [{"actionId": "DailyLoginEnergy_1", "isClaimable": False}]  # once claimed, only the coming days
+    assert login_today([{"actionId": "DailyLoginBossCoin_5", "isClaimable": True}], None, [], 0, prizes, "2026-10-12")["value"] == 5
+    assert login_today(later, {"day": "2026-10-12", "action": "DailyLoginBossCoin_5"}, [], 0, prizes, "2026-10-12")["type"] == 1
+    assert login_today(later, {"day": "2026-10-11", "action": "DailyLoginBossCoin_5"}, [], 0, prizes, "2026-10-12") is None
+    bag = [{"action": {"id": "DailyLoginStreakBag_X"}, "creationTimestamp": 500}, {"action": {"id": "Other"}, "creationTimestamp": 900}]
+    assert login_today(later, None, bag, 400, prizes, "2026-10-12") == {"action": "DailyLoginStreakBag_X"}
+    assert login_today(later, None, bag, 600, prizes, "2026-10-12") is None  # yesterday's bag
+
+
+def test_claiming_the_login_notes_today_s_prize_for_the_board():
+    rewards.claim_login(FakeGame(), True, print)
+    assert json.loads(rewards.LOGIN_FILE.read_text(encoding="utf-8"))["action"] == "DailyLoginEnergy_1"
