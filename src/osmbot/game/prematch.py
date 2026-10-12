@@ -13,6 +13,7 @@ from __future__ import annotations
 import random
 import time
 
+from osmbot import logs
 from osmbot.game import clubinfo, refusals
 from osmbot.prematch.policy import (FRIENDLIES_PER_MATCH, LEAD, friendly_choices, friendlies_due, friendlies_missing,
                                     friendlies_played, in_window, needs_analysis, next_friendly_at, next_opponent)
@@ -34,6 +35,22 @@ def _match_time(client, base: str) -> float | None:
     return next((t["finishedTimestamp"] for t in timers if t["type"] == NEXT_MATCH_TIMER), None)
 
 
+def _progress(client, base: str) -> dict[int, dict]:
+    """Each player's training progress and stats, to see what a friendly gave (owner, 2026-10-12)."""
+    status, players = client.get(f"{base}/players")
+    if status != 200 or not isinstance(players, list):
+        return {}
+    return {p["id"]: {"nome": p.get("name"), "pos": p.get("position"), "progresso": p.get("trainingProgress"),
+                      "att": p.get("statAtt"), "def": p.get("statDef"), "ovr": p.get("statOvr")} for p in players}
+
+
+def _changed(before: dict[int, dict], after: dict[int, dict]) -> list[dict]:
+    keys = ("progresso", "att", "def", "ovr")
+    return [{"id": pid, "nome": now["nome"], "pos": now["pos"], **{f"{k}_antes": before[pid][k] for k in keys},
+             **{f"{k}_depois": now[k] for k in keys}}
+            for pid, now in after.items() if pid in before and any(before[pid][k] != now[k] for k in keys)]
+
+
 def _play_friendlies(client, team: dict, base: str, league: str, week: int, target: int, confirm: bool, log, rng) -> tuple[int, int]:
     """Play the friendlies missing for ``target`` to be done this round (the owner's included; THEORY.md section 6).
     Returns (failures, friendlies played this round now)."""
@@ -53,6 +70,7 @@ def _play_friendlies(client, team: dict, base: str, league: str, week: int, targ
             log(f"{team['name']}: faria {min(missing, len(choices))} amigável(eis) contra {', '.join(names[c] for c in choices[:missing])}")
         return 0, before
     played = refused = 0
+    progress = _progress(client, base)
     for opponent in choices:
         if played == missing or refused == MAX_REFUSALS:
             break
@@ -73,6 +91,10 @@ def _play_friendlies(client, team: dict, base: str, league: str, week: int, targ
             score = (f"{body.get('homeGoals')}-{body.get('awayGoals')}" if mine_home
                      else f"{body.get('awayGoals')}-{body.get('homeGoals')}")
             log(f"Amigável: {team['name']} {score} {names[opponent]}")
+            later = _progress(client, base)
+            logs.record("amigaveis", {"clube": base, "semana": week, "n_na_jornada": before + played,
+                                      "adversario": names[opponent], "resultado": score, "jogadores": _changed(progress, later)})
+            progress = later or progress
             continue
         if not refusals.is_refusal(status):
             log(f"Amigável: {team['name']} contra {names[opponent]} falhou ({status})")

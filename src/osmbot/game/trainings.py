@@ -11,8 +11,9 @@ import json
 import time
 from pathlib import Path
 
+from osmbot import logs
 from osmbot.models import Player
-from osmbot.training.policy import plan_training, round_sessions
+from osmbot.training.policy import TRAINER_POSITION, plan_training, round_sessions
 
 POSITIONS = {1: "ATA", 2: "MED", 3: "DEF", 4: "GR"}
 COUNTS = {"claimed": 0, "started": 0}  # successful writes in this run, for the board summary
@@ -59,16 +60,18 @@ def ready_sessions(sessions: list[dict], now: float) -> list[dict]:
 
 
 def plan_new_trainings(players: list[dict], sessions: list[dict], listed_ids: set[int],
-                       done: dict[int, int] | None = None) -> dict[int, Player]:
+                       done: dict[int, int] | None = None, forecasts: dict[int, int] | None = None) -> dict[int, Player]:
     """Which player each free trainer slot should train now (owner's policy, THEORY.md section 5).
 
     A slot is free when no session in ``sessions`` uses it. Players already in a session, and
-    players the owner has listed for sale, are never picked. ``done``: sessions per player this round (rotation).
+    players the owner has listed for sale, are never picked. ``done``: sessions per player this round (rotation);
+    ``forecasts``: the game's forecast per player (ties in the rotation go to the higher one).
     """
     busy = {s["trainer"] for s in sessions}
     free = [t for t in ALL_TRAINERS if t not in busy]
     unavailable = {s["playerId"] for s in sessions} | set(listed_ids)
-    return plan_training([Player.from_api(p) for p in players], free, unavailable_ids=unavailable, sessions=done)
+    return plan_training([Player.from_api(p) for p in players], free, unavailable_ids=unavailable, sessions=done,
+                         forecasts=forecasts or None)
 
 
 ROUNDS_FILE = Path.home() / ".osmbot" / "treinos.json"  # per machine: the sessions the bot started this round
@@ -89,8 +92,12 @@ def _record(base: str, week: int, session_id, player_id: int) -> None:
     except (OSError, ValueError):
         data = {}
     club = data.get(base) or {}
+    if club.get("week") is not None and week < club["week"]:
+        return  # a session of a round already over: it no longer counts
     if club.get("week") != week:
         club = {"week": week, "sessions": {}}  # a new round: the count starts again
+    if club["sessions"].get(str(session_id)) == player_id:
+        return
     club["sessions"][str(session_id)] = player_id
     data[base] = club
     try:
@@ -98,6 +105,28 @@ def _record(base: str, week: int, session_id, player_id: int) -> None:
         ROUNDS_FILE.write_text(json.dumps(data, indent=1), encoding="utf-8")
     except OSError:
         pass  # at worst the rotation counts only the ongoing sessions
+
+
+def note_seen(base: str, sessions: list[dict]) -> None:
+    """Keep every session seen in the game (running or ready to collect), not only the ones this PC started: a
+    collected session disappears from the game, and the rotation must still count it (e.g. one the other PC put)."""
+    for s in sessions:
+        if s.get("id") and s.get("playerId") and s.get("weekNr") is not None:
+            _record(base, s["weekNr"], s["id"], s["playerId"])
+
+
+def _nth_in_round(base: str, week, session_id, player_id: int) -> int:
+    """Which session of the player this round this one is (1 = the first), from the sessions seen."""
+    mine = [k for k, v in _recorded(base, week).items() if v == player_id]
+    try:
+        return sum(1 for k in mine if int(k) <= int(session_id)) or 1
+    except ValueError:
+        return len(mine) or 1
+
+
+def _brief(player: Player) -> dict:
+    return {"id": player.id, "nome": player.name, "pos": POSITIONS.get(int(player.position)), "idade": player.age,
+            "rating": player.rating, "titular": player.starter}
 
 
 def _teams(client):
@@ -118,6 +147,7 @@ def run_claim(confirm: bool, limit: int | None = None) -> int:
         done = 0
         for slot, team, base in _teams(client):
             _, sessions = client.get(f"{base}/trainingsessions/ongoing")
+            note_seen(base, sessions)
             ready = ready_sessions(sessions, time.time())
             print(f"{team['name']}: {len(ready)} para recolher")
             for session in ready:
@@ -131,6 +161,15 @@ def run_claim(confirm: bool, limit: int | None = None) -> int:
                 status, body = client.put(f"https://web-api.onlinesoccermanager.com/api/v1.1/{base}/trainingsessions/{session['id']}/claim")
                 gain = body.get("progressImprovement") if isinstance(body, dict) else None
                 print(f"  {name}: {'recolhido' if status == 200 else 'falhou'} ({status}{f', +{gain}' if status == 200 and gain is not None else ''})")
+                if status == 200:
+                    after = (body.get("trainingSession") or {}).get("player") if isinstance(body, dict) else None
+                    logs.record("treinos", {  # to study the gains later (owner, 2026-10-12)
+                        "evento": "recolher", "clube": base, "sessao": session["id"], "semana": session.get("weekNr"),
+                        "treinador": session.get("trainer"), "jogador": _brief(Player.from_api(session["player"])),
+                        "previsao": (session.get("trainingForecast") or {}).get("forecast"), "ganho": gain,
+                        "bonus": body.get("variableTrainingProgression") if isinstance(body, dict) else None,
+                        "rating_depois": Player.from_api(after).rating if after else None,
+                        "n_na_jornada": _nth_in_round(base, session.get("weekNr"), session["id"], session["playerId"])})
                 failed += status != 200
                 COUNTS["claimed"] += status == 200
                 done += 1
@@ -161,13 +200,14 @@ def run_train(confirm: bool, limit: int | None = None) -> int:
             setting = next((g["id"] for g in settings if g["name"] == TRAINING_SETTING_NAME), None)
             _, league = client.get(f"leagues/{team['leagueId']}")
             week = league["weekNr"]  # the last round played: a session started now carries this number
+            note_seen(base, sessions)
             rotation = round_sessions(sessions, _recorded(base, week), week)
             status, forecasts = client.get(f"{base}/trainingforecasts")
             forecast = {f["playerId"]: f["forecast"] for f in forecasts} if status == 200 and isinstance(forecasts, list) else {}
             ready = ready_sessions(sessions, time.time())
             # Preview assumes the ready sessions get collected first; a real run only uses truly free slots.
             considered = sessions if confirm else [s for s in sessions if s not in ready]
-            plan = plan_new_trainings(players, considered, listed, rotation)
+            plan = plan_new_trainings(players, considered, listed, rotation, forecast)
             note = ""
             if ready:
                 note = (" (ainda ha %d treino(s) por recolher: corre 'osmbot recolher' primeiro)" if confirm
@@ -193,6 +233,15 @@ def run_train(confirm: bool, limit: int | None = None) -> int:
                 if status == 200:
                     session_id = body.get("id") if isinstance(body, dict) else None
                     _record(base, week, session_id or f"bot-{time.time():.0f}-{player.id}", player.id)
+                    busy = {s["playerId"] for s in sessions}
+                    logs.record("treinos", {  # who was chosen and who else could have been (owner, 2026-10-12)
+                        "evento": "pôr", "clube": base, "sessao": session_id, "semana": week, "treinador": trainer,
+                        "jogador": _brief(player), "previsao": forecast.get(player.id),
+                        "n_na_jornada": rotation.get(player.id, 0) + 1,
+                        "candidatos": [{**_brief(c), "previsao": forecast.get(c.id), "treinos": rotation.get(c.id, 0),
+                                        "lesionado": c.injured, "listado": c.id in listed, "a_treinar": c.id in busy}
+                                       for c in (Player.from_api(x) for x in players)
+                                       if c.position is TRAINER_POSITION[trainer] and c.id != player.id]})
                 failed += status != 200
                 COUNTS["started"] += status == 200
                 done += 1

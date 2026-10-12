@@ -14,6 +14,9 @@ from __future__ import annotations
 
 GAP = 15 * 60  # s: reads further apart than this can't place a round well; the record says so ("lacuna")
 MAX_PRICE = 2.5  # the game's maximum asking price ≈ 2.5 × value (THEORY.md 7.5)
+SALE_RATIO = 1.5  # the "SALE" ribbon: price <= 1.5 × value (gamesettings SaleTransferLabelRatio = 150, web code; 2026-10-12)
+MAIN_STAT = {1: "statAtt", 2: "statOvr", 3: "statDef", 4: "statDef"}  # the number in bold for each position
+POSITIONS = {1: "ATA", 2: "MED", 3: "DEF", 4: "GR"}
 
 
 def _row(item: dict, owner: int | None) -> dict:
@@ -54,6 +57,42 @@ def observe(state: dict | None, market: list[dict], now: float, owner: int | Non
               "jogo_saidos": sum(1 for key in before_game if key not in game),
               "a_venda": list(before_people.values()), "sairam": [before_people[key]["jogador"] for key in gone]}
     return new_state, record
+
+
+def sale_rows(market: list[dict], ratio: float = SALE_RATIO) -> dict[str, dict]:
+    """The game's players with the "SALE" ribbon (never a manager's: the owner buys only from the game, THEORY.md 7.6)."""
+    rows = {}
+    for item in market:
+        player, team = item.get("player") or {}, item.get("team") or {}
+        value, price = player.get("value") or 0, item.get("price") or 0
+        if team.get("userId") or not value or price > ratio * value:
+            continue
+        position = player.get("position")
+        rows[str(item["id"])] = {"anuncio": item["id"], "jogador": player.get("id"), "nome": player.get("name"),
+                                 "pos": POSITIONS.get(position), "rating": player.get(MAIN_STAT.get(position, "statOvr")),
+                                 "idade": player.get("age"), "preco": price, "valor": value,
+                                 "razao": round(price / value, 2), "fora_da_liga": bool(team.get("isForeignTeam")),
+                                 "desde": item.get("timeStampForSale")}
+    return rows
+
+
+def sale_changes(before: dict | None, rows: dict[str, dict], now: float) -> tuple[dict, list[dict], list[dict]]:
+    """(new "SALE" state, those that appeared, those that left) between two reads. Each keeps when it was first seen;
+    the first read only learns what is there."""
+    state = {key: {**row, "visto": (before or {}).get(key, {}).get("visto", now)} for key, row in rows.items()}
+    if before is None:
+        return state, [], []
+    appeared = [state[key] for key in rows if key not in before]
+    gone = [{**row, "durou": now - row["visto"]} for key, row in before.items() if key not in rows]
+    return state, appeared, gone
+
+
+def describe_sales(appeared: list[dict], league: str, money) -> str:
+    """The log line for new "SALE" players, best first."""
+    best = sorted(appeared, key=lambda r: -(r["rating"] or 0))
+    shown = "; ".join(f"{r['pos']} {r['rating']} {r['nome']} ({r['idade']} anos) {money(r['preco'])}" for r in best[:5])
+    more = f" e mais {len(best) - 5}" if len(best) > 5 else ""
+    return f"SALE novos ({league}): {len(best)} · {shown}{more}"
 
 
 def classify(record: dict, transfers: list[dict], slack: float = 120.0) -> dict:

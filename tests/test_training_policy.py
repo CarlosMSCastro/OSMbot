@@ -132,3 +132,12 @@ def test_round_sessions_counts_each_session_once():
                {"id": 3, "playerId": 12, "weekNr": 6}]  # started before the last match: another round
     recorded = {"1": 10, "9": 10}  # the bot's own: session 1 is also ongoing, 9 already collected
     assert round_sessions(ongoing, recorded, 7) == {10: 2, 11: 1}
+
+
+def test_rotation_ties_go_to_the_highest_forecast_then_the_best(make_player):
+    star = make_player(Position.GK, deff=115, lineup=1)
+    young = make_player(Position.GK, deff=104, lineup=1)  # both starters here only to test the tie
+    squad = [star, young]
+    assert pick_trainee(squad, Position.GK, sessions={}, forecasts={star.id: 13, young.id: 29}) is young
+    assert pick_trainee(squad, Position.GK, sessions={young.id: 1}, forecasts={star.id: 13, young.id: 29}) is star
+    assert pick_trainee(squad, Position.GK, sessions={}, forecasts={star.id: 20, young.id: 20}) is star  # same: the best

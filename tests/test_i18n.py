@@ -45,3 +45,7 @@ def test_the_choice_is_remembered_on_this_pc(tmp_path, monkeypatch):
     set_language("pt", save=False)
     assert load_language() == "en" and i18n.language() == "en"
     set_language("pt", save=False)
+
+
+def test_the_new_sale_line_in_english(english):
+    assert tr("SALE novos (Spain): 6 · DEF 88 J (25 anos) 12,3 M e mais 1") ==         "New SALE (Spain): 6 · DEF 88 J (25 years) 12,3 M and 1 more"

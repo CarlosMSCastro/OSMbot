@@ -4,6 +4,21 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-PT/1.1.0/); 
 
 Este ficheiro é o **histórico de versões, para quem lê o repo**. O diário interno de cada sessão de trabalho está em [`docs/WORKLOG.md`](docs/WORKLOG.md).
 
+## [0.11.3] — 2026-10-12
+
+Treinos para quem tem mais a ganhar, rotação que não se perde ao mudar de PC, e registos para estudar o jogo.
+
+### Alterado
+- **Treinos:** entre os titulares que menos treinaram nesta jornada, vai o que tem **maior previsão do jogo** (mais para ganhar), e só depois o melhor. Os jogadores de rating muito alto ganham 2–3× menos por treino.
+- **Rotação entre PCs:** o bot conta também os treinos que encontra no jogo (os do outro PC e os teus), e não só os que ele pôs. Assim não volta a treinar o mesmo jogador depois de mudares de PC.
+
+### Adicionado
+- **Registos para estudar o jogo**, em `logs/<PC>/` (uma linha JSON por acontecimento):
+  - `treinos/`: quem foi posto a treinar e os outros candidatos da posição (previsão, treinos na jornada); ao recolher, o ganho, o bónus e o rating antes e depois.
+  - `amigaveis/`: o que cada amigável mudou no progresso e nas estatísticas dos jogadores.
+  - `medico/`: jogos de baixa antes e depois do médico e do advogado.
+  - `transferencias/sale/`: quando aparece e quando sai cada jogador "SALE" (preço até 1,5× o valor). No registo do bot, uma linha "SALE novos" com os melhores.
+
 ## [0.11.2] — 2026-10-12
 
 Amigáveis ao longo do dia e analista levantado logo que acaba.

@@ -2,7 +2,7 @@
 
 Exploração de um bot para o **Online Soccer Manager** (Gamebasics).
 
-> **Estado (0.11.2):** o bot trabalha sozinho no Windows (treinos em rotação entre os titulares, depósito na poupança antes de cada jogo, estádio, patrocinadores, vídeos da loja, de treino e de dinheiro, recompensas diárias, 4 amigáveis ao longo do dia antes de cada jogo e análise do adversário 4 h antes, médico e advogado, aviso de vagas e de vendas na lista de transferências, histórico de transferências das ligas e registo do motor de transferências), numa **janela de programa** em português ou inglês, com ícone junto ao relógio (o quadro de consola continua disponível). Ver [`CHANGELOG.md`](CHANGELOG.md) e [`docs/`](docs/).
+> **Estado (0.11.3):** o bot trabalha sozinho no Windows (treinos em rotação entre os titulares, primeiro quem tem mais a ganhar, depósito na poupança antes de cada jogo, estádio, patrocinadores, vídeos da loja, de treino e de dinheiro, recompensas diárias, 4 amigáveis ao longo do dia antes de cada jogo e análise do adversário 4 h antes, médico e advogado, aviso de vagas e de vendas na lista de transferências, histórico de transferências das ligas, registo do motor de transferências e dos jogadores "SALE", e registos para estudar treinos, amigáveis, médico e advogado), numa **janela de programa** em português ou inglês, com ícone junto ao relógio (o quadro de consola continua disponível). Ver [`CHANGELOG.md`](CHANGELOG.md) e [`docs/`](docs/).
 
 ## Aviso
 

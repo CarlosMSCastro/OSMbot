@@ -98,6 +98,34 @@ def write(when: datetime, message: str, repo: Path | None = None) -> None:
         pass
 
 
+def _cleaned(value):
+    """The same data with every text passed through ``clean`` (the JSON stays valid)."""
+    if isinstance(value, str):
+        return clean(value)
+    if isinstance(value, dict):
+        return {key: _cleaned(item) for key, item in value.items()}
+    if isinstance(value, (list, tuple)):
+        return [_cleaned(item) for item in value]
+    return value
+
+
+def record(kind: str, data: dict, when: datetime | None = None, repo: Path | None = None) -> None:
+    """One JSON record (one line) in ``<repo>/logs/<machine>/<kind>/AAAA-MM.jsonl``, to study the game later
+    (trainings, friendlies, "SALE" players, doctor and lawyer). Never fails: the log must never stop the bot."""
+    try:
+        repo = repo or repo_folder()
+        if repo is None:
+            return
+        when = when or datetime.now()
+        target = repo / "logs" / machine() / kind / f"{when:%Y-%m}.jsonl"
+        target.parent.mkdir(parents=True, exist_ok=True)
+        line = json.dumps(_cleaned({"t": round(when.timestamp()), **data}), ensure_ascii=False, separators=(",", ":"))
+        with target.open("a", encoding="utf-8") as handle:
+            handle.write(line + "\n")
+    except Exception:
+        pass
+
+
 def import_history(repo: Path, old_log: Path | None = None) -> int:
     """Copy the lines of ``~/.osmbot/bot.log`` into the repo's day files, for the days that have no file
     yet (so running it twice adds nothing). Returns the number of days copied."""

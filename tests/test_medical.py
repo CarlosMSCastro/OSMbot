@@ -121,3 +121,17 @@ def test_a_one_game_suspension_never_goes_to_the_lawyer():
     client = OneGame(suspended=[20, 21])
     treat(client)
     assert [w[2]["playerId"] for w in client.writes if w[1].endswith("lawyercases")] == [21]
+
+
+def test_the_doctor_is_recorded_with_the_games_out_before(monkeypatch, tmp_path):
+    import json
+
+    from osmbot import logs
+
+    monkeypatch.setattr(logs, "repo_folder", lambda: tmp_path)
+    client = FakeClient(injured=[10], doctor=[case(7, 11, NOW - 5)])
+    treat(client)
+    path = next((tmp_path / "logs" / logs.machine() / "medico").glob("*.jsonl"))
+    rows = [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines()]
+    assert [(r["evento"], r["jogador"]) for r in rows] == [("levantar", 11), ("pôr", 10)]
+    assert rows[1]["antes"]["fora"] == 3

@@ -13,8 +13,9 @@ import time
 from datetime import datetime
 from pathlib import Path
 
+from osmbot import logs
 from osmbot.logs import machine, repo_folder
-from osmbot.transfers.engine import classify, describe, observe
+from osmbot.transfers.engine import classify, describe, describe_sales, observe, sale_changes, sale_rows
 
 STATE_FILE = Path.home() / ".osmbot" / "mercado.json"
 SAME_READ = 60.0  # s: two clubs in the same league bring the same list; the second read within this is skipped
@@ -46,11 +47,22 @@ def watch(client, league_id: int, league_name: str, market: list[dict], owner: i
         if state and now - state.get("t", 0) < SAME_READ:
             return None
         data[str(league_id)], record = observe(state, market, now, owner)
+        # "SALE" players: when each appears and how long it stays (owner, 2026-10-12)
+        data[str(league_id)]["sale"], appeared, gone = sale_changes((state or {}).get("sale"), sale_rows(market), now)
         try:
             STATE_FILE.parent.mkdir(parents=True, exist_ok=True)
             STATE_FILE.write_text(json.dumps(data, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
         except OSError:
             pass
+    if log is None:
+        from osmbot.game.loop import _log as log  # the bot's log: ~/.osmbot/bot.log and the repo (D-022)
+    for row in appeared:
+        logs.record("transferencias/sale", {"evento": "apareceu", "liga": league_id, **row})
+    for row in gone:
+        logs.record("transferencias/sale", {"evento": "saiu", "liga": league_id, **row})
+    if appeared:
+        from osmbot.game.dashboard import money
+        log(describe_sales(appeared, league_name or str(league_id), money))
     if record is None:
         return None
     transfers = []
@@ -67,7 +79,5 @@ def watch(client, league_id: int, league_name: str, market: list[dict], owner: i
                 out.write(json.dumps(record, ensure_ascii=False, separators=(",", ":")) + "\n")
         except OSError:
             pass
-    if log is None:
-        from osmbot.game.loop import _log as log  # the bot's log: ~/.osmbot/bot.log and the repo (D-022)
     log(describe(record, league_name or str(league_id), _clock))
     return record

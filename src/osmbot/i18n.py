@@ -187,6 +187,8 @@ PATTERNS = [(re.compile(pattern), replace) for pattern, replace in (
     (r"Motor de transferências \((.+)\): (passou|sem descida de preços) entre (\S+) e (\S+); vendidos (\d+) de (\d+) à venda \(teus: (\d+) de (\d+)\)",
      lambda m: f"Transfer engine ({m[1]}): {'went round' if m[2] == 'passou' else 'no price drop'} between {m[3]} and {m[4]}; "
                f"sold {m[5]} of {m[6]} for sale (yours: {m[7]} of {m[8]})"),
+    (r"SALE novos \((.+?)\): (\d+) · (.+?)(?: e mais (\d+))?$",
+     lambda m: f"New SALE ({m[1]}): {m[2]} · {m[3].replace(' anos)', ' years)')}" + (f" and {m[4]} more" if m[4] else "")),
     (r"Parou: (.+)", lambda m: f"Stopped: {m[1]}"),
     (r"Poupança: (.+) depositou (.+) antes do jogo \(poupança (.+)\)",
      lambda m: f"Savings: {m[1]} deposited {m[2]} before the match (savings {m[3]})"),

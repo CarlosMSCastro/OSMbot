@@ -67,6 +67,8 @@ class FakeClient:
             "user/bosscoinwallet": {"amount": self.coins - 4 * sum(1 for p, _ in self.posts if p.endswith("/matches"))},
             f"{LEAGUE}/teams": teams,
             f"{LEAGUE}/matches/filter": [match(14, 1, 2 + i, kind=2) for i in range(self.friendlies)] + [match(15, 1, 3)],
+            f"{BASE}/players": [{"id": 50, "name": "J", "position": 2, "statAtt": 1, "statDef": 1, "statOvr": 1,
+                                 "trainingProgress": 10 * sum(1 for p, _ in self.posts if p.endswith("/matches"))}],
         }
         if path == f"{BASE}/spyinstructions":
             return (200, self.sent) if self.sent else (404, "")
@@ -184,3 +186,17 @@ def test_a_finished_analyst_is_collected_at_any_hour():
     (failures, wake), lines = prepare(client)
     assert client.puts == ["https://web-api.onlinesoccermanager.com/api/v1.1/leagues/9/teams/1/spyinstructions/5/claim"]
     assert failures == 0 and client.posts == [] and wake == NOW + 2 * 3600  # the 3rd friendly at 8 h before
+
+
+def test_each_friendly_is_recorded_with_what_it_changed(monkeypatch, tmp_path):
+    import json
+
+    from osmbot import logs
+
+    monkeypatch.setattr(logs, "repo_folder", lambda: tmp_path)
+    prepare(FakeClient([step(7, 1), step(5, 1)], friendlies=3))  # 1 to go
+    path = next((tmp_path / "logs" / logs.machine() / "amigaveis").glob("*.jsonl"))
+    row = json.loads(path.read_text(encoding="utf-8").splitlines()[0])
+    assert row["n_na_jornada"] == 4 and row["resultado"] == "2-0"
+    assert row["jogadores"] == [{"id": 50, "nome": "J", "pos": 2, "progresso_antes": 0, "att_antes": 1, "def_antes": 1,
+                                 "ovr_antes": 1, "progresso_depois": 10, "att_depois": 1, "def_depois": 1, "ovr_depois": 1}]

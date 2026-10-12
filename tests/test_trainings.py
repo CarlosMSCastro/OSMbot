@@ -108,3 +108,49 @@ def test_run_train_starts_several_sessions_and_records_them(monkeypatch):
     assert trainings.run_train(confirm=True) == 0
     assert sorted(posted) == [1, 2]
     assert trainings._recorded(base, 7) == {"501": posted[0], "502": posted[1]}
+
+
+def test_a_session_seen_ready_to_collect_still_counts_after_it_is_collected(monkeypatch, tmp_path):
+    """The other PC's session is collected here: the rotation must not train the same player again (2026-10-12)."""
+    import json
+
+    import osmbot.game.client as client_module
+    from osmbot import logs
+    from osmbot.game import trainings
+
+    base = "leagues/1/teams/2"
+    players = [dict(api_player(1, 2, ovr=110, lineup=5), name="A"), dict(api_player(2, 2, ovr=100, lineup=6), name="B")]
+    ready = {"id": 400, "playerId": 1, "weekNr": 7, "trainer": 2, "player": players[0],
+             "trainingForecast": {"forecast": 20}, "countdownTimer": {"finishedTimestamp": 1, "isClaimed": False}}
+    state = {"ongoing": [ready]}
+    replies = {
+        "user/accounts": {"teamSlots": {"1": {"team": {"id": 2, "leagueId": 1, "name": "T"}}}},
+        f"{base}/players": players, f"{base}/transferplayers/0": [],
+        "leagues/1/gamesettings": [{"id": 9, "name": trainings.TRAINING_SETTING_NAME}],
+        "leagues/1": {"weekNr": 7}, f"{base}/trainingforecasts": [{"playerId": 1, "forecast": 20}, {"playerId": 2, "forecast": 25}],
+    }
+    posted = []
+
+    class FakeClient:
+        def get(self, path):
+            return (200, state["ongoing"]) if path.endswith("/ongoing") else (200, replies[path])
+
+        def put(self, path):
+            state["ongoing"] = []  # collected: the game no longer shows it
+            return 200, {"progressImprovement": 31, "variableTrainingProgression": 0, "trainingSession": {"player": players[0]}}
+
+        def post(self, path, body):
+            posted.append(body["playerId"])
+            return 200, {"id": 500 + len(posted)}
+
+    monkeypatch.setattr(client_module, "OsmClient", FakeClient)
+    monkeypatch.setattr(trainings, "PAUSE_BETWEEN_WRITES", 0)
+    monkeypatch.setattr(logs, "repo_folder", lambda: tmp_path)
+    assert trainings.run_claim(confirm=True) == 0
+    assert trainings.run_train(confirm=True) == 0
+    assert posted == [2]  # B: A already trained this round (and B has the higher forecast anyway)
+    rows = [json.loads(line) for line in (tmp_path / "logs" / logs.machine() / "treinos").glob("*.jsonl").__next__()
+            .read_text(encoding="utf-8").splitlines()]
+    assert [r["evento"] for r in rows] == ["recolher", "pôr"]
+    assert rows[0]["ganho"] == 31 and rows[0]["previsao"] == 20 and rows[0]["n_na_jornada"] == 1
+    assert rows[1]["jogador"]["id"] == 2 and rows[1]["candidatos"][0]["treinos"] == 1

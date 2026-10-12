@@ -8,7 +8,7 @@
 
 | # | Automação | Estado |
 |---|---|---|
-| 1 | **Treinos**: recolher e voltar a pôr a treinar quando acabam (política em `THEORY.md` §5; rotação entre titulares desde a 0.11.0, D-035) | **Feito e em uso** (`osmbot ativo`) |
+| 1 | **Treinos**: recolher e voltar a pôr a treinar quando acabam (política em `THEORY.md` §5; rotação entre titulares desde a 0.11.0, D-035; desempate pela previsão do jogo e treinos vistos noutro PC desde a 0.11.3, D-037) | **Feito e em uso** (`osmbot ativo`) |
 | 2 | **Vídeos da loja** (1 boss coin cada, até 9 por hora): pagam os amigáveis (4 boss coins cada) | **Feito** |
 | 3 | **Vídeos de treino** (−2h cada, 4 por 3h): o treino acaba mais cedo e o ciclo volta a treinar mais cedo; regra "uniformizar"; nunca salta janelas (D-021) | **Feito** |
 | 4 | **Vídeos de dinheiro** (3 por dia: ~300k, ~600k, 3 boss coins) | **Feito** (no clube com mais poupança) |
@@ -19,7 +19,7 @@
 | 8a | **Poupança**: depositar tudo 5 min antes de cada jogo (`THEORY.md` §13, D-035) | **Feito** (0.11.0, por ver em real) |
 | 9 | **Aviso de condição física** dos titulares (`THEORY.md` §16) | **Feito** (quadro) |
 | 10 | Transferências automáticas | **Próxima grande funcionalidade, depois do 1.0** (dono, 2026-10-09): o dono vai dar a teoria de gestão de plantel primeiro; escritas novas pedem OK |
-| 11 | Aviso de jogadores novos "SALE" no mercado (`THEORY.md` §7.7) | Por fazer |
+| 11 | Aviso de jogadores novos "SALE" no mercado (`THEORY.md` §7.7) | **A recolher dados** (0.11.3, D-037): cada "SALE" que aparece e sai fica em `logs/<PC>/transferencias/sale/`, com uma linha "SALE novos" no registo; o aviso comparado com os titulares fracos fica por fazer |
 | 12a | **Amigáveis e análise do adversário**: o que o dono ainda não fez; **4 amigáveis** (dono, 2026-10-11) contra quaisquer clubes, **distribuídos pelo dia** (16/12/8/4 h antes do jogo, 0.11.2, D-036); analista ao próximo adversário nas últimas 4 h, **levantado logo que acaba** (`THEORY.md` §6, D-025, D-036) | **Feito** (visto em real em 2026-10-11: amigável, enviar e levantar o analista) |
 | 12b | **Médico e advogado**: lesionados e suspensos tratados e levantados sozinhos (`THEORY.md` §18) | **Feito** (0.9.3; médico visto em real a pôr e a levantar, 2026-10-09–11; advogado por ver, precisa de um suspenso de 2+ jogos) |
 | 12 | **Amigáveis em quantidade** com as boss coins dos vídeos (~25 por equipa por jornada, `THEORY.md` §6) | **Posta de lado** (dono, 2026-10-09): 10 amigáveis (40 coins) subiram só ~1,5–2 M o valor do plantel; não compensa |

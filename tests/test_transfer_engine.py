@@ -64,3 +64,20 @@ def test_the_watch_saves_one_record_per_change_and_skips_the_same_read(tmp_path,
     assert len(saved) == 1 and json.loads(saved[0])["vendidos"][0]["jogador"] == 20
     assert len(lines) == 1 and lines[0].startswith("Motor de transferências (Liga): passou entre ")
     assert lines[0].endswith("; vendidos 1 de 1 à venda (teus: 0 de 0)")
+
+
+def test_sale_players_appear_and_leave():
+    from osmbot.transfers.engine import describe_sales, sale_changes, sale_rows
+
+    def item(lid, price, value, user=None, pos=3):
+        return {"id": lid, "price": price, "team": {"userId": user, "isForeignTeam": True},
+                "player": {"id": lid * 10, "name": f"J{lid}", "position": pos, "statDef": 80 + lid, "age": 25, "value": value}}
+
+    market = [item(1, 140, 100), item(2, 160, 100), item(3, 100, 100, user=5)]
+    rows = sale_rows(market)
+    assert list(rows) == ["1"] and rows["1"]["razao"] == 1.4  # 1.6× is no SALE; a manager's never counts
+    state, appeared, gone = sale_changes(None, rows, 1000)
+    assert appeared == [] and state["1"]["visto"] == 1000  # the first read only learns
+    state, appeared, gone = sale_changes(state, sale_rows([item(4, 120, 100)]), 1600)
+    assert [r["anuncio"] for r in appeared] == [4] and gone[0]["anuncio"] == 1 and gone[0]["durou"] == 600
+    assert describe_sales(appeared, "Liga", lambda m: f"{m} €") == "SALE novos (Liga): 1 · DEF 84 J4 (25 anos) 120 €"

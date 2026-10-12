@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import time
 
+from osmbot import logs
 from osmbot.game import refusals
 from osmbot.medical.policy import LAWYER_MIN_GAMES, doctor_candidates, lawyer_candidates, running_until, to_collect
 
@@ -29,8 +30,14 @@ def _names(players: list[dict]) -> dict[int, str]:
     return {p["id"]: p["name"] for p in players}
 
 
+def _state(player: dict | None) -> dict:
+    """What the doctor or the lawyer may change: games out, injury, suspension (to learn how much they take off)."""
+    player = player or {}
+    return {"fora": player.get("unavailable"), "lesao": player.get("injuryId"), "suspensao": player.get("suspensionId")}
+
+
 def _collect(client, team: dict, base: str, kind: str, cases: list[dict], names: dict, now: float, week: int,
-             confirm: bool, log) -> tuple[int, int]:
+             confirm: bool, log, info: dict | None = None) -> tuple[int, int]:
     """Collect the finished cases. A refused collect is not asked again this round (D-032). Returns (failures, collected)."""
     path, _, label, _ = KINDS[kind]
     failures = collected = 0
@@ -42,9 +49,13 @@ def _collect(client, team: dict, base: str, kind: str, cases: list[dict], names:
         if not confirm:
             log(f"{team['name']}: levantaria {name} ({label.lower()})")
             continue
-        status, _ = client.put(f"{base}/{path}/{case['id']}/claim")
+        status, body = client.put(f"{base}/{path}/{case['id']}/claim")
         time.sleep(PAUSE_BETWEEN_WRITES)
         if status == 200:
+            after = body.get("player") if isinstance(body, dict) else None
+            logs.record("medico", {"evento": "levantar", "tipo": kind, "clube": base, "semana": week, "caso": case["id"],
+                                   "jogador": case["playerId"], "nome": name, "antes": _state((info or {}).get(case["playerId"])),
+                                   "depois": _state(after) if after else None})
             COUNTS["collected"] += 1
             collected += 1
             log(f"{label}: {team['name']} levantou {name}")
@@ -58,7 +69,7 @@ def _collect(client, team: dict, base: str, kind: str, cases: list[dict], names:
 
 
 def _send(client, team: dict, base: str, kind: str, candidates: list[int], names: dict, cases: list[dict], now: float,
-          week: int, confirm: bool, log) -> tuple[int, int]:
+          week: int, confirm: bool, log, info: dict | None = None) -> tuple[int, int]:
     """Send each candidate. A refusal is not repeated (D-032): while another player is being treated the game may take
     only one, so it waits for that case to end; otherwise it waits for the next round. Returns (failures, sent)."""
     path, setting, label, place = KINDS[kind]
@@ -74,6 +85,8 @@ def _send(client, team: dict, base: str, kind: str, candidates: list[int], names
         status, _ = client.post(f"{base}/{path}", {"playerId": pid, "timerGameSettingId": setting})
         time.sleep(PAUSE_BETWEEN_WRITES)
         if status == 200:
+            logs.record("medico", {"evento": "pôr", "tipo": kind, "clube": base, "semana": week, "jogador": pid,
+                                   "nome": name, "antes": _state((info or {}).get(pid))})
             COUNTS[kind] += 1
             sent += 1
             log(f"{label}: {team['name']} pôs {name} {place} (8 h)")
@@ -102,6 +115,7 @@ def treat_club(client, team: dict, base: str, confirm: bool, now: float, log=pri
     injured = [p["id"] for p in injured_players]
     _, players = client.get(f"{base}/players")
     names = {**_names(players), **_names(injured_players)}
+    info = {**{p["id"]: p for p in players}, **{p["id"]: p for p in injured_players}}
     suspended = [p["id"] for p in players if p.get("unavailable", 0) >= LAWYER_MIN_GAMES and p["id"] not in injured]
     failures, wake = 0, []
     for kind, people in (("doctor", injured), ("lawyer", suspended)):
@@ -109,14 +123,14 @@ def treat_club(client, team: dict, base: str, confirm: bool, now: float, log=pri
         if kind == "lawyer" and not people:
             continue  # nobody suspended: nothing to send, and a lawyer case only lasts while the player is out
         cases = _list(client, f"{base}/{path}")
-        failed, collected = _collect(client, team, base, kind, cases, names, now, week, confirm, log)
+        failed, collected = _collect(client, team, base, kind, cases, names, now, week, confirm, log, info)
         failures += failed
         if collected:  # read again: the player may be fit already, and the case is no longer open
             cases = _list(client, f"{base}/{path}")
             if kind == "doctor":
                 people = [p["id"] for p in _list(client, f"{base}/players/injured")]
         wanted = doctor_candidates(people, cases) if kind == "doctor" else lawyer_candidates(people, cases, week)
-        failed, sent = _send(client, team, base, kind, wanted, names, cases, now, week, confirm, log)
+        failed, sent = _send(client, team, base, kind, wanted, names, cases, now, week, confirm, log, info)
         failures += failed
         wake += running_until(cases, now) + [now + CASE_SECONDS] * sent
     return failures, wake

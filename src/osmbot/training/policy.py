@@ -7,7 +7,8 @@ Goalkeepers are exempt from the age limit (owner, 2026-10-04).
 
 Rotation (owner, 2026-10-12): training the same player again in the same round gains less, and it resets
 with each match. Given how many sessions each player already had this round, the trainer goes to the
-starter (onze) with the fewest, the best first; with no eligible starter, to the rest the same way.
+starter (onze) with the fewest; among those, the one with the highest server forecast (most to gain, owner
+2026-10-12), then the best; with no eligible starter, to the rest the same way.
 
 Trainers 1-4 are position-bound (ATT, MID, DEF, GK), matching the API's
 ``trainer`` field as reported by third parties. The universal trainer (5) is not
@@ -42,7 +43,7 @@ def pick_trainee(
     sale), aged ``max_age`` or more, and - when ``forecasts`` is given - players
     whose server forecast is not positive (nothing left to gain).
     Best = highest rating; ties go to the higher forecast, then the lower id.
-    With ``sessions`` (player id -> sessions this round): the rotation above.
+    With ``sessions`` (player id -> sessions this round): the rotation above, ties to the higher forecast.
     """
     candidates = []
     for p in players:
@@ -59,7 +60,7 @@ def pick_trainee(
     if sessions is None:
         return max(candidates, key=lambda c: c[:3])[3]
     starters = [c for c in candidates if c[3].starter]
-    return max(starters or candidates, key=lambda c: (-sessions.get(c[3].id, 0), *c[:3]))[3]
+    return max(starters or candidates, key=lambda c: (-sessions.get(c[3].id, 0), c[1], c[0], c[2]))[3]
 
 
 def plan_training(

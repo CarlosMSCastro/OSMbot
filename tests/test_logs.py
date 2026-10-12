@@ -104,3 +104,18 @@ def test_the_first_line_from_a_pc_brings_its_old_log_without_repeating_it(tmp_pa
     assert (folder / "2026-10-07.log").exists()
     assert (folder / "2026-10-08.log").read_text(encoding="utf-8").splitlines() == [
         "2026-10-08 09:14:34  Bot ligado", "2026-10-08 09:15:00  Loja: vídeo 1"]
+
+
+def test_a_record_is_one_json_line_per_month_and_never_holds_a_secret(tmp_path):
+    import json
+    from datetime import datetime
+
+    from osmbot import logs
+
+    when = datetime(2026, 10, 12, 9, 30)
+    logs.record("treinos", {"evento": "pôr", "nota": "token=abc123"}, when=when, repo=tmp_path)
+    logs.record("treinos", {"evento": "recolher"}, when=when, repo=tmp_path)
+    path = tmp_path / "logs" / logs.machine() / "treinos" / "2026-10.jsonl"
+    rows = [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines()]
+    assert [r["evento"] for r in rows] == ["pôr", "recolher"] and rows[0]["t"] == round(when.timestamp())
+    assert "abc123" not in path.read_text(encoding="utf-8")
