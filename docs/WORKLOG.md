@@ -10,6 +10,7 @@ Entradas mais recentes primeiro. Cada sessão: o que se fez · o que ficou por f
 - **Código:** `Player.lineup`/`starter`; `training/policy.py` (rotação, `round_sessions`); `game/trainings.py` (jornada da liga, `~/.osmbot/treinos.json`, previsão e "N.º treino na jornada" no log); `savings/policy.py` + `game/savings.py` (depósito, 2 PUTs no máximo se o dinheiro estiver repartido), ligado no início de cada passagem do `loop.py` e na linha do tempo/tradução; `gui/window.py` (`READ_HIDDEN_EVERY` = 15 min). 309 testes (PySide6 instalado no `.venv` do Mac).
 - **Ensaio real (só leitura):** com os treinadores livres, a regra nova trocaria o Haaland (no banco) pelo Díaz no Real Betis, e no FC Van o Marmoush e o Dalot (já treinados nesta jornada) pelo Zirkzee e o N'Dicka.
 - **Versão 0.11.0** (pedido do dono). **Por ver em real:** o 1.º depósito (linha "Poupança: … depositou …") e se um PUT com dinheiro nos dois lados deposita ou levanta (o código trata os dois casos). **Próximo passo:** o dono faz commit/push no Mac, pull no Windows, reconstrói o `dist` e corre a 0.11.0; com 3–4 dias de linhas "a treinar … previsão" e "recolhido (+N)", medir se a rotação compensa.
+- **Windows, depois do pull:** 309 testes; `dist` 0.11.0 reconstruído (portátil 552 MB, zip 206 MB, instalador 148 MB); notas em `dist/release-notes-v0.11.0.md`.
 
 ## 2026-10-11 — Revisão dos logs para o 1.0
 
