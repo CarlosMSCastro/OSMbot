@@ -6,19 +6,21 @@
 
 ## 1. Escolha de formação
 
+**Regra atual (dono, 2026-10-13, depois da análise de 272 jogos das 2 ligas; substitui a de 2026-09-27):**
+
 | Formação | Meio-campo | Quando |
 |---|---|---|
-| **4-3-3 A** | Leva **MCO** (médio centro ofensivo) | Padrão quando a equipa é claramente mais forte (o dono começa aqui quando já desenvolveu o plantel). Na prática "meio indiferente, depende do plantel" |
-| **4-3-3 B** | Leva **MCD** (médio centro defensivo) | **Rating parecido** com o do dono, ou **fora de casa em matchups equilibrados** |
-| **5-3-2** | — | Adversário **mais forte** |
+| **4-3-3 A** | Leva **MCO** (médio centro ofensivo) | **Sempre**, exceto contra um adversário claramente mais forte. Com os melhores planteis da liga, é quase sempre |
+| **5-3-2** | — | Adversário **mais forte por mais de 5 %** |
+| 4-3-3 B | Leva **MCD** (médio centro defensivo) | Já não é a regra para jogos parecidos. O dono pode experimentá-lo (por ex. fora de casa); o registo dos jogos diz depois se compensa |
 
-A tática só pesa realmente em matchups difíceis. A "força" compara o **rating da equipa** (o do dono vs. o do adversário).
+**Porquê (os números, `WORKLOG.md` 2026-10-13):** pontos por jogo com a mesma diferença de força e o mesmo local: o 4-3-3 A foi o melhor em casa e fora, sendo mais forte (2,78 casa / 2,25 fora) ou parecido (2,41 / 1,33). O 4-3-3 B fora sendo mais forte deu 2,75, mas em 12 jogos quase todos de um clube do dono muito mais forte: não chega para concluir. O 5-3-2 sendo mais fraco: 3 vitórias em 3 jogos, só jogos do dono (os outros clubes quase não o usam). A força pesa muito mais do que a formação; e o banco também (um suplente fraco a entrar por lesão custou um empate).
 
-Implementado em `choose_formation(my_rating, opp_rating, *, similar_margin=2)`:
-mais forte → 5-3-2 · parecido → 4-3-3 B · mais fraco → 4-3-3 A.
+Implementado em `choose_formation(my_rating, opp_rating, *, stronger_pct=5)`: adversário mais forte por mais de 5 % → 5-3-2; caso contrário → 4-3-3 A.
 
-- **`similar_margin` (resolvido, 2026-09-27):** **2 pontos**, para os dois lados. Dentro de ±2 o dono considera que "ainda pode jogar 433"; passado isso (adversário mais forte por mais de 2) joga 5-3-2.
-- **"Fora de casa em matchups equilibrados" (resolvido):** não alarga a margem — o local do jogo continua a não entrar na conta. **Pouco relevante na prática:** o dono faz as táticas manualmente (não é para automatizar, ver §6 do histórico/cont. 6). Nuance dele: dentro da margem de ±2, se tiver um **bom MCD** disponível nesse jogo, prefere 4-3-3 B por causa do jogador, não por o adversário ser "parecido" — isto já estava coberto pela nota existente de que a escolha entre A/B "depende do plantel".
+- **[S] Os 5 %** foram medidos na **força do jogo** (`matchData`, só se sabe depois do jogo); antes do jogo aplica-se ao **rating da equipa** que o jogo mostra (com ratings perto de 107, ~5 pontos).
+- *Histórico:* até 2026-10-13 a regra era: mais forte → 4-3-3 A; parecido (±2 pontos de rating) ou fora em jogos equilibrados → 4-3-3 B; adversário mais forte por mais de 2 → 5-3-2.
+- **Casa e fora:** o local do jogo continua a não entrar na regra. Os dados mostram que jogar em casa vale ~5 % de força (proposta ao dono, por decidir: tratar o adversário como 5 % mais forte fora de casa). **Pouco relevante na prática:** o dono faz as táticas manualmente (não é para automatizar, ver §6 do histórico/cont. 6).
 - **Rating da equipa (resolvido):** vem da **média do plantel de 0 a 100 em rating** que o jogo mostra **antes de cada jogo** (não é o preço). Ver §11. **[?]** O campo na API só se sabe observando o jogo.
 
 **Confronto direto (dono, 2026-10-08):** um jogo contra um clube que está **a 1 ou 2 lugares** do do dono na classificação, acima ou abaixo. São os jogos que o dono gosta de ver ele próprio nas últimas horas (§6). O quadro marca-os com um símbolo de perigo (D-026).
@@ -28,7 +30,7 @@ mais forte → 5-3-2 · parecido → 4-3-3 B · mais fraco → 4-3-3 A.
 | | **4-3-3** (A e B) | **5-3-2** |
 |---|---|---|
 | Fora de jogo (offside trap) | Não | Não |
-| Marcação à zona | **Não** | Sim |
+| Marcação à zona | **Sim** *(corrigido pelo dono, 2026-10-13; antes estava "Não")* | Sim |
 | Estilo de jogo | Jogo de passe **ou** pelas alas (ver abaixo) | Contra-ataque |
 | Slider Pressão | 60–80, perto de **75** | 20–40, perto de **30** |
 | Slider Estilo | 60–80, perto de **75** | Defensivo: 20–40 **[S: 30]** |
@@ -69,6 +71,8 @@ Desarme: *Cuidadoso · Normal · Agressivo · Extremo*.
 - **Aposta do dono:** com árbitro **Brando**, às vezes arrisca **Extremo** quando **precisa de ganhar** e os plantéis são parecidos. A agressividade parece ajudar a equipa a jogar melhor, mas é um risco. Implementado como `risk_extreme=True`, decidido por quem chama.
 - **Contexto (2.ª ronda):** a tabela acima é só a regra base. Num **jogo tranquilo na véspera de um jogo duro**, o dono **não arrisca levar vermelhos** (fica abaixo do máximo). Num **jogo difícil**, talvez use Agressivo. Ou seja, a escolha real depende do jogo seguinte e da dificuldade, não só do árbitro. `choose_tackling` só implementa a regra base; o dono gere isto sozinho.
 - *Cuidadoso* nunca é usado.
+- **No jogo (verificado no código do site, 2026-10-13):** o desarme é o campo `style` da tática (0 Cuidadoso, 1 Normal, 2 Agressivo, 3 Extremo); o árbitro do próximo jogo já vem no calendário (`refereeId`) com o seu `strictness` (1 muito rigoroso … 5 muito brando, `DISCOVERY.md`).
+- **O que o aviso aceita como certo** (dono, 2026-10-13, §21): muito rigoroso → Normal; rigoroso e normal → Agressivo; brando → Agressivo **ou** Extremo; muito brando → Extremo.
 
 ## 4. Especialistas (só entre os **titulares**)
 
@@ -551,3 +555,20 @@ Há **3 componentes** a melhorar, cada um com **níveis 0, 1, 2 e 3**:
 - **Sacos:** abrir 4 h antes de expirar. O que sai fica no inventário (se expirar, entra nesta mesma regra); os **boss coins** que saem vão logo para a carteira, como faz o site.
 - **Janela:** o ícone do inventário do jogo na barra de cima, **à direita**, junto ao estado do bot, **sem número**; um ponto amarelo quando algo expira em menos de 24 h; ao passar o rato, **só os itens que expiram**, com o tempo em dias e horas ("1 dia e 13 horas") (dono, 2026-10-12, depois da 0.11.6). O treinador universal ativo aparece como um círculo **ao lado do médico e do advogado** (não na linha dos treinos, para não estragar o quadro).
 
+
+## 21. Avisos do pré-jogo: banco, onze e especialistas
+
+*Fonte: o dono, 2026-10-13, depois de ver o empate em que um suplente fraco entrou por lesão. O bot **só avisa**: o onze, o banco e a tática são do dono.*
+
+Na checklist do cartão, o passo fica **amarelo** quando o jogo o dá como feito mas algo está fora da regra, e o **hover diz o quê**. Um passo que o jogo não dá como feito (por ex. onze com menos de 11, posição sem suplente) continua sem verde, como já estava.
+
+**Banco** (o jogo põe a entrar, numa lesão, o 1.º suplente da posição na ordem do banco):
+- **Ordem dentro da posição:** um suplente com rating pior à frente de um melhor da mesma posição (ex.: "Akanni 51 entra antes de Ndicka 107"). Avisa **sempre**, mesmo que o melhor esteja cansado: na lesão entra quem está à frente.
+- **Suplente melhor do que um titular** da mesma posição (ex.: "Marmoush 110 no banco, Diomande 102 a jogar"). **Não avisa se o suplente estiver cansado** (condição a amarelo, §16): está no banco de propósito.
+- **[S]** Rating = o principal da posição (ATA ataque, MED overall, DEF e GR defesa). Lesionados e castigados não contam.
+
+**Onze (tática):**
+- **Desarme vs árbitro do próximo jogo**, pela tabela do §3 com o que o dono aceita.
+- **Formação** (§1): antes da análise só aceita **4-3-3 A**; depois da análise, aceita 5-3-2 se o adversário for mais forte por mais de 5 % (e então pede 5-3-2). O 4-3-3 B fica amarelo (o dono pode experimentá-lo na mesma).
+
+**Especialistas:** como já estava (D-042), amarelo fora da regra (§4); o hover passa a dizer que papel está errado e quem a regra pede.

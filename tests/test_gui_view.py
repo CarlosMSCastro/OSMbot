@@ -78,9 +78,15 @@ def test_the_part_going_up_has_a_bar_when_its_length_is_known():
 def test_pre_match_checklist_shows_done_waiting_and_open_points():
     prep = club_view(club(), NOW)["prep"]
     assert set(prep) == {"steps"}  # no percentage, only the marks (owner, 2026-10-09)
-    assert prep["steps"] == [("done", "Amigável", ""), ("waiting", "Análise", "0h10"), ("open", "Onze", "")]
+    assert prep["steps"] == [("done", "Amigável", "", []), ("waiting", "Análise", "0h10", []), ("open", "Onze", "", [])]
     later = club_view(club(), NOW + 700)["prep"]
-    assert later["steps"][1] == ("collect", "Análise", "por levantar")
+    assert later["steps"][1] == ("collect", "Análise", "por levantar", [])
+
+
+def test_a_step_out_of_the_owner_s_rule_is_yellow_and_says_why():
+    data = club()
+    data["prep"] = {"steps": [("Banco", False, "fora da regra")], "why": {"Banco": ["Akanni 51 entra antes de Ndicka 107"]}}
+    assert club_view(data, NOW)["prep"]["steps"] == [("progress", "Banco", "", ["Akanni 51 entra antes de Ndicka 107"])]
 
 
 def test_injured_and_suspended_players_with_the_doctor_timer():

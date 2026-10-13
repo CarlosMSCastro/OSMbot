@@ -76,7 +76,8 @@ STYLE = (
     f"QScrollBar:vertical {{ background: {BACKGROUND}; width: 10px; }}"
     f"QScrollBar::handle:vertical {{ background: {LINE}; border-radius: 4px; min-height: 30px; }}"
     "QScrollBar::add-line, QScrollBar::sub-line { height: 0; }"
-    f"QToolTip {{ background: #161b40; color: {TEXT}; border: 1px solid rgba(139, 140, 248, 110); padding: 5px 9px; }}"
+    f"QToolTip {{ background: #1a2052; color: {TEXT}; border: 1px solid rgba(139, 140, 248, 150); border-radius: 10px;"
+    " padding: 8px 12px; font-size: 10pt; }"
 )
 
 
@@ -470,8 +471,8 @@ class CareCell(QWidget):
         self.name.setText(escape_text(ring["name"]))
         self.games.setText(str(ring.get("games") or ""))
         self.games.setStyleSheet(f"color:{TEXT};")
-        tip = tr(ring["label"]) + ("" if state == "none" else f" · {ring['name']} · {tr(ring['sub'])}")
-        self.setToolTip(tip + (f" · {tr('acaba em')} {ring['centre']}" if state == "working" else ""))
+        lines = [tr(ring["label"])] + ([] if state == "none" else [ring["name"], tr(ring["sub"])])
+        self.setToolTip(tip_text("\n".join(lines + ([f"{tr('acaba em')} {ring['centre']}"] if state == "working" else []))))
 
 
 class StepIcon(QWidget):
@@ -545,7 +546,8 @@ class StepList(QWidget):
                 mark.kind = kind
                 mark.update()
                 text.setText(rich([(words, colour)]))
-                row.setToolTip(tip_html(steps[index][3]) if len(steps[index]) > 3 else "")
+                title = steps[index][4] if len(steps[index]) > 4 else None
+                row.setToolTip(tip_html(steps[index][3], title) if len(steps[index]) > 3 else "")
 
 
 _tip_icons: dict[str, str] = {}
@@ -573,8 +575,25 @@ def tip_icon(name: str) -> str:
     return _tip_icons[name]
 
 
-def tip_html(rows: list[tuple[str | None, str, str | None]]) -> str:
-    """Hover rows (icon, text, colour) as rich text: a small picture before each text."""
+TIP_TITLE = f"<div style='font-weight:600; color:{TEXT}; padding-bottom:4px; border-bottom:1px solid rgba(139, 140, 248, 90);" \
+            " margin-bottom:5px'>{}</div>"
+
+
+def tip_text(text: str) -> str:
+    """A hover's text in the window's look (owner, 2026-10-13: "mais bonitos e modernos"): the first line as a title
+    with a thin line under it, the rest a little softer; a blank line keeps a gap. One line stays as it is."""
+    from html import escape
+
+    lines = (text or "").split("\n")
+    if len(lines) < 2:
+        return escape(text or "")
+    body = "<br>".join(f"<span style='color:#c9ccef'>{escape(line)}</span>" if line else "" for line in lines[1:])
+    return TIP_TITLE.format(escape(lines[0])) + body
+
+
+def tip_html(rows: list[tuple[str | None, str, str | None]], title: str | None = None) -> str:
+    """Hover rows (icon, text, colour) as rich text: a small picture before each text; ``title`` on top, as in
+    ``tip_text``."""
     from html import escape
 
     if not rows:
@@ -583,7 +602,8 @@ def tip_html(rows: list[tuple[str | None, str, str | None]]) -> str:
     for picture_name, text, colour in rows:
         image = f"<img src='{tip_icon(picture_name)}' width='16' height='16' style='vertical-align:middle'>&nbsp;" if picture_name else ""
         lines.append(f"<tr><td style='padding:2px 0'>{image}<span style='color:{COLOURS.get(colour, COLOURS[None])}'>{escape(text)}</span></td></tr>")
-    return "<table cellspacing='0' cellpadding='0'>" + "".join(lines) + "</table>"
+    head = TIP_TITLE.format(escape(title)) if title else ""
+    return head + "<table cellspacing='0' cellpadding='0'>" + "".join(lines) + "</table>"
 
 
 class MonthGrid(QWidget):
@@ -612,7 +632,7 @@ class MonthGrid(QWidget):
             for column, cell in enumerate(week):
                 if cell and cell["events"] and self._box(row, column).contains(point):
                     text = "\n\n".join("\n".join([f"{e['name']} ({e['when']})", *e["effects"]]) for e in cell["events"])
-                    QToolTip.showText(event.globalPosition().toPoint(), text, self)
+                    QToolTip.showText(event.globalPosition().toPoint(), tip_text(text), self)
                     return
         QToolTip.hideText()
 
@@ -788,7 +808,7 @@ class SaleArrow(QWidget):
         self.setVisible(bool(sales))
         from html import escape
 
-        self.setToolTip("<br>".join(escape(tr(sale)) for sale in sales))
+        self.setToolTip(tip_text("\n".join([tr("Vendas"), *(tr(sale) for sale in sales)])) if sales else "")
         if sales and not self.timer.isActive():
             self.timer.start(40)
         elif not sales:
@@ -827,7 +847,7 @@ class ValueBadge(QWidget):
         if not badge:
             return
         self.text, self.colour = badge["text"], COLOURS.get(badge["colour"], MUTED)
-        self.setToolTip(tr(badge["tip"]))
+        self.setToolTip(tip_text(tr(badge["tip"])))
         self.update()
 
     def paintEvent(self, _event) -> None:
@@ -910,7 +930,7 @@ class MatchStripe(QFrame):
         self.warn.setVisible(bool(match["danger"]))
         self.text.setText(tr(match["text"]))
         self.value.show_value(match.get("value"))
-        self.text.setToolTip(tr(match.get("tip") or ""))
+        self.text.setToolTip(tip_text(tr(match.get("tip") or "")))
         self.left.setText(f"{tr('em')} <b style='font-size:15pt'>{match['left']}</b>" if match["left"] else "")
 
 
@@ -1080,7 +1100,7 @@ class ClubCard(QFrame):
     def show_club(self, club: dict) -> None:
         self.name.setText(club["name"])
         self.header.setText(tr(club["header"]))
-        self.header.setToolTip("\n".join(tr(line) for line in (club.get("table_tip") or "").split("\n")))
+        self.header.setToolTip(tip_text("\n".join(tr(line) for line in (club.get("table_tip") or "").split("\n"))))
         self.cup.setText(tr(f"🏆 {club['cup_line']}"))
         self.match.show_match(club["match"])
         self.alert.setVisible(bool(club["alert"]))
@@ -1088,12 +1108,12 @@ class ClubCard(QFrame):
         squad = club["squad"]  # the place in colour, the total in white; players and average on hover
         gap = "&nbsp;&nbsp;&nbsp;" if squad["place"] else ""
         self.value.setText(rich([(squad["place"], squad["colour"])]) + gap + rich([(squad["total"], None if squad["place"] else GREY)]))
-        self.value.setToolTip(tr(squad["tip"]))
+        self.value.setToolTip(tip_text(tr(squad["tip"])))
         self.money.setText(rich([(club["money"], None)]))
         self.sale.show_sales(club["sales"])
         sponsors = club["sponsors"]
         self.sponsors.setText(rich([(sponsors["text"], sponsors["colour"])]))
-        self.sponsors.setToolTip(tr(sponsors["tip"]))
+        self.sponsors.setToolTip(tip_text(tr(sponsors["tip"])))
         rings = club["stadium_rings"]
         for index, cell in enumerate(self.stadium_cells):
             cell.setVisible(index < len(rings))
@@ -1114,11 +1134,13 @@ class ClubCard(QFrame):
         self.badge.show_value(club.get("value_badge"))
         self.tired.setVisible(bool(club["tired"]))
         self.tired.setText(tr(f"⚠ Cansados: {club['tired']}"))
-        self.tired.setToolTip("\n\n".join(tr(part) for part in (club.get("tired_tip") or "").split("\n\n")))
+        self.tired.setToolTip(tip_text("\n\n".join(tr(part) for part in (club.get("tired_tip") or "").split("\n\n"))))
 
     def _show_prep(self, steps: list) -> None:
-        self.prep.show_steps([(kind, tr(name) + (f" {tr(extra)}" if extra else ""), StepIcon.COLOURS[kind])
-                              for kind, name, extra in steps])
+        """A step out of the owner's rule says why on hover (THEORY.md section 21)."""
+        self.prep.show_steps([(kind, tr(name) + (f" {tr(extra)}" if extra else ""), StepIcon.COLOURS[kind],
+                               [(None, tr(line), YELLOW) for line in why], tr("Fora da regra") if why else None)
+                              for kind, name, extra, why in steps])
 
     def _show_trainings(self, rows: list) -> None:
         while len(self.ring_cells) < len(rows):

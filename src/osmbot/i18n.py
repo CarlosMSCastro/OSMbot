@@ -75,6 +75,7 @@ WORDS = {
     # board titles and labels
     "DIÁRIAS": "DAILY", "BOSS COINS": "BOSS COINS", "A SEGUIR": "UP NEXT", "TREINOS": "TRAINING", "ESTÁDIO": "STADIUM",
     "AGORA": "NOW", "PRÉ-JOGO": "PRE-MATCH", "Valor plantel": "Squad value", "Dinheiro": "Money",
+    "Fora da regra": "Out of your rule", "Vendas": "Sales",
     "Campeões": "Champions", "Patrocinadores": "Sponsors", "Cansados": "Tired", "CASA": "HOME", "FORA": "AWAY", "em": "in",
     # club card
     "Treinos": "Training", "Campo": "Pitch", "Capacidade": "Capacity", "no máximo": "at max", "parado": "idle",
@@ -116,7 +117,25 @@ def _ordinal(number: str) -> str:
     return number + ("th" if 10 <= n % 100 <= 20 else {1: "st", 2: "nd", 3: "rd"}.get(n % 10, "th"))
 
 
+_TACKLE = {"Cuidadoso": "Careful", "Normal": "Normal", "Agressivo": "Aggressive", "Extremo": "Extreme"}
+_REFEREE = {"muito rigoroso": "very strict", "rigoroso": "strict", "normal": "average", "brando": "lenient",
+            "muito brando": "very lenient"}
+def _an(word: str) -> str:
+    return ("an " if word[:1] in "aeiou" else "a ") + word
+
+
+_ROLE = {"Capitão": "Captain", "Penáltis": "Penalties", "Livres": "Free kicks", "Cantos": "Corners"}
 PATTERNS = [(re.compile(pattern), replace) for pattern, replace in (
+    # pre-match warnings (THEORY.md section 21)
+    (r"^(.+) (\d+) entra antes de (.+) (\d+)$", lambda m: f"{m[1]} {m[2]} comes on before {m[3]} {m[4]}"),
+    (r"^(.+) (\d+) no banco, (.+) (\d+) a jogar$", lambda m: f"{m[1]} {m[2]} on the bench, {m[3]} {m[4]} playing"),
+    (r"^Desarme (\w+) com árbitro (.+): devia ser (.+)$",
+     lambda m: f"Tackling {_TACKLE.get(m[1], m[1])} with {_an(_REFEREE.get(m[2], m[2]))} referee: should be "
+               + " or ".join(_TACKLE.get(w, w) for w in m[3].split(" ou "))),
+    (r"^Formação (.+?): devia ser (.+?)( \(adversário mais de 5 % mais forte\))?$",
+     lambda m: f"Formation {m[1]}: should be {m[2]}" + (" (opponent more than 5% stronger)" if m[3] else "")),
+    (r"^(Capitão|Penáltis|Livres|Cantos): (.+), pela regra (.+)$",
+     lambda m: f"{_ROLE[m[1]]}: {m[2]}, your rule says {m[3]}"),
     # card
     (r"(\d+)\.º Campeonato", lambda m: f"{ordinal(m[1])} in the league"),
     (r"ativo até (\d\d:\d\d)", lambda m: f"active until {m[1]}"),

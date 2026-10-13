@@ -223,3 +223,12 @@ def test_idioma_language_switches_the_window_at_once(window):
         assert window.panels[0].prep_title.text().startswith("PRE-MATCH") or window.panels[0].prep_title.text() == "PRE-MATCH"
     finally:
         i18n.set_language("pt", save=False)
+
+
+def test_hovers_have_the_first_line_as_a_title_and_one_line_stays_plain():
+    from osmbot.gui.window import tip_html, tip_text
+
+    assert tip_text("Só uma linha") == "Só uma linha"
+    html = tip_text("Força 108\nValor do plantel: 998 M\n\nMédia: 29 M")
+    assert html.startswith("<div") and "Força 108</div>" in html and "Valor do plantel: 998 M" in html and "<br><br>" in html
+    assert "Fora da regra</div>" in tip_html([(None, "Akanni 51 entra antes de Ndicka 107", None)], "Fora da regra")

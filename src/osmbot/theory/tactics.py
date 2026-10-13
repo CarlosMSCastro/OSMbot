@@ -79,25 +79,19 @@ class TacticSetup:
     defence: DefenceRole
 
 
-def choose_formation(my_rating: float, opp_rating: float, *, similar_margin: float = 2) -> Formation:
-    """Pick the formation from the team-rating matchup.
+def choose_formation(my_rating: float, opp_rating: float, *, stronger_pct: float = 5) -> Formation:
+    """Pick the formation from the team-rating matchup (THEORY.md section 1, owner 2026-10-13).
 
-    - opponent stronger by more than ``similar_margin``  -> 5-3-2
-    - ratings within ``similar_margin``                  -> 4-3-3 B (defensive midfielder)
-    - opponent weaker by more than ``similar_margin``    -> 4-3-3 A (attacking midfielder)
+    - opponent stronger by more than ``stronger_pct`` percent -> 5-3-2
+    - otherwise (similar or weaker opponent)                -> 4-3-3 A (attacking midfielder)
 
-    ``similar_margin`` defaults to 2 (the owner's rule: within +-2 points he still
-    considers playing 4-3-3). Between the two 4-3-3 variants the owner says it also
-    "depends on the squad" (e.g. having a good MCD available); this function only
-    encodes the matchup-driven default.
+    The 5 % comes from 272 matches of the owner's leagues, measured on the game's strength of each match; applied
+    here to the team rating shown before the match [S]. 4-3-3 B is no longer a default (the owner may still try it).
     """
-    if similar_margin < 0:
-        raise ValueError("similar_margin must be >= 0")
-    diff = opp_rating - my_rating
-    if diff > similar_margin:
+    if stronger_pct < 0:
+        raise ValueError("stronger_pct must be >= 0")
+    if opp_rating > my_rating * (1 + stronger_pct / 100):
         return Formation.F532
-    if diff >= -similar_margin:
-        return Formation.F433_B
     return Formation.F433_A
 
 

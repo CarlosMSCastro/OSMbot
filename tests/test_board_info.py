@@ -12,8 +12,8 @@ def match(week, home, away, kind=0, winner=0):
 
 def test_next_match_has_the_opponent_its_place_home_or_away():
     matches = [match(14, 1, 19, kind=1, winner=1), match(14, 1, 4, kind=2), match(15, 1, 6), match(16, 4, 1)]
-    assert next_match(matches, TEAMS, 1, 14) == {"opponent": "Getafe", "opponent_id": 6, "rank": 8, "side": "H", "danger": False, "cup": False}
-    assert next_match(matches, TEAMS, 1, 15) == {"opponent": "Rival", "opponent_id": 4, "rank": 1, "side": "A", "danger": True, "cup": False}
+    assert next_match(matches, TEAMS, 1, 14) == {"opponent": "Getafe", "opponent_id": 6, "rank": 8, "side": "H", "danger": False, "cup": False, "referee_id": None}
+    assert next_match(matches, TEAMS, 1, 15) == {"opponent": "Rival", "opponent_id": 4, "rank": 1, "side": "A", "danger": True, "cup": False, "referee_id": None}
     assert next_match([match(15, 9, 1)], TEAMS, 1, 14)["danger"]  # 2 places apart: still a direct confrontation
     assert next_match(matches, TEAMS, 1, 16) is None
 

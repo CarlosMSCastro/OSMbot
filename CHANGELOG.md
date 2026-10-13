@@ -4,6 +4,23 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-PT/1.1.0/); 
 
 Este ficheiro é o **histórico de versões, para quem lê o repo**. O diário interno de cada sessão de trabalho está em [`docs/WORKLOG.md`](docs/WORKLOG.md).
 
+## [0.11.9] — 2026-10-13
+
+Avisos do pré-jogo, o registo dos jogos como o jogo os mostra, a regra da formação revista com 272 jogos e hovers novos.
+
+### Adicionado
+- **Avisos na checklist** (a amarelo, com o porquê ao passar o rato): **Banco** quando um suplente pior entra antes de um melhor da mesma posição ("Akanni 51 entra antes de Ndicka 107") ou um suplente em forma é melhor do que um titular; **Onze** quando o desarme não serve ao árbitro do próximo jogo ou a formação foge à regra; **Especialistas** passa a dizer que papel está errado e quem a regra pede. O bot só avisa: o onze, o banco e a tática continuam a ser teus.
+- **Registo dos jogos completo** em `logs/<PC>/jogos/`: cada jogo de liga e taça de todos os clubes com a força de cada equipa nesse jogo, formações, estatísticas, quem jogou com a nota e os eventos ao minuto (golos, cartões, lesões, substituições). Na primeira vez, a época inteira (272 jogos nas 2 ligas). Um jogo já registado noutro PC não é lido outra vez.
+
+### Alterado
+- **Regra da formação:** 4-3-3 A sempre; 5-3-2 só com o adversário mais forte por mais de 5 %. O 4-3-3 B deixa de ser a regra para jogos parecidos.
+- **Hovers** com cantos redondos, mais espaço e a primeira linha como título.
+- As **setas verdes** das vendas desaparecem quando os slots de venda voltam a encher.
+- A linha de cada jogo teu no registo diz também a força do jogo ("força do jogo 720/782").
+
+### Corrigido
+- A **força do teu clube** não aparecia quando o onze tinha um lugar vazio (um titular lesionado retirado); passa a contar pela formação da tática, como o jogo.
+
 ## [0.11.8] — 2026-10-13
 
 Força das equipas, objetivo da época e o aviso de posição sem suplente na janela; corrigido o calendário de eventos.

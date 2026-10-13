@@ -26,7 +26,7 @@ def next_match(matches: list[dict], teams: list[dict], team_id: int, week: int) 
     rank = theirs.get("ranking")
     danger = bool(mine and rank and abs(rank - mine) <= DIRECT_RIVAL)
     return {"opponent": theirs.get("name", "?"), "opponent_id": opponent, "rank": rank, "side": side, "danger": danger,
-            "cup": ahead[0]["matchType"] == CUP_MATCH}
+            "cup": ahead[0]["matchType"] == CUP_MATCH, "referee_id": ahead[0].get("refereeId")}
 
 
 def cup_phase(rounds: list[dict], matches: list[dict], team_id: int, week: int) -> tuple[str, str]:
@@ -88,14 +88,20 @@ ELEVEN = 11
 MAIN_STAT = {1: "statAtt", 2: "statOvr", 3: "statDef", 4: "statDef"}  # the number in bold for each position
 
 
-def team_rating(players: list[dict]) -> int | None:
+def team_rating(players: list[dict], formation: int | None = None) -> int | None:
     """The team's strength as the game shows it: the average main rating of the best player for each place of the
     club's current formation (how many DEF/MED/ATA its eleven has, and 1 GR), rounded (DISCOVERY.md, checked on 3
-    clubs, 2026-10-13). None when the eleven is not known: the game shows another club's only after the analysis."""
-    eleven = [p for p in players if 1 <= (p.get("lineup") or 0) <= ELEVEN]
-    if len(eleven) < ELEVEN:
-        return None
-    shape = {pos: sum(1 for p in eleven if p.get("position") == pos) for pos in MAIN_STAT}
+    clubs, 2026-10-13). None when the eleven is not known: the game shows another club's only after the analysis.
+    ``formation`` (the tactics' 433, 532…): the shape from it, so a hole in the eleven (an injured starter taken
+    out) does not hide the club's own strength (owner, 2026-10-13)."""
+    digits = [int(d) for d in str(formation or "")]
+    if len(digits) == 3 and sum(digits) == 10:
+        shape = {4: 1, 3: digits[0], 2: digits[1], 1: digits[2]}
+    else:
+        eleven = [p for p in players if 1 <= (p.get("lineup") or 0) <= ELEVEN]
+        if len(eleven) < ELEVEN:
+            return None
+        shape = {pos: sum(1 for p in eleven if p.get("position") == pos) for pos in MAIN_STAT}
     best = []
     for pos, count in shape.items():
         best += sorted((p.get(MAIN_STAT[pos]) or 0 for p in players if p.get("position") == pos), reverse=True)[:count]

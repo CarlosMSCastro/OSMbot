@@ -12,6 +12,7 @@ import time
 from osmbot.board.info import cup_phase, league_summary, next_match, squad_value, team_rating
 from osmbot.game import market as market_watch, sales
 from osmbot.game.specialists import check
+from osmbot.theory.lineup import bench_warnings, tactic_warnings
 from osmbot.medical.policy import open_cases
 from osmbot.prematch.policy import friendlies_played
 
@@ -19,6 +20,7 @@ FIXTURES_FOR = 10 * 60.0
 SPECIALISTS_STEP = 4  # matchpreparation step "Select specialists"
 RULE = "fora da regra"  # a step the game ticks but the owner's rule does not
 VALUES_FOR = 3600.0
+BENCH_STEP, ELEVEN_STEP = 1, 0
 CHECKLIST = [(7, "Amigável"), (5, "Análise"), (0, "Onze"), (2, "Posições"), (3, "Em forma"), (1, "Banco"),
              (4, "Especialistas"), (6, "4 treinos")]  # matchpreparation step types, in the card's order
 ANALYSIS_STEP = 5
@@ -101,7 +103,7 @@ def club_extra(client, team: dict, base: str, players: list[dict], slot, market:
     league = base.rsplit("/teams/", 1)[0]
     got = get_many(client, [league, f"{league}/teams", f"{base}/matchpreparation",
                             f"{base}/spyinstructions", f"{base}/players/injured", f"{base}/doctortreatments",
-                            f"{base}/specialists"])
+                            f"{base}/specialists", f"{base}/teamtactics"])
     week = got[0][1]["weekNr"]
     teams = _as_list(got[1])
     matches = _cached(("matches", league), FIXTURES_FOR, lambda: _list(client, f"{league}/matches/filter"))
@@ -123,6 +125,7 @@ def club_extra(client, team: dict, base: str, players: list[dict], slot, market:
     except Exception:
         pass
     free = max(0, slot.maximum - slot.listed) if slot else 0
+    sold = sold if free else []  # the green arrows go once the slots are full again (owner, 2026-10-13)
 
     status, prep = got[2]
     prep = prep if status == 200 and isinstance(prep, dict) else {}
@@ -137,10 +140,24 @@ def club_extra(client, team: dict, base: str, players: list[dict], slot, market:
     friendlies = friendlies_played(matches, team["id"], week)  # owner, 2026-10-11: "Amigáveis (1)" … "(4)", green from the 1st
     steps = [(f"Amigáveis ({friendlies})", friendlies >= 1, None) if kind == FRIENDLY_STEP else step
              for (kind, _), step in zip(CHECKLIST, steps)]
+    status, tactic = got[7]
+    tactic = tactic if status == 200 and isinstance(tactic, dict) else None
+    strength = team_rating(players, (tactic or {}).get("formation"))
+    upcoming = next_match(matches, teams, team["id"], week)
+    if upcoming:  # the opponent's strength in a circle (only once analysed), its squad value on hover (owner, 2026-10-13)
+        rival = upcoming["opponent_id"]
+        upcoming["value"] = squad_value(values, rival)
+        upcoming["strength"] = _cached(("strength", league, rival, week), FIXTURES_FOR,
+                                       lambda: team_rating(_list(client, f"{league}/teams/{rival}/players")))
+    referees = _cached(("referees", league), FIXTURES_FOR, lambda: _list(client, f"{league}/referees"))
+    strictness = next((r.get("strictness") for r in referees if upcoming and r["id"] == upcoming.get("referee_id")), None)
     status, current = got[6]  # the game ticks any 4 specialists; yellow when they are not the owner's rule (D-042)
-    wrong = check(players, current if status == 200 and isinstance(current, dict) else None)
-    if wrong:
-        steps = [(name, False, RULE) if kind == SPECIALISTS_STEP else step for (kind, name), step in zip(CHECKLIST, steps)]
+    why = {SPECIALISTS_STEP: check(players, current if status == 200 and isinstance(current, dict) else None),
+           BENCH_STEP: bench_warnings(players),  # THEORY.md section 21: yellow with the reason on hover
+           ELEVEN_STEP: tactic_warnings(tactic, strictness, strength, (upcoming or {}).get("strength"))}
+    steps = [(name, False, RULE) if why.get(kind) and done_ else (name, done_, extra)
+             for (kind, _), (name, done_, extra) in zip(CHECKLIST, steps)]
+    reasons = {name: why[kind] for (kind, _), (name, _, _) in zip(CHECKLIST, steps) if why.get(kind)}
 
     by_id = {p["id"]: p for p in players}
     injured = [{**p, "unavailable": by_id.get(p["id"], p).get("unavailable")} for p in _as_list(got[4])]
@@ -149,20 +166,14 @@ def club_extra(client, team: dict, base: str, players: list[dict], slot, market:
     doctor = _as_list(got[5])
     lawyer = _list(client, f"{base}/lawyercases") if suspended else []
     logo = next((a.get("path") for a in team.get("assets") or [] if a.get("type") == 4), None)
-    upcoming = next_match(matches, teams, team["id"], week)
-    if upcoming:  # the opponent's strength in a circle (only once analysed), its squad value on hover (owner, 2026-10-13)
-        rival = upcoming["opponent_id"]
-        upcoming["value"] = squad_value(values, rival)
-        upcoming["strength"] = _cached(("strength", league, rival, week), FIXTURES_FOR,
-                                       lambda: team_rating(_list(client, f"{league}/teams/{rival}/players")))
     standings = _cached(("standings", league), FIXTURES_FOR, lambda: _list(client, f"{league}/standings"))
     return {
         "team_id": team["id"], "logo": logo, "logo_key": team.get("baseId") or str(team["id"]),
         "next": upcoming,
         "cup": cup_phase(rounds, matches, team["id"], week),
-        "value": squad_value(values, team["id"]), "strength": team_rating(players),
+        "value": squad_value(values, team["id"]), "strength": strength,
         "table": league_summary(standings, teams, matches, team["id"], week, team.get("goal")),
         "free_slots": free, "sales": sold,
-        "prep": {"pct": prep.get("completionPercentage"), "steps": steps},
+        "prep": {"pct": prep.get("completionPercentage"), "steps": steps, "why": reasons},
         "injured": _people(injured, doctor), "suspended": _people(suspended, lawyer),
     }

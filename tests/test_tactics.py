@@ -17,26 +17,24 @@ from osmbot.theory.tactics import (
 @pytest.mark.parametrize(
     "mine, theirs, expected",
     [
-        (80, 90, Formation.F532),  # much stronger opponent
-        (80, 82, Formation.F433_B),  # similar
-        (80, 78, Formation.F433_B),  # similar (slightly weaker)
-        (80, 70, Formation.F433_A),  # clearly weaker
-        (80, 85, Formation.F433_B),  # exactly at the margin still counts as similar
-        (80, 75, Formation.F433_B),
+        (100, 110, Formation.F532),  # opponent 10 % stronger
+        (100, 106, Formation.F532),  # just over 5 %
+        (100, 105, Formation.F433_A),  # exactly 5 % still plays 4-3-3
+        (100, 102, Formation.F433_A),  # similar
+        (100, 90, Formation.F433_A),  # weaker opponent
     ],
 )
 def test_choose_formation(mine, theirs, expected):
-    assert choose_formation(mine, theirs, similar_margin=5) == expected
+    assert choose_formation(mine, theirs) == expected
 
 
-def test_similar_margin_defaults_to_2():
-    assert choose_formation(80, 82) == Formation.F433_B  # within default margin
-    assert choose_formation(80, 83) == Formation.F532  # just outside it
+def test_the_margin_can_be_changed():
+    assert choose_formation(100, 103, stronger_pct=2) == Formation.F532
 
 
 def test_negative_margin_rejected():
     with pytest.raises(ValueError):
-        choose_formation(80, 80, similar_margin=-1)
+        choose_formation(80, 80, stronger_pct=-1)
 
 
 @pytest.mark.parametrize("formation", [Formation.F433_A, Formation.F433_B])

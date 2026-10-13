@@ -49,6 +49,6 @@ def test_a_refusal_is_not_repeated_the_same_day():
 
 
 def test_the_checklist_says_which_roles_are_out_of_the_rule():
-    assert specialists.check(PLAYERS, {"captain": 11, "penalty": 10, "freekick": 10, "corners": 7}) == ["freekick"]
+    assert specialists.check(PLAYERS, {"captain": 11, "penalty": 10, "freekick": 10, "corners": 7}) == ["Livres: P2, pela regra P3"]
     assert specialists.check(PLAYERS, {"captain": 11, "penalty": 10, "freekick": 7, "corners": 7}) == []
     assert specialists.check(PLAYERS, None) == []

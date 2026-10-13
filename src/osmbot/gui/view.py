@@ -260,18 +260,20 @@ def club_view(club: dict, now: float, shortened: dict | None = None) -> dict:
             still.append((f"{name} {level}/{top}", GREEN if level >= top else None))
 
     prep = club.get("prep") or {}
-    steps = []  # (kind, name, extra): the window draws one icon per kind, all the same size (owner, 2026-10-10)
+    steps = []  # (kind, name, extra, why): one icon per kind, all the same size (owner, 2026-10-10)
+    why = prep.get("why") or {}
     for name, done, analyst in prep.get("steps") or []:
+        reasons = why.get(name) or []  # out of the owner's rule: said on hover (THEORY.md section 21)
         if done:
-            steps.append(("done", name, ""))
-        elif analyst == "fora da regra":  # specialists not as the owner's rule: yellow (owner, 2026-10-12)
-            steps.append(("progress", name, ""))
+            steps.append(("done", name, "", reasons))
+        elif analyst == "fora da regra":  # done in the game but not as the owner's rule: yellow (owner, 2026-10-12)
+            steps.append(("progress", name, "", reasons))
         elif analyst and analyst > now:
-            steps.append(("waiting", name, span(analyst - now)))
+            steps.append(("waiting", name, span(analyst - now), reasons))
         elif analyst:
-            steps.append(("collect", name, "por levantar"))
+            steps.append(("collect", name, "por levantar", reasons))
         else:
-            steps.append(("open", name, ""))
+            steps.append(("open", name, "", reasons))
 
     trainings = []
     for t in club.get("trainings", []):

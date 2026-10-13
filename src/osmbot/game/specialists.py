@@ -15,10 +15,14 @@ COUNTS = {"set": 0}
 
 
 def check(players: list[dict], current: dict | None) -> list[str]:
-    """The roles out of the rule (for the card's checklist). Pure."""
+    """The roles out of the rule, as the card's hover says them ("Cantos: X, pela regra Y"; THEORY.md section 21).
+    Pure."""
     if not current:
         return []
-    return wrong_roles(current, wanted_slots(Player.from_api(p) for p in players))
+    wanted = wanted_slots(Player.from_api(p) for p in players)
+    names = {p["lineup"]: p.get("name") for p in players if 1 <= (p.get("lineup") or 0) <= 11}
+    return [f"{ROLE_NAMES[r].capitalize()}: {names.get(current.get(r), '—')}, pela regra {names.get(wanted[r], '—')}"
+            for r in wrong_roles(current, wanted)]
 
 
 def fix_specialists(client, team: dict, base: str, confirm: bool, log) -> int:
