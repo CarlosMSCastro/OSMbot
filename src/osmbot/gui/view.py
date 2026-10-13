@@ -157,6 +157,57 @@ def squad_view(value: tuple | None) -> dict:
             "tip": f"{players} jogadores · média {money(round(average))}"}
 
 
+CLOSE_STRENGTH = 2  # the opponent's circle: yellow when the strengths are less than 2 apart [S] (THEORY.md section 19)
+
+
+def squad_tip(strength: int | None, value: tuple | None) -> str:
+    """The hover on a club's strength or on the opponent's name: the strength, then the squad value."""
+    parts = [f"Força {strength}"] if strength else []
+    if value:
+        squad = squad_view(value)
+        parts.append(f"valor do plantel {squad['total']} · {squad['tip']}")
+    text = " · ".join(parts)
+    return text[:1].upper() + text[1:]
+
+
+def rating_badge(strength: int | None, value: tuple | None = None, ours: int | None = None) -> dict | None:
+    """The team's strength in a circle, the number the game shows (owner, 2026-10-13). The club's own is blue; the
+    opponent's (``ours`` given) is green when weaker, red when stronger, yellow when close. None when unknown: the
+    opponent's only once analysed, as in the game."""
+    if not strength:
+        return None
+    colour = BLUE
+    if ours:
+        colour = GREEN if strength <= ours - CLOSE_STRENGTH else RED if strength >= ours + CLOSE_STRENGTH else YELLOW
+    return {"text": str(strength), "colour": colour, "tip": squad_tip(strength, value)}
+
+
+def table_view(club: dict) -> tuple[str, str]:
+    """The club's place ("2.º Campeonato", or "Campeões" once the title is mathematically won) and its hover: the
+    top 3 with their points (the top 2 and the club when below 3rd) and the season's goal (THEORY.md section 19)."""
+    table = club.get("table") or {}
+    header = "Campeões" if table.get("champion") else f"{club.get('ranking') or '?'}.º Campeonato"
+    lines = [f"{'▸ ' if mine else ''}{place}.º {name} · {points} pts" for place, name, points, mine in table.get("rows") or []]
+    if table.get("goal"):
+        lines.append(f"Objetivo: {table['goal']}.º" + (" ou acima" if table["goal"] > 1 else ""))
+    return header, "\n".join(lines)
+
+
+def tired_view(club: dict) -> tuple[str, str]:
+    """The tired starters' line and, when one has no cover, the "SALE" players that fit the money (THEORY.md 16)."""
+    cover = club.get("cover") or {}
+    text = " · ".join(f"{p['name']} {p['fitness']}%" + (f" (sem suplente {p['pos']})" if p["pos"] in cover else "")
+                      for p in club.get("tired") or [])
+    tips = []
+    for pos, options in cover.items():
+        if options:
+            tips.append(f"SALE {pos} que cabem no dinheiro:\n" + "\n".join(
+                f"{o['rating']} · {o['nome']} ({o['idade']} anos) · {money(o['preco'])}" for o in options))
+        else:
+            tips.append(f"Nenhum SALE {pos} cabe no dinheiro")
+    return text, "\n\n".join(tips)
+
+
 def sponsor_view(sponsors: dict | None) -> dict:
     """Only the money per round; with an empty slot, ⚠ and the empty slots said on hover (owner, 2026-10-10)."""
     if not sponsors:
@@ -232,12 +283,14 @@ def club_view(club: dict, now: float, shortened: dict | None = None) -> dict:
 
     match = None  # the stripe of the next match (D-030), in the club's colour
     if nxt:
-        match = {"text": f"vs {nxt['opponent']}{rank}",
+        match = {"text": f"vs {nxt['opponent']}{rank}", "value": rating_badge(nxt.get("strength"), nxt.get("value"), club.get("strength")),
+                 "tip": squad_tip(nxt.get("strength"), nxt.get("value")),
                  "tag": ("CASA" if nxt["side"] == "H" else "FORA") + (" · TAÇA" if nxt["cup"] else ""), "danger": nxt["danger"], "left": span(club["match"] - now) if club.get("match") else ""}
-    header = f"{club.get('ranking') or '?'}.º Campeonato"  # and the cup on a line of its own (owner, 2026-10-09)
+    header, table_tip = table_view(club)  # and the cup on a line of its own (owner, 2026-10-09)
     cup_line = cup[:1].upper() + cup[1:]
     done_steps = sum(1 for _, done, _ in prep.get("steps") or [] if done)
     prep_title = f"PRÉ-JOGO · {done_steps}/{len(prep.get('steps') or [])}" if prep.get("steps") else "PRÉ-JOGO"
+    tired_text, tired_tip = tired_view(club)
 
     return {"name": club["name"], "logo": club.get("logo"), "logo_key": club.get("logo_key") or club["name"],
             "subtitle": subtitle, "facts": facts, "alert": alert, "header": header, "cup_line": cup_line, "match": match, "prep_title": prep_title,
@@ -245,7 +298,7 @@ def club_view(club: dict, now: float, shortened: dict | None = None) -> dict:
             "stadium": {"still": still, "moving": moving},
             "prep": {"steps": steps},
             "trainings": trainings,
-            "tired": " · ".join(f"{p['name']} {p['fitness']}%" for p in club.get("tired") or []),
+            "tired": tired_text, "tired_tip": tired_tip, "value_badge": rating_badge(club.get("strength"), club.get("value")), "table_tip": table_tip,
             "injured": _people(club.get("injured") or [], "no médico", now),
             "suspended": _people(club.get("suspended") or [], "no advogado", now),
             "stadium_rings": stadium_rings(club.get("stadium"), now),

@@ -264,3 +264,37 @@ def test_every_effect_of_the_october_schedule_reads_in_portuguese():
         assert effect_text(line) != line, line
     assert effect_text("Faster trainers: Normal trainers 2H and Universal Trainer 1:30H") == "Treinos de 2 h; treinador universal 1:30 h"
     assert effect_text("Extra Training Progression with every Friendly") == "Progressão extra de treino em cada amigável"
+
+
+def test_the_circle_shows_the_strength_ours_blue_the_opponents_compared_with_ours():
+    from osmbot.gui.view import rating_badge
+
+    ours = rating_badge(109, (1, 962_000_000, 38_480_000, 25, 20))
+    assert ours == {"text": "109", "colour": BLUE,
+                    "tip": "Força 109 · valor do plantel 962 M · 25 jogadores · média 38,48 M"}
+    assert [rating_badge(theirs, ours=108)["colour"] for theirs in (73, 107, 109, 110)] == [GREEN, YELLOW, YELLOW, RED]
+    assert rating_badge(None, (1, 962_000_000, 38_480_000, 25, 20), ours=108) is None  # not analysed yet: no circle
+
+
+def test_the_place_says_champions_once_won_and_the_hover_has_the_top_3_and_the_goal():
+    from osmbot.gui.view import table_view
+
+    table = {"rows": [(1, "Clube 1", 46, False), (2, "Clube 2", 45, True), (3, "Clube 3", 43, False)], "goal": 4,
+             "champion": False}
+    assert table_view({"ranking": 2, "table": table}) == (
+        "2.º Campeonato", "1.º Clube 1 · 46 pts\n▸ 2.º Clube 2 · 45 pts\n3.º Clube 3 · 43 pts\nObjetivo: 4.º ou acima")
+    assert table_view({"ranking": 1, "table": {**table, "champion": True, "goal": 1}})[0] == "Campeões"
+    assert table_view({"ranking": 1, "table": {**table, "goal": 1}})[1].endswith("Objetivo: 1.º")
+    assert table_view({"ranking": 3}) == ("3.º Campeonato", "")
+
+
+def test_a_tired_starter_without_cover_says_so_and_the_sale_options_show_on_hover():
+    from osmbot.gui.view import tired_view
+
+    club = {"tired": [{"name": "Jogador 1", "pos": "DEF", "fitness": 68}, {"name": "Jogador 2", "pos": "MED", "fitness": 76}],
+            "cover": {"DEF": [{"nome": "Jogador 9", "rating": 88, "idade": 24, "preco": 9_000_000}]}}
+    text, tip = tired_view(club)
+    assert text == "Jogador 1 68% (sem suplente DEF) · Jogador 2 76%"
+    assert tip == "SALE DEF que cabem no dinheiro:\n88 · Jogador 9 (24 anos) · 9 M"
+    assert tired_view({**club, "cover": {"DEF": []}})[1] == "Nenhum SALE DEF cabe no dinheiro"
+    assert tired_view({"tired": []}) == ("", "")

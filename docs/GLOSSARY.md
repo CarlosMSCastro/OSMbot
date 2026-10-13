@@ -18,6 +18,10 @@
 - **Duas moedas** (confirmado pelo dono): **dinheiro do clube (M€)** para transferências; **boss coins** para amigáveis, treino secreto, estágio e olheiro.
 - **SALE** — etiqueta azul no preço de jogadores do jogo, mais baratos que o normal (desconto por medir).
 - **Slots de transferência** — jogadores que se podem ter à venda ao mesmo tempo: 4 (6 em eventos).
+- **Força da equipa** — o número único que o jogo mostra para um clube (ex.: 109): média do rating principal dos melhores por posição na formação atual. A do adversário só aparece depois da análise (`DISCOVERY.md`).
+- **Objetivo da época** — o lugar que a direção pede no início da época (campo `goal`); acabar nesse lugar ou acima cumpre. É uma das 3 conquistas, com o campeonato e a taça (`THEORY.md` §19).
+- **Domínio mundial** — objetivo de longo prazo do dono: conquistas em todos os países, pela ordem alfabética (`THEORY.md` §19).
+- **Torneio de campeões** — torneio para onde às vezes se ganha bilhete no fim da liga; passa o plantel, mas não conta para o domínio mundial.
 - **Amigável** — jogo que custa 4 boss coins e sobe stats de alguns jogadores.
 - **Posições finas:** PL (ponta de lança), EE / ED (extremo esq./dir.), MC (médio centro), MCO / MCD (médio centro ofensivo / defensivo), DC (defesa central), DD / DE (defesa dir./esq.), GK (guarda-redes).
 - **Nomes de colunas no ecrã:** Ata / Def / Med (stats), Con (condição), Mor (moral), Valor.

@@ -12,3 +12,10 @@ def tired_starters(players: list[dict]) -> list[dict]:
              for p in players
              if p["lineup"] in STARTING_ELEVEN and not p["unavailable"] and p["fitness"] < YELLOW_BELOW]
     return sorted(tired, key=lambda p: p["fitness"])
+
+
+def uncovered(players: list[dict], tired: list[dict]) -> list[str]:
+    """The positions of tired starters with nobody to replace them: no other player of that position outside the
+    eleven and available, whatever his condition (owner, 2026-10-13; THEORY.md section 16)."""
+    cover = {POSITIONS.get(p["position"]) for p in players if p["lineup"] not in STARTING_ELEVEN and not p["unavailable"]}
+    return sorted({p["pos"] for p in tired} - cover)

@@ -1,6 +1,6 @@
 # Project Brief
 
-*Última atualização: 2026-10-12*
+*Última atualização: 2026-10-13*
 
 ## Objetivo
 
@@ -17,7 +17,8 @@
 | 7 | **Patrocinadores**: a melhor proposta em cada espaço livre (`THEORY.md` §15) | **Feito** |
 | 8 | **Recompensas diárias**: início de sessão, 3 missões, prémio do dia e vídeos acumulados; ficam no inventário; só se usam os itens que vão expirar, 4 h antes (`THEORY.md` §17 e §20, D-020, D-039) | **Feito** (0.8.0; visto em real: início de sessão, missões e prémio do dia) |
 | 8a | **Poupança**: depositar tudo 5 min antes de cada jogo (`THEORY.md` §13, D-035) | **Feito** (0.11.0, por ver em real) |
-| 9 | **Aviso de condição física** dos titulares (`THEORY.md` §16) | **Feito** (quadro) |
+| 9 | **Aviso de condição física** dos titulares (`THEORY.md` §16) | **Feito** (quadro; desde a 0.11.8 também "sem suplente" com opções "SALE" ao passar o rato, D-043) |
+| 9c | **Força das equipas e objetivo da época na janela**: força num círculo (a do adversário depois da análise), os 3 primeiros com os pontos, o objetivo e "Campeões" (`THEORY.md` §19, D-043) | **Feito** (0.11.8; força conferida com o jogo em 3 clubes) |
 | 9a | **Especialistas** pela regra do dono antes de cada jogo (`THEORY.md` §4, D-042) | **Feito** (0.11.7; 1.ª gravação vista em real) |
 | 9b | **Registo dos jogos** das ligas do dono, para estudar (D-041) | **Feito** (0.11.7; histórico da época gravado; táticas dos outros clubes o jogo não dá) |
 | 10 | Transferências automáticas | **Próxima grande funcionalidade, depois do 1.0** (dono, 2026-10-09): o dono vai dar a teoria de gestão de plantel primeiro; escritas novas pedem OK |

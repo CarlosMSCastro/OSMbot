@@ -567,11 +567,11 @@ def run_active(dry_run: bool = False, *, claim=run_claim, train=run_train, finis
                 except Exception as error:  # the board is an extra too
                     _log(f"Quadro: erro ao atualizar ({error})")
                 tired_before = _check_fitness(last_snapshot, tired_before)
-                events = wake_events(last_snapshot, clock())
-                times = [ts for _, ts in events] or finish_times()
+                wakes = wake_events(last_snapshot, clock())
+                times = [ts for _, ts in wakes] or finish_times()
                 times = times + [t for t in stadium_times + reward_times + prematch_times + medical_times + savings_times
                                  + inventory_times if t > clock()]
-                events = sorted(events + [("depósito na poupança", t) for t in savings_times if t > clock()], key=lambda e: e[1])
+                wakes = sorted(wakes + [("depósito na poupança", t) for t in savings_times if t > clock()], key=lambda e: e[1])
                 wait = next_wait(times, clock(), rng.uniform(*JITTER))
                 if ads_failed:
                     again = ads_wake(clock())
@@ -595,13 +595,13 @@ def run_active(dry_run: bool = False, *, claim=run_claim, train=run_train, finis
                     raise SystemExit(1)
                 wait = network_pause(retries)
                 _log(f"Rede: erro ({error}); nova tentativa em {span(wait)} ({retries}.ª)")
-                events = []
+                wakes = []
             if dry_run:
                 if last_snapshot:
                     print(render(last_snapshot, clock(), "SIMULAÇÃO", list(_recent), machine, colour=sys.stdout.isatty()))
                 _log(f"Simulação: próxima verificação em {span(wait)}")
                 return
-            _log("Próxima verificação: " + (" · ".join(f"{label} em {span(ts - clock())}" for label, ts in events) or f"em {span(wait)}"))
+            _log("Próxima verificação: " + (" · ".join(f"{label} em {span(ts - clock())}" for label, ts in wakes) or f"em {span(wait)}"))
             _now("à espera")
             try:
                 deadline = clock() + wait

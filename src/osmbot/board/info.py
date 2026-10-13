@@ -25,7 +25,7 @@ def next_match(matches: list[dict], teams: list[dict], team_id: int, week: int) 
     mine, theirs = places.get(team_id, {}).get("ranking"), places.get(opponent, {})
     rank = theirs.get("ranking")
     danger = bool(mine and rank and abs(rank - mine) <= DIRECT_RIVAL)
-    return {"opponent": theirs.get("name", "?"), "rank": rank, "side": side, "danger": danger,
+    return {"opponent": theirs.get("name", "?"), "opponent_id": opponent, "rank": rank, "side": side, "danger": danger,
             "cup": ahead[0]["matchType"] == CUP_MATCH}
 
 
@@ -82,3 +82,41 @@ def track_sales(state: dict, listed: dict[int, dict], squad: set[int], now: floa
         new_listings = [item for pid, item in listed.items() if pid not in before]
         sales = (sales + new_sales)[len(new_listings):]
     return {"listed": listed, "sales": sales, "new_listings": new_listings, "new_sales": new_sales}
+
+
+ELEVEN = 11
+MAIN_STAT = {1: "statAtt", 2: "statOvr", 3: "statDef", 4: "statDef"}  # the number in bold for each position
+
+
+def team_rating(players: list[dict]) -> int | None:
+    """The team's strength as the game shows it: the average main rating of the best player for each place of the
+    club's current formation (how many DEF/MED/ATA its eleven has, and 1 GR), rounded (DISCOVERY.md, checked on 3
+    clubs, 2026-10-13). None when the eleven is not known: the game shows another club's only after the analysis."""
+    eleven = [p for p in players if 1 <= (p.get("lineup") or 0) <= ELEVEN]
+    if len(eleven) < ELEVEN:
+        return None
+    shape = {pos: sum(1 for p in eleven if p.get("position") == pos) for pos in MAIN_STAT}
+    best = []
+    for pos, count in shape.items():
+        best += sorted((p.get(MAIN_STAT[pos]) or 0 for p in players if p.get("position") == pos), reverse=True)[:count]
+    return round(sum(best) / len(best)) if best else None
+
+
+def league_summary(standings: list[dict], teams: list[dict], matches: list[dict], team_id: int, week: int,
+                   goal: int | None) -> dict | None:
+    """The hover on the club's place (owner, 2026-10-13; THEORY.md section 19): the top 3 with their points (the top 2
+    and the club when it is below 3rd), the season's goal, and whether the title is mathematically won."""
+    points = {row["teamId"]: row.get("points") or 0 for row in standings}
+    table = sorted((t for t in teams if t.get("ranking")), key=lambda t: t["ranking"])
+    if not points or not table:
+        return None
+    mine = next((t for t in table if t["id"] == team_id), None)
+    shown = table[:3] if not mine or mine["ranking"] <= 3 else table[:2] + [mine]
+    rows = [(t["ranking"], t["name"], points.get(t["id"], 0), t["id"] == team_id) for t in shown]
+    champion = False
+    if mine and mine["ranking"] == 1 and len(table) > 1:
+        second = table[1]["id"]
+        left = sum(1 for m in matches if m.get("matchType") == LEAGUE_MATCH and m["weekNr"] > week
+                   and second in (m["homeTeamId"], m["awayTeamId"]))
+        champion = points.get(second, 0) + 3 * left < points.get(team_id, 0)
+    return {"rows": rows, "goal": goal, "champion": champion}

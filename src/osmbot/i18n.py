@@ -75,7 +75,7 @@ WORDS = {
     # board titles and labels
     "DIÁRIAS": "DAILY", "BOSS COINS": "BOSS COINS", "A SEGUIR": "UP NEXT", "TREINOS": "TRAINING", "ESTÁDIO": "STADIUM",
     "AGORA": "NOW", "PRÉ-JOGO": "PRE-MATCH", "Valor plantel": "Squad value", "Dinheiro": "Money",
-    "Patrocinadores": "Sponsors", "Cansados": "Tired", "CASA": "HOME", "FORA": "AWAY", "em": "in",
+    "Campeões": "Champions", "Patrocinadores": "Sponsors", "Cansados": "Tired", "CASA": "HOME", "FORA": "AWAY", "em": "in",
     # club card
     "Treinos": "Training", "Campo": "Pitch", "Capacidade": "Capacity", "no máximo": "at max", "parado": "idle",
     "Médico": "Doctor", "Advogado": "Lawyer", "ninguém": "nobody", "pronto": "ready", "a levantar": "to collect",
@@ -110,6 +110,12 @@ def _w(text: str) -> str:
     return WORDS.get(text, text)
 
 
+def _ordinal(number: str) -> str:
+    """"1" -> "1st", "2" -> "2nd", "11" -> "11th"."""
+    n = int(number)
+    return number + ("th" if 10 <= n % 100 <= 20 else {1: "st", 2: "nd", 3: "rd"}.get(n % 10, "th"))
+
+
 PATTERNS = [(re.compile(pattern), replace) for pattern, replace in (
     # card
     (r"(\d+)\.º Campeonato", lambda m: f"{ordinal(m[1])} in the league"),
@@ -130,7 +136,15 @@ PATTERNS = [(re.compile(pattern), replace) for pattern, replace in (
     (r"(\d+) j", lambda m: f"{m[1]} g"),
     (r"1 jogo · não dá", lambda m: "1 game · not allowed"),
     (r"(\d+) jogos? · à espera", lambda m: f"{m[1]} game{'s' if m[1] != '1' else ''} · waiting"),
-    (r"⚠ Cansados: (.+)", lambda m: f"⚠ Tired: {m[1]}"),
+    (r"⚠ Cansados: (.+)", lambda m: f"⚠ Tired: " + re.sub(r"sem suplente (\w+)", lambda n: f"no cover {_w(n[1])}", m[1])),
+    (r"(?:Força (\d+) · )?[Vv]alor do plantel (.+) · (\d+) jogadores · média (.+)",
+     lambda m: (f"Strength {m[1]} · squad value" if m[1] else "Squad value") + f" {m[2]} · {m[3]} players · avg {m[4]}"),
+    (r"Força (\d+)", lambda m: f"Strength {m[1]}"),
+    (r"(▸ )?(\d+)\.º (.+) · (\d+) pts", lambda m: f"{m[1] or ''}{_ordinal(m[2])} {m[3]} · {m[4]} pts"),
+    (r"Objetivo: (\d+)\.º( ou acima)?", lambda m: f"Goal: {_ordinal(m[1])}" + (" or better" if m[2] else "")),
+    (r"(?s)SALE (\w+) que cabem no dinheiro:\n(.+)",
+     lambda m: f"SALE {_w(m[1])} you can afford:\n" + m[2].replace(" anos)", " years)")),
+    (r"Nenhum SALE (\w+) cabe no dinheiro", lambda m: f"No SALE {_w(m[1])} you can afford"),
     # top bar, coins
     (r"Início de sessão \(dia (\d+)\)", lambda m: f"Login (day {m[1]})"),
     (r"Missões (\d+)/(\d+)", lambda m: f"Missions {m[1]}/{m[2]}"),

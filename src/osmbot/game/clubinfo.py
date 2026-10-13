@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import time
 
-from osmbot.board.info import cup_phase, next_match, squad_value
+from osmbot.board.info import cup_phase, league_summary, next_match, squad_value, team_rating
 from osmbot.game import market as market_watch, sales
 from osmbot.game.specialists import check
 from osmbot.medical.policy import open_cases
@@ -149,11 +149,19 @@ def club_extra(client, team: dict, base: str, players: list[dict], slot, market:
     doctor = _as_list(got[5])
     lawyer = _list(client, f"{base}/lawyercases") if suspended else []
     logo = next((a.get("path") for a in team.get("assets") or [] if a.get("type") == 4), None)
+    upcoming = next_match(matches, teams, team["id"], week)
+    if upcoming:  # the opponent's strength in a circle (only once analysed), its squad value on hover (owner, 2026-10-13)
+        rival = upcoming["opponent_id"]
+        upcoming["value"] = squad_value(values, rival)
+        upcoming["strength"] = _cached(("strength", league, rival, week), FIXTURES_FOR,
+                                       lambda: team_rating(_list(client, f"{league}/teams/{rival}/players")))
+    standings = _cached(("standings", league), FIXTURES_FOR, lambda: _list(client, f"{league}/standings"))
     return {
         "team_id": team["id"], "logo": logo, "logo_key": team.get("baseId") or str(team["id"]),
-        "next": next_match(matches, teams, team["id"], week),
+        "next": upcoming,
         "cup": cup_phase(rounds, matches, team["id"], week),
-        "value": squad_value(values, team["id"]),
+        "value": squad_value(values, team["id"]), "strength": team_rating(players),
+        "table": league_summary(standings, teams, matches, team["id"], week, team.get("goal")),
         "free_slots": free, "sales": sold,
         "prep": {"pct": prep.get("completionPercentage"), "steps": steps},
         "injured": _people(injured, doctor), "suspended": _people(suspended, lawyer),

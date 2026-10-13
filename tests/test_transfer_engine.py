@@ -81,3 +81,17 @@ def test_sale_players_appear_and_leave():
     state, appeared, gone = sale_changes(state, sale_rows([item(4, 120, 100)]), 1600)
     assert [r["anuncio"] for r in appeared] == [4] and gone[0]["anuncio"] == 1 and gone[0]["durou"] == 600
     assert describe_sales(appeared, "Liga", lambda m: f"{m} €") == "SALE novos (Liga): 1 · DEF 84 J4 (25 anos) 120 €"
+
+
+def test_sale_options_are_the_games_sale_players_of_that_position_the_club_can_pay_for_best_first():
+    from osmbot.transfers.engine import sale_options
+
+    def item(aid, pos, rating, price, user=None):
+        return {"id": aid, "price": price, "team": {"userId": user},
+                "player": {"id": aid, "name": f"Jogador {aid}", "position": pos, "age": 25, "value": price * 2,
+                           "statDef": rating, "statAtt": rating, "statOvr": rating}}
+
+    market = [item(1, 3, 80, 5_000_000), item(2, 3, 88, 9_000_000), item(3, 3, 90, 30_000_000),
+              item(4, 1, 95, 1_000_000), item(5, 3, 99, 2_000_000, user=7)]
+    options = sale_options(market, "DEF", budget=10_000_000)
+    assert [o["nome"] for o in options] == ["Jogador 2", "Jogador 1"]  # too dear, other position and a manager's are out

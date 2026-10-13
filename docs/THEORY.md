@@ -466,6 +466,9 @@ Há **3 componentes** a melhorar, cada um com **níveis 0, 1, 2 e 3**:
 - Um **titular** (onze) com a condição a amarelo **convém ser trocado 1 jogo para descansar**.
 - O bot **só avisa** (quadro e registo, uma vez por jogador até recuperar); não troca ninguém, porque o onze e a tática são do dono.
 - Só contam os titulares (`lineup` 1 a 11) e não lesionados; o banco não interessa. O limiar do vermelho está por apurar.
+- **Sem suplente** (dono, 2026-10-13): quando um titular cansado não tem quem o substitua na posição, o dono compra outro para o descansar (§19, compras). A linha dos cansados diz `(sem suplente DEF)` e, ao passar o rato, mostra até 3 jogadores do **SALE** dessa posição que caibam no dinheiro do clube. **Só sugestão:** comprar é uma escrita nova (regra 5).
+  - **[S]** Suplente = um jogador da mesma posição (ATA/MED/DEF/GR) que não está no onze e não está lesionado nem castigado, seja qual for a condição.
+  - **[S]** Dinheiro do clube = o mesmo total do cartão (conta + poupança). Opções do SALE = os jogadores do jogo com a fita "SALE" na lista de transferências da liga (§7.6), da posição em falta, preço ≤ dinheiro, os de melhor rating primeiro.
 
 ## 17. Recompensas diárias: início de sessão, missões e vídeos acumulados
 
@@ -506,6 +509,36 @@ Há **3 componentes** a melhorar, cada um com **níveis 0, 1, 2 e 3**:
 - **Começar logo com o clube de maior valor do plantel** da liga (ao criar a liga, o jogo deixa escolher o clube). Como as automações tornam tudo mais eficiente (treinos, amigáveis, vídeos, poupança), quanto mais cedo o plantel for o melhor, **mais depressa ganha distância** para os outros.
 - **Estágios: até 3 por época** (10 + 20 + 50 = 80 coins). Os 3 seguintes (100, 200, 500) são exponencialmente mais caros; com a distância ganha cedo, deixam de ser precisos.
 - Conta do dono: com ~190 boss coins por dia, a liga (~350), os 3 estágios (80) e os amigáveis (≈28 coins por dia por equipa) dá para **4 equipas**.
+
+*Mais respostas do dono, 2026-10-13:*
+
+- **Objetivo de longo prazo: domínio mundial.** Conquistas em todos os países, pela **ordem alfabética** dos países. **[?]** Ainda por saber se o jogo pede 1 conquista por país ou as 3 (campeonato, taça e objetivo da época). Um país só fica "feito" quando lá não falta nada; por exemplo, um país onde só faltava a taça foi repetido por isso.
+- **Que clube escolher** ao criar a liga: em regra o de **maior valor e mais jogadores**, sobretudo nas ligas que o dono não acompanha. Pode escolher outro **muito perto do melhor** por gosto pessoal. Não é obrigatoriamente o de melhor onze.
+- **Estágios: só em momentos cruciais**, como eliminatórias da taça contra adversários difíceis. Não há calendário fixo.
+- **Quando criar a liga seguinte:** quando apetecer ao dono, sem regra. Sinal de que pode valer a pena: o campeonato atual a acalmar (equipas desistem, mais jogos contra bots, plantéis mais caros, transferências mais lentas).
+- **Mercado no arranque:** vender os piores até ficar só com o necessário (**onze + banco**); depois, rodar como se faz agora (§7).
+- **Prioridade da época: as 3 conquistas** (campeonato, taça e objetivo), sem uma acima das outras: com o bot, a teoria e o melhor clube, o dono conta ganhar tudo.
+- **Taça:** jogos a uma mão, no máximo 4 (oitavos, quartos, meias, final).
+- **Objetivo da época:** o clube diz no início um lugar (p. ex. 7.º, 3.º); acabar nesse lugar ou acima cumpre. Com um clube cujo objetivo é o 1.º, não ganhar o campeonato é falhar a época.
+- **Todos os países**, mesmo os de ligas fracas (o objetivo é 100 % do mundo). **[?]** Ordem alfabética provavelmente em português, como o jogo os mostra em português.
+- **Banco:** 2 atacantes, 2 médios, 2 defesas e 1 guarda-redes, mais alguma folga para ir rodando as vendas. Os piores vendem-se **sempre ao preço máximo** (§7).
+- **Fim da época:** o dono fica **sempre até a liga acabar**. Se falhar uma conquista, não dá para ficar: a época termina e é preciso criar uma liga nova nesse país.
+- **Poupar coins quando a época está segura** (dono, 2026-10-13, a partir de uma ideia do Claude): no fim da época muitos treinadores já desistiram e há muitos clubes com bots, por isso faz sentido poupar. Fazer **só 1 amigável** em vez de 4 quando: há **+10 pontos** sobre os adversários, e/ou não há mais jogos importantes até ao fim da época, ou o plantel do dono vale **muito mais** do que o dos outros.
+  - **[S] Proposta do Claude, por confirmar:** a decisão é por jogo; o jogo perigoso (confronto direto, como o alarme da janela, ou taça contra plantel mais forte) tem sempre os 4.
+  - *Respostas do dono (2026-10-13):* os pontos de avanço contam-se **sobre o 2.º** (com a liga criada e o melhor clube, o dono conta ir sempre em 1.º). O número 10 foi "por alto": **[?]** a calibrar com a diferença real nas ligas atuais. **Taça: igual ao campeonato** (o modo poupança também se aplica). **Intense Friendlies:** sem certeza; numa fase adiantada, já a dominar, talvez **2 amigáveis por dia** em vez de 8; depende sempre da fase da época **[?]**. **[?]** "Plantel muito maior": sem resposta ainda.
+  - *Dados para calibrar (leitura de 2026-10-13, ligas em que o dono entrou, não criadas):* liga de 20 clubes, 16 de 38 jogos feitos: dono em 2.º a 1 ponto do 1.º; o seu plantel é o mais valioso, 1,20× o 2.º. Liga de 12 clubes, 14 de 22 jogos: dono em 3.º, a 7 pontos do 1.º; o seu plantel é só o 6.º em valor (o 1.º vale 1,10× o 2.º). Nas duas, os planteis do topo estão perto uns dos outros (1,1–1,2×): **um limite de 1,5× quase nunca disparava**, e +10 pontos não acontece em nenhuma.
+  - **[S] Proposta do Claude (2026-10-13), em vez dos 10 fixos:** poupar quando o **avanço sobre o 2.º for igual ou maior do que o número de jogos de campeonato que faltam** (com 10 por jogar, 10 pontos; com 4, 4). Acompanha a fase da época, como o dono pediu; matematicamente campeão é avanço maior do que 3 × jogos que faltam.
+  - **Em aberto por decisão do dono (2026-10-13):** discutir de novo no futuro, de preferência com números de uma liga criada por ele. Por decidir: a regra dos pontos (10 fixos ou "avanço ≥ jogos que faltam"), a condição do plantel muito maior (que valor, ou sai) e o Intense Friendlies (2 por dia?). Nada a construir até lá.
+- **Passagem para o torneio de campeões:** o dono acha que **tudo** desaparece (dinheiro e poupança) e que todos recomeçam iguais. **[?]** Para analisar no fim de uma época com bilhete.
+- **Compras:** conforme a necessidade. Se só há um jogador numa posição e está a ficar cansado, compra-se outro para o descansar. Com tudo tranquilo, compra-se o mais valioso que o dinheiro permita, de preferência no SALE (nem sempre há).
+- **Nada passa de uma liga para a outra.** Exceção: no fim da liga às vezes ganha-se um **bilhete para um torneio de campeões**. O dono costuma jogá-lo; aí passa o plantel e quase tudo, mas **não conta para o domínio mundial**. Na passagem para o torneio convém ter tudo em jogadores, porque o dinheiro desaparece (ver "Passagem para o torneio de campeões" abaixo).
+- **Duração:** sempre 1 jogo por dia: 4 dias de pré-época, depois o campeonato e a taça, e o último dia. O tamanho da liga é o do país (não se escolhe).
+- **Taça:** a preparação é a mesma do campeonato, mas um jogo a eliminar justifica um estágio mais facilmente. Se o jogo da taça for contra um bot muito fraco e houver a seguir um jogo difícil do campeonato contra um adversário direto, pode poupar titulares na taça.
+- **Várias equipas:** o jogo dá **4 lugares** por conta. A partir de agora, ligas criadas pelo dono, um país de cada vez pela ordem alfabética; às vezes também um torneio de campeões.
+- **Na janela (dono, 2026-10-13):**
+  - *Força da equipa* num círculo (o número do jogo, `DISCOVERY.md`): a do clube do dono sempre; a do adversário **só depois da análise**, como no jogo (antes, o jogo não mostra o onze dos outros; sem estimativas). **[S]** Cores: a do clube do dono azul (neutra); a do adversário comparada com a nossa: verde se for 2 ou mais abaixo, vermelho se for 2 ou mais acima, amarelo se estiverem a menos de 2.
+  - *Hover no lugar do campeonato:* os 3 primeiros com os pontos (se o clube estiver abaixo do 3.º: os 2 primeiros e o clube) e o objetivo da época ("Objetivo: 4.º ou acima"). Com o título **matematicamente garantido**, o cabeçalho diz "Campeões" em vez de "1.º Campeonato". **[S]** Garantido = em 1.º e o 2.º não consegue chegar aos nossos pontos nem ganhando todos os jogos de campeonato que lhe faltam (o empate não conta como garantido: o critério de desempate do jogo não é conhecido).
+- **Criar a liga:** o dono ainda nunca criou uma; vai ser **pública**. O jogo deixa escolher o número de clubes, pública ou privada e convidar amigos. O custo varia com o número de clubes/jornadas e talvez com a popularidade da liga.
 
 ## 20. Inventário: usar o que vai expirar
 

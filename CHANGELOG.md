@@ -4,6 +4,21 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-PT/1.1.0/); 
 
 Este ficheiro é o **histórico de versões, para quem lê o repo**. O diário interno de cada sessão de trabalho está em [`docs/WORKLOG.md`](docs/WORKLOG.md).
 
+## [0.11.8] — 2026-10-13
+
+Força das equipas, objetivo da época e o aviso de posição sem suplente na janela; corrigido o calendário de eventos.
+
+### Adicionado
+- **Força da equipa num círculo**, o mesmo número que o jogo mostra (ex.: 109): no cartão, entre o nome e o dinheiro; na faixa do jogo, a do adversário logo a seguir ao lugar dele, **só depois da análise** (como no jogo). O do adversário fica verde se for mais fraco, vermelho se for mais forte, amarelo se estiverem perto. Ao passar o rato: força, valor do plantel, jogadores e média por jogador (também no nome do adversário).
+- **Hover no lugar do campeonato:** os 3 primeiros com os pontos (abaixo do 3.º: os 2 primeiros e o teu clube) e o objetivo da época ("Objetivo: 4.º ou acima"). Com o título matematicamente garantido, o cabeçalho diz **"Campeões"**.
+- **Posição sem suplente:** a linha dos cansados diz `(sem suplente DEF)` quando o cansado não tem quem o substitua; ao passar o rato, até 3 jogadores "SALE" dessa posição que cabem no dinheiro do clube. Só sugestão: o bot não compra.
+
+### Alterado
+- O alarme do confronto direto na faixa do jogo é maior; a coluna do clube ficou mais larga para o nome caber ao lado do círculo.
+
+### Corrigido
+- **Calendário de eventos:** a partir da 2.ª passagem do bot dava "erro ('list' object is not callable)" e não lia o fórum. Novo teste corre o ciclo várias vezes para apanhar este tipo de erro.
+
 ## [0.11.7] — 2026-10-12
 
 Especialistas pela tua regra, 8 amigáveis no Intense Friendlies e o registo de todos os jogos.

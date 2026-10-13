@@ -12,8 +12,8 @@ def match(week, home, away, kind=0, winner=0):
 
 def test_next_match_has_the_opponent_its_place_home_or_away():
     matches = [match(14, 1, 19, kind=1, winner=1), match(14, 1, 4, kind=2), match(15, 1, 6), match(16, 4, 1)]
-    assert next_match(matches, TEAMS, 1, 14) == {"opponent": "Getafe", "rank": 8, "side": "H", "danger": False, "cup": False}
-    assert next_match(matches, TEAMS, 1, 15) == {"opponent": "Rival", "rank": 1, "side": "A", "danger": True, "cup": False}
+    assert next_match(matches, TEAMS, 1, 14) == {"opponent": "Getafe", "opponent_id": 6, "rank": 8, "side": "H", "danger": False, "cup": False}
+    assert next_match(matches, TEAMS, 1, 15) == {"opponent": "Rival", "opponent_id": 4, "rank": 1, "side": "A", "danger": True, "cup": False}
     assert next_match([match(15, 9, 1)], TEAMS, 1, 14)["danger"]  # 2 places apart: still a direct confrontation
     assert next_match(matches, TEAMS, 1, 16) is None
 
@@ -64,3 +64,33 @@ def test_the_games_listing_time_wins():
     assert state["listed"][7]["since"] == 500.0  # timeStampForSale: known even at the very first read
     state = track_sales(state, {}, set(), now=4000.0)
     assert state["new_sales"][0]["since"] == 500.0 and state["new_sales"][0]["sold"] == 4000.0
+
+
+def test_the_teams_strength_is_the_best_player_for_each_place_of_the_current_formation():
+    from osmbot.board.info import team_rating
+
+    def player(pos, rating, lineup=0):
+        return {"position": pos, "statAtt": rating, "statOvr": rating, "statDef": rating, "lineup": lineup}
+
+    # a 3-5-2 eleven; the squad has more strong forwards than the formation uses
+    eleven = [player(4, 70, 1)] + [player(3, 72, 2 + i) for i in range(3)] + [player(2, 74, 5 + i) for i in range(5)]         + [player(1, 70, 10), player(1, 70, 11)]
+    squad = eleven + [player(1, 90), player(1, 90), player(1, 90), player(3, 80), player(4, 99)]
+    # GR 99, DEF 80 72 72, MED 74×5, ATA 90 90 -> 873 / 11 = 79.36; the 3rd forward and the spare keeper do not count
+    assert team_rating(squad) == 79
+    assert team_rating([dict(p, lineup=0) for p in squad]) is None  # another club before the analysis: no eleven known
+
+
+def test_league_summary_has_the_top_3_with_points_the_goal_and_when_the_title_is_won():
+    from osmbot.board.info import league_summary
+
+    teams = [{"id": i, "name": f"Clube {i}", "ranking": i} for i in range(1, 6)]
+    standings = [{"teamId": i, "points": p} for i, p in zip(range(1, 6), (46, 45, 43, 40, 32))]
+    ahead = [match(20, 2, 3), match(21, 4, 2)]  # the 2nd still has 2 league matches
+    summary = league_summary(standings, teams, ahead, 2, 19, 4)
+    assert summary == {"rows": [(1, "Clube 1", 46, False), (2, "Clube 2", 45, True), (3, "Clube 3", 43, False)],
+                       "goal": 4, "champion": False}
+    assert [r[0] for r in league_summary(standings, teams, ahead, 5, 19, 11)["rows"]] == [1, 2, 5]  # below 3rd
+    won = [{"teamId": 1, "points": 52}, {"teamId": 2, "points": 45}]
+    assert league_summary(won, teams, ahead, 1, 19, 1)["champion"]  # 45 + 2×3 = 51 < 52
+    assert not league_summary([{"teamId": 1, "points": 51}, {"teamId": 2, "points": 45}], teams, ahead, 1, 19, 1)["champion"]
+    assert league_summary([], teams, ahead, 1, 19, 1) is None

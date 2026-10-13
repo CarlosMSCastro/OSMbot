@@ -57,3 +57,18 @@ def test_board_never_taller_than_the_window():
     for rows in (40, 30, 26, 20, 12):
         text = render(snap, 0, "ATIVO", ["a", "b", "c", "d", "e"], "Windows", colour=False, rows=rows)
         assert text.count("\n") + 1 <= rows - 1
+
+
+def _player(pid, pos, lineup, unavailable=0, fitness=90):
+    return {"id": pid, "name": f"Jogador {pid}", "position": pos, "lineup": lineup, "unavailable": unavailable,
+            "fitness": fitness}
+
+
+def test_a_tired_starter_without_anyone_of_his_position_outside_the_eleven_has_no_cover():
+    from osmbot.theory.fitness import uncovered
+
+    players = [_player(1, 3, 2, fitness=68), _player(2, 2, 5, fitness=70), _player(3, 2, 14, fitness=55),
+               _player(4, 3, 15, unavailable=2), _player(5, 1, 9)]
+    tired = tired_starters(players)
+    assert uncovered(players, tired) == ["DEF"]  # the only other defender is injured; the tired midfielder has a sub
+    assert uncovered(players, []) == []

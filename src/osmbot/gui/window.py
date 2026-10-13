@@ -812,6 +812,38 @@ class SaleArrow(QWidget):
         painter.drawLine(int(middle + 5), int(y - 6), int(middle), int(y - 11))
 
 
+class ValueBadge(QWidget):
+    """The squad value in a circle, as in the game (owner, 2026-10-13): the short value inside a ring coloured by
+    its place in the league by value; the whole value, players and average on hover."""
+
+    def __init__(self, size: int = 40):
+        super().__init__()
+        self.setFixedSize(size, size)
+        self.text, self.colour = "", MUTED
+        self.setVisible(False)
+
+    def show_value(self, badge: dict | None) -> None:
+        self.setVisible(bool(badge))
+        if not badge:
+            return
+        self.text, self.colour = badge["text"], COLOURS.get(badge["colour"], MUTED)
+        self.setToolTip(tr(badge["tip"]))
+        self.update()
+
+    def paintEvent(self, _event) -> None:
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.Antialiasing)
+        box = QRectF(self.rect()).adjusted(1.5, 1.5, -1.5, -1.5)
+        painter.setPen(QPen(QColor(self.colour), 2.2))
+        painter.setBrush(QColor(10, 12, 32, 170))
+        painter.drawEllipse(box)
+        font = QFont(FONT, 8 if len(self.text) <= (4 if self.width() >= 38 else 3) else 7)
+        font.setBold(True)
+        painter.setFont(font)
+        painter.setPen(QColor(TEXT))
+        painter.drawText(box, Qt.AlignCenter, self.text)
+
+
 class ElidedLabel(QLabel):
     """One line that ends in "…" when it does not fit, instead of breaking."""
 
@@ -837,11 +869,20 @@ class MatchStripe(QFrame):
         grid.setHorizontalSpacing(10)
         grid.setVerticalSpacing(0)
         self.tag = text_label(7, True)
+        self.warn = text_label(15, colour=YELLOW)  # a direct rival: bigger than the text (owner, 2026-10-13)
+        self.warn.setText("⚠")
         self.text = ElidedLabel()
         self.text.setFont(QFont(FONT, 10))
+        self.value = ValueBadge(34)  # the opponent's squad value, after its place (owner, 2026-10-13)
         self.left = text_label(10)
+        line = QHBoxLayout()
+        line.setSpacing(6)
+        line.addWidget(self.warn, 0, Qt.AlignVCenter)
+        line.addWidget(self.text, 0, Qt.AlignVCenter)
+        line.addWidget(self.value, 0, Qt.AlignVCenter)  # right after the opponent's place
+        line.addStretch(1)
         grid.addWidget(self.tag, 0, 0, 1, 2)
-        grid.addWidget(self.text, 1, 0, Qt.AlignBottom)
+        grid.addLayout(line, 1, 0)
         grid.addWidget(self.left, 1, 1, Qt.AlignRight | Qt.AlignBottom)
         grid.setColumnStretch(0, 1)
         self.colour = ""
@@ -866,7 +907,10 @@ class MatchStripe(QFrame):
             return
         self.tag.setText(tr(match["tag"]))
         self.tag.setStyleSheet("color: rgba(255,255,255,170); letter-spacing: 1px;")
-        self.text.setText(("⚠ " if match["danger"] else "") + tr(match["text"]))
+        self.warn.setVisible(bool(match["danger"]))
+        self.text.setText(tr(match["text"]))
+        self.value.show_value(match.get("value"))
+        self.text.setToolTip(tr(match.get("tip") or ""))
         self.left.setText(f"{tr('em')} <b style='font-size:15pt'>{match['left']}</b>" if match["left"] else "")
 
 
@@ -918,7 +962,9 @@ class ClubCard(QFrame):
         self.name.setFont(QFont(FONT, 16, QFont.Bold))
         self.sale = SaleArrow()
         self.money = text_label(15, True)
+        self.badge = ValueBadge()
         name_row.addWidget(self.name, 1)
+        name_row.addWidget(self.badge, 0, Qt.AlignVCenter)
         name_row.addWidget(self.sale, 0, Qt.AlignVCenter)
         name_row.addWidget(icon(FUNDS_FILE, 28), 0, Qt.AlignVCenter)
         name_row.addWidget(self.money, 0, Qt.AlignVCenter)
@@ -958,7 +1004,7 @@ class ClubCard(QFrame):
         club.addStretch(1)
         left = QWidget()
         left.setLayout(club)
-        left.setFixedWidth(345)
+        left.setFixedWidth(380)  # room for the squad value circle by the name (owner, 2026-10-13)
         row.addWidget(left)
         row.addWidget(divider())
 
@@ -1034,6 +1080,7 @@ class ClubCard(QFrame):
     def show_club(self, club: dict) -> None:
         self.name.setText(club["name"])
         self.header.setText(tr(club["header"]))
+        self.header.setToolTip("\n".join(tr(line) for line in (club.get("table_tip") or "").split("\n")))
         self.cup.setText(tr(f"🏆 {club['cup_line']}"))
         self.match.show_match(club["match"])
         self.alert.setVisible(bool(club["alert"]))
@@ -1064,8 +1111,10 @@ class ClubCard(QFrame):
         self.prep_title.setText(tr(club["prep_title"]))
         self._show_prep(club["prep"]["steps"])
         self._show_trainings(club["trainings"])
+        self.badge.show_value(club.get("value_badge"))
         self.tired.setVisible(bool(club["tired"]))
         self.tired.setText(tr(f"⚠ Cansados: {club['tired']}"))
+        self.tired.setToolTip("\n\n".join(tr(part) for part in (club.get("tired_tip") or "").split("\n\n")))
 
     def _show_prep(self, steps: list) -> None:
         self.prep.show_steps([(kind, tr(name) + (f" {tr(extra)}" if extra else ""), StepIcon.COLOURS[kind])

@@ -341,3 +341,35 @@ def test_errors_and_warnings_are_kept_for_the_window():
     loop._log("Loja: vídeo 1")
     kinds = [(kind, text[:9]) for _, kind, text in loop._notices]
     assert kinds == [("Erro", "Vídeos: e"), ("Aviso", "Clube A: ")]
+
+
+@pytest.mark.parametrize("mode", ["lines", "window"])
+def test_every_task_runs_on_every_pass_not_only_the_first(mode):
+    """A name reused inside the loop only breaks from the 2nd pass on (``done`` in 0.11.0, ``events`` in 0.11.7):
+    run several passes with every task faked and check each one ran every time, with no error logged."""
+    passes = 3
+    now = {"t": 1_000_000.0}
+    calls: dict[str, int] = {}
+
+    def counted(name, result=None):
+        def task(*args):
+            calls[name] = calls.get(name, 0) + 1
+            return result
+        return task
+
+    def sleep(seconds):  # the wait after a pass (in bits of 1 s with the window): stop after the last pass
+        now["t"] += seconds
+        if calls.get("train") == passes:
+            raise SystemExit(1)
+
+    tasks = {name: counted(name, (0, [])) for name in
+             ("stadium", "sponsors", "rewards", "prematch", "medical", "savings", "inventory")}
+    tasks.update({name: counted(name) for name in ("transfers", "matches", "events", "ads")})
+    extra = {"board": lambda payload: None} if mode == "window" else {"use_screen": False}
+    with pytest.raises(SystemExit):
+        run_active(claim=counted("claim", 0), train=counted("train", 0), finish_times=lambda: [], slots=lambda: [],
+                   snapshot=lambda: {"coins": 1, "clubs": [], "ads": {}},
+                   sleep=sleep, clock=lambda: now["t"], rng=FixedRng(), **tasks, **extra)
+    assert calls == {name: passes for name in ("claim", "train", *tasks)}
+    log = loop.LOG_FILE.read_text(encoding="utf-8")
+    assert "erro (" not in log and "Próxima verificação" in log

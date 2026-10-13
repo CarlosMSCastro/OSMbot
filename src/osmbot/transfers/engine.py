@@ -76,6 +76,12 @@ def sale_rows(market: list[dict], ratio: float = SALE_RATIO) -> dict[str, dict]:
     return rows
 
 
+def sale_options(market: list[dict], position: str, budget: int, count: int = 3) -> list[dict]:
+    """The "SALE" players of one position (ATA/MED/DEF/GR) the club can pay for, best rating first (THEORY.md 16)."""
+    rows = [r for r in sale_rows(market).values() if r["pos"] == position and r["preco"] <= budget]
+    return sorted(rows, key=lambda r: (-(r["rating"] or 0), r["preco"]))[:count]
+
+
 def sale_changes(before: dict | None, rows: dict[str, dict], now: float) -> tuple[dict, list[dict], list[dict]]:
     """(new "SALE" state, those that appeared, those that left) between two reads. Each keeps when it was first seen;
     the first read only learns what is there."""
