@@ -11,14 +11,19 @@
 | Formação | Meio-campo | Quando |
 |---|---|---|
 | **4-3-3 A** | Leva **MCO** (médio centro ofensivo) | **Sempre**, exceto contra um adversário claramente mais forte. Com os melhores planteis da liga, é quase sempre |
-| **5-3-2** | — | Adversário **mais forte por mais de 5 %** |
+| **5 defesas** (5-3-2, 5-2-3, 5-4-1) | O dono escolhe a que serve aos jogadores | Adversário **mais forte**, por qualquer margem (dono, 2026-10-14; antes: mais de 5 %) |
 | 4-3-3 B | Leva **MCD** (médio centro defensivo) | Já não é a regra para jogos parecidos. O dono pode experimentá-lo (por ex. fora de casa); o registo dos jogos diz depois se compensa |
 
 **Porquê (os números, `WORKLOG.md` 2026-10-13):** pontos por jogo com a mesma diferença de força e o mesmo local: o 4-3-3 A foi o melhor em casa e fora, sendo mais forte (2,78 casa / 2,25 fora) ou parecido (2,41 / 1,33). O 4-3-3 B fora sendo mais forte deu 2,75, mas em 12 jogos quase todos de um clube do dono muito mais forte: não chega para concluir. O 5-3-2 sendo mais fraco: 3 vitórias em 3 jogos, só jogos do dono (os outros clubes quase não o usam). A força pesa muito mais do que a formação; e o banco também (um suplente fraco a entrar por lesão custou um empate).
 
-Implementado em `choose_formation(my_rating, opp_rating, *, stronger_pct=5)`: adversário mais forte por mais de 5 % → 5-3-2; caso contrário → 4-3-3 A.
+Implementado em `choose_formation(my_rating, opp_rating, *, stronger_pct=0)`: adversário mais forte → 5 defesas; igual ou mais fraco → 4-3-3 A. O aviso do pré-jogo aceita qualquer formação de 5 defesas.
 
-- **[S] Os 5 %** foram medidos na **força do jogo** (`matchData`, só se sabe depois do jogo); antes do jogo aplica-se ao **rating da equipa** que o jogo mostra (com ratings perto de 107, ~5 pontos).
+**"Mais forte" conta os bónus do jogo e a casa (dono, 2026-10-14; `match_strength`):** força = rating da equipa × (1 + bónus %) × 1,05 para quem joga em casa.
+- **Bónus:** os de cada lado somam-se, como o jogo os mostra no círculo ao lado do emblema ("+3 %"). Do dono: sequência de logins (`matchBoost`) + estágio (`CampBoostPercentage`, 25 %) e treino secreto (`SecretBoostPercentage`, 2 %) quando marcados. Do adversário: só os logins, depois da análise e só com treinador humano (como o site); o estágio e o treino secreto dele não se veem.
+- **Casa:** +5 % para quem joga em casa; nada em campo neutro.
+- **[S] Os 5 % de casa** são a média medida nos 272 jogos (2026-10-13), com o campo de cada estádio lá dentro sem o separar. O campo dá "+X % home advantage" por nível (0/2/4/6 %; FC Van nível 2 = +4 %), mas o estádio dos outros não se lê (403). **Nota para mais tarde:** voltar a medir a vantagem de casa pelos registos dos jogos (`logs/*/jogos`), e ver se bate com os 5 % ou se depende do nível do campo (pelo menos nos jogos do dono, cujo campo se conhece).
+
+- *Histórico:* de 2026-10-13 a 2026-10-14 a margem era **mais de 5 %** (medida na força do jogo dos 272 jogos) e só o 5-3-2 contava. O dono mudou para "só mais forte" porque varia entre as táticas de 5 defesas consoante os jogadores (D-049).
 - *Histórico:* até 2026-10-13 a regra era: mais forte → 4-3-3 A; parecido (±2 pontos de rating) ou fora em jogos equilibrados → 4-3-3 B; adversário mais forte por mais de 2 → 5-3-2.
 - **Casa e fora:** o local do jogo continua a não entrar na regra. Os dados mostram que jogar em casa vale ~5 % de força (proposta ao dono, por decidir: tratar o adversário como 5 % mais forte fora de casa). **Pouco relevante na prática:** o dono faz as táticas manualmente (não é para automatizar, ver §6 do histórico/cont. 6).
 - **Rating da equipa (resolvido):** vem da **média do plantel de 0 a 100 em rating** que o jogo mostra **antes de cada jogo** (não é o preço). Ver §11. Na API: a média do `statAtt`/`statOvr`/`statDef` (o principal de cada posição) dos melhores por posição na formação (`DISCOVERY.md`, 2026-10-13; é a mesma conta do código do site, `getAverageLineupStrength`).
@@ -573,7 +578,7 @@ Na checklist do cartão, o passo fica **amarelo** quando o jogo o dá como feito
 
 **Onze (tática):**
 - **Desarme vs árbitro do próximo jogo**, pela tabela do §3 com o que o dono aceita.
-- **Formação** (§1): antes da análise só aceita **4-3-3 A**; depois da análise, aceita 5-3-2 se o adversário for mais forte por mais de 5 % (e então pede 5-3-2). O 4-3-3 B fica amarelo (o dono pode experimentá-lo na mesma).
+- **Formação** (§1): antes da análise só aceita **4-3-3 A**; depois da análise, com o adversário mais forte (qualquer margem, com bónus e casa, §1) pede **5 defesas** e aceita qualquer uma (5-3-2, 5-2-3, 5-4-1; D-049). O 4-3-3 B fica amarelo (o dono pode experimentá-lo na mesma).
 
 **Posições** (dono, 2026-10-14): o jogo conta quantos titulares estão no lugar da sua posição específica (9/11 = 2 fora). O hover diz **quem**: "Messi (ED) a jogar a PL". O mapa de cada lugar de cada formação vem do código do próprio jogo (`theory/lineup.places`). Nomes: GR, DE, DC, DD, MDC, MC, MO, ME, MD, EE, PL, ED.
 

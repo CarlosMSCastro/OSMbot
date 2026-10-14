@@ -109,6 +109,36 @@ def session_minutes(client, league_id: int) -> tuple[int, int]:
             values.get("TrainingUniversalSession") or NORMAL["TrainingUniversalSession"])
 
 
+def _boost(client, path: str, key: tuple) -> int:
+    """A manager's match boost from the daily logins (the game's "+3 %"), kept for a while; 0 when unreadable."""
+    def read():
+        status, answer = client.get(path)
+        return (answer.get("matchBoost") or 0) if status == 200 and isinstance(answer, dict) else 0
+    return _cached(key, FIXTURES_FOR, read)
+
+
+def _match_strengths(client, team: dict, league: str, teams: list[dict], week: int, upcoming: dict | None,
+                     strength: float | None, done: dict) -> tuple[float | None, float | None]:
+    """Both sides' strength for the formation rule (THEORY.md section 1): team rating, match boosts (own daily logins,
+    camp and secret training when marked; the opponent's daily logins once analysed and only with a human manager,
+    as the site shows them) and the home advantage (not on neutral ground)."""
+    from osmbot.theory.tactics import match_strength
+
+    if not strength or not upcoming or not upcoming.get("strength"):
+        return strength, None
+    settings = {g["name"]: g["value"] for g in _settings(client, team["leagueId"])}
+    own = _boost(client, "user/dailylogin", ("matchboost", "me"))
+    own += sum(settings.get(name) or 0 for kind, name in ((9, "CampBoostPercentage"), (8, "SecretBoostPercentage"))
+               if done.get(kind))
+    rival = upcoming["opponent_id"]
+    user = next((t.get("userId") for t in teams if t["id"] == rival), None)
+    theirs = _boost(client, f"user/dailylogin/{user}/matchboost", ("matchboost", user, week)) \
+        if user and done.get(ANALYSIS_STEP) else 0
+    home = not upcoming.get("neutral")
+    return (match_strength(strength, boost_pct=own, home=home and upcoming.get("side") == "H"),
+            match_strength(upcoming["strength"], boost_pct=theirs, home=home and upcoming.get("side") == "A"))
+
+
 def club_extra(client, team: dict, base: str, players: list[dict], slot, market: list[dict]) -> dict:
     from osmbot.game.dashboard import get_many
 
@@ -163,10 +193,11 @@ def club_extra(client, team: dict, base: str, players: list[dict], slot, market:
                                        lambda: team_rating(_list(client, f"{league}/teams/{rival}/players")))
     referees = _cached(("referees", league), FIXTURES_FOR, lambda: _list(client, f"{league}/referees"))
     strictness = next((r.get("strictness") for r in referees if upcoming and r["id"] == upcoming.get("referee_id")), None)
+    mine, theirs = _match_strengths(client, team, league, teams, week, upcoming, strength, done)
     status, current = got[6]  # the game ticks any 4 specialists; yellow when they are not the owner's rule (D-042)
     why = {SPECIALISTS_STEP: check(players, current if status == 200 and isinstance(current, dict) else None),
            BENCH_STEP: bench_warnings(players),  # THEORY.md section 21: yellow with the reason on hover
-           ELEVEN_STEP: tactic_warnings(tactic, strictness, strength, (upcoming or {}).get("strength")),
+           ELEVEN_STEP: tactic_warnings(tactic, strictness, mine, theirs),
            POSITIONS_STEP: position_warnings(players, tactic)}  # who is out of position, on the hover
     steps = [(name, False, RULE) if why.get(kind) and done_ else (name, done_, extra)
              for (kind, _), (name, done_, extra) in zip(CHECKLIST, steps)]

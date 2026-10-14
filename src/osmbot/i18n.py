@@ -142,8 +142,9 @@ PATTERNS = [(re.compile(pattern), replace) for pattern, replace in (
     (r"^Desarme (\w+) com árbitro (.+): devia ser (.+)$",
      lambda m: f"Tackling {_TACKLE.get(m[1], m[1])} with {_an(_REFEREE.get(m[2], m[2]))} referee: should be "
                + " or ".join(_TACKLE.get(w, w) for w in m[3].split(" ou "))),
-    (r"^Formação (.+?): devia ser (.+?)( \(adversário mais de 5 % mais forte\))?$",
-     lambda m: f"Formation {m[1]}: should be {m[2]}" + (" (opponent more than 5% stronger)" if m[3] else "")),
+    (r"^Formação (.+?): devia ser de 5 defesas \(adversário mais forte\)$",
+     lambda m: f"Formation {m[1]}: should have 5 defenders (stronger opponent)"),
+    (r"^Formação (.+?): devia ser (.+)$", lambda m: f"Formation {m[1]}: should be {m[2]}"),
     (r"^(Capitão|Penáltis|Livres|Cantos): (.+), pela regra (.+)$",
      lambda m: f"{_ROLE[m[1]]}: {m[2]}, your rule says {m[3]}"),
     # card

@@ -63,14 +63,17 @@ def test_the_tackling_must_match_the_next_referee():
     assert tactic_warnings({**tactic, "style": 2}, None, 108, None) == []  # referee unknown
 
 
-def test_the_formation_is_4_3_3_a_and_5_3_2_only_against_a_clearly_stronger_analysed_opponent():
+def test_the_formation_is_4_3_3_a_and_5_defenders_only_against_a_stronger_analysed_opponent():
     b = {"formation": 433, "formationDetail": "B", "style": 2}
     assert tactic_warnings(b, 3, 108, None) == ["Formação 4-3-3 B: devia ser 4-3-3 A"]
     five = {"formation": 532, "formationDetail": "A", "style": 2}
     assert tactic_warnings(five, 3, 100, None) == ["Formação 5-3-2: devia ser 4-3-3 A"]  # before the analysis
-    assert tactic_warnings(five, 3, 100, 110) == []
-    assert tactic_warnings({**five, "formation": 433}, 3, 100, 110) == [
-        "Formação 4-3-3 A: devia ser 5-3-2 (adversário mais de 5 % mais forte)"]
+    assert tactic_warnings(five, 3, 100, 101) == []
+    assert tactic_warnings({**five, "formation": 523}, 3, 100, 101) == []  # any 5 defenders (owner, 2026-10-14)
+    assert tactic_warnings({**five, "formation": 541}, 3, 100, 101) == []
+    assert tactic_warnings({**five, "formation": 523}, 3, 109, 107) == ["Formação 5-2-3: devia ser 4-3-3 A"]
+    assert tactic_warnings({**five, "formation": 433}, 3, 100, 101) == [
+        "Formação 4-3-3 A: devia ser de 5 defesas (adversário mais forte)"]
 
 
 def test_the_warnings_are_translated():
@@ -83,5 +86,8 @@ def test_the_warnings_are_translated():
             "Tackling Normal with an average referee: should be Aggressive"
         assert tr("Cantos: A, pela regra B") == "Corners: A, your rule says B"
         assert tr("Messi (ED) a jogar a PL") == "Messi (RW) playing as ST"
+        assert tr("Formação 4-3-3 A: devia ser de 5 defesas (adversário mais forte)") == \
+            "Formation 4-3-3 A: should have 5 defenders (stronger opponent)"
+        assert tr("Formação 5-2-3: devia ser 4-3-3 A") == "Formation 5-2-3: should be 4-3-3 A"
     finally:
         set_language("pt", save=False)

@@ -26,7 +26,8 @@ def next_match(matches: list[dict], teams: list[dict], team_id: int, week: int) 
     rank = theirs.get("ranking")
     danger = bool(mine and rank and abs(rank - mine) <= DIRECT_RIVAL)
     return {"opponent": theirs.get("name", "?"), "opponent_id": opponent, "rank": rank, "side": side, "danger": danger,
-            "cup": ahead[0]["matchType"] == CUP_MATCH, "referee_id": ahead[0].get("refereeId")}
+            "cup": ahead[0]["matchType"] == CUP_MATCH, "referee_id": ahead[0].get("refereeId"),
+            "neutral": bool(ahead[0].get("isPlayedOnNeutralGround"))}
 
 
 def cup_phase(rounds: list[dict], matches: list[dict], team_id: int, week: int) -> tuple[str, str]:

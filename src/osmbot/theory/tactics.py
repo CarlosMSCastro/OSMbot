@@ -79,14 +79,24 @@ class TacticSetup:
     defence: DefenceRole
 
 
-def choose_formation(my_rating: float, opp_rating: float, *, stronger_pct: float = 5) -> Formation:
-    """Pick the formation from the team-rating matchup (THEORY.md section 1, owner 2026-10-13).
+HOME_PCT = 5  # [S] home advantage measured in 272 matches (THEORY.md section 1); the pitch's own share is unknown
 
-    - opponent stronger by more than ``stronger_pct`` percent -> 5-3-2
-    - otherwise (similar or weaker opponent)                -> 4-3-3 A (attacking midfielder)
 
-    The 5 % comes from 272 matches of the owner's leagues, measured on the game's strength of each match; applied
-    here to the team rating shown before the match [S]. 4-3-3 B is no longer a default (the owner may still try it).
+def match_strength(rating: float, *, boost_pct: float = 0, home: bool = False, home_pct: float = HOME_PCT) -> float:
+    """The strength that counts for the formation (THEORY.md section 1, owner 2026-10-14): the team rating plus the
+    game's match boosts (daily logins, camp, secret training; added up as the game shows them), times the home
+    advantage for the home side."""
+    return rating * (1 + boost_pct / 100) * (1 + home_pct / 100 if home else 1)
+
+
+def choose_formation(my_rating: float, opp_rating: float, *, stronger_pct: float = 0) -> Formation:
+    """Pick the formation from the team-rating matchup (THEORY.md section 1, owner 2026-10-14).
+
+    - opponent stronger (by more than ``stronger_pct`` percent; 0 = any margin) -> 5 defenders (5-3-2, 5-2-3,
+      5-4-1: the owner picks the one that fits the players)
+    - otherwise (equal or weaker opponent)                                    -> 4-3-3 A (attacking midfielder)
+
+    4-3-3 B is no longer a default (the owner may still try it).
     """
     if stronger_pct < 0:
         raise ValueError("stronger_pct must be >= 0")

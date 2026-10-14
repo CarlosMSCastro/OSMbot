@@ -18,10 +18,9 @@ from osmbot.theory.tactics import (
     "mine, theirs, expected",
     [
         (100, 110, Formation.F532),  # opponent 10 % stronger
-        (100, 106, Formation.F532),  # just over 5 %
-        (100, 105, Formation.F433_A),  # exactly 5 % still plays 4-3-3
-        (100, 102, Formation.F433_A),  # similar
-        (100, 90, Formation.F433_A),  # weaker opponent
+        (100, 101, Formation.F532),  # stronger by any margin (owner, 2026-10-14)
+        (100, 100, Formation.F433_A),  # equal still plays 4-3-3
+        (109, 107, Formation.F433_A),  # weaker opponent
     ],
 )
 def test_choose_formation(mine, theirs, expected):
@@ -96,3 +95,12 @@ def test_risk_extreme_only_upgrades_a_lenient_referee():
     assert choose_tackling(Referee.LENIENT, risk_extreme=True) is Tackling.EXTREME
     assert choose_tackling(Referee.VERY_STRICT, risk_extreme=True) is Tackling.NORMAL
     assert choose_tackling(Referee.NORMAL, risk_extreme=True) is Tackling.AGGRESSIVE
+
+
+def test_match_strength_adds_the_boosts_and_the_home_advantage():
+    from osmbot.theory.tactics import match_strength
+
+    assert match_strength(100) == 100
+    assert match_strength(109, boost_pct=3) == pytest.approx(112.27)
+    assert match_strength(107, boost_pct=3, home=True) == pytest.approx(115.72, abs=0.01)  # FC Van away, 2026-10-14
+    assert match_strength(100, boost_pct=3 + 25, home=True, home_pct=0) == 128  # camp and logins add up

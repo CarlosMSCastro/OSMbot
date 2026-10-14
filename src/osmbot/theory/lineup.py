@@ -85,7 +85,7 @@ def formation_name(tactic: dict) -> str:
 
 def tactic_warnings(tactic: dict | None, strictness: int | None, mine: float | None, opponent: float | None) -> list[str]:
     """What is out of the rule in the tactics: the tackling for the next match's referee, and the formation
-    (4-3-3 A; 5-3-2 once the analysis shows an opponent stronger by more than 5 %). ``opponent``: None before the
+    (4-3-3 A; 5 defenders, any of them, once the analysis shows a stronger opponent). ``opponent``: None before the
     analysis."""
     if not tactic:
         return []
@@ -96,8 +96,9 @@ def tactic_warnings(tactic: dict | None, strictness: int | None, mine: float | N
         warnings.append(f"Desarme {TACKLING.get(style, style)} com árbitro {REFEREES[strictness]}: devia ser {wanted}")
     wanted_formation = choose_formation(mine, opponent) if mine and opponent else Formation.F433_A
     current = formation_name(tactic)
-    if current and current.replace(" ", "") != wanted_formation.value.replace(" ", "") and \
-            not (wanted_formation == Formation.F532 and current.startswith("5-3-2")):
-        reason = " (adversário mais de 5 % mais forte)" if wanted_formation == Formation.F532 else ""
-        warnings.append(f"Formação {current}: devia ser {wanted_formation.value}{reason}")
+    if wanted_formation == Formation.F532:  # any formation with 5 defenders: the owner picks the one that fits the players
+        if current and not current.startswith("5-"):
+            warnings.append(f"Formação {current}: devia ser de 5 defesas (adversário mais forte)")
+    elif current and current.replace(" ", "") != wanted_formation.value.replace(" ", ""):
+        warnings.append(f"Formação {current}: devia ser {wanted_formation.value}")
     return warnings

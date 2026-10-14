@@ -4,6 +4,14 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-PT/1.1.0/); 
 
 Este ficheiro é o **histórico de versões, para quem lê o repo**. O diário interno de cada sessão de trabalho está em [`docs/WORKLOG.md`](docs/WORKLOG.md).
 
+## [0.11.12] — 2026-10-14
+
+O aviso da formação passa a comparar as equipas como o jogo: com os bónus do círculo ("+3 %") e a vantagem de casa.
+
+### Alterado
+- **Formação contra um adversário mais forte:** qualquer formação de 5 defesas (5-3-2, 5-2-3, 5-4-1) conta como certa, e basta o adversário ser mais forte (antes: só o 5-3-2, e só com mais de 5 %). O aviso diz "devia ser de 5 defesas (adversário mais forte)".
+- **"Mais forte" conta os bónus do jogo e a casa:** a força de cada lado é o rating da equipa com os bónus que o jogo mostra no círculo ao lado do emblema (sequência de logins dos dois lados; o estágio e o treino secreto do dono, quando marcados) e +5 % para quem joga em casa (nada em campo neutro). O bónus do adversário só conta depois da análise e com treinador humano, como no site.
+
 ## [0.11.11] — 2026-10-14
 
 O PC não adormece com o bot ligado, os treinos passam à frente dos vídeos da loja, e o treino secreto e o estágio aparecem no pré-jogo.
