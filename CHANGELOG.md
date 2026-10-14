@@ -14,6 +14,9 @@ Hover que diz quem está fora de posição, aviso do banco pela posição espec�
 ### Alterado
 - **Aviso "suplente melhor que titular"** só compara a mesma posição específica (um PL só com o PL, um extremo só com os extremos), porque o jogo diz que os jogadores rendem mais na sua posição. A ordem do banco continua pela posição geral, como o jogo escolhe numa lesão.
 
+### Corrigido
+- **Vídeos da loja com erro** ("Executable doesn't exist … firefox-1555") no bot construído hoje: a pasta levava um Playwright mais novo do que o Firefox copiado. A construção passa a usar o mesmo Playwright do ambiente de desenvolvimento e recusa construir se o Firefox não for o que ele pede.
+
 ## [0.11.9] — 2026-10-13
 
 Avisos do pré-jogo, o registo dos jogos como o jogo os mostra, a regra da formação revista com 272 jogos e hovers novos.

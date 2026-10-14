@@ -12,6 +12,7 @@ and internet on the first run (to fetch the embeddable Python).
 from __future__ import annotations
 
 import argparse
+import json
 import os
 import shutil
 import subprocess
@@ -167,6 +168,20 @@ def playwright_firefox() -> Path:
     return found[-1]
 
 
+def playwright_version() -> str:
+    """The Playwright of this venv: the portable bot gets the same one, so the Firefox copied from this PC is the one
+    it looks for (an unpinned install took a newer Playwright that wanted another Firefox)."""
+    from importlib.metadata import version
+
+    return version("playwright")
+
+
+def firefox_revision(site_packages: Path) -> str:
+    """The Firefox build the packaged Playwright launches (its browsers.json)."""
+    data = json.loads((site_packages / "playwright" / "driver" / "package" / "browsers.json").read_text(encoding="utf-8"))
+    return next(b["revision"] for b in data["browsers"] if b["name"] == "firefox")
+
+
 ICON = ROOT / "tools" / "assets" / "osmbot.ico"  # osmbot's own icon (tools/make_icon.py); --icone PATH overrides it for a personal build
 ISCC_PATHS = (
     Path(os.environ.get("LOCALAPPDATA", "")) / "Programs" / "Inno Setup 6" / "ISCC.exe",
@@ -228,7 +243,7 @@ def build(make_zip: bool, make_installer: bool = False, icon: Path = ICON) -> No
 
     print("2/5 Dependencias")
     run(sys.executable, "-m", "pip", "install", "--quiet", "--target", str(OUT / "Lib" / "site-packages"),
-        "playwright", "certifi", "PySide6-Essentials")
+        f"playwright=={playwright_version()}", "certifi", "PySide6-Essentials")
     trim_pyside(OUT / "Lib" / "site-packages")
 
     print("3/5 Codigo do osmbot")
@@ -237,6 +252,10 @@ def build(make_zip: bool, make_installer: bool = False, icon: Path = ICON) -> No
 
     print("4/5 Firefox do Playwright (demora)")
     firefox = playwright_firefox()
+    wanted = firefox_revision(OUT / "Lib" / "site-packages")
+    if firefox.name != f"firefox-{wanted}":  # 0.11.10: a newer Playwright wanted firefox-1555, the copy was 1543
+        raise SystemExit(f"O Playwright da pasta quer firefox-{wanted}, mas este PC tem {firefox.name}. "
+                         "Corre: python -m playwright install firefox")
     shutil.copytree(firefox, OUT / "browsers" / firefox.name)
 
     print("5/5 Leia-me e icone")

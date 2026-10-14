@@ -238,7 +238,7 @@ Bate com a medição do dono (THEORY §6: 10 amigáveis numa jornada = ~1,5–2 
 | **24–25** | **Intense Friendlies** | mais progressão em cada amigável |
 | 28 | Top Facilities | estádio 4 h; treinos 4 h (universal 3 h) |
 | **31** | **Extreme Training** | progressão extrema (ao recolher) em cada treino e amigável; treinos 3 h (universal 2 h) |
-- **[V/H] (2026-10-14) Hora de início dos eventos:** às 00:48 (hora de Portugal) do dia do Super Staff, `gamesettings` ainda tinha os tempos normais (analista 60, médico 480, treino 480) e `eventnotifications` dava 404. No Transfer Madness de 10/10, a 1.ª liga não teve vendas de utilizadores entre as 00:00 e as 13:00; a 1.ª leva foi às 13h. **[H]** Os eventos começam durante o dia, não à meia-noite; a hora exata está por medir.
+- **[V/H] (2026-10-14) Hora de início dos eventos:** às 00:48 (hora de Portugal) do dia do Super Staff, `gamesettings` ainda tinha os tempos normais (analista 60, médico 480, treino 480) e `eventnotifications` dava 404. No Transfer Madness de 10/10, a 1.ª liga não teve vendas de utilizadores entre as 00:00 e as 13:00; a 1.ª leva foi às 13h. **[V]** Mas os **slots de venda passaram de 4 para 6 entre as 05:53 e as 06:23** de 10/10 (o bot estava ligado desde as 00:27 e só a passagem das 06:23 avisou "4/6"): o evento começou por volta das **06:00 de Portugal** (07:00 na Holanda); as vendas às 13h eram só a 1.ª passagem do motor nesse dia. **[H]** Todos os eventos começam a essa hora; confirmar com o Super Staff de 14/10 (tempos em `gamesettings`).
 
 **[H]** "ao recolher" sugere que a progressão do amigável conta quando se recolhe, como nos treinos; por verificar.
 
