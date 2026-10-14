@@ -21,7 +21,7 @@ Implementado em `choose_formation(my_rating, opp_rating, *, stronger_pct=5)`: ad
 - **[S] Os 5 %** foram medidos na **força do jogo** (`matchData`, só se sabe depois do jogo); antes do jogo aplica-se ao **rating da equipa** que o jogo mostra (com ratings perto de 107, ~5 pontos).
 - *Histórico:* até 2026-10-13 a regra era: mais forte → 4-3-3 A; parecido (±2 pontos de rating) ou fora em jogos equilibrados → 4-3-3 B; adversário mais forte por mais de 2 → 5-3-2.
 - **Casa e fora:** o local do jogo continua a não entrar na regra. Os dados mostram que jogar em casa vale ~5 % de força (proposta ao dono, por decidir: tratar o adversário como 5 % mais forte fora de casa). **Pouco relevante na prática:** o dono faz as táticas manualmente (não é para automatizar, ver §6 do histórico/cont. 6).
-- **Rating da equipa (resolvido):** vem da **média do plantel de 0 a 100 em rating** que o jogo mostra **antes de cada jogo** (não é o preço). Ver §11. **[?]** O campo na API só se sabe observando o jogo.
+- **Rating da equipa (resolvido):** vem da **média do plantel de 0 a 100 em rating** que o jogo mostra **antes de cada jogo** (não é o preço). Ver §11. Na API: a média do `statAtt`/`statOvr`/`statDef` (o principal de cada posição) dos melhores por posição na formação (`DISCOVERY.md`, 2026-10-13; é a mesma conta do código do site, `getAverageLineupStrength`).
 
 **Confronto direto (dono, 2026-10-08):** um jogo contra um clube que está **a 1 ou 2 lugares** do do dono na classificação, acima ou abaixo. São os jogos que o dono gosta de ver ele próprio nas últimas horas (§6). O quadro marca-os com um símbolo de perigo (D-026).
 
@@ -83,8 +83,8 @@ Desarme: *Cuidadoso · Normal · Agressivo · Extremo*.
 | **Livres** | Qualquer titular com mais ataque |
 | **Cantos** | **Médio** com mais ataque |
 
-- "Ataque" = estatística de ataque do jogador (`statAtt` no API, segundo o prior art) **[?] confirmar o nome do campo quando observarmos o jogo**.
-- "Rating" (no capitão e nos desempates) = *stat principal da posição* **[S]**: avançado→ataque, médio→overall, defesa e guarda-redes→defesa. Segue o prior art; confirmar.
+- "Ataque" = estatística de ataque do jogador (`statAtt` no API; confirmado: é o número de ataque do ecrã do jogo, `DISCOVERY.md`).
+- "Rating" (no capitão e nos desempates) = *stat principal da posição*: avançado→ataque, médio→overall, defesa e guarda-redes→defesa. **Confirmado** (2026-10-14): é o `statMain` que o próprio jogo usa na força da equipa, e a força calculada assim bate com a do jogo em 3 clubes.
 - **[S]** Empates que a teoria não cobre resolvem-se por maior rating e depois menor id de jogador, para o resultado ser sempre o mesmo.
 - Sem titular elegível (ex.: sem avançado) → o código devolve `None` e o chamador decide.
 - **O mesmo jogador pode ter mais de um papel** (dono, 2026-10-12).
@@ -95,7 +95,7 @@ Desarme: *Cuidadoso · Normal · Agressivo · Extremo*.
 Como a política de transferências **roda o plantel inteiro** várias vezes, o dono treina quase sempre o **melhor jogador de cada posição**, exceto se tiver **30+ anos**.
 
 Implementado em `plan_training` / `pick_trainee`:
-- Melhor = maior *rating* da posição **[S]** (ver acima). Treinadores 1–4 são por posição (ATT, MID, DEF, GK).
+- Melhor = maior *rating* da posição (ver §4, confirmado). Treinadores 1–4 são por posição (ATT, MID, DEF, GK).
 - Exclui (confirmado pelo dono): lesionados, já em treino, **quem está na lista de transferências (nunca treinar)**, e **idade ≥ 30**: nesse caso não treina o melhor, treina outros.
 - Se o melhor tem 30+, usa-se o melhor dos restantes (confirmado).
 - **Exceção (dono, 2026-10-04): guarda-redes treinam sempre o melhor, independentemente da idade.** O limite de 30+ aplica-se só a jogadores de campo.
@@ -516,8 +516,8 @@ Há **3 componentes** a melhorar, cada um com **níveis 0, 1, 2 e 3**:
 
 *Mais respostas do dono, 2026-10-13:*
 
-- **Objetivo de longo prazo: domínio mundial.** Conquistas em todos os países, pela **ordem alfabética** dos países. **[?]** Ainda por saber se o jogo pede 1 conquista por país ou as 3 (campeonato, taça e objetivo da época). Um país só fica "feito" quando lá não falta nada; por exemplo, um país onde só faltava a taça foi repetido por isso.
-- **Que clube escolher** ao criar a liga: em regra o de **maior valor e mais jogadores**, sobretudo nas ligas que o dono não acompanha. Pode escolher outro **muito perto do melhor** por gosto pessoal. Não é obrigatoriamente o de melhor onze.
+- **Objetivo de longo prazo: domínio mundial.** Conquistas em todos os países, pela **ordem alfabética** dos países. **O jogo conta o país com qualquer uma das 3** (campeonato, taça ou objetivo da época, numa liga "Major"; verificado no código do site em 2026-10-14, `DISCOVERY.md`). **[?]** Falta o dono dizer se a regra dele abaixo ("só feito quando não falta nada") se mantém, sabendo isto. Um país só fica "feito" quando lá não falta nada; por exemplo, um país onde só faltava a taça foi repetido por isso.
+- **Que clube escolher** ao criar a liga: em regra o de **maior valor e mais jogadores**, sobretudo nas ligas que o dono não acompanha. Pode escolher outro **muito perto do melhor** por gosto pessoal. Não é obrigatoriamente o de melhor onze. *Em observação (dono, 2026-10-14: "vamos indo vamos vendo"; regra igual por agora):* o objetivo da época não segue a força do plantel (`DISCOVERY.md`) e o país conta com o objetivo; um clube com mais folga entre objetivo e força pode ser mais seguro do que o mais forte (o mais forte pode ter objetivo 1.º).
 - **Estágios: só em momentos cruciais**, como eliminatórias da taça contra adversários difíceis. Não há calendário fixo.
 - **Quando criar a liga seguinte:** quando apetecer ao dono, sem regra. Sinal de que pode valer a pena: o campeonato atual a acalmar (equipas desistem, mais jogos contra bots, plantéis mais caros, transferências mais lentas).
 - **Mercado no arranque:** vender os piores até ficar só com o necessário (**onze + banco**); depois, rodar como se faz agora (§7).
@@ -565,10 +565,13 @@ Na checklist do cartão, o passo fica **amarelo** quando o jogo o dá como feito
 **Banco** (o jogo põe a entrar, numa lesão, o 1.º suplente da posição na ordem do banco):
 - **Ordem dentro da posição:** um suplente com rating pior à frente de um melhor da mesma posição (ex.: "Akanni 51 entra antes de Ndicka 107"). Avisa **sempre**, mesmo que o melhor esteja cansado: na lesão entra quem está à frente.
 - **Suplente melhor do que um titular** da mesma posição (ex.: "Marmoush 110 no banco, Diomande 102 a jogar"). **Não avisa se o suplente estiver cansado** (condição a amarelo, §16): está no banco de propósito.
-- **[S]** Rating = o principal da posição (ATA ataque, MED overall, DEF e GR defesa). Lesionados e castigados não contam.
+  - **Só contra titulares da mesma posição específica** (dono, 2026-10-14): um PL só com o PL, um extremo só com os extremos. O jogo diz que "os jogadores rendem mais na sua posição específica" (o ponto "Posiciona os jogadores" da checklist fica por fazer com um jogador fora dela), embora as barras de força do onze não mudem com a troca. A **ordem** do banco continua pela posição geral (é assim que o jogo escolhe numa lesão).
+- Rating = o principal da posição (ATA ataque, MED overall, DEF e GR defesa; confirmado, §4). Lesionados e castigados não contam.
 
 **Onze (tática):**
 - **Desarme vs árbitro do próximo jogo**, pela tabela do §3 com o que o dono aceita.
 - **Formação** (§1): antes da análise só aceita **4-3-3 A**; depois da análise, aceita 5-3-2 se o adversário for mais forte por mais de 5 % (e então pede 5-3-2). O 4-3-3 B fica amarelo (o dono pode experimentá-lo na mesma).
+
+**Posições** (dono, 2026-10-14): o jogo conta quantos titulares estão no lugar da sua posição específica (9/11 = 2 fora). O hover diz **quem**: "Messi (ED) a jogar a PL". O mapa de cada lugar de cada formação vem do código do próprio jogo (`theory/lineup.places`). Nomes: GR, DE, DC, DD, MDC, MC, MO, ME, MD, EE, PL, ED.
 
 **Especialistas:** como já estava (D-042), amarelo fora da regra (§4); o hover passa a dizer que papel está errado e quem a regra pede.

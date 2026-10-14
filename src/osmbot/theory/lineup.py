@@ -10,6 +10,21 @@ ELEVEN = range(1, 12)
 TACKLING = {0: "Cuidadoso", 1: "Normal", 2: "Agressivo", 3: "Extremo"}  # the tactics' `style` (game's TacticStyleOfPlay)
 REFEREES = {1: "muito rigoroso", 2: "rigoroso", 3: "normal", 4: "brando", 5: "muito brando"}  # `strictness`
 ACCEPTED = {1: {1}, 2: {2}, 3: {2}, 4: {2, 3}, 5: {3}}  # strictness -> tackling the owner accepts (sections 3, 21)
+# `specificPosition` (game's PlayerSpecificPosition: 1 CAM, 2 CM, 3 CB, 4 ST, 5 CDM, 6 GK, 7 LM, 8 LF, 9 LB, 10 RM,
+# 11 RF, 12 RB) as the owner says them
+SPECIFIC = {1: "MO", 2: "MC", 3: "DC", 4: "PL", 5: "MDC", 6: "GR", 7: "ME", 8: "EE", 9: "DE", 10: "MD", 11: "ED", 12: "DD"}
+# The specific position of each place of each formation, from the game's own lineup page (lineup.js): defenders from
+# place 2, then midfielders, then attackers; "A"/"B" is the formation's detail
+_DEF = {3: [3, 3, 3], 4: [9, 3, 3, 12], 5: [9, 3, 3, 3, 12], 6: [9, 3, 3, 3, 12, 3]}
+_MID = {"2A": [2, 2], "2B": [5, 5], "3A": [2, 1, 2], "3B": [2, 5, 2], "3C": [1, 2, 1], "3D": [2, 2, 2], "3E": [1, 2, 1],
+        "4A": [7, 2, 2, 10], "4B": [2, 5, 2, 1], "5A": [7, 2, 5, 2, 10], "5B": [7, 2, 1, 2, 10], "5C": [7, 1, 5, 1, 10],
+        "5D": [7, 5, 2, 5, 10]}
+_ATT = {"1A": [4], "2A": [4, 4], "2B": [4, 4], "3A": [8, 4, 11], "3B": [8, 4, 11], "4A": [8, 4, 4, 11],
+        "4B": [8, 4, 11, 4], "5A": [8, 4, 4, 11, 4], "5B": [4, 8, 4, 4, 11]}
+_FORMATIONS = {325: ("2B", "2B", "5A", "5B"), 334: ("3D", "3B", "4A", "4B"), 343: ("4A", "4B", "3A", "3B"),
+               352: ("5C", "5D", "2A", "2A"), 433: ("3A", "3B", "3B", "3B"), 451: ("5A", "5B", "1A", "1A"),
+               442: ("4A", "4B", "2A", "2A"), 424: ("2A", "2B", "4A", "4B"), 523: ("2A", "2B", "3B", "3A"),
+               532: ("3A", "3E", "2A", "2B"), 541: ("4A", "4B", "1A", "1A"), 631: ("3A", "3C", "1A", "1A")}
 
 
 def rating(player: dict) -> int:
@@ -18,7 +33,8 @@ def rating(player: dict) -> int:
 
 def bench_warnings(players: list[dict]) -> list[str]:
     """What is out of the rule on the bench: a worse substitute ahead of a better one of the same position (always:
-    on an injury the first one comes on), and a fit substitute better than a starter of his position."""
+    on an injury the first one comes on), and a fit substitute better than a starter of his specific position (the game:
+    players do better in their specific position, so a striker is not compared with a winger)."""
     available = [p for p in players if not p.get("unavailable")]
     starters = [p for p in available if p.get("lineup") in ELEVEN]
     bench = sorted((p for p in available if (p.get("lineup") or 0) > 11), key=lambda p: p["lineup"])
@@ -30,12 +46,34 @@ def bench_warnings(players: list[dict]) -> list[str]:
             if better and rating(better) > rating(ahead):
                 warnings.append(f"{ahead['name']} {rating(ahead)} entra antes de {better['name']} {rating(better)}")
                 break
-        weakest = min((p for p in starters if p.get("position") == position), key=rating, default=None)
         fit = [p for p in subs if (p.get("fitness") or 0) >= YELLOW_BELOW]
-        best = max(fit, key=rating, default=None)
-        if weakest and best and rating(best) > rating(weakest):
-            warnings.append(f"{best['name']} {rating(best)} no banco, {weakest['name']} {rating(weakest)} a jogar")
+        for specific in dict.fromkeys(p.get("specificPosition") for p in fit):  # a winger only against wingers
+            best = max((p for p in fit if p.get("specificPosition") == specific), key=rating)
+            weakest = min((p for p in starters if p.get("position") == position
+                           and p.get("specificPosition") == specific), key=rating, default=None)
+            if weakest and rating(best) > rating(weakest):
+                warnings.append(f"{best['name']} {rating(best)} no banco, {weakest['name']} {rating(weakest)} a jogar")
     return warnings
+
+
+def places(tactic: dict | None) -> dict[int, int]:
+    """Place in the eleven (1-11) -> its specific position, for the tactics' formation; {} when unknown."""
+    formation = (tactic or {}).get("formation")
+    if formation not in _FORMATIONS:
+        return {}
+    mid_a, mid_b, att_a, att_b = _FORMATIONS[formation]
+    a = (tactic.get("formationDetail") or "A") == "A"
+    codes = [6] + _DEF[formation // 100] + _MID[mid_a if a else mid_b] + _ATT[att_a if a else att_b]
+    return dict(enumerate(codes, start=1))
+
+
+def position_warnings(players: list[dict], tactic: dict | None) -> list[str]:
+    """Starters out of their specific position, as the game counts its step "Position your players" (the game:
+    players do better in their specific position; THEORY.md section 21)."""
+    spots = places(tactic)
+    return [f"{p['name']} ({SPECIFIC.get(p.get('specificPosition'), '?')}) a jogar a {SPECIFIC[spots[p['lineup']]]}"
+            for p in sorted(players, key=lambda p: p.get("lineup") or 0)
+            if p.get("lineup") in spots and p.get("specificPosition") and p["specificPosition"] != spots[p["lineup"]]]
 
 
 def formation_name(tactic: dict) -> str:

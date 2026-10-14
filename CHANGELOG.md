@@ -4,6 +4,16 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-PT/1.1.0/); 
 
 Este ficheiro é o **histórico de versões, para quem lê o repo**. O diário interno de cada sessão de trabalho está em [`docs/WORKLOG.md`](docs/WORKLOG.md).
 
+## [0.11.10] — 2026-10-14
+
+Hover que diz quem está fora de posição, aviso do banco pela posição específica e o domínio mundial esclarecido.
+
+### Adicionado
+- **Hover nas "Posições":** diz quem está fora da sua posição específica ("Messi (ED) a jogar a PL"), pelo mapa de lugares de cada formação do próprio jogo. O ponto conta como o jogo: 9/11 = 2 fora.
+
+### Alterado
+- **Aviso "suplente melhor que titular"** só compara a mesma posição específica (um PL só com o PL, um extremo só com os extremos), porque o jogo diz que os jogadores rendem mais na sua posição. A ordem do banco continua pela posição geral, como o jogo escolhe numa lesão.
+
 ## [0.11.9] — 2026-10-13
 
 Avisos do pré-jogo, o registo dos jogos como o jogo os mostra, a regra da formação revista com 272 jogos e hovers novos.

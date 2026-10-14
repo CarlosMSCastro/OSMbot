@@ -12,7 +12,7 @@ import time
 from osmbot.board.info import cup_phase, league_summary, next_match, squad_value, team_rating
 from osmbot.game import market as market_watch, sales
 from osmbot.game.specialists import check
-from osmbot.theory.lineup import bench_warnings, tactic_warnings
+from osmbot.theory.lineup import bench_warnings, position_warnings, tactic_warnings
 from osmbot.medical.policy import open_cases
 from osmbot.prematch.policy import friendlies_played
 
@@ -20,7 +20,7 @@ FIXTURES_FOR = 10 * 60.0
 SPECIALISTS_STEP = 4  # matchpreparation step "Select specialists"
 RULE = "fora da regra"  # a step the game ticks but the owner's rule does not
 VALUES_FOR = 3600.0
-BENCH_STEP, ELEVEN_STEP = 1, 0
+BENCH_STEP, ELEVEN_STEP, POSITIONS_STEP = 1, 0, 2
 CHECKLIST = [(7, "Amigável"), (5, "Análise"), (0, "Onze"), (2, "Posições"), (3, "Em forma"), (1, "Banco"),
              (4, "Especialistas"), (6, "4 treinos")]  # matchpreparation step types, in the card's order
 ANALYSIS_STEP = 5
@@ -154,7 +154,8 @@ def club_extra(client, team: dict, base: str, players: list[dict], slot, market:
     status, current = got[6]  # the game ticks any 4 specialists; yellow when they are not the owner's rule (D-042)
     why = {SPECIALISTS_STEP: check(players, current if status == 200 and isinstance(current, dict) else None),
            BENCH_STEP: bench_warnings(players),  # THEORY.md section 21: yellow with the reason on hover
-           ELEVEN_STEP: tactic_warnings(tactic, strictness, strength, (upcoming or {}).get("strength"))}
+           ELEVEN_STEP: tactic_warnings(tactic, strictness, strength, (upcoming or {}).get("strength")),
+           POSITIONS_STEP: position_warnings(players, tactic)}  # who is out of position, on the hover
     steps = [(name, False, RULE) if why.get(kind) and done_ else (name, done_, extra)
              for (kind, _), (name, done_, extra) in zip(CHECKLIST, steps)]
     reasons = {name: why[kind] for (kind, _), (name, _, _) in zip(CHECKLIST, steps) if why.get(kind)}

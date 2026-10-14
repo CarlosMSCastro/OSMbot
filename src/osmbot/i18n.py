@@ -124,11 +124,15 @@ def _an(word: str) -> str:
     return ("an " if word[:1] in "aeiou" else "a ") + word
 
 
+_SPECIFIC = {"MO": "CAM", "MC": "CM", "DC": "CB", "PL": "ST", "MDC": "CDM", "GR": "GK", "ME": "LM", "EE": "LW",
+             "DE": "LB", "MD": "RM", "ED": "RW", "DD": "RB"}
 _ROLE = {"Capitão": "Captain", "Penáltis": "Penalties", "Livres": "Free kicks", "Cantos": "Corners"}
 PATTERNS = [(re.compile(pattern), replace) for pattern, replace in (
     # pre-match warnings (THEORY.md section 21)
     (r"^(.+) (\d+) entra antes de (.+) (\d+)$", lambda m: f"{m[1]} {m[2]} comes on before {m[3]} {m[4]}"),
     (r"^(.+) (\d+) no banco, (.+) (\d+) a jogar$", lambda m: f"{m[1]} {m[2]} on the bench, {m[3]} {m[4]} playing"),
+    (r"^(.+) \((\w+|\?)\) a jogar a (\w+)$",
+     lambda m: f"{m[1]} ({_SPECIFIC.get(m[2], m[2])}) playing as {_SPECIFIC.get(m[3], m[3])}"),
     (r"^Desarme (\w+) com árbitro (.+): devia ser (.+)$",
      lambda m: f"Tackling {_TACKLE.get(m[1], m[1])} with {_an(_REFEREE.get(m[2], m[2]))} referee: should be "
                + " or ".join(_TACKLE.get(w, w) for w in m[3].split(" ou "))),

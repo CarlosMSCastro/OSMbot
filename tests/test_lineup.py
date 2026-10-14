@@ -1,4 +1,4 @@
-from osmbot.theory.lineup import bench_warnings, formation_name, tactic_warnings
+from osmbot.theory.lineup import bench_warnings, formation_name, places, position_warnings, tactic_warnings
 
 
 def p(name, position, lineup, stat, fitness=100, unavailable=0):
@@ -20,9 +20,33 @@ def test_a_fit_substitute_better_than_a_starter_is_warned_but_not_a_tired_one():
     assert bench_warnings(ELEVEN + [p("Marmoush", 1, 15, 110, fitness=79)]) == []
 
 
+def test_a_substitute_is_only_compared_with_starters_of_his_specific_position():
+    eleven = [{**x, "specificPosition": {"Zirkzee": 4}.get(x["name"], 11)} for x in ELEVEN]
+    assert bench_warnings(eleven + [{**p("Dembélé", 1, 15, 104), "specificPosition": 4}]) == []
+    assert bench_warnings(eleven + [{**p("Dembélé", 1, 15, 106), "specificPosition": 4}]) == ["Dembélé 106 no banco, Zirkzee 105 a jogar"]
+
+
 def test_injured_players_and_a_good_bench_give_no_warning():
     players = ELEVEN + [p("Ndicka", 3, 13, 100), p("Akanni", 3, 16, 51), p("Hurt", 3, 14, 120, unavailable=2)]
     assert bench_warnings(players) == []
+
+
+def test_the_places_of_each_formation_follow_the_game():
+    assert places({"formation": 433, "formationDetail": "A"}) == {1: 6, 2: 9, 3: 3, 4: 3, 5: 12, 6: 2, 7: 1, 8: 2,
+                                                                  9: 8, 10: 4, 11: 11}
+    assert [places({"formation": 433, "formationDetail": "B"})[i] for i in (6, 7, 8)] == [2, 5, 2]  # MDC in the middle
+    assert [places({"formation": 532, "formationDetail": "A"})[i] for i in range(2, 12)] == [9, 3, 3, 3, 12, 2, 1, 2, 4, 4]
+    assert places({"formation": 999}) == places(None) == {}
+
+
+def test_starters_out_of_their_specific_position_are_warned():
+    # the Betis eleven of 2026-10-14: the game's step "Position your players" said 9/11
+    players = [{"name": n, "lineup": i, "specificPosition": s} for i, (n, s) in enumerate(
+        [("GR", 6), ("DE", 9), ("DC1", 3), ("DC2", 3), ("DD", 12), ("MC1", 2), ("MO", 1), ("MC2", 2), ("Díaz", 8),
+         ("Messi", 11), ("Haaland", 4)], start=1)] + [{"name": "Banco", "lineup": 14, "specificPosition": 5}]
+    assert position_warnings(players, {"formation": 433, "formationDetail": "A"}) == \
+        ["Messi (ED) a jogar a PL", "Haaland (PL) a jogar a ED"]
+    assert position_warnings(players, None) == []
 
 
 def test_formation_names():
@@ -58,5 +82,6 @@ def test_the_warnings_are_translated():
         assert tr("Desarme Normal com árbitro normal: devia ser Agressivo") == \
             "Tackling Normal with an average referee: should be Aggressive"
         assert tr("Cantos: A, pela regra B") == "Corners: A, your rule says B"
+        assert tr("Messi (ED) a jogar a PL") == "Messi (RW) playing as ST"
     finally:
         set_language("pt", save=False)
