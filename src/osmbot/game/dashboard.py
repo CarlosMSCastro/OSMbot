@@ -21,7 +21,7 @@ from osmbot.game.ads import SHOP_ACTION, TRAINING_ACTION, VIDEO_SAVES, money_sta
 from osmbot.game.slots import SlotStatus, count_listed
 from osmbot.inventory.policy import UNIVERSAL_TRAINER, active_until
 from osmbot.theory.fitness import YELLOW_BELOW, tired_starters, uncovered
-from osmbot.transfers.engine import sale_options
+from osmbot.transfers.engine import sale_options, sale_picks
 
 POSITIONS = {1: "ATA", 2: "MED", 3: "DEF", 4: "GR"}
 NEXT_MATCH_TIMER = 14
@@ -173,6 +173,16 @@ def collect(client) -> dict:
             club["extra_error"] = f"{type(error).__name__}: {error}"
         budget = funds["balance"] + (funds["savings"] or 0)  # a tired starter with no cover: "SALE" options (THEORY.md 16)
         club["cover"] = {pos: sale_options(market, pos, budget) for pos in uncovered(players, club["tired"])}
+        try:  # the "SALE" worth a look: to strengthen the eleven or to sell again (THEORY.md 7.7)
+            from osmbot.game.clubinfo import league_sells_at_max
+
+            free = max(0, slot.maximum - slot.listed) if slot else 0
+            club["sale"] = {"picks": sale_picks(market, players, budget, free),
+                            "certo": league_sells_at_max(client, team["leagueId"])}
+        except OSError:
+            raise
+        except Exception:
+            club["sale"] = None
         return club
 
     from concurrent.futures import ThreadPoolExecutor

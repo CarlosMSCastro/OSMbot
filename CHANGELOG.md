@@ -4,6 +4,13 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-PT/1.1.0/); 
 
 Este ficheiro é o **histórico de versões, para quem lê o repo**. O diário interno de cada sessão de trabalho está em [`docs/WORKLOG.md`](docs/WORKLOG.md).
 
+## [0.11.14] — 2026-10-14
+
+Os "SALE" que valem a pena, no cartão de cada clube.
+
+### Adicionado
+- **SALE no cartão do clube:** uma linha verde com o melhor "SALE" que cabe no dinheiro (conta + poupança) e o lucro estimado se o revenderes ao máximo; ao passar o rato, os 3 melhores, com o preço, quanto é do valor e as marcas **reforço** (melhor do que o titular mais fraco da posição), **pechincha** (até 1,1× o valor) ou só negócio. Os negócios só aparecem com uma vaga livre na lista de vendas; os reforços aparecem sempre. O lucro leva "?" quando a liga não vendeu nada ao máximo nos últimos 3 dias.
+
 ## [0.11.13] — 2026-10-14
 
 Médico, advogado e analista com o tempo dos eventos, e o 4-4-2 B aceite quando faltam extremos em forma.

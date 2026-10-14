@@ -116,6 +116,9 @@ def test_the_warnings_are_translated():
         assert tr("4-4-2 B aceite: sem EE em forma (Doku 75 %); sem ED no plantel") == \
             "4-4-2 B accepted: no fit LW (Doku 75 %); no RW in the squad"
         assert tr("Aceite") == "Accepted"
+        assert tr("DEF 85 · S1 (26 anos) · 11,0 M (1.1×) · lucro ~14,0 M · reforço (> T1 79) · pechincha") == \
+            "DEF 85 · S1 (26 years) · 11,0 M (1.1×) · profit ~14,0 M · upgrade (> T1 79) · bargain"
+        assert tr("SALE: GR 103 S1 · 45,6 M · lucro ~45,9 M? (+2)") == "SALE: GK 103 S1 · 45,6 M · profit ~45,9 M? (+2)"
         assert tr("Desarme Normal com árbitro normal: devia ser Agressivo") == \
             "Tackling Normal with an average referee: should be Aggressive"
         assert tr("Cantos: A, pela regra B") == "Corners: A, your rule says B"

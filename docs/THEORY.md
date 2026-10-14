@@ -312,6 +312,14 @@ Pelo mesmo preço, o do jogo tem **+6 de rating** que o de utilizador (PL) e o "
   - Ou seja: (1) quantos "SALE" novos apareceram; (2) para as posições em que o plantel tem um titular fraco, compara o rating dele com os "SALE" disponíveis nessa posição e diz se há melhores.
 - **Horas certas:** mais tarde, com análise de dados, quando o dono souber a hora ao certo; por agora vai verificando "mais ou menos".
 - **Titular "fraco" (resolvido, 2026-09-27):** **ambos os critérios contam** — é "fraco" quem for o **mais baixo da sua posição** entre os titulares, **ou** quem estiver **abaixo da média do 11** (não precisa de ser os dois ao mesmo tempo).
+- **Os SALE no cartão do clube (dono, 2026-10-14, depois de ver o rival do Qarabag comprar ao valor):** um SALE interessa para **reforçar** e também para **revender** (§7 ponto 4: comprar SALE e listar logo ao máximo). Sem mínimo de lucro (os números de 14/10 mostraram que quase todos dão lucro; o que filtra é o dinheiro):
+  - Só os que **cabem em conta + poupança**; o cartão mostra **os 3 melhores** pelo lucro estimado.
+  - **Lucro estimado** = preço máximo de revenda − preço; máximo ≈ **2,5 × valor** (**[H]**: as vendas de 14/10 saíram a 2,48–2,49×), **75 %** disso acima de 100 M (§7 ponto 2).
+  - **Reforço:** rating maior do que o titular mais baixo da **mesma posição geral** (ATA/MED/DEF/GR) — o titular mais baixo da posição é sempre "fraco". Aparece mesmo sem vaga de venda.
+  - **Negócio:** só com uma **vaga livre** na lista de vendas (para revender já).
+  - **Pechincha:** preço ≤ **1,1 × valor**, marcado à parte.
+  - **"?" no lucro** quando a liga **não vende ao máximo**: nenhuma venda de um clube da liga a ≥ 2,4× o valor nas transferências dos últimos 3 dias (Espanha, 12–13/10, `DISCOVERY.md`).
+  - Só avisa; comprar continua a ser do dono (regra 5).
 
 ### 7.8 Guarda-redes, moedas e o porquê do jogador fraco
 

@@ -95,3 +95,43 @@ def test_sale_options_are_the_games_sale_players_of_that_position_the_club_can_p
               item(4, 1, 95, 1_000_000), item(5, 3, 99, 2_000_000, user=7)]
     options = sale_options(market, "DEF", budget=10_000_000)
     assert [o["nome"] for o in options] == ["Jogador 2", "Jogador 1"]  # too dear, other position and a manager's are out
+
+
+def _sale(aid, pos, rating, price, value):
+    return {"id": aid, "price": price, "team": {"userId": None, "isForeignTeam": True},
+            "player": {"id": aid, "name": f"S{aid}", "position": pos, "age": 26, "value": value,
+                       "statDef": rating, "statAtt": rating, "statOvr": rating}}
+
+
+def _starter(pid, pos, rating, lineup=1):
+    return {"id": pid, "name": f"T{pid}", "position": pos, "lineup": lineup, "statDef": rating, "statAtt": rating, "statOvr": rating}
+
+
+def test_sale_picks_are_the_affordable_sale_players_by_resale_profit_with_reinforcements_and_bargains():
+    from osmbot.transfers.engine import resale, sale_picks
+
+    assert resale(10e6) == 25e6 and resale(50e6) == 0.75 * 125e6  # the maximum, 75 % of it above 100 M (THEORY.md 7)
+    players = [_starter(1, 3, 79), _starter(2, 3, 90, lineup=2), _starter(3, 3, 95, lineup=14)]  # the bench does not count
+    market = [_sale(1, 3, 85, 11e6, 10e6),  # beats the weakest DEF (79), at 1.1×: a bargain
+              _sale(2, 1, 70, 14e6, 10e6),  # a deal only (no forwards in the eleven to compare with)
+              _sale(3, 3, 99, 30e6, 25e6),  # too dear
+              _sale(4, 3, 60, 1.4e6, 1e6)]  # small profit: last
+    picks = sale_picks(market, players, money=20e6, free_slots=1)
+    assert [(p["nome"], p["reforco"], p["pechincha"]) for p in picks] == [("S1", True, True), ("S2", False, False), ("S4", False, False)]
+    assert picks[0]["lucro"] == 25e6 - 11e6 and picks[0]["fraco"] == "T1 79"
+    assert [p["nome"] for p in sale_picks(market, players, money=20e6, free_slots=0)] == ["S1"]  # no free slot: reinforcements only
+    assert len(sale_picks(market, players, money=20e6, free_slots=2, count=2)) == 2
+
+
+def test_a_league_sells_at_the_maximum_when_one_of_its_clubs_sold_at_2_4_times_the_value_lately():
+    from osmbot.transfers.engine import sells_at_max
+
+    now = 1_000_000
+
+    def sale(price, value, foreign=False, ago=3600):
+        return {"price": price, "value": value, "timestamp": now - ago, "sourceTeam": {"id": 4, "isForeignTeam": foreign}}
+
+    assert sells_at_max([sale(25, 10)], now)
+    assert not sells_at_max([sale(20, 10)], now)  # 2×: below the maximum
+    assert not sells_at_max([sale(25, 10, foreign=True)], now)  # bought by the league from outside, not sold by it
+    assert not sells_at_max([sale(25, 10, ago=4 * 86400)], now)  # too long ago

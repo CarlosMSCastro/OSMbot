@@ -178,6 +178,12 @@ PATTERNS = [(re.compile(pattern), replace) for pattern, replace in (
     (r"(?s)SALE (\w+) que cabem no dinheiro:\n(.+)",
      lambda m: f"SALE {_w(m[1])} you can afford:\n" + m[2].replace(" anos)", " years)")),
     (r"Nenhum SALE (\w+) cabe no dinheiro", lambda m: f"No SALE {_w(m[1])} you can afford"),
+    (r"^SALE: (\w+) (.+?) · (.+?) · lucro ~(.+)$", lambda m: f"SALE: {_w(m[1])} {m[2]} · {m[3]} · profit ~{m[4]}"),
+    (r"^(ATA|MED|DEF|GR) (\d+) · (.+) \((\d+) anos\) · (.+?) · lucro ~(.+)$",
+     lambda m: f"{_w(m[1])} {m[2]} · {m[3]} ({m[4]} years) · {m[5]} · profit ~"
+               + m[6].replace(" · reforço (> ", " · upgrade (> ").replace(" · pechincha", " · bargain")),
+    (r"^\? = esta liga não vendeu ao máximo nos últimos 3 dias$",
+     lambda m: "? = this league has not sold at the maximum in the last 3 days"),
     # top bar, coins
     (r"Início de sessão \(dia (\d+)\)", lambda m: f"Login (day {m[1]})"),
     (r"Missões (\d+)/(\d+)", lambda m: f"Missions {m[1]}/{m[2]}"),

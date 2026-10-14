@@ -208,6 +208,28 @@ def tired_view(club: dict) -> tuple[str, str]:
     return text, "\n\n".join(tips)
 
 
+def sale_view(club: dict) -> tuple[str, str]:
+    """The "SALE" worth a look (THEORY.md 7.7): one line with the best and how many, the 3 on hover with the estimated
+    resale profit ("?" when the league does not sell at the maximum), "reforço" and "pechincha". Empty: no line."""
+    sale = club.get("sale") or {}
+    picks = sale.get("picks") or []
+    if not picks:
+        return "", ""
+    unsure = "" if sale.get("certo") else "?"
+
+    def tags(p: dict) -> str:
+        return "".join([f" · reforço (> {p['fraco']})" if p["reforco"] else "", " · pechincha" if p["pechincha"] else ""])
+
+    best = picks[0]
+    text = f"SALE: {best['pos']} {best['rating']} {best['nome']} · {money(best['preco'])} · lucro ~{money(best['lucro'])}{unsure}" \
+           + (f" (+{len(picks) - 1})" if len(picks) > 1 else "")
+    lines = [f"{p['pos']} {p['rating']} · {p['nome']} ({p['idade']} anos) · {money(p['preco'])} ({p['razao']}×) · "
+             f"lucro ~{money(p['lucro'])}{unsure}{tags(p)}" for p in picks]
+    if unsure:
+        lines.append("? = esta liga não vendeu ao máximo nos últimos 3 dias")
+    return text, "\n".join(lines)
+
+
 def sponsor_view(sponsors: dict | None) -> dict:
     """Only the money per round; with an empty slot, ⚠ and the empty slots said on hover (owner, 2026-10-10)."""
     if not sponsors:
@@ -301,6 +323,7 @@ def club_view(club: dict, now: float, shortened: dict | None = None) -> dict:
     done_steps = sum(1 for _, done, _ in prep.get("steps") or [] if done)
     prep_title = f"PRÉ-JOGO · {done_steps}/{len(prep.get('steps') or [])}" if prep.get("steps") else "PRÉ-JOGO"
     tired_text, tired_tip = tired_view(club)
+    sale_text, sale_tip = sale_view(club)
 
     return {"name": club["name"], "logo": club.get("logo"), "logo_key": club.get("logo_key") or club["name"],
             "subtitle": subtitle, "facts": facts, "alert": alert, "header": header, "cup_line": cup_line, "match": match, "prep_title": prep_title,
@@ -308,7 +331,7 @@ def club_view(club: dict, now: float, shortened: dict | None = None) -> dict:
             "stadium": {"still": still, "moving": moving},
             "prep": {"steps": steps, "boosts": boosts},
             "trainings": trainings,
-            "tired": tired_text, "tired_tip": tired_tip, "value_badge": rating_badge(club.get("strength"), club.get("value")), "table_tip": table_tip,
+            "tired": tired_text, "tired_tip": tired_tip, "sale": sale_text, "sale_tip": sale_tip, "value_badge": rating_badge(club.get("strength"), club.get("value")), "table_tip": table_tip,
             "injured": _people(club.get("injured") or [], "no médico", now),
             "suspended": _people(club.get("suspended") or [], "no advogado", now),
             "stadium_rings": stadium_rings(club.get("stadium"), now),

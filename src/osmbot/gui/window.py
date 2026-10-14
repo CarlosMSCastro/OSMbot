@@ -1127,6 +1127,9 @@ class ClubCard(QFrame):
         self.tired = text_label(9, colour=YELLOW)
         self.tired.setWordWrap(True)
         prep.addWidget(self.tired)
+        self.sale_picks = text_label(9, colour=GREEN)  # the "SALE" worth a look, the 3 on hover (THEORY.md 7.7)
+        self.sale_picks.setWordWrap(True)
+        prep.addWidget(self.sale_picks)
         prep.addStretch(1)
         right = QWidget()
         right.setLayout(prep)
@@ -1201,6 +1204,9 @@ class ClubCard(QFrame):
         self.tired.setVisible(bool(club["tired"]))
         self.tired.setText(tr(f"⚠ Cansados: {club['tired']}"))
         self.tired.setToolTip(tip_text("\n\n".join(tr(part) for part in (club.get("tired_tip") or "").split("\n\n"))))
+        self.sale_picks.setVisible(bool(club.get("sale")))
+        self.sale_picks.setText(tr(club.get("sale") or ""))
+        self.sale_picks.setToolTip(tip_text("\n".join(tr(line) for line in (club.get("sale_tip") or "").split("\n"))))
 
     def _show_prep(self, steps: list) -> None:
         """A step out of the owner's rule says why on hover (THEORY.md section 21); a green one may carry a note (a

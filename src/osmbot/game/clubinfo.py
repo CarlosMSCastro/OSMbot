@@ -112,6 +112,15 @@ def timer_minutes(client, league_id: int, name: str) -> int:
     return next((g["value"] for g in _settings(client, league_id) if g["name"] == name and g.get("value")), NORMAL[name])
 
 
+def league_sells_at_max(client, league_id: int) -> bool:
+    """Whether a club of this league sold at the maximum lately (the league's transfers, kept for a while): without
+    it, the resale profit of a "SALE" is uncertain (THEORY.md 7.7)."""
+    from osmbot.transfers.engine import sells_at_max
+
+    transfers = _cached(("transfers", league_id), FIXTURES_FOR, lambda: _list(client, f"leagues/{league_id}/transfers"))
+    return sells_at_max(transfers, time.time())
+
+
 def session_minutes(client, league_id: int) -> tuple[int, int]:
     """How long a training and a universal trainer's session last now in this league, in minutes (480 and 360
     normally, 120 and 90 in the Super Staff)."""

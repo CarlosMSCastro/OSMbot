@@ -316,3 +316,17 @@ def test_a_tired_starter_without_cover_says_so_and_the_sale_options_show_on_hove
     assert tip == "SALE DEF que cabem no dinheiro:\n88 · Jogador 9 (24 anos) · 9 M"
     assert tired_view({**club, "cover": {"DEF": []}})[1] == "Nenhum SALE DEF cabe no dinheiro"
     assert tired_view({"tired": []}) == ("", "")
+
+
+def test_the_sale_line_shows_the_best_and_the_three_on_hover():
+    from osmbot.gui.view import sale_view
+
+    pick = {"pos": "DEF", "rating": 85, "nome": "S1", "idade": 26, "preco": 11_000_000, "razao": 1.1, "lucro": 14_000_000,
+            "reforco": True, "fraco": "T1 79", "pechincha": True}
+    deal = {**pick, "nome": "S2", "lucro": 9_000_000, "reforco": False, "fraco": None, "pechincha": False}
+    assert sale_view({}) == ("", "") and sale_view({"sale": {"picks": [], "certo": True}}) == ("", "")
+    text, tip = sale_view({"sale": {"picks": [pick, deal], "certo": True}})
+    assert text.startswith("SALE: DEF 85 S1 · ") and text.endswith(" (+1)") and "?" not in text
+    assert tip.splitlines()[0].endswith(" · reforço (> T1 79) · pechincha") and len(tip.splitlines()) == 2
+    _, unsure = sale_view({"sale": {"picks": [deal], "certo": False}})
+    assert unsure.splitlines()[-1] == "? = esta liga não vendeu ao máximo nos últimos 3 dias"

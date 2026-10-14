@@ -82,6 +82,51 @@ def sale_options(market: list[dict], position: str, budget: int, count: int = 3)
     return sorted(rows, key=lambda r: (-(r["rating"] or 0), r["preco"]))[:count]
 
 
+BARGAIN = 1.1  # a "SALE" at no more than this × value is a bargain (owner, 2026-10-14)
+BIG_SALE, BIG_SALE_SHARE = 100e6, 0.75  # above 100 M the owner asks 75 % of the maximum (THEORY.md 7)
+SELLS_AT_MAX = 2.4  # a league sale at this × value or more: the league buys at the maximum (THEORY.md 7.7)
+
+
+def resale(value: float) -> float:
+    """What the owner would ask for a player when listing it: the maximum (≈ 2.5 × value, a hypothesis from the
+    sales of 2026-10-14), or 75 % of it above 100 M."""
+    top = MAX_PRICE * value
+    return BIG_SALE_SHARE * top if top > BIG_SALE else top
+
+
+def sells_at_max(transfers: list[dict], now: float, days: float = 3) -> bool:
+    """Whether a club of this league sold at the maximum in the last days (else the resale profit is uncertain:
+    a league whose market buys only below it, DISCOVERY.md)."""
+    return any(not (t.get("sourceTeam") or {}).get("isForeignTeam") and (t.get("sourceTeam") or {}).get("id")
+               and t.get("value") and t.get("price", 0) >= SELLS_AT_MAX * t["value"]
+               and t.get("timestamp", 0) >= now - days * 86400 for t in transfers)
+
+
+def sale_picks(market: list[dict], players: list[dict], money: float, free_slots: int, count: int = 3) -> list[dict]:
+    """The "SALE" players worth a look on the club card (THEORY.md 7.7): those the club can pay for, best estimated
+    resale profit first. Each says if it beats the lowest starter of its general position (``reforco``: shown even
+    with no free sale slot), and if it is a bargain (``pechincha``, at most 1.1 × value). A pure deal needs a free
+    slot, to list it again at once."""
+    from osmbot.theory.lineup import rating
+
+    weakest: dict[str, dict] = {}
+    for p in players:
+        position = POSITIONS.get(p.get("position"))
+        if position and p.get("lineup") in range(1, 12) and (position not in weakest or rating(p) < rating(weakest[position])):
+            weakest[position] = p
+    picks = []
+    for row in sale_rows(market).values():
+        if row["preco"] > money:
+            continue
+        low = weakest.get(row["pos"])
+        better = bool(low) and (row["rating"] or 0) > rating(low)
+        if not better and free_slots <= 0:
+            continue
+        picks.append({**row, "lucro": resale(row["valor"]) - row["preco"], "reforco": better,
+                      "fraco": f"{low['name']} {rating(low)}" if better else None, "pechincha": row["razao"] <= BARGAIN})
+    return sorted(picks, key=lambda r: -r["lucro"])[:count]
+
+
 def sale_changes(before: dict | None, rows: dict[str, dict], now: float) -> tuple[dict, list[dict], list[dict]]:
     """(new "SALE" state, those that appeared, those that left) between two reads. Each keeps when it was first seen;
     the first read only learns what is there."""
