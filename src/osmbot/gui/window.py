@@ -41,23 +41,24 @@ COIN_FILE, FUNDS_FILE = ASSETS / "bosscoin.png", ASSETS / "clubfunds.png"  # the
 PICTURES = {"training": ASSETS / "training.png", "doctor": ASSETS / "doctor.png", "lawyer": ASSETS / "lawyer.png",
             "coins": COIN_FILE, "funds": FUNDS_FILE, "missions": ASSETS / "missions.png", "stadium": ASSETS / "stadium.png",
             "timer": ASSETS / "timer.png", "ball": ASSETS / "ball.png", "inventory": ASSETS / "inventory.png",
-            "universal": ASSETS / "universal.png"}  # waiting, and a club's match (owner, 2026-10-10;
+            "universal": ASSETS / "universal.png", "camp": ASSETS / "camp.png", "secret": ASSETS / "secret.png"}  # waiting, and a club's match (owner, 2026-10-10;
 # drawn from img/*.svg at 128 px: the portable build leaves Qt's svg support out)
-_pictures: dict[tuple[str, bool], QPixmap] = {}
+_pictures: dict[tuple[str, bool, int], QPixmap] = {}
 
 
-def picture(name: str, grey: bool = False) -> QPixmap:
-    """A picture for the inside of a ring (empty if the file is missing); ``grey``: washed out, for "nobody"."""
-    if (name, grey) not in _pictures:
+def picture(name: str, grey: bool = False, alpha: int = 40) -> QPixmap:
+    """A picture for the inside of a ring (empty if the file is missing); ``grey``: washed out, for "nobody"
+    (``alpha``: how much of it still shows, in %)."""
+    if (name, grey, alpha) not in _pictures:
         image = QImage(str(PICTURES[name])).convertToFormat(QImage.Format_ARGB32)
         if grey and not image.isNull():
             for y in range(image.height()):
                 for x in range(image.width()):
                     c = image.pixelColor(x, y)
                     level = int(c.red() * 0.3 + c.green() * 0.59 + c.blue() * 0.11)
-                    image.setPixelColor(x, y, QColor(level, level, level, c.alpha() * 2 // 5))
-        _pictures[name, grey] = QPixmap.fromImage(image)
-    return _pictures[name, grey]
+                    image.setPixelColor(x, y, QColor(level, level, level, c.alpha() * alpha // 100))
+        _pictures[name, grey, alpha] = QPixmap.fromImage(image)
+    return _pictures[name, grey, alpha]
 LOGOS = Path.home() / ".osmbot" / "logos"
 TRAY_DOT = {True: "#9be22d", False: "#9a9a9a"}  # lime with a white ring: readable on the green logo at 16 px
 ROW_HEIGHT, HEADER_HEIGHT = 22, 24
@@ -548,6 +549,67 @@ class StepList(QWidget):
                 text.setText(rich([(words, colour)]))
                 title = steps[index][4] if len(steps[index]) > 4 else None
                 row.setToolTip(tip_html(steps[index][3], title) if len(steps[index]) > 3 else "")
+
+
+class BoostIcon(QWidget):
+    """The game's icon of the secret training or the training camp, a little bigger than a step's mark: in colour with
+    a green ring when marked for the next match, grey otherwise (owner, 2026-10-14)."""
+
+    def __init__(self):
+        super().__init__()
+        self.name, self.on = "camp", False
+        self.setFixedSize(20, 20)
+
+    def paintEvent(self, _event) -> None:
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.Antialiasing)
+        painter.setRenderHint(QPainter.SmoothPixmapTransform)
+        pic = picture(self.name, grey=not self.on, alpha=75)
+        if not pic.isNull():
+            room = 13 if self.on else 17  # inside the ring when there is one
+            size = pic.size().scaled(room, room, Qt.KeepAspectRatio)
+            painter.drawPixmap(QRectF((20 - size.width()) / 2, (20 - size.height()) / 2, size.width(), size.height()),
+                               pic, QRectF(pic.rect()))
+        if self.on:
+            painter.setPen(QPen(QColor(COLOURS[GREEN]), 1.6))
+            painter.setBrush(Qt.NoBrush)
+            painter.drawEllipse(QRectF(1, 1, 18, 18))
+
+
+class BoostList(QWidget):
+    """The secret training and the training camp under the pre-match steps: the game's icon and the name, green when
+    marked, grey when not (the reason on hover)."""
+
+    def __init__(self, size: int, spacing: int):
+        super().__init__()
+        self.layout_ = QVBoxLayout(self)
+        self.layout_.setContentsMargins(0, 0, 0, 0)
+        self.layout_.setSpacing(spacing - 4)  # the rows are 4 px taller than a step's (the 20 px icon)
+        self.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Maximum)
+        self.size = size
+        self.rows: list[tuple[QWidget, BoostIcon, QLabel]] = []
+
+    def show_boosts(self, boosts: list[dict]) -> None:
+        while len(self.rows) < len(boosts):
+            row = QWidget()
+            line = QHBoxLayout(row)
+            line.setContentsMargins(0, 0, 0, 0)
+            line.setSpacing(4)  # the 20 px icon is 4 px wider than a step's mark: the text lines up with theirs
+            row.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
+            mark, text = BoostIcon(), text_label(self.size)
+            line.addWidget(mark, 0, Qt.AlignVCenter)
+            line.addWidget(text, 1, Qt.AlignVCenter)
+            self.layout_.addWidget(row)
+            self.rows.append((row, mark, text))
+        self.setVisible(bool(boosts))
+        for index, (row, mark, text) in enumerate(self.rows):
+            row.setVisible(index < len(boosts))
+            if index < len(boosts):
+                boost = boosts[index]
+                mark.name, mark.on = boost["icon"], boost["on"]
+                mark.update()
+                text.setText(rich([(boost["name"], GREEN if boost["on"] else GREY)]))
+                row.setToolTip(tip_text(f"{tr(boost['name'])}\n{tr(boost['tip'])}"))
 
 
 _tip_icons: dict[str, str] = {}
@@ -1058,6 +1120,9 @@ class ClubCard(QFrame):
         prep.addSpacing(4)
         self.prep = StepList(vertical=True, size=10, spacing=9)  # one row per step: icon and text (owner, 2026-10-10)
         prep.addWidget(self.prep)
+        prep.addSpacing(7)  # a step's gap less half of the 4 px the boost rows are taller
+        self.boosts = BoostList(size=10, spacing=9)  # secret training and training camp, after the steps (owner, 2026-10-14)
+        prep.addWidget(self.boosts)
         prep.addSpacing(8)
         self.tired = text_label(9, colour=YELLOW)
         self.tired.setWordWrap(True)
@@ -1130,6 +1195,7 @@ class ClubCard(QFrame):
         self.universal_cell.show_care(club["universal"], self.timer)
         self.prep_title.setText(tr(club["prep_title"]))
         self._show_prep(club["prep"]["steps"])
+        self.boosts.show_boosts(club["prep"].get("boosts") or [])
         self._show_trainings(club["trainings"])
         self.badge.show_value(club.get("value_badge"))
         self.tired.setVisible(bool(club["tired"]))

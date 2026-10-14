@@ -4,6 +4,23 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-PT/1.1.0/); 
 
 Este ficheiro é o **histórico de versões, para quem lê o repo**. O diário interno de cada sessão de trabalho está em [`docs/WORKLOG.md`](docs/WORKLOG.md).
 
+## [0.11.11] — 2026-10-14
+
+O PC não adormece com o bot ligado, os treinos passam à frente dos vídeos da loja, e o treino secreto e o estágio aparecem no pré-jogo.
+
+### Adicionado
+- **Treino secreto e estágio no pré-jogo**, no fim da lista, com os ícones do próprio jogo: verde (e um anel verde no ícone) quando estão marcados para o próximo jogo, cinzento quando não estão ou não há jogo nesta jornada (o porquê ao passar o rato).
+- **Hora de início dos eventos:** entre as 05:30 e as 07:00 as definições do jogo são lidas de 10 em 10 min, e o registo diz entre que horas o evento começou ou acabou.
+
+### Alterado
+- **O PC não adormece** enquanto o bot trabalha (nem apaga o ecrã: nos PCs com "Modern Standby" é o ecrã apagado que os põe a dormir). Ao parar o bot, tudo volta ao normal; bloquear o PC continua a funcionar.
+- **Treinos antes dos vídeos:** a série de vídeos da loja pára quando um treino acaba; o bot recolhe e põe os treinos e vê o resto dos vídeos a seguir.
+- **Especialistas com o mesmo ataque:** ganha quem tiver o resto das stats melhor (overall + defesa), e não o primeiro da lista.
+
+### Corrigido
+- **Círculos dos treinos** desenhados sempre contra 8 h: num evento de treinos de 2 h apareciam quase cheios logo no início. Passam a usar a duração do jogo (2 h e 1h30 no Super Staff).
+- O registo dizia sempre "Treinador universal: … a treinar (6 h)"; passa a dizer a duração real.
+
 ## [0.11.10] — 2026-10-14
 
 Hover que diz quem está fora de posição, aviso do banco pela posição específica e o domínio mundial esclarecido.

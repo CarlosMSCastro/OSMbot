@@ -61,8 +61,11 @@ def is_claimable(client, action_id: str = SHOP_ACTION) -> bool:
 
 
 def run_shop_ads(claimable: Callable[[], bool], watch_one: Callable[[], None], *, dry_run: bool = False,
-                 log: Callable[[str], None] = print, rng=random, sleep=time.sleep) -> int:
-    """Watch shop videos while the game allows it. Returns how many were watched."""
+                 log: Callable[[str], None] = print, rng=random, sleep=time.sleep,
+                 training_ready: Callable[[], bool] = lambda: False) -> int:
+    """Watch shop videos while the game allows it. Returns how many were watched. Stops between two videos when a
+    training is ready to collect (owner, 2026-10-14: in 2 h events a burst of ~20 min costs too much); the rest of
+    the window is watched in the next pass, once the trainings are collected and started again."""
     if not claimable():
         return 0
     if rng.random() > ENGAGE_CHANCE:
@@ -77,6 +80,9 @@ def run_shop_ads(claimable: Callable[[], bool], watch_one: Callable[[], None], *
         watched += 1
         log(f"Loja: vídeo {watched}")
         if not claimable():
+            break
+        if training_ready():
+            log("Loja: pausa, há treinos para recolher")
             break
         sleep(rng.uniform(*PAUSE))
     return watched

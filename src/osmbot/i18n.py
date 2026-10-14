@@ -10,6 +10,12 @@ import json
 import re
 from pathlib import Path
 
+
+def _between(text: str) -> str:
+    """'(mudou entre 05:50 e 06:00)' -> '(changed between 05:50 and 06:00)': when an event's change was seen."""
+    return re.sub(r" \(mudou entre (\S+) e (\S+)\)", r" (changed between \1 and \2)", text)
+
+
 LANGUAGES = {"pt": "Português", "en": "English"}
 _language = "pt"
 
@@ -99,7 +105,7 @@ WORDS = {
     "A treinar": "Training started", "Depósito na poupança": "Savings deposit", "Patrocinador assinado": "Sponsor signed", "Missões": "Missions",
     "Início de sessão": "Login reward", "Vídeos acumulados": "Cumulative videos",
     # what the bot is doing
-    "à espera": "waiting", "por levantar": "to collect", "acaba em": "ends in", "não dá": "not allowed", "estádio": "stadium", "ler o jogo": "reading the game", "médico e advogado": "doctor and lawyer", "inventário": "inventory", "Treinador universal": "Universal trainer", "livre": "free",
+    "à espera": "waiting", "por levantar": "to collect", "acaba em": "ends in", "não dá": "not allowed", "estádio": "stadium", "ler o jogo": "reading the game", "médico e advogado": "doctor and lawyer", "inventário": "inventory", "Treinador universal": "Universal trainer", "livre": "free", "Treino secreto": "Secret training", "Estágio": "Training camp", "Marcado para o próximo jogo": "Booked for the next match", "Não marcado": "Not booked", "Sem jogo nesta jornada": "No match this round",
     "patrocinadores": "sponsors", "pré-jogo": "pre-match", "recolher e pôr treinos": "collecting and starting trainings",
     "recompensas": "rewards", "poupança": "savings",
 }
@@ -228,10 +234,11 @@ PATTERNS = [(re.compile(pattern), replace) for pattern, replace in (
     (r"SALE novos \((.+?)\): (\d+) · (.+?)(?: e mais (\d+))?$",
      lambda m: f"New SALE ({m[1]}): {m[2]} · {m[3].replace(' anos)', ' years)')}" + (f" and {m[4]} more" if m[4] else "")),
     (r"Evento: (.+)", lambda m: f"Event: {m[1]}"),
-    (r"Evento no jogo \((.+?)\): acabou, tudo normal", lambda m: f"Event in the game ({m[1]}): over, all back to normal"),
+    (r"Indisponível: (.+)", lambda m: f"Unavailable: {m[1]}"),
+    (r"Evento no jogo \((.+?)\): acabou, tudo normal(.*)", lambda m: f"Event in the game ({m[1]}): over, all back to normal" + _between(m[2])),
     (r"Evento no jogo \((.+?)\): (.+)", lambda m: f"Event in the game ({m[1]}): " + m[2].replace("treinador universal", "universal trainer")
      .replace("treinos", "trainings").replace("estádio", "stadium").replace("analista", "analyst").replace("médico", "doctor")
-     .replace("advogado", "lawyer").replace("olheiro", "scout").replace("vagas de venda", "transfer list places")),
+     .replace("advogado", "lawyer").replace("olheiro", "scout").replace("vagas de venda", "transfer list places").replace(" (mudou entre", " (changed between").replace(" e ", " and ")),
     (r"Calendário de eventos de (\S+): (\d+) · (.+)", lambda m: f"Events calendar for {m[1]}: {m[2]} · {m[3]}"),
     (r"Calendário de eventos: não consegui ler o fórum \((.+)\); tento amanhã",
      lambda m: f"Events calendar: could not read the forum ({m[1]}); trying again tomorrow"),

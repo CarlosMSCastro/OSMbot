@@ -96,7 +96,15 @@ def test_an_event_in_the_settings_is_logged_when_it_starts_and_ends():
     assert check(client, 9, "Liga", log=lines.append, now=1600.0) == ["analista 15 min"]  # within the hour: not read
     client.settings = [{"name": "SpyInstructionTimer", "value": 60}]
     assert check(client, 9, "Liga", log=lines.append, now=5000.0) == []
-    assert lines == ["Evento no jogo (Liga): analista 15 min", "Evento no jogo (Liga): acabou, tudo normal"]
+    when = f"{datetime.fromtimestamp(1000):%H:%M} e {datetime.fromtimestamp(5000):%H:%M}"  # the previous reading and this one
+    assert lines == ["Evento no jogo (Liga): analista 15 min", f"Evento no jogo (Liga): acabou, tudo normal (mudou entre {when})"]
+
+
+def test_the_settings_are_read_every_10_min_early_in_the_morning():
+    from osmbot.game import events
+
+    day = datetime(2026, 10, 17)
+    assert [events.check_every(day.replace(hour=h, minute=m).timestamp()) for h, m in ((5, 29), (5, 30), (6, 59), (7, 0))]         == [3600, 600, 600, 3600]
 
 
 def test_the_timeline_shows_the_event_going_on_and_the_next_ones():

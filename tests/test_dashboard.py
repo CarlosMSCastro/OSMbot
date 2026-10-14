@@ -1,4 +1,4 @@
-﻿from osmbot.game.dashboard import bar, render, span, wake_events
+from osmbot.game.dashboard import bar, render, span, wake_events
 
 NOW = 1_000_000.0
 
@@ -266,3 +266,18 @@ def test_the_length_of_a_stadium_upgrade_is_guessed_from_its_end(monkeypatch):
     assert dashboard.upgrade_length(2, 4 * hours - 60) == 4 * hours  # an event one, just started
     assert dashboard.upgrade_length(3, 2 * hours) == 18 * hours  # could be either: taken as a normal one
     assert dashboard.upgrade_length(1, 3 * hours) == 18 * hours  # decided the first time it is seen
+
+
+def test_the_length_of_a_training_follows_the_league_and_one_begun_before_an_event_keeps_8_h(monkeypatch):
+    from osmbot.game import dashboard
+    from osmbot.gui.view import club_view
+
+    monkeypatch.setattr(dashboard, "_session_lengths", {})
+    hours, normal = 3600, 8 * 3600
+    assert dashboard.session_length(1, 1.5 * hours, 2 * hours, normal) == 2 * hours  # Super Staff: a 2 h training
+    assert dashboard.session_length(2, 5 * hours, 2 * hours, normal) == normal  # more left than 2 h: begun before it
+    assert dashboard.session_length(2, hours, 2 * hours, normal) == normal  # decided the first time it is seen
+    assert dashboard.session_length(3, 5 * hours, 8 * hours, normal) == normal  # a normal day
+    club = {"name": "A", "trainings": [{"id": 1, "name": "P", "pos": "ATA", "finish": 1000 + 1.5 * hours, "claimed": False,
+                                        "length": 2 * hours}]}
+    assert club_view(club, 1000)["trainings"][0][4] == 0.25  # the ring: 30 min gone of 2 h, not 6h30 of 8 h

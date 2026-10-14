@@ -56,9 +56,18 @@ class _Club:
         return any(s["trainer"] == UNIVERSAL_TRAINER for s in self.sessions)
 
 
-def _setting(client, league: int) -> int | None:
+def _setting(client, league: int) -> tuple[int, int] | None:
+    """The universal session's setting: its id and its length now, in minutes (360 normally, 90 in the Super Staff)."""
     _, settings = client.get(f"leagues/{league}/gamesettings")
-    return next((g["id"] for g in settings or [] if g.get("name") == UNIVERSAL_SETTING), None)
+    return next(((g["id"], g.get("value")) for g in settings or [] if g.get("name") == UNIVERSAL_SETTING), None)
+
+
+def _minutes(value) -> str:
+    """360 -> "6 h", 90 -> "1h30"; the time as the log says it."""
+    if not isinstance(value, int) or value <= 0:
+        return "?"
+    hours, minutes = divmod(value, 60)
+    return f"{hours} h" if not minutes else f"{hours}h{minutes:02d}" if hours else f"{minutes} min"
 
 
 def _train(client, club: _Club, confirm: bool, log) -> int:
@@ -77,10 +86,11 @@ def _train(client, club: _Club, confirm: bool, log) -> int:
     if not confirm:
         log(f"Simulação: poria {label} no treinador universal")
         return 0
-    setting = _setting(client, club.league)
-    if setting is None:
+    found = _setting(client, club.league)
+    if found is None:
         log("Treinador universal: duração da sessão não encontrada nas definições do jogo")
         return 1
+    setting, minutes = found
     status, body = client.post(f"{club.base}/trainingsessions",
                                {"playerId": player["id"], "trainer": UNIVERSAL_TRAINER, "timerGameSettingId": setting})
     time.sleep(PAUSE_BETWEEN_WRITES)
@@ -91,7 +101,7 @@ def _train(client, club: _Club, confirm: bool, log) -> int:
         logs.record("treinos", {"evento": "pôr", "clube": club.base, "sessao": session_id, "semana": club.week,
                                 "treinador": UNIVERSAL_TRAINER, "jogador": {"id": player["id"], "nome": _name(player)},
                                 "previsao": club.forecasts.get(player["id"]), "n_na_jornada": club.rounds.get(player["id"], 0) + 1})
-        log(f"Treinador universal: {label} a treinar (6 h)")
+        log(f"Treinador universal: {label} a treinar ({_minutes(minutes)})")
         return 0
     if refusals.is_refusal(status):
         refusals.refuse(key, log, f"! Treinador universal: o jogo recusou {label} ({status}); volto a tentar amanhã",

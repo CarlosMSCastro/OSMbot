@@ -104,7 +104,7 @@ def universal_ring(universal: dict | None, now: float) -> dict:
         return {"label": "Treinador universal", "state": "ready", "centre": "pronto", "name": session["name"], "sub": active,
                 "done": 1.0}
     return {"label": "Treinador universal", "state": "working", "centre": span(session["finish"] - now), "name": session["name"],
-            "sub": active, "done": _done(session["finish"] - now, UNIVERSAL_SESSION)}
+            "sub": active, "done": _done(session["finish"] - now, session.get("length") or UNIVERSAL_SESSION)}
 
 
 def time_left(seconds: float, lang: str = "pt") -> str:
@@ -275,12 +275,20 @@ def club_view(club: dict, now: float, shortened: dict | None = None) -> dict:
         else:
             steps.append(("open", name, "", reasons))
 
+    boosts = []  # secret training and training camp: the game's icon, green when marked, grey otherwise (owner, 2026-10-14)
+    for boost in prep.get("boosts") or []:
+        blocked = "Sem jogo nesta jornada" if boost["blocked"].startswith("You don't have a match") else (
+            f"Indisponível: {boost['blocked']}" if boost["blocked"] else "")  # the game says why in English
+        tip = "Marcado para o próximo jogo" if boost["on"] else blocked or "Não marcado"
+        boosts.append({"icon": boost["kind"], "name": boost["name"], "on": boost["on"], "tip": tip})
+
     trainings = []
     for t in club.get("trainings", []):
         left = t["finish"] - now
         ready = left <= 0 and not t["claimed"]
-        done = _done(left, BAR_SECONDS)
-        skipped = min(done, max(shortened.get(t.get("id"), 0), 0) / BAR_SECONDS)
+        length = t.get("length") or BAR_SECONDS  # the session's real length (2 h in some events)
+        done = _done(left, length)
+        skipped = min(done, max(shortened.get(t.get("id"), 0), 0) / length)
         trainings.append((t["name"], t["pos"], "pronto" if ready else span(left), GREEN if ready else BLUE, done, skipped))
 
     match = None  # the stripe of the next match (D-030), in the club's colour
@@ -298,7 +306,7 @@ def club_view(club: dict, now: float, shortened: dict | None = None) -> dict:
             "subtitle": subtitle, "facts": facts, "alert": alert, "header": header, "cup_line": cup_line, "match": match, "prep_title": prep_title,
             "money": _money(total), "sales": sales, "sponsors": sponsor_row, "squad": squad_view(club.get("value")),
             "stadium": {"still": still, "moving": moving},
-            "prep": {"steps": steps},
+            "prep": {"steps": steps, "boosts": boosts},
             "trainings": trainings,
             "tired": tired_text, "tired_tip": tired_tip, "value_badge": rating_badge(club.get("strength"), club.get("value")), "table_tip": table_tip,
             "injured": _people(club.get("injured") or [], "no médico", now),

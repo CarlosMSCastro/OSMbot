@@ -24,6 +24,7 @@ FILE = Path.home() / ".osmbot" / "eventos.json"
 TOPIC = 67089
 FORUM = "https://forum.onlinesoccermanager.com"
 CHECK_EVERY = 3600.0  # s: the game's settings and eventnotifications, per league
+EARLY, EARLY_EVERY = (5 * 60 + 30, 7 * 60), 600.0  # 05:30-07:00 (local): read every 10 min, to learn when events begin
 _last_check: dict[int, float] = {}
 _active: dict[int, list[str]] = {}
 
@@ -119,12 +120,20 @@ def calendar_months() -> list[dict]:
     return [months[key] for key in sorted(months)]
 
 
+def check_every(now: float) -> float:
+    """How often the settings are read: every 10 min from 05:30 to 07:00 (the events seem to begin at ~06:00 in
+    Portugal, DISCOVERY.md; owner, 2026-10-14), every hour otherwise."""
+    moment = datetime.fromtimestamp(now)
+    return EARLY_EVERY if EARLY[0] <= moment.hour * 60 + moment.minute < EARLY[1] else CHECK_EVERY
+
+
 def check_league(client, league_id: int, name: str = "", settings: list[dict] | None = None, log=None,
                  now: float | None = None) -> list[str]:
     """What an event changed in this league's settings (read at most once an hour); logged when it changes.
     Also reads ``eventnotifications`` and keeps any answer, to learn what the game says during an event."""
     now = time.time() if now is None else now
-    if league_id in _last_check and now - _last_check[league_id] < CHECK_EVERY:
+    before = _last_check.get(league_id)
+    if before is not None and now - before < check_every(now):
         return _active.get(league_id, [])
     _last_check[league_id] = now
     if settings is None:
@@ -135,8 +144,9 @@ def check_league(client, league_id: int, name: str = "", settings: list[dict] | 
         if log is None:
             from osmbot.game.loop import _log as log
         where = name or str(league_id)
-        log(f"Evento no jogo ({where}): {', '.join(changes)}" if changes else f"Evento no jogo ({where}): acabou, tudo normal")
-        logs.record("eventos", {"evento": "definições", "liga": league_id, "mudancas": changes})
+        since = f" (mudou entre {datetime.fromtimestamp(before):%H:%M} e {datetime.fromtimestamp(now):%H:%M})" if before else ""
+        log(f"Evento no jogo ({where}): {', '.join(changes)}{since}" if changes else f"Evento no jogo ({where}): acabou, tudo normal{since}")
+        logs.record("eventos", {"evento": "definições", "liga": league_id, "mudancas": changes, "leitura_anterior": before})
     _active[league_id] = changes
     status, body = client.get(f"leagues/{league_id}/eventnotifications")
     if status == 200 and body:

@@ -3,6 +3,7 @@
 All functions take the **starters only** and return ``None`` when no eligible
 player exists; deciding what to do then is the caller's job.
 
+Equal attack: the better rest of the stats wins (overall + defence; owner, 2026-10-14).
 Ties that the theory does not cover are broken deterministically by higher
 rating, then lower player id, so the same squad always gives the same answer.
 """
@@ -23,21 +24,26 @@ def pick_captain(starters: Iterable[Player]) -> Optional[Player]:
     return _best(starters, lambda p: (p.age, p.rating, -p.id))
 
 
+def _attack(p: Player) -> tuple:
+    """Attack first; on equal attack, the better rest of the stats (owner, 2026-10-14)."""
+    return (p.stat_att, p.stat_ovr + p.stat_def, p.rating, -p.id)
+
+
 def pick_penalty_taker(starters: Iterable[Player]) -> Optional[Player]:
     """Forward with the highest attack stat."""
     forwards = (p for p in starters if p.position is Position.ATT)
-    return _best(forwards, lambda p: (p.stat_att, p.rating, -p.id))
+    return _best(forwards, _attack)
 
 
 def pick_free_kick_taker(starters: Iterable[Player]) -> Optional[Player]:
     """Any starter with the highest attack stat."""
-    return _best(starters, lambda p: (p.stat_att, p.rating, -p.id))
+    return _best(starters, _attack)
 
 
 def pick_corner_taker(starters: Iterable[Player]) -> Optional[Player]:
     """Midfielder with the highest attack stat."""
     mids = (p for p in starters if p.position is Position.MID)
-    return _best(mids, lambda p: (p.stat_att, p.rating, -p.id))
+    return _best(mids, _attack)
 
 
 @dataclass(frozen=True)

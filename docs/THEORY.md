@@ -85,7 +85,8 @@ Desarme: *Cuidadoso · Normal · Agressivo · Extremo*.
 
 - "Ataque" = estatística de ataque do jogador (`statAtt` no API; confirmado: é o número de ataque do ecrã do jogo, `DISCOVERY.md`).
 - "Rating" (no capitão e nos desempates) = *stat principal da posição*: avançado→ataque, médio→overall, defesa e guarda-redes→defesa. **Confirmado** (2026-10-14): é o `statMain` que o próprio jogo usa na força da equipa, e a força calculada assim bate com a do jogo em 3 clubes.
-- **[S]** Empates que a teoria não cobre resolvem-se por maior rating e depois menor id de jogador, para o resultado ser sempre o mesmo.
+- **Ataque igual (penáltis, livres, cantos; dono, 2026-10-14):** ganha quem tiver **o resto das stats melhor** (overall + defesa). Ex.: Marmoush e Trossard com 111 de ataque; Trossard 73 + 36 contra 65 + 19 → Trossard.
+- **[S]** Empates que ainda sobram resolvem-se por maior rating e depois menor id de jogador, para o resultado ser sempre o mesmo.
 - Sem titular elegível (ex.: sem avançado) → o código devolve `None` e o chamador decide.
 - **O mesmo jogador pode ter mais de um papel** (dono, 2026-10-12).
 - **Automático (dono, 2026-10-12, D-042):** nas **últimas 4 h antes de cada jogo**, em cada passagem, o bot põe certos só os papéis que estão fora da regra (segue as mudanças do onze). Um lesionado ou suspenso sai do onze e por isso dos especialistas (dono). Na checklist do quadro, "Especialistas" fica **amarelo** quando não seguem a regra, mesmo que o jogo os dê como feitos.
@@ -411,6 +412,7 @@ Há **3 componentes** a melhorar, cada um com **níveis 0, 1, 2 e 3**:
 - **Tempo de espera confirmado: 1 hora.** Ao atingir o limite, o jogo pára a secção durante 1h (o dono não distinguiu se é fixo ou conta do último vídeo, mas o valor de 1h fica confirmado).
 - **[?]** Continua por confirmar se, ao ver os 9 vídeos, há **recompensa extra** (o dono tinha mencionado isso para o limite antigo de "10"; por reconfirmar com o número certo).
 - **Cada vídeo dá 1 boss coin** (confirmado pelo dono).
+- **Treinos primeiro (dono, 2026-10-14):** entre dois vídeos da loja, se um treino já acabou, o bot pára a série, recolhe e põe os treinos, e vê o resto dos vídeos na passagem seguinte (a janela da loja continua aberta). Nos eventos de treinos de 2 h, uma série de ~20 min custava muito.
 - **Conta (atualizada):** 9 vídeos = 9 boss coins por ciclo de 1 hora (mais a possível recompensa extra, por confirmar). Um amigável custa 4 (§6), ou seja, um ciclo paga mais de 2 amigáveis.
 
 ### 12.3 Finanças/poupança: vídeos de dinheiro
@@ -442,6 +444,7 @@ Há **3 componentes** a melhorar, cada um com **níveis 0, 1, 2 e 3**:
 - Tudo é **determinístico** → funções puras `(estado do jogo) → decisão`, testáveis sem tocar no jogo (44 testes).
 - Os especialistas mudam sempre que o plantel muda (compras, vendas, lesões, aniversários) → boa candidata a automatizar mesmo com tática manual.
 - Os endpoints para **ler/escrever** tática e especialistas são **desconhecidos** (o prior art só viu chaves `TeamTactic_{liga}_{equipa}` no localStorage). Ver `PRIOR_ART.md` §"Por verificar".
+- **Eventos do jogo (dono, 2026-10-14):** as definições de cada liga lêem-se de hora a hora e, entre as 05:30 e as 07:00, de 10 em 10 min, para saber a que horas os eventos começam (`events.check_every`). Uma mudança fica no registo com as duas leituras entre as quais aconteceu.
 
 ## 15. Estádio e patrocinadores
 
@@ -575,3 +578,5 @@ Na checklist do cartão, o passo fica **amarelo** quando o jogo o dá como feito
 **Posições** (dono, 2026-10-14): o jogo conta quantos titulares estão no lugar da sua posição específica (9/11 = 2 fora). O hover diz **quem**: "Messi (ED) a jogar a PL". O mapa de cada lugar de cada formação vem do código do próprio jogo (`theory/lineup.places`). Nomes: GR, DE, DC, DD, MDC, MC, MO, ME, MD, EE, PL, ED.
 
 **Especialistas:** como já estava (D-042), amarelo fora da regra (§4); o hover passa a dizer que papel está errado e quem a regra pede.
+
+**Treino secreto e estágio na janela** (dono, 2026-10-14): por baixo dos 8 passos, no fim da lista, com os ícones do próprio jogo (o escudo com cadeado e a tenda). **Marcado** para o próximo jogo: texto **verde** e ícone a cores com um anel verde. **Não marcado**: texto **cinzento** e ícone a cinzento. Sem jogo nesta jornada (o jogo não deixa marcar): igual a não marcado, e o hover diz porquê. Só mostra: comprar continua a ser decisão do dono (§6).

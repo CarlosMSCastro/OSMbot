@@ -77,10 +77,20 @@ def test_the_part_going_up_has_a_bar_when_its_length_is_known():
 
 def test_pre_match_checklist_shows_done_waiting_and_open_points():
     prep = club_view(club(), NOW)["prep"]
-    assert set(prep) == {"steps"}  # no percentage, only the marks (owner, 2026-10-09)
+    assert set(prep) == {"steps", "boosts"}  # no percentage, only the marks (owner, 2026-10-09)
     assert prep["steps"] == [("done", "Amigável", "", []), ("waiting", "Análise", "0h10", []), ("open", "Onze", "", [])]
     later = club_view(club(), NOW + 700)["prep"]
     assert later["steps"][1] == ("collect", "Análise", "por levantar", [])
+
+
+def test_secret_training_and_training_camp_come_after_the_steps_green_when_booked():
+    boosts = [{"kind": "secret", "name": "Treino secreto", "on": True, "blocked": ""},
+              {"kind": "camp", "name": "Estágio", "on": False, "blocked": ""}]
+    prep = club_view(club(prep={"steps": [], "boosts": boosts}), NOW)["prep"]
+    assert prep["boosts"] == [{"icon": "secret", "name": "Treino secreto", "on": True, "tip": "Marcado para o próximo jogo"},
+                              {"icon": "camp", "name": "Estágio", "on": False, "tip": "Não marcado"}]
+    blocked = [{**boosts[1], "blocked": "You don't have a match scheduled this matchday."}]
+    assert club_view(club(prep={"steps": [], "boosts": blocked}), NOW)["prep"]["boosts"][0]["tip"] == "Sem jogo nesta jornada"
 
 
 def test_a_step_out_of_the_owner_s_rule_is_yellow_and_says_why():

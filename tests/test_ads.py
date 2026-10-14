@@ -472,3 +472,11 @@ def test_no_second_try_when_the_shop_closed_meanwhile_and_a_second_failure_is_re
     assert watch_with_retry(fail, lambda: False) == 0
     with pytest.raises(AdsError):
         watch_with_retry(fail, lambda: True)
+
+
+def test_the_shop_videos_pause_when_a_training_is_ready_and_say_so():
+    watched, lines = [], []
+    ready = iter([False, True])
+    count = run_shop_ads(lambda: True, lambda: watched.append(1), log=lines.append, rng=Rng(), sleep=lambda s: None,
+                         training_ready=lambda: next(ready))
+    assert count == 2 and lines[-1] == "Loja: pausa, há treinos para recolher"  # the rest waits for the next pass

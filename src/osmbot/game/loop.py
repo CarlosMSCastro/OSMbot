@@ -21,6 +21,7 @@ from datetime import datetime
 from pathlib import Path
 
 from osmbot import logs as repo_log
+from osmbot.awake import keep_awake
 from osmbot.game.ads import (MAX_PER_BURST, MAX_TRAINING_VIDEOS, SHOP_ACTION, TRAINING_ACTION, VIDEO_SAVES, AdsError, is_claimable, money_state, pick_money_club, run_money_ads,
                              run_shop_ads, run_training_ads, watch_money_video, watch_shop_video, watch_training_video,
                              watch_with_retry)
@@ -260,7 +261,17 @@ def _shop_ads(dry_run: bool) -> int:
         _stats["shop_coins"] = _stats.get("shop_coins", 0) + gained  # the "+X" beside the boss coins (owner, 2026-10-09)
 
     return run_shop_ads(lambda: is_claimable(client), _counted("shop", watch, refresh_coins),
-                        dry_run=dry_run, log=_log, sleep=_tick_sleep)
+                        dry_run=dry_run, log=_log, sleep=_tick_sleep, training_ready=lambda: _training_ready(client))
+
+
+def _training_ready(client=None) -> bool:
+    """A training (or the universal trainer's session) has finished and waits to be collected."""
+    from osmbot.game.client import OsmClient
+
+    try:
+        return any(t <= time.time() for t in pending_finish_times(client or OsmClient()))
+    except Exception:  # a failed read never stops the videos: the next pass collects anyway
+        return False
 
 
 def _training_ads(dry_run: bool) -> int:
@@ -314,11 +325,14 @@ def _all_ads(dry_run: bool, clock=time.time) -> int:
     (the failure is reported after). Nothing is ever switched off, but a kind that keeps failing is left
     alone for longer each time (10, 20, 40, 60 min), so a broken page does not hold up every pass."""
     watched, errors = 0, []
+
     for step in (_shop_ads, _training_ads, _money_ads):
         name = step.__name__.strip("_")
         failures, not_before = _ads_backoff.get(name, (0, 0.0))
         if clock() < not_before:
             continue
+        if watched and _training_ready():  # collect first: the other videos wait for the next pass
+            break
         try:
             watched += step(dry_run)
             _ads_backoff.pop(name, None)
@@ -419,8 +433,9 @@ def run_active(dry_run: bool = False, *, claim=run_claim, train=run_train, finis
                 *rewards_module.COUNTS.values(), *prematch_module.COUNTS.values(),
                 *medical_module.COUNTS.values(), *inventory_module.COUNTS.values(), savings_module.COUNTS["deposits"])
 
+    awake = not dry_run and keep_awake(True)  # the PC must not sleep while the bot works (owner, 2026-10-14)
     try:
-        _log("Simulação (uma passagem)" if dry_run else "Bot ligado")
+        _log("Simulação (uma passagem)" if dry_run else "Bot ligado" + (" · o PC não adormece" if awake else ""))
         if shown:  # something to show right away, before the first pass (which can take minutes)
             try:
                 last_snapshot = snapshot()
@@ -615,6 +630,8 @@ def run_active(dry_run: bool = False, *, claim=run_claim, train=run_train, finis
                 _log("Parado")
                 return
     finally:
+        if awake:
+            keep_awake(False)
         if not dry_run and _stats.get("start") is not None:
             _log("Resumo: " + summary_text(last_snapshot, _summary_data(), clock()))
         if screen:

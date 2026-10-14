@@ -23,6 +23,7 @@ VALUES_FOR = 3600.0
 BENCH_STEP, ELEVEN_STEP, POSITIONS_STEP = 1, 0, 2
 CHECKLIST = [(7, "Amigável"), (5, "Análise"), (0, "Onze"), (2, "Posições"), (3, "Em forma"), (1, "Banco"),
              (4, "Especialistas"), (6, "4 treinos")]  # matchpreparation step types, in the card's order
+BOOSTS = [(8, "secret", "Treino secreto"), (9, "camp", "Estágio")]  # matchpreparation steps bought with boss coins: shown under the checklist
 ANALYSIS_STEP = 5
 FRIENDLY_STEP = 7
 _cache: dict[tuple, tuple[float, object]] = {}
@@ -86,15 +87,26 @@ def _people(players: list[dict], cases: list[dict]) -> list[dict]:
     return result
 
 
+def _settings(client, league_id: int) -> list[dict]:
+    """The league's game settings, kept for a while (an event changes them: DISCOVERY.md §6b)."""
+    return _cached(("gamesettings", league_id), FIXTURES_FOR, lambda: _list(client, f"leagues/{league_id}/gamesettings"))
+
+
 def max_listed(client, league_id: int) -> int:
     """The game's limit of players on the transfer list (4 normally, 6 in events), kept for a while."""
     from osmbot.game.slots import MAX_SLOTS_SETTING
 
-    def read():
-        settings = _list(client, f"leagues/{league_id}/gamesettings")
-        return next((g["value"] for g in settings if g["name"] == MAX_SLOTS_SETTING), 4)
+    return next((g["value"] for g in _settings(client, league_id) if g["name"] == MAX_SLOTS_SETTING), 4)
 
-    return _cached(("max_listed", league_id), FIXTURES_FOR, read)
+
+def session_minutes(client, league_id: int) -> tuple[int, int]:
+    """How long a training and a universal trainer's session last now in this league, in minutes (480 and 360
+    normally, 120 and 90 in the Super Staff)."""
+    from osmbot.events.calendar import NORMAL
+
+    values = {g["name"]: g["value"] for g in _settings(client, league_id)}
+    return (values.get("TrainingSession") or NORMAL["TrainingSession"],
+            values.get("TrainingUniversalSession") or NORMAL["TrainingUniversalSession"])
 
 
 def club_extra(client, team: dict, base: str, players: list[dict], slot, market: list[dict]) -> dict:
@@ -159,6 +171,10 @@ def club_extra(client, team: dict, base: str, players: list[dict], slot, market:
     steps = [(name, False, RULE) if why.get(kind) and done_ else (name, done_, extra)
              for (kind, _), (name, done_, extra) in zip(CHECKLIST, steps)]
     reasons = {name: why[kind] for (kind, _), (name, _, _) in zip(CHECKLIST, steps) if why.get(kind)}
+    by_type = {s["type"]: s for s in prep.get("steps") or []}
+    boosts = [{"kind": key, "name": name, "on": done.get(kind, False),  # marked for the next match (owner, 2026-10-14)
+               "blocked": "" if (by_type.get(kind) or {}).get("enabled", True) else by_type[kind].get("disabledText") or "?"}
+              for kind, key, name in BOOSTS]
 
     by_id = {p["id"]: p for p in players}
     injured = [{**p, "unavailable": by_id.get(p["id"], p).get("unavailable")} for p in _as_list(got[4])]
@@ -175,6 +191,6 @@ def club_extra(client, team: dict, base: str, players: list[dict], slot, market:
         "value": squad_value(values, team["id"]), "strength": strength,
         "table": league_summary(standings, teams, matches, team["id"], week, team.get("goal")),
         "free_slots": free, "sales": sold,
-        "prep": {"pct": prep.get("completionPercentage"), "steps": steps, "why": reasons},
+        "prep": {"pct": prep.get("completionPercentage"), "steps": steps, "why": reasons, "boosts": boosts},
         "injured": _people(injured, doctor), "suspended": _people(suspended, lawyer),
     }

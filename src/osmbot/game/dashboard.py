@@ -90,10 +90,22 @@ def upgrade_length(timer_id: int, left: float) -> float | None:
     return _upgrade_lengths[timer_id]
 
 
+TRAINING_NORMAL, UNIVERSAL_NORMAL = 8 * 3600, 6 * 3600  # s: TrainingSession 480, TrainingUniversalSession 360
+_session_lengths: dict[int, float] = {}  # session id -> total length, decided the first time it is seen
+
+
+def session_length(session_id: int, left: float, now_length: float, normal: float) -> float:
+    """How long a training lasts in all: the game gives only its end. The league's length now (gamesettings: 2 h in
+    the Super Staff); a session with more left than that began before the event, so it gets the normal length."""
+    if session_id not in _session_lengths:
+        _session_lengths[session_id] = now_length if left <= now_length else max(normal, now_length)
+    return _session_lengths[session_id]
+
+
 def collect(client) -> dict:
     """One snapshot of everything the board shows (GET requests only, several at a time)."""
 
-    from osmbot.game.clubinfo import max_listed
+    from osmbot.game.clubinfo import max_listed, session_minutes
 
     started = time.time()  # when the reading began: the board keeps the newest one (bot's or window's)
     (_, account), (_, wallet) = get_many(client, ["user/accounts", "user/bosscoinwallet"])
@@ -110,6 +122,11 @@ def collect(client) -> dict:
         running = [p["countdownTimer"]["finishedTimestamp"] for p in stadium["stadiumParts"]
                    if p.get("countdownTimer") and p["countdownTimer"]["finishedTimestamp"] > time.time()]
         live = [c for c in contracts if c.get("weeksLeft", 0) > 0]
+        training_min, universal_min = session_minutes(client, team["leagueId"])
+
+        def length(s: dict, minutes: int, normal: float) -> float:
+            return session_length(s["id"], s["countdownTimer"]["finishedTimestamp"] - time.time(), minutes * 60, normal)
+
         club = {
             "name": team["name"], "ranking": team.get("ranking"), "league": leagues.get(team["name"], {}).get("name", "?"),
             "tired": tired_starters(players), "match": match,
@@ -126,13 +143,15 @@ def collect(client) -> dict:
             "sponsors": {"slots": len(live), "revenue": sum(c["sponsorRevenueForTeam"] for c in live)}, "slots": (slot.listed, slot.maximum) if slot else None,
             "trainings": [
                 {"id": s["id"], "name": s["player"]["name"], "pos": POSITIONS.get(s["player"]["position"], "?"),
-                 "finish": s["countdownTimer"]["finishedTimestamp"], "claimed": s["countdownTimer"]["isClaimed"]}
+                 "finish": s["countdownTimer"]["finishedTimestamp"], "claimed": s["countdownTimer"]["isClaimed"],
+                 "length": length(s, training_min, TRAINING_NORMAL)}
                 for s in sorted(sessions, key=lambda s: s["trainer"]) if s["trainer"] != UNIVERSAL_TRAINER
             ],
             "universal": {  # the universal trainer (THEORY.md section 20): beside the doctor and the lawyer
                 "until": active_until(timers, time.time()),
                 "session": next(({"id": s["id"], "name": s["player"]["name"], "finish": s["countdownTimer"]["finishedTimestamp"],
-                                  "claimed": s["countdownTimer"]["isClaimed"]}
+                                  "claimed": s["countdownTimer"]["isClaimed"],
+                                  "length": length(s, universal_min, UNIVERSAL_NORMAL)}
                                  for s in sessions if s["trainer"] == UNIVERSAL_TRAINER), None)},
         }
         try:  # an event going on in this league: what it changed in the game's settings (D-038)
@@ -389,7 +408,7 @@ def _render(snapshot: dict | None, now: float, status: str, recent: list[str], m
                 ready = left <= 0 and not t["claimed"]
                 state = timer(left, ready) + " " * (6 - len("pronto" if ready else span(left)))
                 lines.append(f"   {t['name'][:14]:<14} {t['pos']:<4} {state} "
-                             + painted_bar(left, BAR_SECONDS, BAR_WIDTH, skipped.get(t.get("id"), 0)))
+                             + painted_bar(left, t.get("length") or BAR_SECONDS, BAR_WIDTH, skipped.get(t.get("id"), 0)))
             tired = club.get("tired") or []
             if tired:
                 prefix, names = "   ! cansados: ", [f"{p['name'].split()[-1]} {p['fitness']}%" for p in tired]

@@ -44,6 +44,13 @@ def test_corner_taker_is_midfielder_with_most_attack(make_player):
     assert pick_corner_taker([striker, mid_low, mid_high]) is mid_high
 
 
+def test_equal_attack_goes_to_the_better_rest_of_the_stats(make_player):
+    marmoush = make_player(Position.ATT, att=111, ovr=65, deff=19, id=1)
+    trossard = make_player(Position.ATT, att=111, ovr=73, deff=36, id=2)
+    assert pick_penalty_taker([marmoush, trossard]) is trossard  # the owner's case (2026-10-14), not the lower id
+    assert pick_free_kick_taker([marmoush, trossard]) is trossard
+
+
 def test_equal_attack_is_broken_by_rating_then_lower_id(make_player):
     a = make_player(Position.MID, att=70, ovr=60, id=5)
     b = make_player(Position.MID, att=70, ovr=60, id=3)

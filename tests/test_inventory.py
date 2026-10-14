@@ -60,7 +60,7 @@ class FakeGame:
             return 200, {"teamSlots": {"0": {"team": {"id": 1, "leagueId": 9, "name": "A"}},
                                        "1": {"team": {"id": 2, "leagueId": 8, "name": "B"}}}}
         if path.endswith("/gamesettings"):
-            return 200, [{"id": 974, "name": "TrainingUniversalSession"}]
+            return 200, [{"id": 974, "name": "TrainingUniversalSession", "value": 90}]
         if path in ("leagues/9", "leagues/8"):
             return 200, {"weekNr": 5}
         base = next(b for b in clubs if path.startswith(b + "/"))
@@ -105,7 +105,7 @@ def test_a_universal_trainer_about_to_expire_goes_to_the_club_with_most_to_gain_
     assert failures == 0
     assert fake.writes == [("PUT", "leagues/8/teams/2/universaltrainer/ut24/claim"),
                            ("POST", "leagues/8/teams/2/trainingsessions", {"playerId": 20, "trainer": 5, "timerGameSettingId": 974})]
-    assert "Treinador universal de 24 h ativado em B" in lines[0] and "P20 (B, previsão 67) a treinar" in lines[1]
+    assert "Treinador universal de 24 h ativado em B" in lines[0] and "P20 (B, previsão 67) a treinar (1h30)" in lines[1]  # the length now (Super Staff)
 
 
 def test_an_active_universal_trainer_with_nobody_gets_the_next_player_and_a_busy_one_is_left_alone(game):
@@ -158,6 +158,12 @@ def test_the_window_shows_the_inventory_and_the_universal_trainer():
     ring = universal_ring({"until": NOW + 20 * HOUR, "session": {"name": "P1", "finish": NOW + 3 * HOUR, "claimed": False}}, NOW)
     assert (ring["state"], ring["centre"], ring["name"], ring["done"]) == ("working", "3h00", "P1", 0.5)
     assert universal_ring({"until": NOW + HOUR, "session": None}, NOW)["state"] == "waiting"
+    event = {"until": NOW + 20 * HOUR, "session": {"name": "P1", "finish": NOW + HOUR, "claimed": False, "length": 1.5 * HOUR}}
+    assert round(universal_ring(event, NOW)["done"], 2) == 0.33  # 1 h left of a 1h30 session (Super Staff)
+
+
+def test_the_universal_session_length_in_the_log():
+    assert [inventory._minutes(v) for v in (360, 90, 45, None)] == ["6 h", "1h30", "45 min", "?"]
 
 
 def test_training_videos_skip_the_universal_trainer_and_the_bot_wakes_to_collect_its_session():
