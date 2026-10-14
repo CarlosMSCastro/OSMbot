@@ -11,9 +11,11 @@ are only called by the owner-approved write commands (see D-014).
 """
 from __future__ import annotations
 
+import base64
 import json
 import threading
 import os
+import re
 import ssl
 import time
 import urllib.error
@@ -69,6 +71,8 @@ def save_browser_session(cookies: list[dict], state_file: Path = STATE_FILE) -> 
     return True
 
 
+NEW_CLUB_RETRY = 600  # s: a club missing from the token is renewed for at most this often
+_NEW_CLUB_TRIED: dict[str, float] = {}
 _RENEW_LOCK = threading.RLock()  # one for the whole program: the bot and the window never renew at the same time
 _ssl_context: ssl.SSLContext | None = None
 
@@ -117,6 +121,33 @@ class OsmClient:
     def _token(self, name: str) -> str | None:
         cookie = self._cookie(name)
         return cookie["value"] if cookie else None
+
+    def _token_clubs(self) -> set[str] | None:
+        """The clubs the access token is for ("league,team", its `team` claim); None if it does not say. The game
+        fills it when the token is issued: a club created since is missing until the next renewal (2026-10-14)."""
+        token = self._token("access_token") or ""
+        parts = token.split(".")
+        try:
+            payload = json.loads(base64.urlsafe_b64decode(parts[1] + "=" * (-len(parts[1]) % 4)))
+        except (IndexError, ValueError):
+            return None
+        clubs = payload.get("team") if isinstance(payload, dict) else None
+        if isinstance(clubs, str):
+            clubs = [clubs]
+        return {str(c) for c in clubs} if isinstance(clubs, list) else None
+
+    def _club_missing(self, path: str) -> str | None:
+        """The club of ``path`` ("league,team") when the token does not list it, at most once per club every
+        NEW_CLUB_RETRY seconds (other clubs' finances also answer 403, and must not renew every time)."""
+        match = re.search(r"leagues/(\d+)/teams/(\d+)", path)
+        clubs = self._token_clubs()
+        if not match or clubs is None:
+            return None
+        club = f"{match[1]},{match[2]}"
+        if club in clubs or time.time() - _NEW_CLUB_TRIED.get(club, 0) < NEW_CLUB_RETRY:
+            return None
+        _NEW_CLUB_TRIED[club] = time.time()
+        return club
 
     def _access_is_fresh(self) -> bool:
         token = self._token("access_token")
@@ -205,6 +236,12 @@ class OsmClient:
                 headers={**headers, "Authorization": f"Bearer {used}"},
             )
             status, raw = self._transport(request)
+            if status == 403 and attempt == 1 and self._club_missing(path):
+                with self._lock:  # a club created after the token was issued: renew once so the token lists it
+                    self._reload()
+                    if self._token("access_token") == used:
+                        self.refresh(force=True)
+                continue
             if status == 401 and attempt == 1:
                 with self._lock:  # token rejected despite looking fresh: renew once (unless another client just did)
                     self._reload()

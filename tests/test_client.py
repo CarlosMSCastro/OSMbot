@@ -63,6 +63,25 @@ def test_401_triggers_one_refresh_and_retry(tmp_path):
     assert OsmClient(state, codes, fake).get("x")[0] == 200
 
 
+def test_a_403_for_a_club_missing_from_the_token_renews_once_then_not_again(tmp_path, monkeypatch):
+    import osmbot.game.client as client
+
+    monkeypatch.setattr(client, "_NEW_CLUB_TRIED", {})
+    seg = lambda d: base64.urlsafe_b64encode(json.dumps(d).encode()).decode().rstrip("=")
+    state, codes = make(tmp_path, time.time() + 600, time.time() + 86400)
+    cookies = json.loads(state.read_text())
+    cookies["cookies"][0]["value"] = f"{seg({'alg': 'x'})}.{seg({'exp': time.time() + 600, 'team': ['1,1']})}.sig"
+    state.write_text(json.dumps(cookies), encoding="utf-8")
+    answer, _ = renewal(tmp_path)
+    fake = Fake((403, b""), answer, (200, b"[]"))  # a club created after the token: renew, then it answers
+    assert OsmClient(state, codes, fake).get("leagues/9/teams/8/timers") == (200, [])
+    fake = Fake((403, b""), (403, b""))  # already tried: a real 403 (another club's finances) is left alone
+    assert OsmClient(state, codes, fake).get("leagues/9/teams/8/finances")[0] == 403
+    assert len(fake.requests) == 1
+    fake = Fake((403, b""))  # a club the token lists: no renewal
+    assert OsmClient(state, codes, fake).get("leagues/1/teams/1/stadium")[0] == 403
+
+
 def test_dead_refresh_token_needs_browser(tmp_path):
     state, codes = make(tmp_path, time.time() - 10, time.time() - 10)
     with pytest.raises(NeedsBrowserLogin):
