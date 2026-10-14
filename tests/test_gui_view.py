@@ -209,6 +209,8 @@ def test_doctor_and_lawyer_rings():
     assert care_ring("Médico", [], NOW)["state"] == "none"
     working = care_ring("Médico", [{"name": "J3", "games": 2, "until": NOW + 3600}], NOW)
     assert (working["state"], working["centre"], working["name"]) == ("working", "1h00", "J3") and working["done"] == 7 / 8
+    event = care_ring("Médico", [{"name": "J3", "games": 2, "until": NOW + 3600, "length": 3 * 3600}], NOW)
+    assert round(event["done"], 3) == round(2 / 3, 3)  # a 3 h case of the Super Staff: drawn against its own length, not 8 h
     assert care_ring("Médico", [{"name": "J3", "games": 2, "ready": True}], NOW)["centre"] == "pronto"
     assert care_ring("Médico", [{"name": "J3", "games": 4}, {"name": "J5", "games": 1}], NOW)["name"] == "J3 +1"
     one = care_ring("Advogado", [{"name": "J8", "games": 1}], NOW, lawyer=True)

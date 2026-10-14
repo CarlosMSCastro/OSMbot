@@ -9,7 +9,7 @@ MAIN_STAT = {1: "statAtt", 2: "statOvr", 3: "statDef", 4: "statDef"}  # the rati
 ELEVEN = range(1, 12)
 TACKLING = {0: "Cuidadoso", 1: "Normal", 2: "Agressivo", 3: "Extremo"}  # the tactics' `style` (game's TacticStyleOfPlay)
 REFEREES = {1: "muito rigoroso", 2: "rigoroso", 3: "normal", 4: "brando", 5: "muito brando"}  # `strictness`
-ACCEPTED = {1: {1}, 2: {2}, 3: {2}, 4: {2, 3}, 5: {3}}  # strictness -> tackling the owner accepts (sections 3, 21)
+ACCEPTED = {1: {1}, 2: {2}, 3: {2}, 4: {2, 3}, 5: {2, 3}}  # strictness -> tackling the owner accepts (sections 3, 21; very lenient: also Aggressive, 2026-10-14)
 # `specificPosition` (game's PlayerSpecificPosition: 1 CAM, 2 CM, 3 CB, 4 ST, 5 CDM, 6 GK, 7 LM, 8 LF, 9 LB, 10 RM,
 # 11 RF, 12 RB) as the owner says them
 SPECIFIC = {1: "MO", 2: "MC", 3: "DC", 4: "PL", 5: "MDC", 6: "GR", 7: "ME", 8: "EE", 9: "DE", 10: "MD", 11: "ED", 12: "DD"}
@@ -83,10 +83,45 @@ def formation_name(tactic: dict) -> str:
     return f"{digits} {detail}".strip() if digits == "4-3-3" else digits
 
 
-def tactic_warnings(tactic: dict | None, strictness: int | None, mine: float | None, opponent: float | None) -> list[str]:
+WINGERS = {8: "EE", 11: "ED"}  # specificPosition of the wingers the 4-3-3 needs, one on each side
+
+
+def _no_wingers(players: list[dict]) -> str | None:
+    """Why the 4-3-3 cannot be played (owner, 2026-10-14): a side with no winger fit to play (fitness >= 80, not
+    injured or suspended), in the whole squad. None when both sides have one."""
+    missing = []
+    for code, side in WINGERS.items():
+        mine = [p for p in players if p.get("specificPosition") == code]
+        if any(not p.get("unavailable") and (p.get("fitness") or 0) >= YELLOW_BELOW for p in mine):
+            continue
+        who = ", ".join(f"{p['name']} {'fora' if p.get('unavailable') else str(p.get('fitness') or 0) + ' %'}"
+                        for p in mine)
+        missing.append(f"sem {side} em forma ({who})" if who else f"sem {side} no plantel")
+    return "; ".join(missing) or None
+
+
+def _wingerless(tactic: dict, players: list[dict] | None) -> str | None:
+    """The 4-4-2 B (2 strikers, no wingers) taken in place of the 4-3-3 A when a side has no fit winger: the reason,
+    or None when it does not apply."""
+    if tactic.get("formation") != 442 or (tactic.get("formationDetail") or "") != "B" or players is None:
+        return None
+    return _no_wingers(players)
+
+
+def tactic_notes(tactic: dict | None, players: list[dict] | None, mine: float | None, opponent: float | None) -> list[str]:
+    """What the tactics do differently from the rule, on purpose and within it (the step stays green): the 4-4-2 B
+    for want of wingers (THEORY.md section 1)."""
+    if not tactic or (mine and opponent and choose_formation(mine, opponent) == Formation.F532):
+        return []
+    why = _wingerless(tactic, players)
+    return [f"4-4-2 B aceite: {why}"] if why else []
+
+
+def tactic_warnings(tactic: dict | None, strictness: int | None, mine: float | None, opponent: float | None,
+                    players: list[dict] | None = None) -> list[str]:
     """What is out of the rule in the tactics: the tackling for the next match's referee, and the formation
-    (4-3-3 A; 5 defenders, any of them, once the analysis shows a stronger opponent). ``opponent``: None before the
-    analysis."""
+    (4-3-3 A, or the 4-4-2 B when a side has no fit winger; 5 defenders, any of them, once the analysis shows a
+    stronger opponent). ``opponent``: None before the analysis."""
     if not tactic:
         return []
     warnings = []
@@ -99,6 +134,6 @@ def tactic_warnings(tactic: dict | None, strictness: int | None, mine: float | N
     if wanted_formation == Formation.F532:  # any formation with 5 defenders: the owner picks the one that fits the players
         if current and not current.startswith("5-"):
             warnings.append(f"Formação {current}: devia ser de 5 defesas (adversário mais forte)")
-    elif current and current.replace(" ", "") != wanted_formation.value.replace(" ", ""):
+    elif current and current.replace(" ", "") != wanted_formation.value.replace(" ", "") and not _wingerless(tactic, players):
         warnings.append(f"Formação {current}: devia ser {wanted_formation.value}")
     return warnings

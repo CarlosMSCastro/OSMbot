@@ -52,8 +52,10 @@ def test_friendly_opponents_exclude_the_club_and_this_weeks_friendlies():
 
 
 class FakeClient:
-    def __init__(self, steps, match_in=3600, coins=100, sent=None, post_status=200, clubs=6, friendlies=1):
+    def __init__(self, steps, match_in=3600, coins=100, sent=None, post_status=200, clubs=6, friendlies=1,
+                 settings=({"id": 60, "name": "SpyInstructionTimer", "value": 60},)):
         self.steps, self.coins, self.sent, self.post_status = steps, coins, sent, post_status
+        self.settings = list(settings)
         self.match = NOW + match_in
         self.clubs, self.friendlies = clubs, friendlies
         self.posts, self.puts = [], []
@@ -63,6 +65,7 @@ class FakeClient:
         data = {
             f"{BASE}/timers": [{"type": 14, "finishedTimestamp": self.match}],
             LEAGUE: {"weekNr": 14},
+            f"{LEAGUE}/gamesettings": self.settings,
             f"{BASE}/matchpreparation": {"steps": self.steps},
             "user/bosscoinwallet": {"amount": self.coins - 4 * sum(1 for p, _ in self.posts if p.endswith("/matches"))},
             f"{LEAGUE}/teams": teams,
@@ -140,6 +143,14 @@ def test_what_the_owner_already_did_is_left_alone():
     client = FakeClient([step(7, 1), step(5, 0)], sent=[{"weekNr": 14}], friendlies=4)
     assert prepare(client)[0] == (0, None)
     assert client.posts == []
+
+
+def test_in_an_event_the_analyst_takes_the_event_timer_and_is_collected_when_it_ends():
+    client = FakeClient([step(7, 4), step(5, 0)], friendlies=4,
+                        settings=[{"id": 728, "name": "SpyInstructionTimer", "value": 15}])  # Super Staff, 2026-10-14
+    (failures, wake), lines = prepare(client)
+    assert client.posts == [(f"{BASE}/spyinstructions", {"instructionTeamId": 3, "timerGameSettingId": 728})]
+    assert failures == 0 and wake == NOW + 15 * 60 and "Análise: Club enviou o analista a T3 (15 min)" in lines
 
 
 def test_without_coins_no_friendly_but_the_analysis_still_goes():

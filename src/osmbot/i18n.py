@@ -81,7 +81,7 @@ WORDS = {
     # board titles and labels
     "DIÁRIAS": "DAILY", "BOSS COINS": "BOSS COINS", "A SEGUIR": "UP NEXT", "TREINOS": "TRAINING", "ESTÁDIO": "STADIUM",
     "AGORA": "NOW", "PRÉ-JOGO": "PRE-MATCH", "Valor plantel": "Squad value", "Dinheiro": "Money",
-    "Fora da regra": "Out of your rule", "Vendas": "Sales",
+    "Fora da regra": "Out of your rule", "Aceite": "Accepted", "Vendas": "Sales",
     "Campeões": "Champions", "Patrocinadores": "Sponsors", "Cansados": "Tired", "CASA": "HOME", "FORA": "AWAY", "em": "in",
     # club card
     "Treinos": "Training", "Campo": "Pitch", "Capacidade": "Capacity", "no máximo": "at max", "parado": "idle",
@@ -145,6 +145,9 @@ PATTERNS = [(re.compile(pattern), replace) for pattern, replace in (
     (r"^Formação (.+?): devia ser de 5 defesas \(adversário mais forte\)$",
      lambda m: f"Formation {m[1]}: should have 5 defenders (stronger opponent)"),
     (r"^Formação (.+?): devia ser (.+)$", lambda m: f"Formation {m[1]}: should be {m[2]}"),
+    (r"^4-4-2 B aceite: (.+)$", lambda m: "4-4-2 B accepted: " + re.sub(
+        r"sem (\w+) (em forma|no plantel)", lambda w: f"no {'fit ' if w[2] == 'em forma' else ''}"
+        f"{_SPECIFIC.get(w[1], w[1])}{' in the squad' if w[2] == 'no plantel' else ''}", m[1]).replace(" fora", " out")),
     (r"^(Capitão|Penáltis|Livres|Cantos): (.+), pela regra (.+)$",
      lambda m: f"{_ROLE[m[1]]}: {m[2]}, your rule says {m[3]}"),
     # card
@@ -197,10 +200,10 @@ PATTERNS = [(re.compile(pattern), replace) for pattern, replace in (
     (r"Vídeos da loja ×(\d+)", lambda m: f"Shop videos ×{m[1]}"),
     (r"(Vídeo de treino −2h|Vídeo de dinheiro) ×(\d+)", lambda m: f"{_w(m[1])} ×{m[2]}"),
     (r"Estádio: (\w+) a subir", lambda m: f"Stadium: {_PART.get(m[1], m[1])} going up"),
-    (r"(.+) pôs (.+) no (médico|advogado) \(8 h\)", lambda m: f"{m[1]} sent {m[2]} to the {'doctor' if m[3] == 'médico' else 'lawyer'} (8 h)"),
+    (r"(.+) pôs (.+) no (médico|advogado) \((.+)\)", lambda m: f"{m[1]} sent {m[2]} to the {'doctor' if m[3] == 'médico' else 'lawyer'} ({m[4]})"),
     (r"(.+) levantou o analista", lambda m: f"{m[1]} collected the analyst"),
     (r"(.+) levantou (.+)", lambda m: f"{m[1]} collected {m[2]}"),
-    (r"(.+) enviou o analista a (.+) \(1 h\)", lambda m: f"{m[1]} sent the analyst to {m[2]} (1 h)"),
+    (r"(.+) enviou o analista a (.+) \((.+)\)", lambda m: f"{m[1]} sent the analyst to {m[2]} ({m[3]})"),
     # what the bot is doing
     (r"vídeo da loja (\d+)/(\d+)", lambda m: f"shop video {m[1]}/{m[2]}"),
     (r"vídeo de treino (.+)", lambda m: f"training video {m[1]}"),

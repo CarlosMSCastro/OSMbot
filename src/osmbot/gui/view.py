@@ -46,7 +46,7 @@ def _people(people: list[dict], place: str, now: float) -> list[tuple[str, str |
     return pieces or [("0", GREY)]
 
 
-CASE_SECONDS = 8 * 3600  # doctor and lawyer: 480 min (DISCOVERY.md section 3)
+CASE_SECONDS = 8 * 3600  # doctor and lawyer: 480 min (DISCOVERY.md section 3); when the case has no length
 
 
 def stadium_rings(stadium: dict | None, now: float) -> list[dict]:
@@ -79,7 +79,7 @@ def care_ring(label: str, people: list[dict], now: float, lawyer: bool = False) 
                 "games": count}
     if first.get("until") and first["until"] > now:
         return {"label": label, "state": "working", "centre": span(first["until"] - now), "name": name, "sub": games,
-                "done": _done(first["until"] - now, CASE_SECONDS), "games": count}
+                "done": _done(first["until"] - now, first.get("length") or CASE_SECONDS), "games": count}
     if lawyer and count < 2:
         return {"label": label, "state": "blocked", "centre": "não dá", "name": name, "sub": "1 jogo · não dá", "done": 0.0,
                 "games": count}
@@ -264,8 +264,8 @@ def club_view(club: dict, now: float, shortened: dict | None = None) -> dict:
     why = prep.get("why") or {}
     for name, done, analyst in prep.get("steps") or []:
         reasons = why.get(name) or []  # out of the owner's rule: said on hover (THEORY.md section 21)
-        if done:
-            steps.append(("done", name, "", reasons))
+        if done:  # a done step never has warnings (they make it yellow): its lines are notes, a small "ⓘ" (owner, 2026-10-14)
+            steps.append(("done", name, "ⓘ" if reasons else "", reasons))
         elif analyst == "fora da regra":  # done in the game but not as the owner's rule: yellow (owner, 2026-10-12)
             steps.append(("progress", name, "", reasons))
         elif analyst and analyst > now:

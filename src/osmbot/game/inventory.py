@@ -12,6 +12,7 @@ import time
 
 from osmbot import logs
 from osmbot.game import refusals
+from osmbot.game.timers import minutes_text
 from osmbot.inventory.policy import (BAG, UNIVERSAL, UNIVERSAL_TRAINER, active_until, due, expires, pick_club,
                                      universal_trainee, wake_times)
 from osmbot.rewards.texts import prize_text
@@ -62,12 +63,7 @@ def _setting(client, league: int) -> tuple[int, int] | None:
     return next(((g["id"], g.get("value")) for g in settings or [] if g.get("name") == UNIVERSAL_SETTING), None)
 
 
-def _minutes(value) -> str:
-    """360 -> "6 h", 90 -> "1h30"; the time as the log says it."""
-    if not isinstance(value, int) or value <= 0:
-        return "?"
-    hours, minutes = divmod(value, 60)
-    return f"{hours} h" if not minutes else f"{hours}h{minutes:02d}" if hours else f"{minutes} min"
+_minutes = minutes_text  # the time as the log says it (game/timers)
 
 
 def _train(client, club: _Club, confirm: bool, log) -> int:

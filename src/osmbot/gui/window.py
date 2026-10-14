@@ -1203,9 +1203,11 @@ class ClubCard(QFrame):
         self.tired.setToolTip(tip_text("\n\n".join(tr(part) for part in (club.get("tired_tip") or "").split("\n\n"))))
 
     def _show_prep(self, steps: list) -> None:
-        """A step out of the owner's rule says why on hover (THEORY.md section 21)."""
+        """A step out of the owner's rule says why on hover (THEORY.md section 21); a green one may carry a note (a
+        choice within the rule, e.g. the 4-4-2 B for want of wingers)."""
         self.prep.show_steps([(kind, tr(name) + (f" {tr(extra)}" if extra else ""), StepIcon.COLOURS[kind],
-                               [(None, tr(line), YELLOW) for line in why], tr("Fora da regra") if why else None)
+                               [(None, tr(line), GREEN if kind == "done" else YELLOW) for line in why],
+                               (tr("Aceite") if kind == "done" else tr("Fora da regra")) if why else None)
                               for kind, name, extra, why in steps])
 
     def _show_trainings(self, rows: list) -> None:

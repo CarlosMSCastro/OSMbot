@@ -4,6 +4,18 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-PT/1.1.0/); 
 
 Este ficheiro é o **histórico de versões, para quem lê o repo**. O diário interno de cada sessão de trabalho está em [`docs/WORKLOG.md`](docs/WORKLOG.md).
 
+## [0.11.13] — 2026-10-14
+
+Médico, advogado e analista com o tempo dos eventos, e o 4-4-2 B aceite quando faltam extremos em forma.
+
+### Corrigido
+- **Médico, advogado e analista nos eventos:** pediam sempre o temporizador normal (médico e advogado 8 h, analista 1 h), mesmo com um evento a dar menos tempo (no Super Staff: 3 h e 15 min). Passam a pedir o do evento, como os treinos já faziam; sem as definições do jogo, o normal.
+- O registo dizia sempre "(8 h)" e "(1 h)"; passa a dizer a duração real. A hora de levantar, os círculos do médico e do advogado e a duração das melhorias do estádio num evento também passam a vir das definições do jogo.
+
+### Alterado
+- **4-4-2 B sem extremos em forma:** o 4-3-3 A precisa de um extremo esquerdo e um direito em forma (condição ≥ 80 %, sem lesão nem castigo). Se faltar um dos lados, o 4-4-2 B conta como certo: o passo "Onze" fica verde com um "ⓘ" e a razão ao passar o rato.
+- **Desarme com árbitro muito brando:** Agressivo também conta como certo (antes: só Extremo).
+
 ## [0.11.12] — 2026-10-14
 
 O aviso da formação passa a comparar as equipas como o jogo: com os bónus do círculo ("+3 %") e a vantagem de casa.

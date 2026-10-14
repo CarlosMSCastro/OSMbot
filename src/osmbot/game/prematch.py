@@ -15,13 +15,13 @@ import time
 
 from osmbot import logs
 from osmbot.game import clubinfo, refusals
+from osmbot.game.timers import minutes_text, timer
 from osmbot.prematch.policy import (LEAD, friendly_choices, friendly_event, friendlies_due, friendlies_missing,
                                     friendlies_played, in_window, needs_analysis, next_friendly_at, next_opponent)
 
 FRIENDLY_PRODUCT = 62  # bosscoinproducts: "Friendly"
 FRIENDLY_PRICE = 4  # boss coins
-SPY_TIMER_SETTING = 60  # gamesettings: "SpyInstructionTimer"
-ANALYST_SECONDS = 3600  # SpyInstructionTimer: 60 min
+SPY_TIMER_NAME, SPY_TIMER_SETTING = "SpyInstructionTimer", 60  # gamesettings: its name and normal id (60 min; 15 in the Super Staff)
 NEXT_MATCH_TIMER = 14  # timers: "Your next match"
 PAUSE_BETWEEN_WRITES = 1.5  # seconds
 MAX_REFUSALS = 3  # refused friendlies per club per pass before giving up until the next pass (each moves on to another club)
@@ -108,36 +108,38 @@ def _play_friendlies(client, team: dict, base: str, league: str, week: int, targ
     return 0, before + played
 
 
-def _send_analyst(client, team: dict, base: str, league: str, week: int, confirm: bool, log) -> int:
+def _send_analyst(client, team: dict, base: str, league: str, week: int, confirm: bool, log) -> tuple[int, float | None]:
+    """Send the analyst to the next opponent. Returns (failures, how long it takes in seconds, when sent)."""
     _, matches = client.get(f"{league}/matches/filter")
     opponent = next_opponent(matches, team["id"], week)
     if opponent is None:
         log(f"! {team['name']}: não sei quem é o próximo adversário; análise fica por fazer")
-        return 0
+        return 0, None
     _, teams = client.get(f"{league}/teams")
     name = next((t["name"] for t in teams if t["id"] == opponent), str(opponent))
     key = f"analista:enviar:{base}"
     if refusals.blocked(key, week=week):
-        return 0
+        return 0, None
     if not confirm:
         log(f"{team['name']}: enviaria o analista a {name}")
-        return 0
-    status, _ = client.post(f"{base}/spyinstructions", {"instructionTeamId": opponent, "timerGameSettingId": SPY_TIMER_SETTING})
+        return 0, None
+    setting, minutes = timer(client, league, SPY_TIMER_NAME, SPY_TIMER_SETTING)  # the event's one when there is one
+    status, _ = client.post(f"{base}/spyinstructions", {"instructionTeamId": opponent, "timerGameSettingId": setting})
     time.sleep(PAUSE_BETWEEN_WRITES)
     if status == 200:
         COUNTS["analyses"] += 1
-        log(f"Análise: {team['name']} enviou o analista a {name} (1 h)")
-        return 0
+        log(f"Análise: {team['name']} enviou o analista a {name} ({minutes_text(minutes)})")
+        return 0, minutes * 60
     if refusals.is_refusal(status):
         refusals.refuse(key, log, f"! Análise: o jogo recusou enviar o analista a {name} ({team['name']}, {status}); "
                         "volto a tentar na próxima jornada", week=week)
-        return 0
+        return 0, None
     log(f"Análise: {team['name']} → {name} falhou ({status})")
-    return 1
+    return 1, None
 
 
 def _collect_analyst(client, team: dict, base: str, sent: list[dict], week: int, now: float, confirm: bool, log) -> tuple[int, float | None]:
-    """Collect this week's analyst once its hour is over. Returns (failures, when it ends if still working)."""
+    """Collect this week's analyst once its time is over. Returns (failures, when it ends if still working)."""
     for entry in sent:
         timer = entry.get("countdownTimer")
         if entry.get("weekNr") != week or not timer or timer.get("isClaimed"):
@@ -215,10 +217,10 @@ def prepare_club(client, team: dict, base: str, confirm: bool, now: float, log=p
             log(f"Especialistas ({team['name']}): erro ({error})")
         _, prep = client.get(f"{base}/matchpreparation")
         if needs_analysis(prep.get("steps") or [], sent, week):
-            before = COUNTS["analyses"]
-            failures += _send_analyst(client, team, base, league, week, confirm, log)
-            if COUNTS["analyses"] > before:
-                wakes.append(now + ANALYST_SECONDS)  # come back when the hour is over, to collect it
+            failed, takes = _send_analyst(client, team, base, league, week, confirm, log)
+            failures += failed
+            if takes:
+                wakes.append(now + takes)  # come back when it is over, to collect it
     ahead = [w for w in wakes if w and w > now]
     return failures, min(ahead) if ahead else None
 

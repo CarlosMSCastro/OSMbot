@@ -18,6 +18,8 @@
 
 Implementado em `choose_formation(my_rating, opp_rating, *, stronger_pct=0)`: adversário mais forte → 5 defesas; igual ou mais fraco → 4-3-3 A. O aviso do pré-jogo aceita qualquer formação de 5 defesas.
 
+**Sem extremos em forma → 4-4-2 B (dono, 2026-10-14):** o 4-3-3 A precisa de **1 EE e 1 ED** (posição específica) em forma: condição ≥ 80 % (§16), sem lesão nem castigo, no plantel todo (titulares ou banco). Se faltar um dos lados, o **4-4-2 B** (2 PL, sem extremos) conta como certo em vez do 4-3-3 A; outra formação continua a dar aviso. Na janela o passo "Onze" fica **verde** com uma nota ao passar o rato ("4-4-2 B aceite: sem ED em forma (…)"). Só quando a regra da força diz 4-3-3 A; contra um mais forte continuam as 5 defesas.
+
 **"Mais forte" conta os bónus do jogo e a casa (dono, 2026-10-14; `match_strength`):** força = rating da equipa × (1 + bónus %) × 1,05 para quem joga em casa.
 - **Bónus:** os de cada lado somam-se, como o jogo os mostra no círculo ao lado do emblema ("+3 %"). Do dono: sequência de logins (`matchBoost`) + estágio (`CampBoostPercentage`, 25 %) e treino secreto (`SecretBoostPercentage`, 2 %) quando marcados. Do adversário: só os logins, depois da análise e só com treinador humano (como o site); o estágio e o treino secreto dele não se veem.
 - **Casa:** +5 % para quem joga em casa; nada em campo neutro.
@@ -77,7 +79,7 @@ Desarme: *Cuidadoso · Normal · Agressivo · Extremo*.
 - **Contexto (2.ª ronda):** a tabela acima é só a regra base. Num **jogo tranquilo na véspera de um jogo duro**, o dono **não arrisca levar vermelhos** (fica abaixo do máximo). Num **jogo difícil**, talvez use Agressivo. Ou seja, a escolha real depende do jogo seguinte e da dificuldade, não só do árbitro. `choose_tackling` só implementa a regra base; o dono gere isto sozinho.
 - *Cuidadoso* nunca é usado.
 - **No jogo (verificado no código do site, 2026-10-13):** o desarme é o campo `style` da tática (0 Cuidadoso, 1 Normal, 2 Agressivo, 3 Extremo); o árbitro do próximo jogo já vem no calendário (`refereeId`) com o seu `strictness` (1 muito rigoroso … 5 muito brando, `DISCOVERY.md`).
-- **O que o aviso aceita como certo** (dono, 2026-10-13, §21): muito rigoroso → Normal; rigoroso e normal → Agressivo; brando → Agressivo **ou** Extremo; muito brando → Extremo.
+- **O que o aviso aceita como certo** (dono, 2026-10-13, §21): muito rigoroso → Normal; rigoroso e normal → Agressivo; brando e muito brando → Agressivo **ou** Extremo (muito brando: dono, 2026-10-14, "pode ser agressivo, não precisa ser extremo"; antes só Extremo).
 
 ## 4. Especialistas (só entre os **titulares**)
 

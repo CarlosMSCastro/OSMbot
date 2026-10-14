@@ -1,6 +1,7 @@
 """Doctor and lawyer (writes, owner's rules in THEORY.md section 18; DISCOVERY.md section 3).
 
-Free, with an 8-hour timer, collected at the end like a training. Sending to the doctor and collecting it were
+Free, with an 8-hour timer (shorter in some events: the timer is looked up by name, ``game/timers``), collected at
+the end like a training. Sending to the doctor and collecting it were
 observed (2026-10-09; the collect is on api/v1, not v1.1 like the analyst); the lawyer flow follows the doctor's,
 accepted by the owner. A refused request is noted and not repeated (D-032).
 """
@@ -10,14 +11,14 @@ import time
 
 from osmbot import logs
 from osmbot.game import refusals
+from osmbot.game.timers import minutes_text, timer
 from osmbot.medical.policy import LAWYER_MIN_GAMES, doctor_candidates, lawyer_candidates, running_until, to_collect
 
 PAUSE_BETWEEN_WRITES = 1.5  # seconds
-CASE_SECONDS = 8 * 3600  # DoctorTreatmentTimer and LawyerCaseTimer: 480 min
 COUNTS = {"doctor": 0, "lawyer": 0, "collected": 0}
-KINDS = {  # kind -> (cases path, gamesettings timer id, label, "sent to" text)
-    "doctor": ("doctortreatments", 48, "Médico", "no médico"),  # DoctorTreatmentTimer
-    "lawyer": ("lawyercases", 45, "Advogado", "no advogado"),  # LawyerCaseTimer
+KINDS = {  # kind -> (cases path, gamesettings timer name, its normal id, label, "sent to" text)
+    "doctor": ("doctortreatments", "DoctorTreatmentTimer", 48, "Médico", "no médico"),
+    "lawyer": ("lawyercases", "LawyerCaseTimer", 45, "Advogado", "no advogado"),
 }
 
 
@@ -39,7 +40,7 @@ def _state(player: dict | None) -> dict:
 def _collect(client, team: dict, base: str, kind: str, cases: list[dict], names: dict, now: float, week: int,
              confirm: bool, log, info: dict | None = None) -> tuple[int, int]:
     """Collect the finished cases. A refused collect is not asked again this round (D-032). Returns (failures, collected)."""
-    path, _, label, _ = KINDS[kind]
+    path, _, _, label, _ = KINDS[kind]
     failures = collected = 0
     for case in to_collect(cases, now):
         name = names.get(case["playerId"], str(case["playerId"]))
@@ -69,11 +70,12 @@ def _collect(client, team: dict, base: str, kind: str, cases: list[dict], names:
 
 
 def _send(client, team: dict, base: str, kind: str, candidates: list[int], names: dict, cases: list[dict], now: float,
-          week: int, confirm: bool, log, info: dict | None = None) -> tuple[int, int]:
+          week: int, confirm: bool, log, info: dict | None = None) -> tuple[int, list[float]]:
     """Send each candidate. A refusal is not repeated (D-032): while another player is being treated the game may take
-    only one, so it waits for that case to end; otherwise it waits for the next round. Returns (failures, sent)."""
-    path, setting, label, place = KINDS[kind]
-    sent = 0
+    only one, so it waits for that case to end; otherwise it waits for the next round. Returns (failures, when the
+    cases sent end)."""
+    path, setting_name, normal_id, label, place = KINDS[kind]
+    ends, found = [], None
     for pid in candidates:
         name = names.get(pid, str(pid))
         key = f"{kind}:pôr:{base}:{pid}"
@@ -82,14 +84,17 @@ def _send(client, team: dict, base: str, kind: str, candidates: list[int], names
         if not confirm:
             log(f"{team['name']}: poria {name} {place}")
             continue
+        if found is None:  # the event's timer when there is one (3 h in the Super Staff), else the normal 8 h
+            found = timer(client, base.rsplit("/teams/", 1)[0], setting_name, normal_id)
+        setting, minutes = found
         status, _ = client.post(f"{base}/{path}", {"playerId": pid, "timerGameSettingId": setting})
         time.sleep(PAUSE_BETWEEN_WRITES)
         if status == 200:
             logs.record("medico", {"evento": "pôr", "tipo": kind, "clube": base, "semana": week, "jogador": pid,
                                    "nome": name, "antes": _state((info or {}).get(pid))})
             COUNTS[kind] += 1
-            sent += 1
-            log(f"{label}: {team['name']} pôs {name} {place} (8 h)")
+            ends.append(now + minutes * 60)
+            log(f"{label}: {team['name']} pôs {name} {place} ({minutes_text(minutes)})")
         elif refusals.is_refusal(status):
             busy = running_until(cases, now)
             if busy:  # e.g. only one at a time: this one waits for the running case to end (THEORY.md section 18)
@@ -101,8 +106,8 @@ def _send(client, team: dict, base: str, kind: str, candidates: list[int], names
             break
         else:
             log(f"{label}: {team['name']} {name} falhou ({status})")
-            return 1, sent
-    return 0, sent
+            return 1, ends
+    return 0, ends
 
 
 def treat_club(client, team: dict, base: str, confirm: bool, now: float, log=print) -> tuple[int, list[float]]:
@@ -130,9 +135,9 @@ def treat_club(client, team: dict, base: str, confirm: bool, now: float, log=pri
             if kind == "doctor":
                 people = [p["id"] for p in _list(client, f"{base}/players/injured")]
         wanted = doctor_candidates(people, cases) if kind == "doctor" else lawyer_candidates(people, cases, week)
-        failed, sent = _send(client, team, base, kind, wanted, names, cases, now, week, confirm, log, info)
+        failed, ends = _send(client, team, base, kind, wanted, names, cases, now, week, confirm, log, info)
         failures += failed
-        wake += running_until(cases, now) + [now + CASE_SECONDS] * sent
+        wake += running_until(cases, now) + ends
     return failures, wake
 
 

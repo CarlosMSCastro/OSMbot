@@ -12,7 +12,7 @@ import time
 from osmbot.board.info import cup_phase, league_summary, next_match, squad_value, team_rating
 from osmbot.game import market as market_watch, sales
 from osmbot.game.specialists import check
-from osmbot.theory.lineup import bench_warnings, position_warnings, tactic_warnings
+from osmbot.theory.lineup import bench_warnings, position_warnings, tactic_notes, tactic_warnings
 from osmbot.medical.policy import open_cases
 from osmbot.prematch.policy import friendlies_played
 
@@ -74,16 +74,21 @@ def _timer(case: dict) -> dict | None:
     return timer if timer and not timer.get("isClaimed") else None
 
 
-def _people(players: list[dict], cases: list[dict]) -> list[dict]:
-    """[{name, games, until, ready}]: ``until`` = when the doctor/lawyer case ends, ``ready`` = ended, to collect."""
+def _people(players: list[dict], cases: list[dict], minutes: int) -> list[dict]:
+    """[{name, games, until, ready, length}]: ``until`` = when the doctor/lawyer case ends, ``ready`` = ended, to
+    collect, ``length`` = how long the case lasts in all (the game gives only its end; ``minutes`` = the timer now)."""
+    from osmbot.game.dashboard import CASE_NORMAL, session_length
+
     by_player = {c["playerId"]: _timer(c) for c in open_cases(cases)}
     now = time.time()
     result = []
     for p in players:
         timer = by_player.get(p["id"])
         end = timer["finishedTimestamp"] if timer else None
+        length = session_length(("case", timer.get("id") or p["id"]), end - now, minutes * 60, CASE_NORMAL) \
+            if end and end > now else None
         result.append({"name": p["name"], "games": p.get("unavailable") or 0, "until": end,
-                       "ready": bool(end and end <= now)})
+                       "ready": bool(end and end <= now), "length": length})
     return result
 
 
@@ -99,14 +104,18 @@ def max_listed(client, league_id: int) -> int:
     return next((g["value"] for g in _settings(client, league_id) if g["name"] == MAX_SLOTS_SETTING), 4)
 
 
+def timer_minutes(client, league_id: int, name: str) -> int:
+    """How long the game's timer ``name`` lasts now in this league, in minutes (the doctor: 480 normally, 180 in the
+    Super Staff), kept for a while."""
+    from osmbot.events.calendar import NORMAL
+
+    return next((g["value"] for g in _settings(client, league_id) if g["name"] == name and g.get("value")), NORMAL[name])
+
+
 def session_minutes(client, league_id: int) -> tuple[int, int]:
     """How long a training and a universal trainer's session last now in this league, in minutes (480 and 360
     normally, 120 and 90 in the Super Staff)."""
-    from osmbot.events.calendar import NORMAL
-
-    values = {g["name"]: g["value"] for g in _settings(client, league_id)}
-    return (values.get("TrainingSession") or NORMAL["TrainingSession"],
-            values.get("TrainingUniversalSession") or NORMAL["TrainingUniversalSession"])
+    return timer_minutes(client, league_id, "TrainingSession"), timer_minutes(client, league_id, "TrainingUniversalSession")
 
 
 def _boost(client, path: str, key: tuple) -> int:
@@ -197,11 +206,15 @@ def club_extra(client, team: dict, base: str, players: list[dict], slot, market:
     status, current = got[6]  # the game ticks any 4 specialists; yellow when they are not the owner's rule (D-042)
     why = {SPECIALISTS_STEP: check(players, current if status == 200 and isinstance(current, dict) else None),
            BENCH_STEP: bench_warnings(players),  # THEORY.md section 21: yellow with the reason on hover
-           ELEVEN_STEP: tactic_warnings(tactic, strictness, mine, theirs),
+           ELEVEN_STEP: tactic_warnings(tactic, strictness, mine, theirs, players),
            POSITIONS_STEP: position_warnings(players, tactic)}  # who is out of position, on the hover
     steps = [(name, False, RULE) if why.get(kind) and done_ else (name, done_, extra)
              for (kind, _), (name, done_, extra) in zip(CHECKLIST, steps)]
     reasons = {name: why[kind] for (kind, _), (name, _, _) in zip(CHECKLIST, steps) if why.get(kind)}
+    notes = {ELEVEN_STEP: tactic_notes(tactic, players, mine, theirs)}  # within the rule: the step keeps its colour
+    for (kind, _), (name, _, _) in zip(CHECKLIST, steps):
+        if notes.get(kind):  # after any warning of the same step (the tackling may still be out of the rule)
+            reasons[name] = reasons.get(name, []) + notes[kind]
     by_type = {s["type"]: s for s in prep.get("steps") or []}
     boosts = [{"kind": key, "name": name, "on": done.get(kind, False),  # marked for the next match (owner, 2026-10-14)
                "blocked": "" if (by_type.get(kind) or {}).get("enabled", True) else by_type[kind].get("disabledText") or "?"}
@@ -223,5 +236,6 @@ def club_extra(client, team: dict, base: str, players: list[dict], slot, market:
         "table": league_summary(standings, teams, matches, team["id"], week, team.get("goal")),
         "free_slots": free, "sales": sold,
         "prep": {"pct": prep.get("completionPercentage"), "steps": steps, "why": reasons, "boosts": boosts},
-        "injured": _people(injured, doctor), "suspended": _people(suspended, lawyer),
+        "injured": _people(injured, doctor, timer_minutes(client, team["leagueId"], "DoctorTreatmentTimer")),
+        "suspended": _people(suspended, lawyer, timer_minutes(client, team["leagueId"], "LawyerCaseTimer")),
     }

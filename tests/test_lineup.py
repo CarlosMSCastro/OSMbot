@@ -1,4 +1,4 @@
-from osmbot.theory.lineup import bench_warnings, formation_name, places, position_warnings, tactic_warnings
+from osmbot.theory.lineup import bench_warnings, formation_name, places, position_warnings, tactic_notes, tactic_warnings
 
 
 def p(name, position, lineup, stat, fitness=100, unavailable=0):
@@ -59,7 +59,8 @@ def test_the_tackling_must_match_the_next_referee():
     assert tactic_warnings(tactic, 3, 108, None) == ["Desarme Normal com árbitro normal: devia ser Agressivo"]
     assert tactic_warnings({**tactic, "style": 1}, 1, 108, None) == []  # very strict: Normal
     assert tactic_warnings({**tactic, "style": 3}, 4, 108, None) == []  # lenient: Aggressive or Extreme
-    assert tactic_warnings({**tactic, "style": 2}, 5, 108, None) == ["Desarme Agressivo com árbitro muito brando: devia ser Extremo"]
+    assert tactic_warnings({**tactic, "style": 2}, 5, 108, None) == []  # very lenient: Aggressive or Extreme (owner, 2026-10-14)
+    assert tactic_warnings({**tactic, "style": 1}, 5, 108, None) == ["Desarme Normal com árbitro muito brando: devia ser Agressivo ou Extremo"]
     assert tactic_warnings({**tactic, "style": 2}, None, 108, None) == []  # referee unknown
 
 
@@ -76,12 +77,45 @@ def test_the_formation_is_4_3_3_a_and_5_defenders_only_against_a_stronger_analys
         "Formação 4-3-3 A: devia ser de 5 defesas (adversário mais forte)"]
 
 
+def winger(name, side, fitness=90, out=0):
+    return {"name": name, "specificPosition": 8 if side == "EE" else 11, "fitness": fitness, "unavailable": out}
+
+
+def test_without_a_fit_winger_on_a_side_the_4_4_2_b_is_taken_and_noted():
+    b442 = {"formation": 442, "formationDetail": "B", "style": 2}
+    tired = [winger("Saka", "ED", 72), winger("Doku", "EE", 75)]
+    assert tactic_warnings(b442, 3, 108, 100, tired) == [] and tactic_notes(b442, tired, 108, 100) == [
+        "4-4-2 B aceite: sem EE em forma (Doku 75 %); sem ED em forma (Saka 72 %)"]
+    one_side = [winger("Doku", "EE"), winger("Saka", "ED", out=2)]  # one fit EE is not enough: the ED is out
+    assert tactic_notes(b442, one_side, 108, 100) == ["4-4-2 B aceite: sem ED em forma (Saka fora)"]
+    assert tactic_notes(b442, [winger("Doku", "EE")], 108, None) == ["4-4-2 B aceite: sem ED no plantel"]
+
+
+def test_with_a_fit_winger_on_each_side_the_4_4_2_b_is_still_out_of_the_rule():
+    b442 = {"formation": 442, "formationDetail": "B", "style": 2}
+    fit = [winger("Doku", "EE"), winger("Saka", "ED", 72), winger("Bowen", "ED", 85)]  # a fit one on the bench counts
+    assert tactic_warnings(b442, 3, 108, 100, fit) == ["Formação 4-4-2: devia ser 4-3-3 A"]
+    assert tactic_notes(b442, fit, 108, 100) == []
+
+
+def test_only_the_4_4_2_b_and_only_when_the_rule_says_4_3_3_a():
+    tired = [winger("Doku", "EE", 70), winger("Saka", "ED", 70)]
+    a442 = {"formation": 442, "formationDetail": "A", "style": 2}
+    assert tactic_warnings(a442, 3, 108, 100, tired) == ["Formação 4-4-2: devia ser 4-3-3 A"]  # the owner: only the B
+    b442 = {**a442, "formationDetail": "B"}
+    assert tactic_warnings(b442, 3, 100, 108, tired) == ["Formação 4-4-2: devia ser de 5 defesas (adversário mais forte)"]
+    assert tactic_notes(b442, tired, 100, 108) == []
+
+
 def test_the_warnings_are_translated():
     from osmbot.i18n import set_language, tr
 
     set_language("en", save=False)
     try:
         assert tr("Akanni 51 entra antes de Ndicka 107") == "Akanni 51 comes on before Ndicka 107"
+        assert tr("4-4-2 B aceite: sem EE em forma (Doku 75 %); sem ED no plantel") == \
+            "4-4-2 B accepted: no fit LW (Doku 75 %); no RW in the squad"
+        assert tr("Aceite") == "Accepted"
         assert tr("Desarme Normal com árbitro normal: devia ser Agressivo") == \
             "Tackling Normal with an average referee: should be Aggressive"
         assert tr("Cantos: A, pela regra B") == "Corners: A, your rule says B"

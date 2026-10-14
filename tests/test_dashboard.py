@@ -262,10 +262,12 @@ def test_the_length_of_a_stadium_upgrade_is_guessed_from_its_end(monkeypatch):
 
     monkeypatch.setattr(dashboard, "_upgrade_lengths", {})
     hours = 3600
-    assert dashboard.upgrade_length(1, 14 * hours) == 18 * hours  # more than 4 h left: a normal one
-    assert dashboard.upgrade_length(2, 4 * hours - 60) == 4 * hours  # an event one, just started
-    assert dashboard.upgrade_length(3, 2 * hours) == 18 * hours  # could be either: taken as a normal one
-    assert dashboard.upgrade_length(1, 3 * hours) == 18 * hours  # decided the first time it is seen
+    assert dashboard.upgrade_length(1, 14 * hours) == 18 * hours  # no event: a normal one
+    assert dashboard.upgrade_length(2, 4 * hours - 60, 4 * hours) == 4 * hours  # the league's 4 h event upgrade
+    assert dashboard.upgrade_length(3, 6 * hours, 4 * hours) == 18 * hours  # more left than that: begun before it
+    assert dashboard.upgrade_length(4, 2 * hours) == 18 * hours  # no event: taken as a normal one
+    assert dashboard.upgrade_length(1, 3 * hours, 4 * hours) == 18 * hours  # decided the first time it is seen
+    assert dashboard.upgrade_length(5, 20 * hours) is None  # more than 18 h: unknown
 
 
 def test_the_length_of_a_training_follows_the_league_and_one_begun_before_an_event_keeps_8_h(monkeypatch):

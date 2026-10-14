@@ -5,6 +5,8 @@ LEAGUE = "leagues/9"
 BASE = f"{LEAGUE}/teams/1"
 TEAM = {"id": 1, "name": "Club"}
 NOW = 1_000_000.0
+NORMAL_SETTINGS = [{"id": 48, "name": "DoctorTreatmentTimer", "value": 480}, {"id": 45, "name": "LawyerCaseTimer", "value": 480}]
+SUPER_STAFF = [{"id": 725, "name": "DoctorTreatmentTimer", "value": 180}, {"id": 726, "name": "LawyerCaseTimer", "value": 180}]
 
 
 def case(cid, player, ends=None, claimed=False, week=14):
@@ -23,7 +25,8 @@ def test_who_goes_to_the_doctor_and_the_lawyer():
 
 
 class FakeClient:
-    def __init__(self, injured=(), suspended=(), doctor=(), lawyer=(), status=200):
+    def __init__(self, injured=(), suspended=(), doctor=(), lawyer=(), status=200, settings=NORMAL_SETTINGS):
+        self.settings = settings
         self.injured, self.suspended = list(injured), list(suspended)
         self.doctor, self.lawyer, self.status = list(doctor), list(lawyer), status
         self.writes = []
@@ -35,7 +38,7 @@ class FakeClient:
                  f"{BASE}/doctortreatments": self.doctor, f"{BASE}/lawyercases": self.lawyer}
         if path in lists:
             return (200, lists[path]) if lists[path] else (404, "")
-        return 200, {LEAGUE: {"weekNr": self.week}, f"{BASE}/players": players}[path]
+        return 200, {LEAGUE: {"weekNr": self.week}, f"{BASE}/players": players, f"{LEAGUE}/gamesettings": self.settings}[path]
 
     def post(self, path, form):
         self.writes.append(("POST", path, form))
@@ -60,6 +63,21 @@ def test_every_injured_player_goes_to_the_doctor_and_every_suspended_one_to_the_
                              ("POST", f"{BASE}/doctortreatments", {"playerId": 11, "timerGameSettingId": 48}),
                              ("POST", f"{BASE}/lawyercases", {"playerId": 20, "timerGameSettingId": 45})]
     assert "Médico: Club pôs P10 no médico (8 h)" in lines
+
+
+def test_in_an_event_the_doctor_and_the_lawyer_take_the_event_timer():
+    client = FakeClient(injured=[10], suspended=[20], settings=SUPER_STAFF)  # 2026-10-14: 48 gave 8 h in the Super Staff
+    (failures, wake), lines = treat(client)
+    assert client.writes == [("POST", f"{BASE}/doctortreatments", {"playerId": 10, "timerGameSettingId": 725}),
+                             ("POST", f"{BASE}/lawyercases", {"playerId": 20, "timerGameSettingId": 726})]
+    assert failures == 0 and wake == [NOW + 3 * 3600] * 2 and "Médico: Club pôs P10 no médico (3 h)" in lines
+
+
+def test_without_the_settings_the_normal_timer_is_sent():
+    client = FakeClient(injured=[10], settings=[])
+    (_, wake), _ = treat(client)
+    assert client.writes == [("POST", f"{BASE}/doctortreatments", {"playerId": 10, "timerGameSettingId": 48})]
+    assert wake == [NOW + 8 * 3600]
 
 
 def test_a_finished_case_is_collected_and_a_running_one_left_alone():

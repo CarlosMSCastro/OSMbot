@@ -71,18 +71,17 @@ def get_many(client, paths: list[str]) -> list[tuple[int, object]]:
 
 
 UPGRADE_NORMAL = 18 * 3600  # s: a stadium upgrade (seen on the pitch, 2026-10-07/08/09)
-UPGRADE_EVENT = 4 * 3600  # s: during the game's stadium events (owner, 2026-10-09)
-JUST_STARTED = 15 * 60  # s: an event upgrade first seen with this little gone is taken as one that just started
 _upgrade_lengths: dict[int, float | None] = {}  # timer id -> total length, decided the first time it is seen
 
 
-def upgrade_length(timer_id: int, left: float) -> float | None:
-    """How long a stadium upgrade lasts in all: the game gives only its end (the timer has no start). Just under 4 h
-    left: an event one that has just started; otherwise taken as a normal 18 h one, so the ring fills with the time
-    (owner, 2026-10-10); more than 18 h: unknown (None)."""
+def upgrade_length(timer_id: int, left: float, now_length: float = UPGRADE_NORMAL) -> float | None:
+    """How long a stadium upgrade lasts in all: the game gives only its end (the timer has no start). In an event
+    (``now_length``, the league's StadiumUpgrade now, shorter than 18 h) one with no more left than that is an event
+    one; otherwise taken as a normal 18 h one, so the ring fills with the time (owner, 2026-10-10); more than 18 h:
+    unknown (None)."""
     if timer_id not in _upgrade_lengths:
-        if UPGRADE_EVENT - JUST_STARTED < left <= UPGRADE_EVENT:
-            _upgrade_lengths[timer_id] = UPGRADE_EVENT
+        if now_length < UPGRADE_NORMAL and left <= now_length:
+            _upgrade_lengths[timer_id] = now_length
         elif left <= UPGRADE_NORMAL:
             _upgrade_lengths[timer_id] = UPGRADE_NORMAL
         else:
@@ -91,11 +90,12 @@ def upgrade_length(timer_id: int, left: float) -> float | None:
 
 
 TRAINING_NORMAL, UNIVERSAL_NORMAL = 8 * 3600, 6 * 3600  # s: TrainingSession 480, TrainingUniversalSession 360
-_session_lengths: dict[int, float] = {}  # session id -> total length, decided the first time it is seen
+CASE_NORMAL = 8 * 3600  # s: DoctorTreatmentTimer and LawyerCaseTimer, 480
+_session_lengths: dict[object, float] = {}  # session id (or ("case", timer id)) -> total length, decided the first time it is seen
 
 
-def session_length(session_id: int, left: float, now_length: float, normal: float) -> float:
-    """How long a training lasts in all: the game gives only its end. The league's length now (gamesettings: 2 h in
+def session_length(session_id, left: float, now_length: float, normal: float) -> float:
+    """How long a training (or a doctor/lawyer case) lasts in all: the game gives only its end. The league's length now (gamesettings: 2 h in
     the Super Staff); a session with more left than that began before the event, so it gets the normal length."""
     if session_id not in _session_lengths:
         _session_lengths[session_id] = now_length if left <= now_length else max(normal, now_length)
@@ -105,7 +105,7 @@ def session_length(session_id: int, left: float, now_length: float, normal: floa
 def collect(client) -> dict:
     """One snapshot of everything the board shows (GET requests only, several at a time)."""
 
-    from osmbot.game.clubinfo import max_listed, session_minutes
+    from osmbot.game.clubinfo import max_listed, session_minutes, timer_minutes
 
     started = time.time()  # when the reading began: the board keeps the newest one (bot's or window's)
     (_, account), (_, wallet) = get_many(client, ["user/accounts", "user/bosscoinwallet"])
@@ -123,6 +123,7 @@ def collect(client) -> dict:
                    if p.get("countdownTimer") and p["countdownTimer"]["finishedTimestamp"] > time.time()]
         live = [c for c in contracts if c.get("weeksLeft", 0) > 0]
         training_min, universal_min = session_minutes(client, team["leagueId"])
+        upgrade_now = timer_minutes(client, team["leagueId"], "StadiumUpgrade") * 60
 
         def length(s: dict, minutes: int, normal: float) -> float:
             return session_length(s["id"], s["countdownTimer"]["finishedTimestamp"] - time.time(), minutes * 60, normal)
@@ -137,7 +138,7 @@ def collect(client) -> dict:
                                   for p in sorted(stadium["stadiumParts"], key=lambda p: -p["stadiumPartType"])],
                         "until": max(running) if running else None,
                         "lengths": {STADIUM_NAMES.get(p["stadiumPartType"], "?"): upgrade_length(
-                            p["countdownTimer"]["id"], p["countdownTimer"]["finishedTimestamp"] - time.time())
+                            p["countdownTimer"]["id"], p["countdownTimer"]["finishedTimestamp"] - time.time(), upgrade_now)
                             for p in stadium["stadiumParts"]
                             if p.get("countdownTimer") and p["countdownTimer"]["finishedTimestamp"] > time.time()}},
             "sponsors": {"slots": len(live), "revenue": sum(c["sponsorRevenueForTeam"] for c in live)}, "slots": (slot.listed, slot.maximum) if slot else None,
@@ -391,7 +392,7 @@ def _render(snapshot: dict | None, now: float, status: str, recent: list[str], m
                     text = f"{name} {part_level}/{top}"
                     if ends and ends > now:
                         left = ends - now
-                        bits.append(paint(text, BLUE) + " " + (painted_bar(left, STADIUM_BAR_SECONDS, STADIUM_BAR_WIDTH) + " " if level < 3 else "» ")
+                        bits.append(paint(text, BLUE) + " " + (painted_bar(left, (stadium.get("lengths") or {}).get(name) or STADIUM_BAR_SECONDS, STADIUM_BAR_WIDTH) + " " if level < 3 else "» ")
                                     + paint(span(left), BLUE))
                     elif part_level >= top:
                         bits.append(paint(text + " √", GREEN))
