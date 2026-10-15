@@ -146,23 +146,27 @@ def inventory_view(items: list[dict] | None, now: float, lang: str = "pt") -> di
 TOP_PLACES, BOTTOM_PLACES = 2, 3  # squad value: 1st-2nd green, the last 3 red, yellow in between (owner, 2026-10-10)
 
 
-def squad_view(value: tuple | None) -> dict:
-    """The squad value: the place by value in colour, the total in white; players and average on hover."""
+def squad_view(value: tuple | None, table: list | None = None) -> dict:
+    """The squad value: the place by value in colour, the total in white; players and average on hover, and the
+    league's table by value around the club when known (owner, 2026-10-15)."""
     if not value:
-        return {"place": "", "colour": GREY, "total": "—", "tip": ""}
+        return {"place": "", "colour": GREY, "total": "—", "tip": "", "table_tip": ""}
     place, total, average, *more = value  # (place, total, average, players, teams); older readings had only 3
     players, teams = more if more else (round(total / average) if average else 0, 0)
     colour = GREEN if place <= TOP_PLACES else RED if teams and place > teams - BOTTOM_PLACES else YELLOW
-    return {"place": f"{place}.º", "colour": colour, "total": money(total),
-            "tip": f"{players} jogadores · média {money(round(average))}"}
+    tip = f"{players} jogadores · média {money(round(average))}"
+    rows = [f"{'▸ ' if mine else ''}{at}.º {name} · {money(sum_)} · {count} jogadores · média {money(round(avg))}"
+            for at, name, sum_, count, avg, mine in table or []]
+    return {"place": f"{place}.º", "colour": colour, "total": money(total), "tip": tip,
+            "table_tip": "\n".join(["Valor do plantel", *rows]) if rows else tip}
 
 
 CLOSE_STRENGTH = 2  # the opponent's circle: yellow when the strengths are less than 2 apart [S] (THEORY.md section 19)
 
 
-def squad_tip(strength: int | None, value: tuple | None) -> str:
-    """The hover on a club's strength or on the opponent's name: the strength, then the squad value."""
-    parts = [f"Força {strength}"] if strength else []
+def squad_tip(value: tuple | None) -> str:
+    """The hover on the opponent's name: its squad value (no strength: the circle shows it, owner 2026-10-15)."""
+    parts = []
     if value:
         squad = squad_view(value)
         parts.append(f"valor do plantel {squad['total']} · {squad['tip']}")
@@ -170,16 +174,16 @@ def squad_tip(strength: int | None, value: tuple | None) -> str:
     return text[:1].upper() + text[1:]
 
 
-def rating_badge(strength: int | None, value: tuple | None = None, ours: int | None = None) -> dict | None:
+def rating_badge(strength: int | None, ours: int | None = None) -> dict | None:
     """The team's strength in a circle, the number the game shows (owner, 2026-10-13). The club's own is blue; the
     opponent's (``ours`` given) is green when weaker, red when stronger, yellow when close. None when unknown: the
-    opponent's only once analysed, as in the game."""
+    opponent's only once analysed, as in the game. No hover on either (owner, 2026-10-15: redundant)."""
     if not strength:
         return None
     colour = BLUE
     if ours:
         colour = GREEN if strength <= ours - CLOSE_STRENGTH else RED if strength >= ours + CLOSE_STRENGTH else YELLOW
-    return {"text": str(strength), "colour": colour, "tip": squad_tip(strength, value)}
+    return {"text": str(strength), "colour": colour, "tip": ""}
 
 
 def table_view(club: dict) -> tuple[str, str]:
@@ -315,8 +319,8 @@ def club_view(club: dict, now: float, shortened: dict | None = None) -> dict:
 
     match = None  # the stripe of the next match (D-030), in the club's colour
     if nxt:
-        match = {"text": f"vs {nxt['opponent']}{rank}", "value": rating_badge(nxt.get("strength"), nxt.get("value"), club.get("strength")),
-                 "tip": squad_tip(nxt.get("strength"), nxt.get("value")),
+        match = {"text": f"vs {nxt['opponent']}{rank}", "value": rating_badge(nxt.get("strength"), club.get("strength")),
+                 "tip": squad_tip(nxt.get("value")),
                  "tag": ("CASA" if nxt["side"] == "H" else "FORA") + (" · TAÇA" if nxt["cup"] else ""), "danger": nxt["danger"], "left": span(club["match"] - now) if club.get("match") else ""}
     header, table_tip = table_view(club)  # and the cup on a line of its own (owner, 2026-10-09)
     cup_line = cup[:1].upper() + cup[1:]
@@ -327,11 +331,11 @@ def club_view(club: dict, now: float, shortened: dict | None = None) -> dict:
 
     return {"name": club["name"], "logo": club.get("logo"), "logo_key": club.get("logo_key") or club["name"],
             "subtitle": subtitle, "facts": facts, "alert": alert, "header": header, "cup_line": cup_line, "match": match, "prep_title": prep_title,
-            "money": _money(total), "sales": sales, "sponsors": sponsor_row, "squad": squad_view(club.get("value")),
+            "money": _money(total), "sales": sales, "sponsors": sponsor_row, "squad": squad_view(club.get("value"), club.get("value_table")),
             "stadium": {"still": still, "moving": moving},
             "prep": {"steps": steps, "boosts": boosts},
             "trainings": trainings,
-            "tired": tired_text, "tired_tip": tired_tip, "sale": sale_text, "sale_tip": sale_tip, "value_badge": rating_badge(club.get("strength"), club.get("value")), "table_tip": table_tip,
+            "tired": tired_text, "tired_tip": tired_tip, "sale": sale_text, "sale_tip": sale_tip, "value_badge": rating_badge(club.get("strength")), "table_tip": table_tip,
             "injured": _people(club.get("injured") or [], "no médico", now),
             "suspended": _people(club.get("suspended") or [], "no advogado", now),
             "stadium_rings": stadium_rings(club.get("stadium"), now),
@@ -353,9 +357,9 @@ def _daily_parts(daily: dict, now: float) -> list[tuple[str, str, str, str]]:
         parts.append(("missions", "done", f"Missões {missions['claimed']}/{missions['total']}", GREEN) if finished
                      else ("missions", "progress", f"Missões {missions['claimed']}/{missions['total']}", YELLOW))
         if missions["day_pending"]:
-            parts.append(("day", "collect", "Prémio do dia por reclamar", YELLOW))
+            parts.append(("day", "collect", "Prémio diário por reclamar", YELLOW))
         else:
-            parts.append(("day", "done", "Prémio do dia", GREEN) if finished else ("day", "open", "Prémio do dia", GREY))
+            parts.append(("day", "done", "Prémio diário", GREEN) if finished else ("day", "open", "Prémio diário", GREY))
     renews = (login or {}).get("renews")
     if renews and renews > now:
         parts.append(("renews", "waiting", f"Novo dia em {span(renews - now)}", BLUE))
@@ -381,8 +385,11 @@ def daily_tips(daily: dict | None, lang: str = "pt") -> dict[str, list[tuple[str
         if prize:
             claim = _say(lang, " (por reclamar)", " (to claim)") if login.get("claimable") else ""
             tips["login"] = [(prize_icon(prize), _say(lang, "Hoje: ", "Today: ") + prize_text(prize, lang) + claim, None)]
-        else:
-            tips["login"] = [(None, _say(lang, "Hoje: prémio por saber", "Today: prize not known"), GREY)]
+        else:  # claimed before this PC ever saw it (on another PC or on the site)
+            tips["login"] = [(None, _say(lang, "Hoje: reclamado (prémio não visto)", "Today: claimed (prize not seen)"), GREY)]
+        tomorrow = login.get("tomorrow")
+        if tomorrow:
+            tips["login"].append((prize_icon(tomorrow), _say(lang, "Amanhã: ", "Tomorrow: ") + prize_text(tomorrow, lang), GREY))
     missions = daily.get("missions")
     if missions:
         dailies = missions.get("dailies") or []
@@ -398,7 +405,7 @@ def daily_tips(daily: dict | None, lang: str = "pt") -> dict[str, list[tuple[str
                      _say(lang, "depois das 3 missões", "after the 3 missions"))
             rows = [(prize_icon(first["prize"]), _say(lang, "Hoje: ", "Today: ") + f"{prize_text(first['prize'], lang)} ({state})", None)]
         else:
-            rows = [(None, _say(lang, "Hoje não há prémio do dia", "No daily prize today"), GREY)]
+            rows = [(None, _say(lang, "Sem prémio do dia", "No daily prize today"), GREY)]
         tomorrow = next((d for d in week if today is not None and d["day"] == today + 1), None)
         if tomorrow:
             rows.append((prize_icon(tomorrow["prize"]), _say(lang, "Amanhã: ", "Tomorrow: ") + prize_text(tomorrow["prize"], lang), GREY))

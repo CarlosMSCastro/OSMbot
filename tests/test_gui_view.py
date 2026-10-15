@@ -43,7 +43,8 @@ def test_the_card_header_says_the_opponent_home_or_away_and_warns_of_a_direct_ri
 def test_league_cup_and_squad_value_and_one_money_line_with_the_sales():
     view = club_view(club(), NOW)
     assert view["facts"] == [("Liga", "3.º", None), ("Taça", "quartos-de-final", None)]
-    assert view["squad"] == {"place": "2.º", "colour": GREEN, "total": "588,7 M", "tip": "20 jogadores · média 29,43 M"}
+    assert view["squad"] == {"place": "2.º", "colour": GREEN, "total": "588,7 M", "tip": "20 jogadores · média 29,43 M",
+                             "table_tip": "20 jogadores · média 29,43 M"}
     assert view["money"] == "10,3 M"  # funds and savings together (owner, 2026-10-08)
     assert view["sales"] == ["✓ Jogador 7 vendido · +166,66 M"]
     assert view["alert"] == "1 vaga livre na lista de transferências"
@@ -114,7 +115,7 @@ def test_daily_rewards_and_the_accumulated_videos():
              "videos": {"count": 3, "threshold": 10, "claimable": False, "reopen": None}}
     parts, videos = daily_view(daily, NOW)
     assert parts == [("done", "Início de sessão (dia 5)", GREEN), ("progress", "Missões 2/3", YELLOW),
-                     ("open", "Prémio do dia", GREY), ("waiting", "Novo dia em 1h00", BLUE)]
+                     ("open", "Prémio diário", GREY), ("waiting", "Novo dia em 1h00", BLUE)]
     assert videos == {"text": "3/10", "colour": None, "done": 0.3}
     assert daily_view(None, NOW) == ([], None)
 
@@ -234,9 +235,9 @@ def test_daily_hover_texts():
                            ("funds", "Amanhã: pacote de 3 M de fundos", GREY)]
     assert daily_tips(daily, "en")["missions"][0] == ("done", "Train any player (2/2)", None)
     daily["missions"]["today"] = 1  # the week's day 1: the game lists no prize for it
-    assert daily_tips(daily)["day"] == [(None, "Hoje não há prémio do dia", GREY), ("missions", "Amanhã: 2 de energia", GREY)]
+    assert daily_tips(daily)["day"] == [(None, "Sem prémio do dia", GREY), ("missions", "Amanhã: 2 de energia", GREY)]
     pieces = board_view({"clubs": [], "coins": 1, "ads": {}, "daily": daily}, None, NOW)["daily"]
-    assert [p[3][0][1] for p in pieces] == ["Hoje: 5 boss coins", "Treinar um jogador (2/2)", "Hoje não há prémio do dia"]
+    assert [p[3][0][1] for p in pieces] == ["Hoje: 5 boss coins", "Treinar um jogador (2/2)", "Sem prémio do dia"]
 
 
 def test_events_calendar_for_the_top_bar():
@@ -287,11 +288,9 @@ def test_every_effect_of_the_october_schedule_reads_in_portuguese():
 def test_the_circle_shows_the_strength_ours_blue_the_opponents_compared_with_ours():
     from osmbot.gui.view import rating_badge
 
-    ours = rating_badge(109, (1, 962_000_000, 38_480_000, 25, 20))
-    assert ours == {"text": "109", "colour": BLUE,
-                    "tip": "Força 109 · valor do plantel 962 M · 25 jogadores · média 38,48 M"}
+    assert rating_badge(109) == {"text": "109", "colour": BLUE, "tip": ""}  # no hover (owner, 2026-10-15)
     assert [rating_badge(theirs, ours=108)["colour"] for theirs in (73, 107, 109, 110)] == [GREEN, YELLOW, YELLOW, RED]
-    assert rating_badge(None, (1, 962_000_000, 38_480_000, 25, 20), ours=108) is None  # not analysed yet: no circle
+    assert rating_badge(None, ours=108) is None  # not analysed yet: no circle
 
 
 def test_the_place_says_champions_once_won_and_the_hover_has_the_top_3_and_the_goal():
@@ -330,3 +329,14 @@ def test_the_sale_line_shows_the_best_and_the_three_on_hover():
     assert tip.splitlines()[0].endswith(" · reforço (> T1 79) · pechincha") and len(tip.splitlines()) == 2
     _, unsure = sale_view({"sale": {"picks": [deal], "certo": False}})
     assert unsure.splitlines()[-1] == "? = esta liga não vendeu ao máximo nos últimos 3 dias"
+
+
+def test_squad_hover_is_the_table_by_value():
+    from osmbot.gui.view import squad_view
+
+    rows = [(1, "A", 1_032_740_000, 21, 49_178_095, True), (2, "B", 940_000_000, 22, 42_727_272, False)]
+    tip = squad_view((1, 1_032_740_000, 49_178_095, 21, 20), rows)["table_tip"].split(chr(10))
+    assert tip[0] == "Valor do plantel" and tip[1].startswith("▸ 1.º A · ") and "21 jogadores · média" in tip[1]
+    assert squad_view((1, 10, 1, 10, 20))["table_tip"] == squad_view((1, 10, 1, 10, 20))["tip"]
+    from osmbot.gui.view import rating_badge
+

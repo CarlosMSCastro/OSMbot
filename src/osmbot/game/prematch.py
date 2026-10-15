@@ -16,7 +16,7 @@ import time
 from osmbot import logs
 from osmbot.game import clubinfo, refusals
 from osmbot.game.timers import minutes_text, timer
-from osmbot.prematch.policy import (LEAD, friendly_choices, friendly_event, friendlies_due, friendlies_missing,
+from osmbot.prematch.policy import (LEAD, day_end, friendly_choices, friendly_event, friendlies_due, friendlies_missing,
                                     friendlies_played, in_window, needs_analysis, next_friendly_at, next_opponent)
 
 FRIENDLY_PRODUCT = 62  # bosscoinproducts: "Friendly"
@@ -33,6 +33,12 @@ COUNTS = {"friendlies": 0, "analyses": 0, "collected": 0}
 def _match_time(client, base: str) -> float | None:
     _, timers = client.get(f"{base}/timers")
     return next((t["finishedTimestamp"] for t in timers if t["type"] == NEXT_MATCH_TIMER), None)
+
+
+def _day_time(client, base: str, now: float) -> float | None:
+    """When the game's day ends (the match, or in the pre-season the hour it would be at; policy.day_end)."""
+    _, info = client.get(base.rsplit("/teams/", 1)[0])
+    return day_end(_match_time(client, base), now, info.get("weekNr") if isinstance(info, dict) else None)
 
 
 def _progress(client, base: str) -> dict[int, dict]:
@@ -196,13 +202,14 @@ def prepare_club(client, team: dict, base: str, confirm: bool, now: float, log=p
     from osmbot.game.events import calendar_events
 
     events = calendar_events(now)
-    due = friendlies_due(match, now, events)
+    day = day_end(match, now, week)  # in the pre-season the 4 friendlies are daily (owner, 2026-10-15)
+    due = friendlies_due(day, now, events)
     played = 0
     if due:
         failed, played = _play_friendlies(client, team, base, league, week, due, confirm, log, rng,
                                           event=(friendly_event(events, now) or {}).get("nome"))
         failures += failed
-    wakes.append(next_friendly_at(match, now, played, events))
+    wakes.append(next_friendly_at(day, now, played, events))
     if not in_window(match, now):
         wakes.append(match - LEAD)  # the analysis is sent only in the last 4 hours
     else:

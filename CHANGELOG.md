@@ -4,6 +4,26 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-PT/1.1.0/); 
 
 Este ficheiro é o **histórico de versões, para quem lê o repo**. O diário interno de cada sessão de trabalho está em [`docs/WORKLOG.md`](docs/WORKLOG.md).
 
+## [0.12.1] — 2026-10-15
+
+Boss coins e dinheiro do inventário reclamados sozinhos, calendário nas diárias e o prémio do início de sessão sempre conhecido.
+
+### Alterado
+- **Boss coins e dinheiro do clube no inventário:** vão logo para a carteira, como o "Claim" do jogo (p. ex. o prémio diário das missões, que fazia aparecer "Boss Coins não reclamadas"). O dinheiro do clube vai para o clube com menos dinheiro (fundos + poupança). Os outros itens (trocas de posição, treino +100) continuam no inventário para usares tu.
+- **Calendário nas diárias:** o texto "DIÁRIAS" da barra de cima passa a ser um ícone de calendário, no estilo do relógio.
+- **Prémio do início de sessão:** o bot guarda os prémios dos próximos dias quando os lê, por isso sabe o de hoje mesmo que tenha sido reclamado noutro PC ou no site; o hover mostra também o de amanhã.
+- **Textos:** "Prémio do dia" passa a "Prémio diário"; sem prémio hoje, o hover diz "Sem prémio do dia" e, por baixo, o de amanhã.
+
+## [0.12.0] — 2026-10-15
+
+A pré-época passa a ter o mesmo tratamento que o resto da época, e os tempos longos aparecem em dias.
+
+### Alterado
+- **Pré-época:** o bot deposita na poupança e faz os 4 amigáveis em **cada dia** da pré-época, não só antes do 1.º jogo do campeonato. O "jogo do dia" é a hora do 1.º jogo do campeonato (1 jogo por dia). O analista e os especialistas ficam para o jogo a sério.
+- **Tempos em dias:** a partir de 24 h aparece "2 dias e 10h59" em vez de "58h59" (janela, registo e `treinos`).
+- **Valor do plantel:** ao passar o rato sobre o lugar e o valor do plantel ("1.º 1032,74 M") aparece a tabela da liga por valor, como no jogo: em 1.º, os 2 de baixo; senão 1 acima e 1 abaixo, com valor, jogadores e média.
+- **Hovers redundantes retirados:** os círculos da força (o do clube e o do adversário) deixam de ter hover; o hover no nome do adversário mostra só o valor do plantel, sem a força.
+
 ## [0.11.14] — 2026-10-14
 
 Os "SALE" que valem a pena, no cartão de cada clube.

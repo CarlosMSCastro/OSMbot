@@ -2,6 +2,24 @@
 
 Entradas mais recentes primeiro. Cada sessão: o que se fez · o que ficou por fazer · próximo passo.
 
+## 2026-10-15 — Pré-época e tempos em dias (PT-LA-02-0095-N)
+
+- **Erros de rede de manhã** (pergunta do dono): `Page.goto` com timeout, boss coins que não subiram e `getaddrinfo failed` às 10:43, por o portátil andar sem rede. O bot recuperou sozinho; não foi preciso reiniciar.
+- **Qarabag sem amigáveis** (pergunta do dono): está na pré-época (`weekNr` −2) e o 1.º jogo é daqui a 59 h. A regra fazia os amigáveis só nas 16 h antes do jogo.
+- **Pré-época com o mesmo tratamento** (pedido do dono): depósito na poupança e 4 amigáveis em cada dia, à hora do 1.º jogo menos N dias (`prematch/policy.preseason`, `day_end`; `prematch._day_time`; `savings`, `timeline` com `club["week"]`). D-054, `THEORY.md` §6/§13, `DISCOVERY.md`. Simulação com dados reais (só leituras): o dia do Qarabag acaba às 23:08, depósito às 23:03, faria já 2 amigáveis.
+- **Tempos em dias** (pedido do dono): `dashboard.span` mostra "2 dias e 10h59" a partir de 24 h (janela, registo, `treinos`).
+- 399 testes. **O bot aberto tem de ser reiniciado** para usar o código novo.
+- **Hover no valor do plantel** (pedido do dono, com print do jogo): a tabela por valor à volta do clube (1.º → os 2 de baixo; senão 1 acima e 1 abaixo) com valor, jogadores e média; sem pedidos novos ao jogo (os valores já eram lidos). `board/info.value_table`, `clubinfo` (`value_table`), `gui/view.squad_view` (`table_tip`), `gui/window`, `i18n`. `THEORY.md` §19. 401 testes. Visto com dados reais (só leituras): bate com o print (Betis 1032,74 M, Barcelona 939,4 M, Real Madrid 533,88 M).
+- **Sem hover nos círculos da força** (pedido do dono: redundante), o do clube e o do adversário; o hover no nome do adversário deixa de dizer "Força" (o círculo já mostra) e fica só o valor do plantel. `gui/view.rating_badge`, `squad_tip`.
+- **Versão 0.12.0** (pedido do dono): `pyproject`, `__init__`, `CHANGELOG`, `README`, `PROJECT_BRIEF` (8a, 12a); `dist` reconstruído neste PC (portátil 553 MB, zip 206 MB, instalador 148 MB; versão e `status` da versão portátil confirmados); notas em `dist/release-notes-v0.12.0.md`. Commit e `gh release create v0.12.0` entregues ao dono.
+- **Calendário em vez de "DIÁRIAS"** (pedido do dono): ícone desenhado por nós no estilo do relógio (`img/calendar.svg` → `gui/assets/calendar.png`, 128 px, aro prateado e topo azul); "Diárias" no hover. `gui/window`, `i18n`. Visto num print fora do ecrã.
+- **"Hoje: prémio por saber"** (pergunta do dono): o início de sessão de hoje foi reclamado às 05:00 noutro PC; depois disso o jogo só mostra os dias seguintes e este PC nunca o tinha anotado. **Corrigido:** cada leitura guarda os prémios por número do dia (`~/.osmbot/inicio_sessao_dias.json`, `rewards/policy.track_seen`), e o de hoje sai daí; o hover mostra também o de amanhã (`login_tomorrow`). Sem nota: "Hoje: reclamado (prémio não visto)". 402 testes.
+- **Calendário maior** (pedido do dono): 28 → 34 px.
+- **"Boss Coins não reclamadas" (5) no jogo** (pergunta do dono): era a recompensa do dia das missões (`DailyMissionsRewardBC_5`, 12:57), guardada no inventário pela regra "nunca usar itens" (D-020), que eu tinha aplicado também ao dinheiro. **Corrigido (D-055):** boss coins e dinheiro do clube do inventário vão para a carteira (`claim_money`, no fim das recompensas); dinheiro do clube para o clube com menos dinheiro (escolha do dono). 403 testes. Simulação real (sem escritas): 5 boss coins + 3 M para o Qarabag (4 M, o mais pobre). Não fiz a escrita: fica para o bot ativo depois de reiniciado.
+- **Textos das diárias** (pedido do dono): "Prémio do dia" → "Prémio diário" (barra, por reclamar, consola); hover sem prémio: "Sem prémio do dia" e o de amanhã por baixo. 403 testes.
+- **Versão 0.12.1** (pedido do dono): `pyproject`, `__init__`, `CHANGELOG`, `README`; `dist` reconstruído neste PC; notas em `dist/release-notes-v0.12.1.md`. Commit e `gh release create v0.12.1` entregues ao dono.
+- **Por verificar:** se o juro é mesmo pago na pré-época (comparar a poupança do Qarabag antes e depois das 23:08) e a que hora muda a jornada.
+
 ## 2026-10-14 (noite) — Pull e `dist` 0.11.12 (DESKTOP-KAM70RR)
 
 - **Pull bloqueado** (pergunta do dono): `DISCOVERY.md` e `WORKLOG.md` alterados aqui e no trabalho. Resolvido pelo dono com `stash` → `pull` → `stash pop`, sem conflitos.

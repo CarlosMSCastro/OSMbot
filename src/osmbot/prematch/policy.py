@@ -10,6 +10,20 @@ EVENT_NAME = "intense friendlies"  # the event that brings 8 friendlies (owner, 
 EVENT_MARGIN = 3600  # a friendly that would only fit after the event is played this long before it ends [S]
 ANALYSIS_STEP = 5  # matchpreparation step "Analyse your opponent"
 LEAGUE_MATCH, CUP_MATCH, FRIENDLY_MATCH = 0, 1, 2  # matchType in matches/filter (1 = cup: hypothesis)
+DAY = 24 * 3600
+
+
+def preseason(week: int | None) -> bool:
+    """The 4 days before the first league match: ``weekNr`` -3 to 0 (seen -3 and -2, 2026-10-14/15)."""
+    return week is not None and week < 1
+
+
+def day_end(match_time: float | None, now: float, week: int | None) -> float | None:
+    """When the game's day ends: the match; in the pre-season, with no match that day, the same hour as the first
+    league match (one match a day), where the savings' interest is paid too (owner, 2026-10-15; THEORY.md section 13) [S]."""
+    if match_time is None or not preseason(week) or now >= match_time:
+        return match_time
+    return match_time - DAY * int((match_time - now) // DAY)
 
 
 def in_window(match_time: float | None, now: float) -> bool:

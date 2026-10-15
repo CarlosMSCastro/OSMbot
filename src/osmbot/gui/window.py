@@ -41,7 +41,8 @@ COIN_FILE, FUNDS_FILE = ASSETS / "bosscoin.png", ASSETS / "clubfunds.png"  # the
 PICTURES = {"training": ASSETS / "training.png", "doctor": ASSETS / "doctor.png", "lawyer": ASSETS / "lawyer.png",
             "coins": COIN_FILE, "funds": FUNDS_FILE, "missions": ASSETS / "missions.png", "stadium": ASSETS / "stadium.png",
             "timer": ASSETS / "timer.png", "ball": ASSETS / "ball.png", "inventory": ASSETS / "inventory.png",
-            "universal": ASSETS / "universal.png", "camp": ASSETS / "camp.png", "secret": ASSETS / "secret.png"}  # waiting, and a club's match (owner, 2026-10-10;
+            "universal": ASSETS / "universal.png", "camp": ASSETS / "camp.png", "secret": ASSETS / "secret.png",
+            "calendar": ASSETS / "calendar.png"}  # waiting, and a club's match (owner, 2026-10-10;
 # drawn from img/*.svg at 128 px: the portable build leaves Qt's svg support out)
 _pictures: dict[tuple[str, bool, int], QPixmap] = {}
 
@@ -1176,7 +1177,7 @@ class ClubCard(QFrame):
         squad = club["squad"]  # the place in colour, the total in white; players and average on hover
         gap = "&nbsp;&nbsp;&nbsp;" if squad["place"] else ""
         self.value.setText(rich([(squad["place"], squad["colour"])]) + gap + rich([(squad["total"], None if squad["place"] else GREY)]))
-        self.value.setToolTip(tip_text(tr(squad["tip"])))
+        self.value.setToolTip(tip_text("\n".join(tr(line) for line in (squad.get("table_tip") or squad["tip"]).split("\n"))))
         self.money.setText(rich([(club["money"], None)]))
         self.sale.show_sales(club["sales"])
         sponsors = club["sponsors"]
@@ -1579,7 +1580,9 @@ class MainWindow(QMainWindow):
         bar = QHBoxLayout(top)
         bar.setContentsMargins(18, 9, 18, 9)
         bar.setSpacing(14)
-        bar.addWidget(column_title("DIÁRIAS"))
+        daily_icon = icon(PICTURES["calendar"], 34)  # instead of the "DIÁRIAS" title (owner, 2026-10-15)
+        daily_icon.setToolTip(tip_text(tr("Diárias")))
+        bar.addWidget(daily_icon, 0, Qt.AlignVCenter)
         self.daily = StepList(vertical=False, size=10, spacing=18)  # the same icons as the pre-match (owner, 2026-10-10)
         self.daily.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Preferred)  # never squeezed by the event beside it
         bar.addWidget(self.daily)

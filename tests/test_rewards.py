@@ -241,7 +241,8 @@ def test_the_accumulated_videos_reward_goes_to_the_inventory_only_at_the_thresho
 
 def test_daily_state_for_the_board():
     state = rewards.daily_state(FakeGame(claimed={10, 11, 12}, counter=(7, 10), cap_open=False), clock=lambda: DAY3)
-    assert state["login"] == {"claimable": True, "day": 15, "renews": 2_000_000_000, "today": {"action": "DailyLoginEnergy_1"}}
+    assert state["login"] == {"claimable": True, "day": 15, "renews": 2_000_000_000, "today": {"action": "DailyLoginEnergy_1"},
+                              "tomorrow": {"action": "DailyLoginEnergy_1"}}
     missions = state["missions"]
     assert {k: missions[k] for k in ("claimed", "total", "day_pending")} == {"claimed": 3, "total": 3, "day_pending": True}
     assert [d["claimed"] for d in missions["dailies"]] == [True, True, True] and missions["today"] == 3
@@ -321,3 +322,53 @@ def test_today_s_login_prize_after_it_was_claimed():
 def test_claiming_the_login_notes_today_s_prize_for_the_board():
     rewards.claim_login(FakeGame(), True, print)
     assert json.loads(rewards.LOGIN_FILE.read_text(encoding="utf-8"))["action"] == "DailyLoginEnergy_1"
+
+
+def test_today_s_login_prize_from_an_earlier_read_and_tomorrow_s():
+    from osmbot.rewards.policy import login_today, login_tomorrow, track_seen
+
+    prizes = {"DailyLoginBossCoin_5": {"type": 1, "value": 5, "action": "DailyLoginBossCoin_5"}}
+    yesterday = [{"dayNumber": 23, "actionId": "DailyLoginEnergy_1"}, {"dayNumber": 24, "actionId": "DailyLoginBossCoin_5"}]
+    seen = track_seen(yesterday, None, 23)
+    later = [{"dayNumber": 25, "actionId": "DailyLoginEnergy_1"}]  # claimed on another PC: only the coming days
+    seen = track_seen(later, seen, 24)
+    assert seen == {"24": "DailyLoginBossCoin_5", "25": "DailyLoginEnergy_1"}  # day 23 is gone
+    assert login_today(later, None, [], 0, prizes, "2026-10-15", seen, 24)["value"] == 5
+    assert login_today(later, None, [], 0, prizes, "2026-10-15", {}, 24) is None
+    assert login_tomorrow(later, 24, prizes) == {"action": "DailyLoginEnergy_1"} and login_tomorrow(later, 25, prizes) is None
+
+
+def test_money_in_the_inventory_goes_to_the_wallets_the_other_items_stay():
+    from osmbot.rewards.policy import money_items, poorest
+
+    inventory = [{"id": "a", "action": {"id": "DailyMissionsRewardBC_5"}, "reward": {"type": 1, "value": 5}},
+                 {"id": "b", "action": {"id": "DailyMissionsRewardCF_3M"}, "reward": {"type": 8, "value": 3_000_000}},
+                 {"id": "c", "action": {"id": "DailyMissionsRewardTP_Boost100"}, "reward": {"type": 9, "value": 100}},
+                 {"id": "d", "action": {"id": "RewardedVideoCounterPositionModifier"}, "reward": {"type": 7, "value": 1}}]
+    assert [i["id"] for i in money_items(inventory)] == ["a", "b"]
+    assert poorest({"L1/T1": (10, 500), "L2/T2": (300, 0)}) == "L2/T2" and poorest({}) is None
+
+    class Client:
+        def __init__(self):
+            self.posts = []
+
+        def get(self, path):
+            if path == "user/userrewards":
+                return 200, inventory
+            if path == "user/accounts":
+                return 200, {"teamSlots": {"0": {"team": {"id": 1, "leagueId": 7, "name": "Rico"}},
+                                           "1": {"team": {"id": 2, "leagueId": 8, "name": "Pobre"}}}}
+            return 200, {"balance": 0, "savings": 900} if path.startswith("leagues/7/") else {"balance": 5, "savings": 0}
+
+        def post(self, path, form):
+            self.posts.append((path, form))
+            return 200, {}
+
+    client, lines = Client(), []
+    assert rewards.claim_money(client, True, lines.append) == 0
+    assert client.posts == [("user/bosscoinwallet/consumereward", {"rewardId": "a"}),
+                            ("leagues/8/teams/2/finances/consumereward", {"rewardId": "b"})]
+    assert lines == ["Inventário: 5 boss coins (DailyMissionsRewardBC_5) na carteira",
+                     "Inventário: 3 M para o Pobre (DailyMissionsRewardCF_3M) na carteira"]
+    simulated = Client()
+    assert rewards.claim_money(simulated, False, lines.append) == 0 and simulated.posts == []

@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import time
 
-from osmbot.board.info import cup_phase, league_summary, next_match, squad_value, team_rating
+from osmbot.board.info import cup_phase, league_summary, next_match, squad_value, team_rating, value_table
 from osmbot.game import market as market_watch, sales
 from osmbot.game.specialists import check
 from osmbot.theory.lineup import bench_warnings, position_warnings, tactic_notes, tactic_warnings
@@ -238,10 +238,11 @@ def club_extra(client, team: dict, base: str, players: list[dict], slot, market:
     logo = next((a.get("path") for a in team.get("assets") or [] if a.get("type") == 4), None)
     standings = _cached(("standings", league), FIXTURES_FOR, lambda: _list(client, f"{league}/standings"))
     return {
-        "team_id": team["id"], "logo": logo, "logo_key": team.get("baseId") or str(team["id"]),
+        "team_id": team["id"], "week": week, "logo": logo, "logo_key": team.get("baseId") or str(team["id"]),
         "next": upcoming,
         "cup": cup_phase(rounds, matches, team["id"], week),
         "value": squad_value(values, team["id"]), "strength": strength,
+        "value_table": value_table(values, {t["id"]: t["name"] for t in teams}, team["id"]),
         "table": league_summary(standings, teams, matches, team["id"], week, team.get("goal")),
         "free_slots": free, "sales": sold,
         "prep": {"pct": prep.get("completionPercentage"), "steps": steps, "why": reasons, "boosts": boosts},

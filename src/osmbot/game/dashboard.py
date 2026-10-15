@@ -42,8 +42,11 @@ ANSI = re.compile(r"(\x1b\[[0-9;]*m)")
 
 
 def span(seconds: float) -> str:
+    """"3h06"; from a day on, the days first (owner, 2026-10-15): "2 dias e 10h59", "1 dia e 0h20"."""
     minutes = int(max(0, seconds) // 60)
-    return f"{minutes // 60}h{minutes % 60:02d}"
+    days, minutes = divmod(minutes, 24 * 60)
+    clock = f"{minutes // 60}h{minutes % 60:02d}"
+    return f"{days} dia{'s' if days > 1 else ''} e {clock}" if days else clock
 
 
 def money(amount: int) -> str:
@@ -325,7 +328,7 @@ def daily_lines(daily: dict | None, now: float, level: int, paint, painted_bar, 
     if missions and missions["total"]:
         finished = missions["claimed"] >= missions["total"]
         parts.append((done if finished else todo)(f"missões {missions['claimed']}/{missions['total']}" + (" √" if finished else "")))
-        prize = "prémio" if short else "prémio do dia"
+        prize = "prémio" if short else "prémio diário"
         parts.append(todo(f"{prize} por reclamar") if missions["day_pending"] else (done(f"{prize} √") if finished else wait(f"{prize} -")))
     renews = (login or {}).get("renews")
     new_day = paint(("novo dia " if short else "novo dia em ") + span(renews - now), BLUE) if renews and renews > now else ""

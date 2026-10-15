@@ -9,7 +9,7 @@ from __future__ import annotations
 import time
 
 from osmbot.game import refusals
-from osmbot.game.prematch import _match_time
+from osmbot.game.prematch import _day_time
 from osmbot.savings.policy import deposit_due, wake_at
 
 PAUSE_BETWEEN_WRITES = 1.5  # seconds
@@ -21,8 +21,9 @@ def _millions(amount: int) -> str:
 
 
 def deposit_club(client, team: dict, base: str, confirm: bool, now: float, log=print) -> tuple[int, float | None]:
-    """One club: deposit if its match is 15 minutes away or less. Returns (failures, time to wake at)."""
-    match = _match_time(client, base)
+    """One club: deposit if its match is 15 minutes away or less (in the pre-season, the hour it would be at, owner
+    2026-10-15). Returns (failures, time to wake at)."""
+    match = _day_time(client, base, now)
     if not deposit_due(match, now):
         return 0, wake_at(match, now)
     _, money = client.get(f"{base}/finances/balanceandsavings")

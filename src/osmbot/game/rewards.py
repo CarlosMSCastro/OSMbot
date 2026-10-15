@@ -2,7 +2,8 @@
 
 Login reward, the three daily missions plus the day reward, and the reward for accumulated videos. Whatever
 the game offers is claimed and KEPT in the inventory, except the login reward, which the site itself spends
-into its wallet (energy, boss coins). Nothing from the inventory is ever used. The game's own limits are
+into its wallet (energy, boss coins), and any item that is only money (boss coins, club money), claimed into
+its wallet (owner, 2026-10-15). Nothing else from the inventory is ever used. The game's own limits are
 respected: no claim that would overfill an inventory slot, and a refused claim is not repeated that day (D-032).
 """
 from __future__ import annotations
@@ -13,8 +14,9 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from osmbot.game import refusals
-from osmbot.rewards.policy import (VIDEO_COUNTER_ACTION, day_key, has_room, is_daily, login_today, mission_details,
-                                   mission_summary, next_claim, prize_index, wallet_path)
+from osmbot.rewards.policy import (CLUB_FUNDS, COINS, VIDEO_COUNTER_ACTION, day_key, has_room, is_daily, login_today,
+                                   login_tomorrow, mission_details, mission_summary, money_items, next_claim, poorest,
+                                   prize_index, track_seen, wallet_path)
 
 PAUSE_BETWEEN_WRITES = 1.5  # seconds
 MAX_MISSION_CLAIMS = 10  # per pass
@@ -27,6 +29,7 @@ _prizes: dict[str, dict] = {}  # actionId -> prize, from the reward catalogues: 
 _unspent: dict[int, str] = {}  # login rewards the bot claimed but failed to spend: reward id -> action (tried again)
 _missions_read: list = [0.0, None]  # [when, body] of the last missions read
 LOGIN_FILE = Path.home() / ".osmbot" / "inicio_sessao.json"  # today's login prize, noted when the bot claims it
+TRACK_FILE = Path.home() / ".osmbot" / "inicio_sessao_dias.json"  # the login prizes by day number, as last read
 MISSIONS_FRESH = 5 * 60.0  # the board may reuse a missions read this recent (the claims always read anew)
 
 
@@ -156,6 +159,22 @@ def _noted_login() -> dict | None:
         return None
 
 
+def _track(track: list[dict], day: int) -> dict[str, str]:
+    """Note the login prizes by day number (for today's once it is claimed elsewhere) and return them."""
+    try:
+        before = json.loads(TRACK_FILE.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        before = None
+    seen = track_seen(track, before if isinstance(before, dict) else None, day)
+    if seen != before:
+        try:
+            TRACK_FILE.parent.mkdir(parents=True, exist_ok=True)
+            TRACK_FILE.write_text(json.dumps(seen), encoding="utf-8")
+        except OSError:
+            pass
+    return seen
+
+
 def _game_day_start(now: float) -> float:
     """When today's game day began (04:00 UTC)."""
     day = datetime.strptime(refusals.game_day(now), "%Y-%m-%d").replace(hour=4, tzinfo=timezone.utc)
@@ -231,8 +250,10 @@ def daily_state(client, clock=time.time) -> dict:
     except Exception:
         known = {}
     try:
-        out["login"]["today"] = login_today(state.get("rewardTrackDays") or [], _noted_login(), client.get("user/userrewards")[1],
-                                            _game_day_start(clock()), known, refusals.game_day(clock()))
+        track, day = state.get("rewardTrackDays") or [], state["consecutiveLoginCount"]
+        out["login"]["tomorrow"] = login_tomorrow(track, day, known)
+        out["login"]["today"] = login_today(track, _noted_login(), client.get("user/userrewards")[1],
+                                            _game_day_start(clock()), known, refusals.game_day(clock()), _track(track, day), day)
     except Exception:
         pass
     try:
@@ -253,6 +274,51 @@ def daily_state(client, clock=time.time) -> dict:
     return out
 
 
+def claim_money(client, confirm: bool, log=print) -> int:
+    """Boss coins and club money waiting in the inventory (e.g. the missions' day reward) go to their wallet, as the
+    game's "Claim" (owner, 2026-10-15); club money to the club with the least money. Requests observed with the
+    videos (DISCOVERY.md section 3). Returns the failures."""
+    from osmbot.game.trainings import _teams
+
+    items = money_items(client.get("user/userrewards")[1])
+    items = [i for i in items if not refusals.blocked(f"dinheiro:{i['id']}")]
+    if not items:
+        return 0
+    if not confirm:
+        log(f"Simulação: poria {len(items)} prémio(s) de dinheiro na carteira")
+        return 0
+    club = None
+    if any(i["reward"]["type"] == CLUB_FUNDS for i in items):
+        money = {}
+        for _, team, base in _teams(client):
+            status, funds = client.get(f"{base}/finances/balanceandsavings")
+            if status == 200 and isinstance(funds, dict):
+                money[base] = (funds.get("balance") or 0, funds.get("savings") or 0)
+                money_names[base] = team["name"]
+        club = poorest(money)
+    failures = 0
+    for item in items:
+        coins, value, action = item["reward"]["type"] == COINS, item["reward"].get("value") or 0, item["action"]["id"]
+        if not coins and club is None:
+            continue
+        path = "user/bosscoinwallet/consumereward" if coins else f"{club}/finances/consumereward"
+        status, _ = client.post(path, {"rewardId": item["id"]})
+        time.sleep(PAUSE_BETWEEN_WRITES)
+        what = f"{value} boss coins" if coins else f"{value / 1e6:g} M para o {money_names.get(club, club)}".replace(".", ",")
+        if status == 200:
+            log(f"Inventário: {what} ({action}) na carteira")
+        elif refusals.is_refusal(status):
+            refusals.refuse(f"dinheiro:{item['id']}", log, f"! Inventário: o jogo recusou pôr {what} na carteira ({status}); "
+                            "volto a tentar amanhã", day=refusals.game_day())
+        else:
+            log(f"Inventário: falha ao pôr {what} na carteira ({status})")
+            failures += 1
+    return failures
+
+
+money_names: dict[str, str] = {}
+
+
 def run_rewards(confirm: bool) -> tuple[int, list[float]]:
     """All three, each independent of the others. Returns (failures, times to wake at).
     Without ``confirm`` only shows what it would do."""
@@ -261,7 +327,7 @@ def run_rewards(confirm: bool) -> tuple[int, list[float]]:
     failures, wake = 0, []
     try:
         client = OsmClient()
-        for step in (claim_login, claim_missions, claim_video_reward):
+        for step in (claim_login, claim_missions, claim_video_reward, claim_money):
             try:
                 failures += step(client, confirm)
             except (NeedsBrowserLogin, OSError):

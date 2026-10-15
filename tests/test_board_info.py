@@ -94,3 +94,14 @@ def test_league_summary_has_the_top_3_with_points_the_goal_and_when_the_title_is
     assert league_summary(won, teams, ahead, 1, 19, 1)["champion"]  # 45 + 2×3 = 51 < 52
     assert not league_summary([{"teamId": 1, "points": 51}, {"teamId": 2, "points": 45}], teams, ahead, 1, 19, 1)["champion"]
     assert league_summary([], teams, ahead, 1, 19, 1) is None
+
+
+def test_value_table_shows_the_2_below_when_first_else_1_above_and_1_below():
+    from osmbot.board.info import value_table
+
+    values = {1: (1_033_000_000, 21), 2: (940_000_000, 22), 3: (534_000_000, 19), 4: (100_000_000, 20)}
+    names = {1: "A", 2: "B", 3: "C", 4: "D"}
+    assert [(r[0], r[1], r[5]) for r in value_table(values, names, 1)] == [(1, "A", True), (2, "B", False), (3, "C", False)]
+    assert [r[0] for r in value_table(values, names, 3)] == [2, 3, 4]
+    assert [r[0] for r in value_table(values, names, 4)] == [3, 4]
+    assert value_table(values, names, 9) == []

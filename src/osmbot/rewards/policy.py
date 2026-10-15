@@ -10,6 +10,20 @@ LOGIN_WALLETS = {
 }
 
 
+COINS, CLUB_FUNDS = 1, 8  # reward types: boss coins, club money
+
+
+def money_items(inventory: list[dict]) -> list[dict]:
+    """The inventory items that are only money (boss coins, club money): claimed into the wallet at once, like the
+    "Claim" in the game (owner, 2026-10-15: "claim sim, usar não"); the other items stay for the owner to use."""
+    return [i for i in inventory if (i.get("reward") or {}).get("type") in (COINS, CLUB_FUNDS)]
+
+
+def poorest(money: dict[str, tuple[int, int]]) -> str | None:
+    """The club with the least money (funds + savings), where the club money goes (owner, 2026-10-15)."""
+    return min(money, key=lambda base: sum(money[base])) if money else None
+
+
 def wallet_path(action_id: str) -> str | None:
     """The wallet request that spends a login reward, or None (e.g. the day-21 bag): it stays in the inventory."""
     return next((path for prefix, path in LOGIN_WALLETS.items() if action_id.startswith(prefix)), None)
@@ -89,16 +103,34 @@ def prize_index(action_rewards: list[dict], rewards: list[dict]) -> dict[str, di
 
 
 def login_today(track: list[dict], saved: dict | None, inventory: list[dict], day_start: float, prizes: dict[str, dict],
-                today: str) -> dict | None:
+                today: str, seen: dict[str, str] | None = None, day: int | None = None) -> dict | None:
     """Today's login prize, for the board's hover: the day the game offers to claim; once claimed (the track then
-    shows only the coming days), what the bot noted when it claimed it today (``saved``: {"day", "action"}), or an
-    item of a login reward the inventory got today (a bag stays there; coins and energy are spent at once)."""
+    shows only the coming days), what the bot noted when it claimed it today (``saved``: {"day", "action"}), what an
+    earlier read saw for today's day number (``seen``: {day number: action}, ``day``: the login count; so a prize
+    claimed on another PC or on the site is known too, owner 2026-10-15), or an item of a login reward the
+    inventory got today (a bag stays there; coins and energy are spent at once)."""
     action = next((d["actionId"] for d in track if d.get("isClaimable")), None)
     if action is None and saved and saved.get("day") == today:
         action = saved.get("action")
+    if action is None and seen and day is not None:
+        action = seen.get(str(day))
     if action is None:
         action = next((i["action"]["id"] for i in inventory if i["action"]["id"].startswith("DailyLogin")
                        and (i.get("creationTimestamp") or 0) >= day_start), None)
+    return (prizes.get(action) or {"action": action}) if action else None
+
+
+def track_seen(track: list[dict], seen: dict[str, str] | None, day: int) -> dict[str, str]:
+    """The login prizes by day number, kept from read to read: the track's days (today's while it is still to claim,
+    and the coming ones) over what was seen before, dropping the days gone by."""
+    kept = {k: v for k, v in (seen or {}).items() if k.isdigit() and int(k) >= day}
+    kept.update({str(d["dayNumber"]): d["actionId"] for d in track if d.get("dayNumber") is not None and d.get("actionId")})
+    return kept
+
+
+def login_tomorrow(track: list[dict], day: int, prizes: dict[str, dict]) -> dict | None:
+    """Tomorrow's login prize (the track's next day after today's count)."""
+    action = next((d["actionId"] for d in track if d.get("dayNumber") == day + 1), None)
     return (prizes.get(action) or {"action": action}) if action else None
 
 

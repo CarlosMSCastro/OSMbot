@@ -62,6 +62,18 @@ def squad_value(values: dict[int, tuple[int, int]], team_id: int) -> tuple[int, 
     return order.index(team_id) + 1, total, total / max(1, count), count, len(values)
 
 
+def value_table(values: dict[int, tuple[int, int]], names: dict[int, str], team_id: int) -> list[tuple]:
+    """The league's table by squad value around the club (owner, 2026-10-15), as the game's: the 2 below when it is
+    1st, else 1 above and 1 below. Rows (place, name, total, players, average, mine)."""
+    if team_id not in values:
+        return []
+    order = sorted(values, key=lambda t: -values[t][0])
+    at = order.index(team_id)
+    picked = order[:3] if at == 0 else order[at - 1:at + 2]
+    return [(order.index(t) + 1, names.get(t, "?"), values[t][0], values[t][1], values[t][0] / max(1, values[t][1]), t == team_id)
+            for t in picked]
+
+
 def track_sales(state: dict, listed: dict[int, dict], squad: set[int], now: float | None = None) -> dict:
     """Follow one club's transfer list between reads. ``listed``: {player id: {"name", "price", "value"}} on the list
     now; ``squad``: the club's player ids now. A player that left the list AND the squad was sold (at the listed

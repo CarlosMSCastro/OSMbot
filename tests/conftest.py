@@ -23,6 +23,7 @@ def _no_repo_logs(monkeypatch, tmp_path):
     from osmbot.game import rewards
 
     monkeypatch.setattr(rewards, "LOGIN_FILE", tmp_path / "inicio_sessao.json")  # nor today's login prize
+    monkeypatch.setattr(rewards, "TRACK_FILE", tmp_path / "inicio_sessao_dias.json")  # nor the prizes by day
     from osmbot.game import events
 
     monkeypatch.setattr(events, "FILE", tmp_path / "eventos.json")  # nor the owner's calendar of events

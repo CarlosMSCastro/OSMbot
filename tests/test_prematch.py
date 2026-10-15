@@ -53,8 +53,8 @@ def test_friendly_opponents_exclude_the_club_and_this_weeks_friendlies():
 
 class FakeClient:
     def __init__(self, steps, match_in=3600, coins=100, sent=None, post_status=200, clubs=6, friendlies=1,
-                 settings=({"id": 60, "name": "SpyInstructionTimer", "value": 60},)):
-        self.steps, self.coins, self.sent, self.post_status = steps, coins, sent, post_status
+                 settings=({"id": 60, "name": "SpyInstructionTimer", "value": 60},), week=14):
+        self.steps, self.coins, self.sent, self.post_status, self.week = steps, coins, sent, post_status, week
         self.settings = list(settings)
         self.match = NOW + match_in
         self.clubs, self.friendlies = clubs, friendlies
@@ -64,12 +64,12 @@ class FakeClient:
         teams = [{"id": i, "name": f"T{i}"} for i in range(1, self.clubs + 1)]
         data = {
             f"{BASE}/timers": [{"type": 14, "finishedTimestamp": self.match}],
-            LEAGUE: {"weekNr": 14},
+            LEAGUE: {"weekNr": self.week},
             f"{LEAGUE}/gamesettings": self.settings,
             f"{BASE}/matchpreparation": {"steps": self.steps},
             "user/bosscoinwallet": {"amount": self.coins - 4 * sum(1 for p, _ in self.posts if p.endswith("/matches"))},
             f"{LEAGUE}/teams": teams,
-            f"{LEAGUE}/matches/filter": [match(14, 1, 2 + i, kind=2) for i in range(self.friendlies)] + [match(15, 1, 3)],
+            f"{LEAGUE}/matches/filter": [match(self.week, 1, 2 + i, kind=2) for i in range(self.friendlies)] + [match(15, 1, 3)],
             f"{BASE}/players": [{"id": 50, "name": "J", "position": 2, "statAtt": 1, "statDef": 1, "statOvr": 1,
                                  "trainingProgress": 10 * sum(1 for p, _ in self.posts if p.endswith("/matches"))}],
         }
@@ -229,3 +229,19 @@ def test_eight_friendlies_during_an_intense_friendlies_and_never_after_it_ends()
     assert friendlies_due(match, match - 6 * hour, [ending]) == 8
     later = {**event, "start": match - 2 * hour}  # not started yet: still 4
     assert friendlies_due(match, now, [later]) == 1 and len(friendly_deadlines(match, now, [later])) == 4
+
+
+def test_in_the_pre_season_the_day_ends_at_the_hour_of_the_first_match():
+    from osmbot.prematch.policy import DAY, day_end
+
+    first = NOW + 2 * DAY + 11 * 3600  # 59 h away, weekNr -2 (seen 2026-10-15)
+    assert day_end(first, NOW, -2) == NOW + 11 * 3600
+    assert day_end(first, NOW, 0) == NOW + 11 * 3600 and day_end(NOW + 3600, NOW, 0) == NOW + 3600
+    assert day_end(first, NOW, 14) == first  # in the season the day is the match
+    assert day_end(None, NOW, -2) is None
+
+
+def test_pre_season_friendlies_every_day_and_the_analysis_waits_for_the_match():
+    client = FakeClient([step(7, 0), step(5, 0)], match_in=2 * 86400 + LEAD + 600, friendlies=0, week=-2)
+    assert prepare(client)[0] == (0, NOW + 600)  # back at 4 h before the end of the day for the 4th
+    assert [path for path, _ in client.posts] == [f"{BASE}/matches"] * 3

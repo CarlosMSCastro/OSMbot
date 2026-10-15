@@ -22,6 +22,7 @@ def snapshot(**changes):
 def test_span_and_bar():
     assert span(3 * 3600 + 6 * 60) == "3h06"
     assert span(-5) == "0h00"
+    assert span(58 * 3600 + 59 * 60) == "2 dias e 10h59" and span(24 * 3600 + 20 * 60) == "1 dia e 0h20"
     assert bar(8 * 3600).count("█") == 0
     assert bar(0).count("█") == 20
     assert len(bar(4 * 3600)) == 20
@@ -210,7 +211,7 @@ def below_coins(text, count):
 def test_daily_rewards_take_two_lines_under_the_boss_coins():
     text = render(snapshot(daily=daily()), NOW, "ATIVO", [], "Windows", colour=False)
     first, second = below_coins(text, 2)
-    for expected in ("início de sessão √ (dia 16)", "missões 3/3 √", "prémio do dia √", "novo dia em 16h30"):
+    for expected in ("início de sessão √ (dia 16)", "missões 3/3 √", "prémio diário √", "novo dia em 16h30"):
         assert expected in first
     assert "troca de posição" in second and "7/10" in second and "█" in second and "reabre" not in second
 
@@ -220,7 +221,7 @@ def test_daily_rewards_say_what_is_still_to_claim():
                     missions={"claimed": 3, "total": 3, "day_pending": True},
                     videos={"count": 10, "threshold": 10, "claimable": True, "reopen": None})
     first, second = below_coins(render(snapshot(daily=pending), NOW, "ATIVO", [], "Windows", colour=False), 2)
-    assert "início de sessão por reclamar" in first and "prémio do dia por reclamar" in first
+    assert "início de sessão por reclamar" in first and "prémio diário por reclamar" in first
     assert "troca de posição por reclamar" in second
 
 
@@ -228,7 +229,7 @@ def test_daily_rewards_wait_for_the_dailies_and_show_when_the_videos_come_back()
     waiting = daily(missions={"claimed": 1, "total": 3, "day_pending": False},
                     videos={"count": 0, "threshold": 10, "claimable": False, "reopen": NOW + 3600 * 11.7})
     first, second = below_coins(render(snapshot(daily=waiting), NOW, "ATIVO", [], "Windows", colour=False), 2)
-    assert "missões 1/3" in first and "√" not in first.split("missões")[1].split("·")[0] and "prémio do dia -" in first
+    assert "missões 1/3" in first and "√" not in first.split("missões")[1].split("·")[0] and "prémio diário -" in first
     assert "0/10" in second and "reabre em 11h42" in second
 
 

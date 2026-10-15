@@ -21,8 +21,9 @@ NEXT_MATCH_TIMER = 14
 
 
 def _span(seconds: float) -> str:
-    minutes = int(abs(seconds) // 60)
-    return f"{minutes // 60}h{minutes % 60:02d}"
+    from osmbot.game.dashboard import span
+
+    return span(abs(seconds))
 
 
 def summarize_trainings(sessions: list[dict], timers: list[dict], now: float | None = None) -> list[str]:

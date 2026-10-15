@@ -60,3 +60,18 @@ def test_a_refused_deposit_is_not_repeated_that_day():
     assert savings.deposit_club(client, TEAM, BASE, True, MATCH - 300, lines.append) == (0, None)
     savings.deposit_club(client, TEAM, BASE, True, MATCH - 200, lines.append)
     assert client.puts == 1 and len(lines) == 1 and lines[0].startswith("! Poupança")
+
+
+def test_in_the_pre_season_it_deposits_before_each_day_ends():
+    FIRST = MATCH + 2 * 86400  # the first league match; the day ends at the same hour
+    class PreSeason(FakeClient):
+        def get(self, path):
+            return (200, {"weekNr": -2}) if path == "leagues/1" else super().get(path)
+
+    client = PreSeason(1_000_000, 0)
+    client.get = lambda path, get=client.get: (200, [{"type": 14, "finishedTimestamp": FIRST}]) if path.endswith("/timers") else get(path)
+    assert savings.deposit_club(client, TEAM, BASE, True, MATCH - 300) == (0, None)  # 2 days before the first match
+    assert client.saved == 1_000_000
+    client = PreSeason(1_000_000, 0)
+    client.get = lambda path, get=client.get: (200, [{"type": 14, "finishedTimestamp": FIRST}]) if path.endswith("/timers") else get(path)
+    assert savings.deposit_club(client, TEAM, BASE, True, MATCH - 7200) == (0, MATCH - LEAD)
