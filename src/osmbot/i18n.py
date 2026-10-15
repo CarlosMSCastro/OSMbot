@@ -79,9 +79,10 @@ WORDS = {
     "Hora": "Time", "Tipo": "Type", "Mensagem": "Message", "Erro": "Error", "Aviso": "Warning",
     "OSMbot — Avisos e erros": "OSMbot — Warnings and errors",
     # board titles and labels
-    "DIÁRIAS": "DAILY", "Diárias": "Daily rewards", "BOSS COINS": "BOSS COINS", "A SEGUIR": "UP NEXT", "TREINOS": "TRAINING", "ESTÁDIO": "STADIUM",
+    "DIÁRIAS": "DAILY", "BOSS COINS": "BOSS COINS", "A SEGUIR": "UP NEXT", "TREINOS": "TRAINING", "ESTÁDIO": "STADIUM",
     "AGORA": "NOW", "PRÉ-JOGO": "PRE-MATCH", "Valor plantel": "Squad value", "Dinheiro": "Money",
-    "Fora da regra": "Out of your rule", "Aceite": "Accepted", "Vendas": "Sales", "Valor do plantel": "Squad value",
+    "Fora da regra": "Out of your rule", "Aceite": "Accepted", "Vendas": "Sales", "Valor do plantel": "Squad value", "Clube": "Club", "J": "P", "DG": "GD", "Valor": "Value",
+    "Jogadores": "Players", "Média": "Avg",
     "Campeões": "Champions", "Patrocinadores": "Sponsors", "Cansados": "Tired", "CASA": "HOME", "FORA": "AWAY", "em": "in",
     # club card
     "Treinos": "Training", "Campo": "Pitch", "Capacidade": "Capacity", "no máximo": "at max", "parado": "idle",
@@ -158,8 +159,6 @@ PATTERNS = [(re.compile(pattern), replace) for pattern, replace in (
     (r"vs (.+) \((\d+)\.º\)", lambda m: f"vs {m[1]} ({ordinal(m[2])})"),
     (r"(\w+) · TAÇA", lambda m: f"{_w(m[1])} · CUP"),
     (r"(\d+)\.º", lambda m: ordinal(m[1])),
-    (r"(▸ )?(\d+)\.º (.+) · (.+) · (\d+) jogadores · média (.+)",
-     lambda m: f"{m[1] or ''}{ordinal(m[2])} {m[3]} · {m[4]} · {m[5]} players · avg {m[6]}"),
     (r"(\d+) jogadores · média (.+)", lambda m: f"{m[1]} players · avg {m[2]}"),
     (r"(\d+) vagas? vazias? nos patrocinadores", lambda m: f"{m[1]} empty sponsor slot" + ("s" if m[1] != "1" else "")),
     (r"(\d+) vagas? livres? na lista de transferências",

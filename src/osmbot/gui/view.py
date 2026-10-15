@@ -150,15 +150,15 @@ def squad_view(value: tuple | None, table: list | None = None) -> dict:
     """The squad value: the place by value in colour, the total in white; players and average on hover, and the
     league's table by value around the club when known (owner, 2026-10-15)."""
     if not value:
-        return {"place": "", "colour": GREY, "total": "—", "tip": "", "table_tip": ""}
+        return {"place": "", "colour": GREY, "total": "—", "tip": "", "table_tip": None}
     place, total, average, *more = value  # (place, total, average, players, teams); older readings had only 3
     players, teams = more if more else (round(total / average) if average else 0, 0)
     colour = GREEN if place <= TOP_PLACES else RED if teams and place > teams - BOTTOM_PLACES else YELLOW
     tip = f"{players} jogadores · média {money(round(average))}"
-    rows = [f"{'▸ ' if mine else ''}{at}.º {name} · {money(sum_)} · {count} jogadores · média {money(round(avg))}"
-            for at, name, sum_, count, avg, mine in table or []]
-    return {"place": f"{place}.º", "colour": colour, "total": money(total), "tip": tip,
-            "table_tip": "\n".join(["Valor do plantel", *rows]) if rows else tip}
+    rows = [([str(at), name, money(sum_), str(count), money(round(avg))], mine) for at, name, sum_, count, avg, mine in table or []]
+    grid = {"columns": [("#", "r"), ("Clube", "l"), ("Valor", "r"), ("Jogadores", "r"), ("Média", "r")], "rows": rows,
+            "foot": ""} if rows else None  # as the game's table by value (owner, 2026-10-15)
+    return {"place": f"{place}.º", "colour": colour, "total": money(total), "tip": tip, "table_tip": grid}
 
 
 CLOSE_STRENGTH = 2  # the opponent's circle: yellow when the strengths are less than 2 apart [S] (THEORY.md section 19)
@@ -186,15 +186,19 @@ def rating_badge(strength: int | None, ours: int | None = None) -> dict | None:
     return {"text": str(strength), "colour": colour, "tip": ""}
 
 
-def table_view(club: dict) -> tuple[str, str]:
+def table_view(club: dict) -> tuple[str, dict | None]:
     """The club's place ("2.º Campeonato", or "Campeões" once the title is mathematically won) and its hover: the
-    top 3 with their points (the top 2 and the club when below 3rd) and the season's goal (THEORY.md section 19)."""
+    top 3 (the top 2 and the club when below 3rd) as the game's table, # · Clube · J · DG · Pts (owner, 2026-10-15),
+    and the season's goal under it (THEORY.md section 19)."""
     table = club.get("table") or {}
     header = "Campeões" if table.get("champion") else f"{club.get('ranking') or '?'}.º Campeonato"
-    lines = [f"{'▸ ' if mine else ''}{place}.º {name} · {points} pts" for place, name, points, mine in table.get("rows") or []]
-    if table.get("goal"):
-        lines.append(f"Objetivo: {table['goal']}.º" + (" ou acima" if table["goal"] > 1 else ""))
-    return header, "\n".join(lines)
+    rows = [([str(place), name, str(rest[0]) if rest else "", (f"{rest[1]:+d}" if rest[1] else "0") if len(rest) > 1 else "", str(points)], mine)
+            for place, name, points, mine, *rest in table.get("rows") or []]
+    if not rows:
+        return header, None
+    goal = table.get("goal")
+    foot = f"Objetivo: {goal}.º" + (" ou acima" if goal > 1 else "") if goal else ""
+    return header, {"columns": [("#", "r"), ("Clube", "l"), ("J", "r"), ("DG", "r"), ("Pts", "r")], "rows": rows, "foot": foot}
 
 
 def tired_view(club: dict) -> tuple[str, str]:

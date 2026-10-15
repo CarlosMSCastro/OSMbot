@@ -44,7 +44,7 @@ def test_league_cup_and_squad_value_and_one_money_line_with_the_sales():
     view = club_view(club(), NOW)
     assert view["facts"] == [("Liga", "3.º", None), ("Taça", "quartos-de-final", None)]
     assert view["squad"] == {"place": "2.º", "colour": GREEN, "total": "588,7 M", "tip": "20 jogadores · média 29,43 M",
-                             "table_tip": "20 jogadores · média 29,43 M"}
+                             "table_tip": None}
     assert view["money"] == "10,3 M"  # funds and savings together (owner, 2026-10-08)
     assert view["sales"] == ["✓ Jogador 7 vendido · +166,66 M"]
     assert view["alert"] == "1 vaga livre na lista de transferências"
@@ -296,13 +296,16 @@ def test_the_circle_shows_the_strength_ours_blue_the_opponents_compared_with_our
 def test_the_place_says_champions_once_won_and_the_hover_has_the_top_3_and_the_goal():
     from osmbot.gui.view import table_view
 
-    table = {"rows": [(1, "Clube 1", 46, False), (2, "Clube 2", 45, True), (3, "Clube 3", 43, False)], "goal": 4,
-             "champion": False}
-    assert table_view({"ranking": 2, "table": table}) == (
-        "2.º Campeonato", "1.º Clube 1 · 46 pts\n▸ 2.º Clube 2 · 45 pts\n3.º Clube 3 · 43 pts\nObjetivo: 4.º ou acima")
+    table = {"rows": [(1, "Clube 1", 46, False, 20, 31), (2, "Clube 2", 45, True, 20, -2), (3, "Clube 3", 43, False)],
+             "goal": 4, "champion": False}  # the 3rd as in an older reading: no games and goal difference
+    header, grid = table_view({"ranking": 2, "table": table})
+    assert header == "2.º Campeonato" and [name for name, _ in grid["columns"]] == ["#", "Clube", "J", "DG", "Pts"]
+    assert grid["rows"] == [(["1", "Clube 1", "20", "+31", "46"], False), (["2", "Clube 2", "20", "-2", "45"], True),
+                            (["3", "Clube 3", "", "", "43"], False)]
+    assert grid["foot"] == "Objetivo: 4.º ou acima"
     assert table_view({"ranking": 1, "table": {**table, "champion": True, "goal": 1}})[0] == "Campeões"
-    assert table_view({"ranking": 1, "table": {**table, "goal": 1}})[1].endswith("Objetivo: 1.º")
-    assert table_view({"ranking": 3}) == ("3.º Campeonato", "")
+    assert table_view({"ranking": 1, "table": {**table, "goal": 1}})[1]["foot"] == "Objetivo: 1.º"
+    assert table_view({"ranking": 3}) == ("3.º Campeonato", None)
 
 
 def test_a_tired_starter_without_cover_says_so_and_the_sale_options_show_on_hover():
@@ -335,8 +338,9 @@ def test_squad_hover_is_the_table_by_value():
     from osmbot.gui.view import squad_view
 
     rows = [(1, "A", 1_032_740_000, 21, 49_178_095, True), (2, "B", 940_000_000, 22, 42_727_272, False)]
-    tip = squad_view((1, 1_032_740_000, 49_178_095, 21, 20), rows)["table_tip"].split(chr(10))
-    assert tip[0] == "Valor do plantel" and tip[1].startswith("▸ 1.º A · ") and "21 jogadores · média" in tip[1]
-    assert squad_view((1, 10, 1, 10, 20))["table_tip"] == squad_view((1, 10, 1, 10, 20))["tip"]
+    grid = squad_view((1, 1_032_740_000, 49_178_095, 21, 20), rows)["table_tip"]
+    assert [name for name, _ in grid["columns"]] == ["#", "Clube", "Valor", "Jogadores", "Média"]
+    assert grid["rows"][0] == (["1", "A", "1032,74 M", "21", "49,18 M"], True) and grid["rows"][1][1] is False
+    assert squad_view((1, 10, 1, 10, 20))["table_tip"] is None  # no table: the players and average only
     from osmbot.gui.view import rating_badge
 

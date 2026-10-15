@@ -669,6 +669,27 @@ def tip_html(rows: list[tuple[str | None, str, str | None]], title: str | None =
     return head + "<table cellspacing='0' cellpadding='0'>" + "".join(lines) + "</table>"
 
 
+def tip_grid(grid: dict | None) -> str:
+    """A table in a hover, as the game's (owner, 2026-10-15): the column names muted over a thin line, the numbers
+    right-aligned, the club's own row in the accent colour, and a footnote under another line."""
+    from html import escape
+
+    if not grid:
+        return ""
+    line = "1px solid rgba(139, 140, 248, 90)"
+
+    def cell(text: str, align: str, style: str) -> str:
+        return f"<td align='{'right' if align == 'r' else 'left'}' style='padding:3px 7px; {style}'>{escape(tr(text))}</td>"
+
+    head = "".join(cell(name, align, f"color:{MUTED}; font-weight:600; border-bottom:{line}") for name, align in grid["columns"])
+    body = "".join("<tr>" + "".join(cell(text, align, f"color:{ACCENT_LIGHT}; font-weight:600" if mine else "color:#c9ccef")
+                                    for text, (_, align) in zip(cells, grid["columns"])) + "</tr>"
+                   for cells, mine in grid["rows"])
+    foot = (f"<tr><td colspan='{len(grid['columns'])}' style='padding:5px 7px 1px 7px; color:{MUTED}; border-top:{line}'>"
+            f"{escape(tr(grid['foot']))}</td></tr>") if grid.get("foot") else ""
+    return f"<table cellspacing='0' cellpadding='0'><tr>{head}</tr>{body}{foot}</table>"
+
+
 class MonthGrid(QWidget):
     """One month of the events' calendar (owner, 2026-10-12): a row per week, Monday first; an event's day is
     orange with the event's name in it (faded once gone by), today has a white edge; its effects on hover."""
@@ -1169,7 +1190,7 @@ class ClubCard(QFrame):
     def show_club(self, club: dict) -> None:
         self.name.setText(club["name"])
         self.header.setText(tr(club["header"]))
-        self.header.setToolTip(tip_text("\n".join(tr(line) for line in (club.get("table_tip") or "").split("\n"))))
+        self.header.setToolTip(tip_grid(club.get("table_tip")))  # as the game's table (owner, 2026-10-15)
         self.cup.setText(tr(f"🏆 {club['cup_line']}"))
         self.match.show_match(club["match"])
         self.alert.setVisible(bool(club["alert"]))
@@ -1177,7 +1198,7 @@ class ClubCard(QFrame):
         squad = club["squad"]  # the place in colour, the total in white; players and average on hover
         gap = "&nbsp;&nbsp;&nbsp;" if squad["place"] else ""
         self.value.setText(rich([(squad["place"], squad["colour"])]) + gap + rich([(squad["total"], None if squad["place"] else GREY)]))
-        self.value.setToolTip(tip_text("\n".join(tr(line) for line in (squad.get("table_tip") or squad["tip"]).split("\n"))))
+        self.value.setToolTip(tip_grid(squad["table_tip"]) if squad.get("table_tip") else tip_text(tr(squad["tip"])))
         self.money.setText(rich([(club["money"], None)]))
         self.sale.show_sales(club["sales"])
         sponsors = club["sponsors"]
@@ -1580,9 +1601,7 @@ class MainWindow(QMainWindow):
         bar = QHBoxLayout(top)
         bar.setContentsMargins(18, 9, 18, 9)
         bar.setSpacing(14)
-        daily_icon = icon(PICTURES["calendar"], 34)  # instead of the "DIÁRIAS" title (owner, 2026-10-15)
-        daily_icon.setToolTip(tip_text(tr("Diárias")))
-        bar.addWidget(daily_icon, 0, Qt.AlignVCenter)
+        bar.addWidget(icon(PICTURES["calendar"], 34), 0, Qt.AlignVCenter)  # instead of the "DIÁRIAS" title, no hover (owner, 2026-10-15)
         self.daily = StepList(vertical=False, size=10, spacing=18)  # the same icons as the pre-match (owner, 2026-10-10)
         self.daily.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Preferred)  # never squeezed by the event beside it
         bar.addWidget(self.daily)

@@ -84,10 +84,12 @@ def test_league_summary_has_the_top_3_with_points_the_goal_and_when_the_title_is
     from osmbot.board.info import league_summary
 
     teams = [{"id": i, "name": f"Clube {i}", "ranking": i} for i in range(1, 6)]
-    standings = [{"teamId": i, "points": p} for i, p in zip(range(1, 6), (46, 45, 43, 40, 32))]
+    standings = [{"teamId": i, "points": p, "won": 14, "drew": 4, "lost": 2, "goalsFor": 40, "goalsAgainst": 10 + i}
+                 for i, p in zip(range(1, 6), (46, 45, 43, 40, 32))]
     ahead = [match(20, 2, 3), match(21, 4, 2)]  # the 2nd still has 2 league matches
     summary = league_summary(standings, teams, ahead, 2, 19, 4)
-    assert summary == {"rows": [(1, "Clube 1", 46, False), (2, "Clube 2", 45, True), (3, "Clube 3", 43, False)],
+    assert summary == {"rows": [(1, "Clube 1", 46, False, 20, 29), (2, "Clube 2", 45, True, 20, 28),
+                                (3, "Clube 3", 43, False, 20, 27)],
                        "goal": 4, "champion": False}
     assert [r[0] for r in league_summary(standings, teams, ahead, 5, 19, 11)["rows"]] == [1, 2, 5]  # below 3rd
     won = [{"teamId": 1, "points": 52}, {"teamId": 2, "points": 45}]

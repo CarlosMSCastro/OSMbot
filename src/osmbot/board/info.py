@@ -124,14 +124,17 @@ def team_rating(players: list[dict], formation: int | None = None) -> int | None
 def league_summary(standings: list[dict], teams: list[dict], matches: list[dict], team_id: int, week: int,
                    goal: int | None) -> dict | None:
     """The hover on the club's place (owner, 2026-10-13; THEORY.md section 19): the top 3 with their points (the top 2
-    and the club when it is below 3rd), the season's goal, and whether the title is mathematically won."""
+    and the club when it is below 3rd), the season's goal, and whether the title is mathematically won. Rows:
+    (place, name, points, mine, games played, goal difference), the columns of the game's table (owner, 2026-10-15)."""
     points = {row["teamId"]: row.get("points") or 0 for row in standings}
+    record = {row["teamId"]: ((row.get("won") or 0) + (row.get("drew") or 0) + (row.get("lost") or 0),
+                              (row.get("goalsFor") or 0) - (row.get("goalsAgainst") or 0)) for row in standings}
     table = sorted((t for t in teams if t.get("ranking")), key=lambda t: t["ranking"])
     if not points or not table:
         return None
     mine = next((t for t in table if t["id"] == team_id), None)
     shown = table[:3] if not mine or mine["ranking"] <= 3 else table[:2] + [mine]
-    rows = [(t["ranking"], t["name"], points.get(t["id"], 0), t["id"] == team_id) for t in shown]
+    rows = [(t["ranking"], t["name"], points.get(t["id"], 0), t["id"] == team_id, *record.get(t["id"], (0, 0))) for t in shown]
     champion = False
     if mine and mine["ranking"] == 1 and len(table) > 1:
         second = table[1]["id"]

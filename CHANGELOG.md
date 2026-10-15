@@ -4,6 +4,15 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-PT/1.1.0/); 
 
 Este ficheiro é o **histórico de versões, para quem lê o repo**. O diário interno de cada sessão de trabalho está em [`docs/WORKLOG.md`](docs/WORKLOG.md).
 
+## [0.12.2] — 2026-10-15
+
+Os hovers do campeonato e do valor do plantel passam a tabelas como as do jogo.
+
+### Alterado
+- **Hover do campeonato:** uma tabela como a do jogo, com # · Clube · J · DG · Pts (jogos e diferença de golos) e o objetivo da época por baixo. O título já não fica colado à primeira linha e as colunas ficam alinhadas.
+- **Hover do valor do plantel:** o mesmo formato, com # · Clube · Valor · Jogadores · Média.
+- **Calendário das diárias:** sem hover.
+
 ## [0.12.1] — 2026-10-15
 
 Boss coins e dinheiro do inventário reclamados sozinhos, calendário nas diárias e o prémio do início de sessão sempre conhecido.
