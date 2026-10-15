@@ -40,6 +40,17 @@ class NeedsBrowserLogin(Exception):
     """The saved session can't be renewed without the owner opening the browser."""
 
 
+class GameUnavailable(OSError):
+    """A read the game's server could not answer (5xx, or 429 "too many requests"). Its text would otherwise reach the
+    callers as if it were data ("string indices must be integers", 2026-10-14/15); as an OSError the loop waits and
+    tries again, as it does when the network is down."""
+
+
+def _excerpt(raw: bytes, size: int = 80) -> str:
+    text = " ".join(raw.decode("utf-8", "replace").split())
+    return text[:size] + ("…" if len(text) > size else "")
+
+
 def save_private(path: Path, data: dict) -> None:
     """Write JSON readable only by the owner (session and client codes are secrets)."""
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -249,6 +260,9 @@ class OsmClient:
                         self.refresh(force=True)
                 continue
             break
+        if method == "GET" and (status >= 500 or status == 429):
+            said = _excerpt(raw)
+            raise GameUnavailable(f"o jogo respondeu {status} a {path.split('?')[0]}" + (f": {said}" if said else ""))
         try:
             return status, json.loads(raw)
         except ValueError:

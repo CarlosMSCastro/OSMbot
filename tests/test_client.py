@@ -63,6 +63,22 @@ def test_401_triggers_one_refresh_and_retry(tmp_path):
     assert OsmClient(state, codes, fake).get("x")[0] == 200
 
 
+def test_a_read_the_server_cannot_answer_says_what_the_game_said_instead_of_passing_its_text_on(tmp_path):
+    from osmbot.game.client import GameUnavailable
+
+    state, codes = make(tmp_path, time.time() + 600, time.time() + 86400)
+    for status in (503, 429):
+        with pytest.raises(GameUnavailable, match=f"o jogo respondeu {status} a user/bosscoinwallet: Service Unavailable"):
+            OsmClient(state, codes, Fake((status, b"Service\r\n Unavailable"))).get("user/bosscoinwallet?x=1")
+    assert isinstance(GameUnavailable("x"), OSError)  # the loop's patient retries, as with no network
+
+
+def test_refusals_and_writes_still_come_back_with_their_status(tmp_path):
+    state, codes = make(tmp_path, time.time() + 600, time.time() + 86400)
+    assert OsmClient(state, codes, Fake((404, b"Not found"))).get("x") == (404, "Not found")
+    assert OsmClient(state, codes, Fake((500, b""))).put("x") == (500, "")
+
+
 def test_a_403_for_a_club_missing_from_the_token_renews_once_then_not_again(tmp_path, monkeypatch):
     import osmbot.game.client as client
 

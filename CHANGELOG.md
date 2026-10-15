@@ -1,8 +1,25 @@
 # Changelog
 
-Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-PT/1.1.0/); versões segundo [SemVer](https://semver.org/lang/pt-BR/) (`0.x` até haver automação estável).
+Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-PT/1.1.0/); versões segundo [SemVer](https://semver.org/lang/pt-BR/) (`0.x` até à primeira versão vendida, que será a `1.0.0`).
 
 Este ficheiro é o **histórico de versões, para quem lê o repo**. O diário interno de cada sessão de trabalho está em [`docs/WORKLOG.md`](docs/WORKLOG.md).
+
+## [0.12.3] — 2026-10-15
+
+Os vídeos já não param com a janela das boss coins por reclamar, os erros do servidor do jogo ficam explicados no registo, e a janela tem vários retoques.
+
+### Corrigido
+- **Vídeos parados com "botão não encontrado":** com boss coins por reclamar, o jogo abre uma janela ("Boss Coins não reclamadas") que tapa a loja e o treino. O bot passa a carregar em *Claim* nessa janela, como já fazia na da energia.
+- **"string indices must be integers":** quando o servidor do jogo falha numa leitura (erro 5xx ou 429), o registo diz agora "o jogo respondeu N a caminho: mensagem", e o bot espera e tenta outra vez, como quando falta a rede.
+
+### Alterado
+- **Hovers do campeonato e do valor do plantel:** a linha do clube fica numa faixa da cor do clube e os números não se partem ("965,81 M" inteiro). No campeonato aparece um certo verde quando o clube está no lugar do objetivo ou acima, e um "!" amarelo quando está abaixo. Na pré-época não aparece nenhum dos dois.
+- **Hover do adversário:** valor do plantel em linhas, como os outros hovers.
+- **Estádio no máximo:** o texto e o "MAX" na cor do clube.
+- **Treinador universal:** "Treinador universal" a cinza por cima do nome, centrado; o número de jogos só aparece quando existe.
+- **Médico e advogado sem ninguém:** a imagem fica esbatida, sem ficar a preto e branco.
+- **Treino secreto e estágio:** o hover já não repete o nome.
+- **SALE:** passa a uma faixa azul com a etiqueta SALE, as marcas (reforço, pechincha), o jogador, o preço e o lucro; o hover mostra os detalhes numa tabela. Corrigido o "&gt;" que aparecia no texto e o hover cortado.
 
 ## [0.12.2] — 2026-10-15
 

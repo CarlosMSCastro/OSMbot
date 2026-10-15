@@ -193,6 +193,8 @@ def run_training_ads(claimable: Callable[[], bool], load_sessions: Callable[[], 
 
 
 MAX_CONTINUES = 6  # screens in a row after a round: Continue, the match (Skip), Continue, manager XP
+# "Unclaimed Energy" seen 2026-10-09; the boss-coins title is not seen in English yet (the owner saw it in Portuguese)
+UNCLAIMED = re.compile(r"^\s*(unclaimed\s+(energy|boss\s*coins?)|boss\s*coins?\s+(unclaimed|não\s+reclamad[ao]s))\s*$", re.I)
 
 
 def _dismiss_matchday(page) -> None:
@@ -201,12 +203,14 @@ def _dismiss_matchday(page) -> None:
     manager-XP window, which only closes with a click outside it. Go through them as the owner does by
     hand. "Skip" is only pressed on the matchday screen; nothing in the XP window is clicked.
     The "Unclaimed Energy" window (energy waiting, e.g. after the daily missions) is claimed: the owner always
-    does so (2026-10-09, THEORY.md section 17); the energy goes to its wallet."""
+    does so (2026-10-09, THEORY.md section 17); the energy goes to its wallet. So is the boss-coins one (D-055: boss
+    coins go to the wallet): on 2026-10-15 it covered the shop and the training page for 3h30 after the missions'
+    5 boss coins went to the inventory (title assumed by analogy, UNCLAIMED)."""
     for _ in range(MAX_CONTINUES):
         button = page.get_by_text(re.compile(r"^\s*continue\s*$", re.I)).filter(visible=True)
         if not button.count() and page.get_by_text(re.compile(r"^\s*matchday\b", re.I)).filter(visible=True).count():
             button = page.get_by_text(re.compile(r"^\s*skip\s*$", re.I)).filter(visible=True)
-        if not button.count() and page.get_by_text(re.compile(r"^\s*unclaimed energy\s*$", re.I)).filter(visible=True).count():
+        if not button.count() and page.get_by_text(UNCLAIMED).filter(visible=True).count():
             button = page.get_by_text(re.compile(r"^\s*claim\s*$", re.I)).filter(visible=True)
         if button.count():
             button.first.click(timeout=PAGE_TIMEOUT)

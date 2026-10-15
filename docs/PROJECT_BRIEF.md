@@ -1,6 +1,6 @@
 # Project Brief
 
-*Última atualização: 2026-10-13*
+*Última atualização: 2026-10-15*
 
 ## Objetivo
 
@@ -53,6 +53,16 @@ Fora do alcance: táticas. O dono aplica a sua teoria de jogo ele mesmo; está r
 
 *Proposta do Claude, aceite pelo dono em 2026-10-09. O 1.0 não pede funções novas: pede que o que existe esteja provado em uso real.*
 
+**Desde 2026-10-15 (D-057):** a 1.0 passa a ser a **primeira versão vendida** (D-056). Os critérios abaixo fecham a fase de congelamento (só correções). Depois vêm a versão paga (0.20+, repo privado), o teste do colega (1.0.0-rc) e a venda (1.0.0):
+
+- [ ] O dono declara as funções congeladas.
+- [ ] Os critérios de estabilidade abaixo, mais **uma época completa sem intervenção**.
+- [ ] Licença, servidor e peça das boss coins feitos e testados (D-056).
+- [ ] Executável compilado e instalador novo testados noutro PC.
+- [ ] O colega compra e usa a versão paga sem problemas.
+
+Critérios de estabilidade (2026-10-09):
+
 - [ ] **Tudo o que escreve na conta foi visto em real**, nenhum pedido "por analogia" ativo: pôr e levantar o advogado (precisa de um suspenso de 2+ jogos). Vistos nos logs (2026-10-11): médico pôr ×3 e levantar ×2 (DESKTOP-KAM70RR, 10–11/10), levantar o analista ×2, enviar o analista ×1 (forçado a pedido do dono, 11/10), amigável ×1, início de sessão e missões.
 - [x] **Nunca repete um pedido que o jogo recusou** (D-032, 0.9.6; falta ver em real).
 - [ ] **7 dias seguidos num PC** sem intervenção e sem erros novos nos logs.
@@ -64,4 +74,4 @@ Fora do alcance: táticas. O dono aplica a sua teoria de jogo ele mesmo; está r
 ## Quem
 
 - Dono do projeto: o autor do repositório (contactos no perfil do GitHub). Git e GitHub são dele (regra 9 do `CLAUDE.md`).
-- Uso pessoal (D-002), com repositório público e sem licença (D-007).
+- Uso pessoal (D-002), com repositório público e sem licença (D-007). No futuro, versão paga com repo privado (D-056, em aberto).

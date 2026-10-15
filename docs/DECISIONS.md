@@ -178,6 +178,30 @@ A janela usa imagens dadas pelo dono: o **boss coin** (arte do OSM/Gamebasics), 
 A cada leitura do quadro (3 em 3 min), o bot compara a lista de transferências de cada liga com a anterior (só leitura; estado em `~/.osmbot/mercado.json`). Quando os jogadores postos pelo jogo (clubes de fora da liga) baixam de preço, ou um jogador de um treinador sai da lista, grava um registo em `logs/<PC>/transferencias/motor/<liga>.jsonl` (uma linha JSON por mudança): entre que leituras foi, quantos preços do jogo desceram, o que estava à venda na leitura antes (preço, valor, % do máximo, idade, posição, ratings, desde quando, se é do dono) e o que saiu, separado em **vendido** (aparece nas transferências da liga; 1 GET só quando alguém sai) e **retirado**. No registo do bot, uma linha: "Motor de transferências (liga): passou entre HH:MM e HH:MM; vendidos X de Y à venda (teus: A de B)". Código: `transfers/engine.py` (puro), `game/market.py`. Nada é decidido a partir disto; serve para estudar com o tempo a probabilidade de venda por preço e por % do máximo, dentro e fora de eventos.
 **Porquê:** pedido do dono ("configura os logs das transferências como achares útil para tirarmos conclusões com o tempo"), depois da pesquisa no fórum (`DISCOVERY.md` §6c: motor 8×/dia, venda por sorte com probabilidade por preço e taxa). A hipótese "o jogo baixa os seus preços a cada passagem" fica por confirmar com estes registos.
 
+### D-057 · A 1.0 é a primeira versão vendida · Aceite · 2026-10-15
+Pergunta do dono: "como é que gerimos as versões?" Plano por fases:
+
+| Fase | Versões | Repo | O que entra |
+|---|---|---|---|
+| 1. Agora | 0.12.x, 0.13… | Público | Correções e as últimas funções |
+| 2. Congelamento | 0.x | Público ou já privado (o dono decide quando) | O dono diz "não há mais funções"; só correções; contam os critérios de estabilidade (`PROJECT_BRIEF.md`) |
+| 3. Versão paga | 0.20, 0.21… | Privado | Licença, servidor, peça das boss coins, compilação, instalador (D-056) |
+| 4. Teste do colega | 1.0.0-rc.1, rc.2… | Privado | O colega compra e usa; cada problema dá uma rc nova |
+| 5. Venda | **1.0.0** | Privado | A primeira versão vendida |
+
+Depois da 1.0: último número para correções (sobretudo quando o jogo muda), número do meio para funções novas (p. ex. as transferências automáticas), primeiro número quando as versões antigas deixam de servir (licença ou servidor incompatíveis). O bot deve avisar quando há versão nova.
+**Porquê:** em SemVer a 1.0 marca a versão que outros passam a usar; aqui, isso é quando há clientes a pagar. Os critérios de estabilidade de 2026-10-09 continuam e passam a ser a condição para fechar a fase 2. Nota: quanto mais tarde o repo ficar privado, melhor é a versão gratuita que fica pública para sempre.
+
+### D-056 · Versão paga, com licença, no futuro · Em aberto · 2026-10-15
+Plano do dono, **para o futuro, nada se constrói agora**:
+- **Venda:** o bot passa a ser vendido. O dono assume o risco (termos do OSM, marca, anúncios vistos automaticamente) e não quer medidas além da licença.
+- **Repo privado** nessa altura. Fica privado o que vier depois. O que já foi público (até à 0.12.x: cópias, forks, instaladores descarregados, arquivos de robôs) não se recupera. Para confirmar o que saiu, ver Insights → Traffic (só 14 dias) e o contador de downloads dos Releases pela API. Quando for aplicada, substitui a "Publicação" da D-016 e a D-007.
+- **Licença blindada:** sem licença não pode haver boss coins. As outras funções podem ficar livres ou não, a decidir.
+- **Plano recomendado (opção A), por estudar:** uma peça essencial ao fluxo das boss coins (passos e padrões dos vídeos) vem de um servidor do dono em cada sessão, só para licenças válidas, e muda quando o jogo muda. Por cima: chave por cliente ligada ao pagamento, ativação online, licença assinada, executável compilado (Nuitka) e chaves desligáveis no servidor se aparecerem partilhadas. Rejeitada a opção B (boss coins a correr no servidor com a sessão do cliente): guardar sessões de terceiros e muitas contas no mesmo IP.
+- **Teste:** um colega compra por 5 € (pagos pelo dono) para testar a compra e a versão paga do princípio ao fim.
+
+**Porquê:** um "tem licença?" dentro do bot corrige-se sempre no PC do cliente, mesmo compilado; só o que fica no servidor não se contorna. É o mesmo princípio das empresas: o Photoshop para PC é crackeado, as funções que correm nos servidores da Adobe não. Por decidir: forma de pagamento, servidor, preço, o que fica livre.
+
 ### D-055 · Boss coins e dinheiro do clube do inventário vão para a carteira · Aceite · 2026-10-15
 Altera D-020 ("nunca usar itens"): o que é **só dinheiro** no inventário (tipo 1, boss coins; tipo 8, dinheiro do clube), p. ex. a recompensa do dia das missões, vai logo para a carteira com os pedidos já usados pelos vídeos (`user/bosscoinwallet/consumereward`; `leagues/{L}/teams/{T}/finances/consumereward`, no clube com menos fundos + poupança). Os outros itens continuam para o dono. Autónomo com o bot ativo (regra 5). `game/rewards.claim_money`, `rewards/policy.money_items`/`poorest`; `THEORY.md` §17.
 **Porquê:** o dono (2026-10-15), ao ver "Boss Coins não reclamadas" (5) no jogo: "se são boss coins, se é só dar claim, porque não deu?"; "à espera de mim para usar, para dar claim não". Dinheiro do clube: "o que tem menos dinheiro".

@@ -82,7 +82,8 @@ WORDS = {
     "DIÁRIAS": "DAILY", "BOSS COINS": "BOSS COINS", "A SEGUIR": "UP NEXT", "TREINOS": "TRAINING", "ESTÁDIO": "STADIUM",
     "AGORA": "NOW", "PRÉ-JOGO": "PRE-MATCH", "Valor plantel": "Squad value", "Dinheiro": "Money",
     "Fora da regra": "Out of your rule", "Aceite": "Accepted", "Vendas": "Sales", "Valor do plantel": "Squad value", "Clube": "Club", "J": "P", "DG": "GD", "Valor": "Value",
-    "Jogadores": "Players", "Média": "Avg",
+    "Jogadores": "Players", "Média": "Avg", "Pos": "Pos", "Força": "Strength", "Jogador": "Player", "Idade": "Age",
+    "Preço": "Price", "Lucro": "Profit",
     "Campeões": "Champions", "Patrocinadores": "Sponsors", "Cansados": "Tired", "CASA": "HOME", "FORA": "AWAY", "em": "in",
     # club card
     "Treinos": "Training", "Campo": "Pitch", "Capacidade": "Capacity", "no máximo": "at max", "parado": "idle",
@@ -179,10 +180,9 @@ PATTERNS = [(re.compile(pattern), replace) for pattern, replace in (
     (r"(?s)SALE (\w+) que cabem no dinheiro:\n(.+)",
      lambda m: f"SALE {_w(m[1])} you can afford:\n" + m[2].replace(" anos)", " years)")),
     (r"Nenhum SALE (\w+) cabe no dinheiro", lambda m: f"No SALE {_w(m[1])} you can afford"),
-    (r"^SALE: (\w+) (.+?) · (.+?) · lucro ~(.+)$", lambda m: f"SALE: {_w(m[1])} {m[2]} · {m[3]} · profit ~{m[4]}"),
-    (r"^(ATA|MED|DEF|GR) (\d+) · (.+) \((\d+) anos\) · (.+?) · lucro ~(.+)$",
-     lambda m: f"{_w(m[1])} {m[2]} · {m[3]} ({m[4]} years) · {m[5]} · profit ~"
-               + m[6].replace(" · reforço (> ", " · upgrade (> ").replace(" · pechincha", " · bargain")),
+    (r"^(ATA|MED|DEF|GR) (\d+) · (.+)$", lambda m: f"{_w(m[1])} {m[2]} · {m[3]}"),  # the SALE stripe's player
+    (r"^lucro ~(.+)$", lambda m: f"profit ~{m[1]}"),
+    (r"^((?:reforço|pechincha).*)$", lambda m: m[1].replace("reforço", "upgrade").replace("pechincha", "bargain")),
     (r"^\? = esta liga não vendeu ao máximo nos últimos 3 dias$",
      lambda m: "? = this league has not sold at the maximum in the last 3 days"),
     # top bar, coins

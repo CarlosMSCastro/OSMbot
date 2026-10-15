@@ -214,7 +214,9 @@ class _Page:
         if pattern.match("Skip"):
             return _Locator(self, lambda: self.top() == "skip")
         if pattern.match("Unclaimed Energy") or pattern.match("Claim"):
-            return _Locator(self, lambda: self.top() == "energy")
+            assert pattern.match("Unclaimed Boss Coins") or pattern.match("Claim")
+            assert not pattern.match("Unclaimed Players")  # only energy and boss coins (D-028, D-055)
+            return _Locator(self, lambda: self.top() in ("energy", "coins"))
         assert pattern.match("Matchday 12/26")
         return _Locator(self, lambda: self.top() in ("continue", "skip"))
 
@@ -248,6 +250,15 @@ def test_the_unclaimed_energy_window_is_claimed_like_the_owner_does():
     page = _Page(["energy", "continue"])  # seen on the career page after the daily missions (2026-10-09)
     _dismiss_matchday(page)
     assert page.clicks == 2 and page.remaining == 0
+
+
+def test_the_unclaimed_boss_coins_window_is_claimed_too():
+    from osmbot.game.ads import UNCLAIMED, _dismiss_matchday
+
+    page = _Page(["coins", "continue"])  # it hid the shop and the training page on 2026-10-15
+    _dismiss_matchday(page)
+    assert page.clicks == 2 and page.remaining == 0
+    assert all(UNCLAIMED.match(t) for t in ("Unclaimed Boss Coins", "Unclaimed BossCoins", "Boss Coins não reclamadas"))
 
 
 def test_nothing_is_clicked_when_there_is_no_matchday_screen():

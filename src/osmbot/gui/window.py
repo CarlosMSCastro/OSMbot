@@ -47,19 +47,38 @@ PICTURES = {"training": ASSETS / "training.png", "doctor": ASSETS / "doctor.png"
 _pictures: dict[tuple[str, bool, int], QPixmap] = {}
 
 
-def picture(name: str, grey: bool = False, alpha: int = 40) -> QPixmap:
+def picture(name: str, grey: bool = False, alpha: int = 40, keep: float = 0.0) -> QPixmap:
     """A picture for the inside of a ring (empty if the file is missing); ``grey``: washed out, for "nobody"
-    (``alpha``: how much of it still shows, in %)."""
-    if (name, grey, alpha) not in _pictures:
+    (``alpha``: how much of it still shows, in %; ``keep``: how much of its colour stays, 0 = black and white)."""
+    if (name, grey, alpha, keep) not in _pictures:
         image = QImage(str(PICTURES[name])).convertToFormat(QImage.Format_ARGB32)
         if grey and not image.isNull():
             for y in range(image.height()):
                 for x in range(image.width()):
                     c = image.pixelColor(x, y)
-                    level = int(c.red() * 0.3 + c.green() * 0.59 + c.blue() * 0.11)
-                    image.setPixelColor(x, y, QColor(level, level, level, c.alpha() * alpha // 100))
-        _pictures[name, grey, alpha] = QPixmap.fromImage(image)
-    return _pictures[name, grey, alpha]
+                    level = c.red() * 0.3 + c.green() * 0.59 + c.blue() * 0.11
+                    r, g, b = (int(level + (part - level) * keep) for part in (c.red(), c.green(), c.blue()))
+                    image.setPixelColor(x, y, QColor(r, g, b, c.alpha() * alpha // 100))
+        _pictures[name, grey, alpha, keep] = QPixmap.fromImage(image)
+    return _pictures[name, grey, alpha, keep]
+
+
+CARE_KEEP, CARE_ALPHA = 0.35, 55  # the doctor and the lawyer with nobody: near black and white, not quite (owner, 2026-10-15)
+
+
+def vivid(colour: str | None, fallback: str) -> str:
+    """The club's colour bright enough to read on the dark card (a navy logo would vanish), e.g. a full stadium ring."""
+    if not colour:
+        return fallback
+    hue, sat, val, _ = QColor(colour).getHsv()
+    return QColor.fromHsv(max(hue, 0), sat, max(val, 200)).name()
+
+
+def blend(colour: str | None, alpha: float, under: str = "#1a2052") -> str:
+    """``colour`` at ``alpha`` over the hover's background, as one plain colour (Qt's rich text has no transparency)."""
+    c, base = QColor(colour or ACCENT), QColor(under)
+    return QColor(*(int(b + (a - b) * alpha) for a, b in ((c.red(), base.red()), (c.green(), base.green()),
+                                                         (c.blue(), base.blue())))).name()
 LOGOS = Path.home() / ".osmbot" / "logos"
 TRAY_DOT = {True: "#9be22d", False: "#9a9a9a"}  # lime with a white ring: readable on the green logo at 16 px
 ROW_HEIGHT, HEADER_HEIGHT = 22, 24
@@ -444,6 +463,11 @@ class CareCell(QWidget):
         column.setSpacing(3)
         self.ring = Ring()
         column.addWidget(self.ring, 0, Qt.AlignHCenter)
+        self.title = text_label(8, colour=GREY)  # the universal trainer: what it is, in grey, over the name (owner, 2026-10-15)
+        self.title.setAlignment(Qt.AlignHCenter)
+        self.title.setText(tr("Treinador universal"))
+        self.title.setVisible(kind == "universal")
+        column.addWidget(self.title, 0, Qt.AlignHCenter)
         row = QHBoxLayout()
         row.setSpacing(4)
         self.name = text_label(9)
@@ -465,13 +489,15 @@ class CareCell(QWidget):
         arc = {"working": timer, "ready": COLOURS[GREEN], "waiting": COLOURS[YELLOW]}.get(state, RING_TRACK)
         share = {"working": ring["done"], "ready": 1.0, "waiting": 1.0}.get(state, 0.0)
         self.ring.show_ring("", share, arc, TEXT)
-        self.ring.picture = picture(self.kind, grey=nobody)
+        self.ring.picture = picture(self.kind, grey=nobody, alpha=CARE_ALPHA, keep=CARE_KEEP)
         self.ring.hover = None if state == "none" else (tr(ring["centre"]), arc if state != "blocked" else MUTED)
         self.under.setVisible(state != "none")
         if self.kind == "universal":  # only while it is active (owner, 2026-10-12)
             self.setVisible(state != "none")
+            self.title.setText(tr("Treinador universal"))
         self.name.setText(escape_text(ring["name"]))
         self.games.setText(str(ring.get("games") or ""))
+        self.games.setVisible(bool(ring.get("games")))  # an empty one still took room and pushed the name off centre
         self.games.setStyleSheet(f"color:{TEXT};")
         lines = [tr(ring["label"])] + ([] if state == "none" else [ring["name"], tr(ring["sub"])])
         self.setToolTip(tip_text("\n".join(lines + ([f"{tr('acaba em')} {ring['centre']}"] if state == "working" else []))))
@@ -610,7 +636,7 @@ class BoostList(QWidget):
                 mark.name, mark.on = boost["icon"], boost["on"]
                 mark.update()
                 text.setText(rich([(boost["name"], GREEN if boost["on"] else GREY)]))
-                row.setToolTip(tip_text(f"{tr(boost['name'])}\n{tr(boost['tip'])}"))
+                row.setToolTip(tip_text(tr(boost["tip"])))  # the name is already beside the icon (owner, 2026-10-15)
 
 
 _tip_icons: dict[str, str] = {}
@@ -669,25 +695,43 @@ def tip_html(rows: list[tuple[str | None, str, str | None]], title: str | None =
     return head + "<table cellspacing='0' cellpadding='0'>" + "".join(lines) + "</table>"
 
 
-def tip_grid(grid: dict | None) -> str:
+def tip_grid(grid: dict | None, colour: str | None = None) -> str:
     """A table in a hover, as the game's (owner, 2026-10-15): the column names muted over a thin line, the numbers
-    right-aligned, the club's own row in the accent colour, and a footnote under another line."""
+    right-aligned, the club's own row on a band of the club's ``colour`` (not at full strength), and a footnote under
+    another line, with the step's tick or "!" when the grid has a ``mark``. Cells never break ("965,81 M" stays whole)."""
     from html import escape
 
     if not grid:
         return ""
     line = "1px solid rgba(139, 140, 248, 90)"
+    band = blend(colour, 0.45)
 
-    def cell(text: str, align: str, style: str) -> str:
-        return f"<td align='{'right' if align == 'r' else 'left'}' style='padding:3px 7px; {style}'>{escape(tr(text))}</td>"
+    def cell(text: str, align: str, style: str, mine: bool = False) -> str:
+        fill = f" bgcolor='{band}'" if mine else ""
+        words = escape(tr(text)).replace(" ", "&nbsp;")
+        return f"<td align='{'right' if align == 'r' else 'left'}'{fill} style='padding:3px 7px; white-space:nowrap; {style}'>{words}</td>"
 
     head = "".join(cell(name, align, f"color:{MUTED}; font-weight:600; border-bottom:{line}") for name, align in grid["columns"])
-    body = "".join("<tr>" + "".join(cell(text, align, f"color:{ACCENT_LIGHT}; font-weight:600" if mine else "color:#c9ccef")
+    body = "".join("<tr>" + "".join(cell(text, align, f"color:{TEXT}; font-weight:600" if mine else "color:#c9ccef", mine)
                                     for text, (_, align) in zip(cells, grid["columns"])) + "</tr>"
                    for cells, mine in grid["rows"])
+    mark = f"<img src='{tip_icon(grid['mark'])}' width='14' height='14' style='vertical-align:middle'>&nbsp;" if grid.get("mark") else ""
     foot = (f"<tr><td colspan='{len(grid['columns'])}' style='padding:5px 7px 1px 7px; color:{MUTED}; border-top:{line}'>"
-            f"{escape(tr(grid['foot']))}</td></tr>") if grid.get("foot") else ""
+            f"{mark}{escape(tr(grid['foot']))}</td></tr>") if grid.get("foot") else ""
     return f"<table cellspacing='0' cellpadding='0'><tr>{head}</tr>{body}{foot}</table>"
+
+
+def tip_pairs(tip: dict | None) -> str:
+    """A hover with a title and "name · value" lines, the names muted and the values right-aligned (the opponent's
+    squad, owner 2026-10-15)."""
+    from html import escape
+
+    if not tip:
+        return ""
+    rows = "".join(f"<tr><td style='padding:2px 14px 2px 0; color:{MUTED}'>{escape(tr(name))}</td>"
+                   f"<td align='right' style='padding:2px 0; color:{TEXT}; font-weight:600; white-space:nowrap'>"
+                   f"{escape(value).replace(' ', '&nbsp;')}</td></tr>" for name, value in tip["pairs"])
+    return TIP_TITLE.format(escape(tip["title"])) + f"<table cellspacing='0' cellpadding='0'>{rows}</table>"
 
 
 class MonthGrid(QWidget):
@@ -863,7 +907,7 @@ def escape_text(text: str) -> str:
     from html import escape
 
     return escape(text)
-STADIUM_RING = {"top": (COLOURS[GREEN], COLOURS[GREEN]), "still": ("#4a5080", MUTED)}  # "moving": the timer colour
+STADIUM_RING = {"still": ("#4a5080", MUTED)}  # "moving": the timer colour; "top": the club's colour
 
 
 def icon(path: Path, size: int) -> QLabel:
@@ -1014,8 +1058,65 @@ class MatchStripe(QFrame):
         self.warn.setVisible(bool(match["danger"]))
         self.text.setText(tr(match["text"]))
         self.value.show_value(match.get("value"))
-        self.text.setToolTip(tip_text(tr(match.get("tip") or "")))
+        self.text.setToolTip(tip_pairs(match.get("tip")))
         self.left.setText(f"{tr('em')} <b style='font-size:15pt'>{match['left']}</b>" if match["left"] else "")
+
+
+SALE_BLUE = "#1f6fd1"  # the game's blue for "SALE" players
+
+
+def chip(text: str, background: str) -> QLabel:
+    """A small rounded tag ("SALE", "reforço")."""
+    label = text_label(7, True)
+    label.setText(text)
+    label.setStyleSheet(f"QLabel {{ background: {background}; color: #ffffff; border-radius: 3px; padding: 1px 5px; "
+                        "letter-spacing: 1px; }")
+    return label
+
+
+class SaleStripe(QFrame):
+    """The best "SALE" (THEORY.md 7.7) as a blue stripe, as the game marks those players (owner, 2026-10-15): the
+    "SALE" tag and its marks (reforço, pechincha) on top with how many more, the player under it, then the price and
+    the estimated resale profit; the 3 as a table on hover."""
+
+    def __init__(self):
+        super().__init__()
+        grid = QVBoxLayout(self)
+        grid.setContentsMargins(10, 6, 10, 7)
+        grid.setSpacing(2)
+        top = QHBoxLayout()
+        top.setSpacing(4)
+        top.addWidget(chip("SALE", "#3d8bff"))
+        self.tags = [chip("", "rgba(255, 255, 255, 40)") for _ in range(2)]
+        for tag in self.tags:
+            top.addWidget(tag)
+        top.addStretch(1)
+        self.more = text_label(8)
+        top.addWidget(self.more)
+        grid.addLayout(top)
+        self.player = ElidedLabel()
+        self.player.setFont(QFont(FONT, 10, QFont.Bold))
+        grid.addWidget(self.player)
+        self.price = text_label(9)
+        grid.addWidget(self.price)
+        self.setStyleSheet(f"SaleStripe {{ border-radius: 8px; background: qlineargradient(x1:0, y1:0, x2:1, y2:0, "
+                           f"stop:0 {SALE_BLUE}, stop:1 rgba(31, 111, 209, 50)); }} "
+                           "QLabel { background: transparent; color: #f2f2f7; }")
+        self.setVisible(False)
+
+    def show_sale(self, sale: dict | None) -> None:
+        self.setVisible(bool(sale))
+        if not sale:
+            return
+        for tag, word in zip(self.tags, sale["tags"] + ["", ""]):
+            tag.setText(tr(word))
+            tag.setVisible(bool(word))
+        self.more.setText(f"+{sale['more']}" if sale["more"] else "")
+        self.more.setStyleSheet("color: rgba(255,255,255,170);")
+        self.player.setText(tr(sale["player"]))
+        self.price.setText(f"<b>{sale['price']}</b>&nbsp;&nbsp;·&nbsp;&nbsp;<span style='color:#b8f5c8'>"
+                           f"{escape_text(tr(sale['profit']))}</span>")
+        self.setToolTip(tip_grid(sale["tip"]))
 
 
 def column_title(text: str = "") -> QLabel:
@@ -1149,8 +1250,8 @@ class ClubCard(QFrame):
         self.tired = text_label(9, colour=YELLOW)
         self.tired.setWordWrap(True)
         prep.addWidget(self.tired)
-        self.sale_picks = text_label(9, colour=GREEN)  # the "SALE" worth a look, the 3 on hover (THEORY.md 7.7)
-        self.sale_picks.setWordWrap(True)
+        prep.addSpacing(4)
+        self.sale_picks = SaleStripe()  # the "SALE" worth a look, the 3 on hover (THEORY.md 7.7)
         prep.addWidget(self.sale_picks)
         prep.addStretch(1)
         right = QWidget()
@@ -1190,7 +1291,7 @@ class ClubCard(QFrame):
     def show_club(self, club: dict) -> None:
         self.name.setText(club["name"])
         self.header.setText(tr(club["header"]))
-        self.header.setToolTip(tip_grid(club.get("table_tip")))  # as the game's table (owner, 2026-10-15)
+        self.header.setToolTip(tip_grid(club.get("table_tip"), self.colour))  # as the game's table (owner, 2026-10-15)
         self.cup.setText(tr(f"🏆 {club['cup_line']}"))
         self.match.show_match(club["match"])
         self.alert.setVisible(bool(club["alert"]))
@@ -1198,7 +1299,7 @@ class ClubCard(QFrame):
         squad = club["squad"]  # the place in colour, the total in white; players and average on hover
         gap = "&nbsp;&nbsp;&nbsp;" if squad["place"] else ""
         self.value.setText(rich([(squad["place"], squad["colour"])]) + gap + rich([(squad["total"], None if squad["place"] else GREY)]))
-        self.value.setToolTip(tip_grid(squad["table_tip"]) if squad.get("table_tip") else tip_text(tr(squad["tip"])))
+        self.value.setToolTip(tip_grid(squad["table_tip"], self.colour) if squad.get("table_tip") else tip_text(tr(squad["tip"])))
         self.money.setText(rich([(club["money"], None)]))
         self.sale.show_sales(club["sales"])
         sponsors = club["sponsors"]
@@ -1210,10 +1311,10 @@ class ClubCard(QFrame):
             if index < len(rings):
                 ring = rings[index]  # only the name under it; on hover the middle says MAX or the time left
                 moving = ring["state"] == "moving"
-                arc, text = (self.timer, TEXT) if moving else STADIUM_RING[ring["state"]]
+                top = vivid(self.colour, COLOURS[GREEN])  # a full part in the club's colour (owner, 2026-10-15)
+                arc, text = (self.timer, TEXT) if moving else (top, top) if ring["state"] == "top" else STADIUM_RING["still"]
                 cell.ring.show_ring(ring["level"], ring["done"], arc, text)
-                cell.ring.hover = ((ring["left"], TEXT) if moving else ("MAX", COLOURS[GREEN]) if ring["state"] == "top"
-                                   else None)
+                cell.ring.hover = ((ring["left"], TEXT) if moving else ("MAX", top) if ring["state"] == "top" else None)
                 cell.say((ring["name"], TEXT if moving else MUTED))
         for cell, ring in zip(self.care_cells, club["care"]):
             cell.show_care(ring, self.timer)
@@ -1226,9 +1327,7 @@ class ClubCard(QFrame):
         self.tired.setVisible(bool(club["tired"]))
         self.tired.setText(tr(f"⚠ Cansados: {club['tired']}"))
         self.tired.setToolTip(tip_text("\n\n".join(tr(part) for part in (club.get("tired_tip") or "").split("\n\n"))))
-        self.sale_picks.setVisible(bool(club.get("sale")))
-        self.sale_picks.setText(tr(club.get("sale") or ""))
-        self.sale_picks.setToolTip(tip_text("\n".join(tr(line) for line in (club.get("sale_tip") or "").split("\n"))))
+        self.sale_picks.show_sale(club.get("sale"))
 
     def _show_prep(self, steps: list) -> None:
         """A step out of the owner's rule says why on hover (THEORY.md section 21); a green one may carry a note (a

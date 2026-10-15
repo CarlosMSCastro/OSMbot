@@ -502,6 +502,7 @@ Há **3 componentes** a melhorar, cada um com **níveis 0, 1, 2 e 3**:
 - Reclamar. O site gasta a recompensa logo na carteira certa; o bot faz o mesmo: **energia** → carteira de energia; **boss coins** → carteira de boss coins (o dono: "vão para a carteira, não há nada a ver").
 - Qualquer outra recompensa (p. ex. o saco do dia 21): reclamar e **deixar no inventário**, sem gastar. **[S]** O pedido que a gasta nunca foi observado.
 - **Janela "Unclaimed Energy"** (energia por reclamar, p. ex. depois do prémio das missões; aparece no browser dos vídeos e tapa o jogo): carregar **sempre em Claim**; a energia vai para a carteira de energia (dono, 2026-10-09: "dá claim sempre"; D-028).
+- **Janela das boss coins por reclamar** ("Boss Coins não reclamadas", vista pelo dono a 2026-10-15): igual, **Claim**; as boss coins vão para a carteira (D-055). **[S]** O título em inglês, no browser dos vídeos, ainda não foi visto; o bot aceita "Unclaimed Boss Coins" e variantes.
 
 **Missões**
 - As **3 missões diárias** (as que têm `order`) reclamam-se quando o progresso chega ao objetivo (`threshold`, do catálogo `missions`). O bot já treina jogadores, por isso são as que se cumprem sozinhas.
@@ -565,6 +566,7 @@ Há **3 componentes** a melhorar, cada um com **níveis 0, 1, 2 e 3**:
   - *Hover no lugar do campeonato:* os 3 primeiros com os pontos (se o clube estiver abaixo do 3.º: os 2 primeiros e o clube) e o objetivo da época ("Objetivo: 4.º ou acima"). Com o título **matematicamente garantido**, o cabeçalho diz "Campeões" em vez de "1.º Campeonato". **[S]** Garantido = em 1.º e o 2.º não consegue chegar aos nossos pontos nem ganhando todos os jogos de campeonato que lhe faltam (o empate não conta como garantido: o critério de desempate do jogo não é conhecido).
   - *Hover no valor do plantel (dono, 2026-10-15):* a tabela do jogo por valor do plantel (clube, valor, jogadores, valor médio por jogador) à volta do clube: em **1.º, os 2 de baixo**; senão **1 acima e 1 abaixo** (em último, só o de cima). Sem o nome do treinador (o bot não o lê).
   - *Formato dos dois hovers (dono, 2026-10-15):* tabelas como as do jogo, com os nomes das colunas por cima e o nosso clube destacado. Campeonato: **# · Clube · J · DG · Pts** e o objetivo por baixo; valor do plantel: **# · Clube · Valor · Jogadores · Média**.
+  - *Cores e objetivo (dono, 2026-10-15):* a linha do nosso clube numa faixa da **cor do clube** (meio transparente). Ao lado do objetivo, o **certo verde** se o lugar atual o cumpre (nesse lugar ou acima) e o **"!" amarelo** se está abaixo; sem marca na pré-época (`weekNr` < 1), porque a tabela ainda não conta. O hover do adversário passa a linhas: nome, valor do plantel, jogadores, média.
 - **Criar a liga:** o dono ainda nunca criou uma; vai ser **pública**. O jogo deixa escolher o número de clubes, pública ou privada e convidar amigos. O custo varia com o número de clubes/jornadas e talvez com a popularidade da liga.
 
 ## 20. Inventário: usar o que vai expirar

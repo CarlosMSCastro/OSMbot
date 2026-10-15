@@ -56,6 +56,6 @@ Regra: **cada regra do código tem de estar em `THEORY.md`**. Se o código preci
 
 - Idioma dos docs: **português europeu**. Código, identificadores e mensagens de commit: a decidir (D-003).
 - Datas em ISO (`AAAA-MM-DD`).
-- **Versões:** SemVer, `0.x` até haver automação estável. A versão vive em `pyproject.toml`; o histórico em `CHANGELOG.md` (para quem lê o repo), separado de `docs/WORKLOG.md` (diário interno). Quando o dono pedir uma versão, o Claude atualiza os dois ficheiros e escreve a mensagem de commit; **tags e releases são do dono** (regra 9).
+- **Versões:** SemVer, `0.x` até à primeira versão vendida, que é a `1.0.0` (plano por fases em D-057). A versão vive em `pyproject.toml`; o histórico em `CHANGELOG.md` (para quem lê o repo), separado de `docs/WORKLOG.md` (diário interno). Quando o dono pedir uma versão, o Claude atualiza os dois ficheiros e escreve a mensagem de commit; **tags e releases são do dono** (regra 9).
 - Docs curtos e factuais; preferir tabelas e listas a prosa.
 - Repo git inicializado (ramo `main`) com `origin` = https://github.com/CarlosMSCastro/OSMbot.git. Foi feito pelo Claude **a pedido pontual do dono em 2026-09-27** (só `git init` + `git remote add`); commits, pushes e pulls continuam a ser do dono (regra 9).

@@ -302,7 +302,10 @@ def test_the_place_says_champions_once_won_and_the_hover_has_the_top_3_and_the_g
     assert header == "2.º Campeonato" and [name for name, _ in grid["columns"]] == ["#", "Clube", "J", "DG", "Pts"]
     assert grid["rows"] == [(["1", "Clube 1", "20", "+31", "46"], False), (["2", "Clube 2", "20", "-2", "45"], True),
                             (["3", "Clube 3", "", "", "43"], False)]
-    assert grid["foot"] == "Objetivo: 4.º ou acima"
+    assert grid["foot"] == "Objetivo: 4.º ou acima" and grid["mark"] is None  # no round played yet: no mark
+    assert table_view({"ranking": 2, "week": 20, "table": table})[1]["mark"] == "done"  # within the goal: the green tick
+    assert table_view({"ranking": 5, "week": 20, "table": table})[1]["mark"] == "collect"  # below it: yellow (owner, 2026-10-15)
+    assert table_view({"ranking": 5, "week": -2, "table": table})[1]["mark"] is None  # pre-season
     assert table_view({"ranking": 1, "table": {**table, "champion": True, "goal": 1}})[0] == "Campeões"
     assert table_view({"ranking": 1, "table": {**table, "goal": 1}})[1]["foot"] == "Objetivo: 1.º"
     assert table_view({"ranking": 3}) == ("3.º Campeonato", None)
@@ -326,12 +329,14 @@ def test_the_sale_line_shows_the_best_and_the_three_on_hover():
     pick = {"pos": "DEF", "rating": 85, "nome": "S1", "idade": 26, "preco": 11_000_000, "razao": 1.1, "lucro": 14_000_000,
             "reforco": True, "fraco": "T1 79", "pechincha": True}
     deal = {**pick, "nome": "S2", "lucro": 9_000_000, "reforco": False, "fraco": None, "pechincha": False}
-    assert sale_view({}) == ("", "") and sale_view({"sale": {"picks": [], "certo": True}}) == ("", "")
-    text, tip = sale_view({"sale": {"picks": [pick, deal], "certo": True}})
-    assert text.startswith("SALE: DEF 85 S1 · ") and text.endswith(" (+1)") and "?" not in text
-    assert tip.splitlines()[0].endswith(" · reforço (> T1 79) · pechincha") and len(tip.splitlines()) == 2
-    _, unsure = sale_view({"sale": {"picks": [deal], "certo": False}})
-    assert unsure.splitlines()[-1] == "? = esta liga não vendeu ao máximo nos últimos 3 dias"
+    assert sale_view({}) is None and sale_view({"sale": {"picks": [], "certo": True}}) is None
+    sale = sale_view({"sale": {"picks": [pick, deal], "certo": True}})
+    assert (sale["player"], sale["price"], sale["profit"]) == ("DEF 85 · S1", "11 M", "lucro ~14 M")
+    assert sale["tags"] == ["reforço", "pechincha"] and sale["more"] == 1  # the blue stripe (owner, 2026-10-15)
+    rows = sale["tip"]["rows"]
+    assert rows[0][0][-1] == "reforço (> T1 79) · pechincha" and rows[1][0][-1] == "" and not sale["tip"]["foot"]
+    unsure = sale_view({"sale": {"picks": [deal], "certo": False}})
+    assert unsure["profit"] == "lucro ~9 M?" and unsure["tip"]["foot"] == "? = esta liga não vendeu ao máximo nos últimos 3 dias"
 
 
 def test_squad_hover_is_the_table_by_value():
