@@ -19,8 +19,8 @@ from datetime import datetime
 from pathlib import Path
 
 from PySide6.QtCore import QLockFile, QObject, QPoint, QPointF, QRectF, QSize, Qt, QTimer, Signal
-from PySide6.QtGui import (QAction, QColor, QCursor, QFont, QFontDatabase, QIcon, QImage, QPainter, QPainterPath, QPalette, QPen,
-                           QPixmap)
+from PySide6.QtGui import (QAction, QColor, QCursor, QFont, QFontDatabase, QFontMetrics, QIcon, QImage, QPainter, QPainterPath, QPalette, QPen,
+                           QPixmap, QRegion)
 from PySide6.QtWidgets import (QAbstractItemView, QApplication, QFrame, QGridLayout, QGroupBox, QHBoxLayout, QLabel,
                                QMainWindow, QMenu, QMessageBox, QProxyStyle, QPushButton, QScrollArea, QSizePolicy, QStackedWidget, QStyle,
                                QSystemTrayIcon, QTableWidget, QTableWidgetItem, QToolTip, QVBoxLayout, QWidget)
@@ -66,14 +66,6 @@ def picture(name: str, grey: bool = False, alpha: int = 40, keep: float = 0.0) -
 CARE_KEEP, CARE_ALPHA = 0.35, 55  # the doctor and the lawyer with nobody: near black and white, not quite (owner, 2026-10-15)
 
 
-def vivid(colour: str | None, fallback: str) -> str:
-    """The club's colour bright enough to read on the dark card (a navy logo would vanish), e.g. a full stadium ring."""
-    if not colour:
-        return fallback
-    hue, sat, val, _ = QColor(colour).getHsv()
-    return QColor.fromHsv(max(hue, 0), sat, max(val, 200)).name()
-
-
 def blend(colour: str | None, alpha: float, under: str = "#1a2052") -> str:
     """``colour`` at ``alpha`` over the hover's background, as one plain colour (Qt's rich text has no transparency)."""
     c, base = QColor(colour or ACCENT), QColor(under)
@@ -113,11 +105,15 @@ class QuickTips(QProxyStyle):
         return super().styleHint(hint, option, widget, data)
 
 
-def soft(colour: str) -> str:
-    """The club's colour half faded, for timers still running (owner, 2026-10-10): a green club stays apart from the
-    bright green of "done"."""
+def soft(colour: str, share: float = 0.5) -> str:
+    """The club's colour faded towards grey: half for timers still running (owner, 2026-10-10), ``FULL`` for a full
+    ring (a training ready, a care ring ready, a stadium part at the top; owner, 2026-10-15)."""
     c, grey = QColor(colour), QColor(MUTED)
-    return QColor((c.red() + grey.red()) // 2, (c.green() + grey.green()) // 2, (c.blue() + grey.blue()) // 2).name()
+    return QColor(*(int(g + (a - g) * share) for a, g in ((c.red(), grey.red()), (c.green(), grey.green()),
+                                                         (c.blue(), grey.blue())))).name()
+
+
+FULL = 0.7  # a full ring: the club's colour a little stronger than a running timer (0.5)
 
 
 def logo_path() -> Path:
@@ -279,6 +275,16 @@ def text_label(size: int = 9, bold: bool = False, colour: str | None = None) -> 
     return label
 
 
+def fit(label: QLabel, width: int, size: float = 8, smallest: float = 6.5) -> None:
+    """The label's font at ``size``, smaller until its text fits ``width`` (a label in a fixed column is cut, not
+    wrapped: owner, 2026-10-15, "Treinador universa")."""
+    font = label.font()
+    font.setPointSizeF(size)
+    while font.pointSizeF() > smallest and QFontMetrics(font).horizontalAdvance(label.text()) > width:
+        font.setPointSizeF(font.pointSizeF() - 0.5)
+    label.setFont(font)
+
+
 def logo_colour(image: QImage) -> str:
     """The logo's main colour (card, match stripe, timeline dot): the most common strong colour inside the shield,
     ignoring transparent, white, black and grey pixels. Only the middle is read: every OSM logo has the same gold
@@ -346,11 +352,13 @@ class Ring(QWidget):
         self.hovered = False
         self.picture: QPixmap | None = None  # drawn inside the ring instead of the text (owner, 2026-10-10)
 
-    def set(self, text: str, colour: str | None, done: float, skipped: float = 0.0, timer: str = ACCENT) -> None:
-        """A training: green and full when ready, else the club's timer colour (light blue for the skipped part)."""
+    def set(self, text: str, colour: str | None, done: float, skipped: float = 0.0, timer: str = ACCENT,
+            full: str = COLOURS[GREEN]) -> None:
+        """A training: full in the club's ``full`` colour when ready, else the club's timer colour (light blue for
+        the skipped part)."""
         ready = colour == GREEN
-        self.show_ring(text, 1.0 if ready else done, COLOURS[GREEN] if ready else timer,
-                       COLOURS[GREEN] if ready else TEXT, 0.0 if ready else skipped)
+        self.show_ring(text, 1.0 if ready else done, full if ready else timer, full if ready else TEXT,
+                       0.0 if ready else skipped)
         self.colour = colour
 
     def enterEvent(self, _event) -> None:
@@ -483,10 +491,10 @@ class CareCell(QWidget):
         row.setContentsMargins(0, 0, 0, 0)
         column.addWidget(self.under)
 
-    def show_care(self, ring: dict, timer: str) -> None:
+    def show_care(self, ring: dict, timer: str, full: str = COLOURS[GREEN]) -> None:
         state = ring["state"]
         nobody = state in ("none", "blocked")  # "not available": washed out (owner, 2026-10-10)
-        arc = {"working": timer, "ready": COLOURS[GREEN], "waiting": COLOURS[YELLOW]}.get(state, RING_TRACK)
+        arc = {"working": timer, "ready": full, "waiting": COLOURS[YELLOW]}.get(state, RING_TRACK)
         share = {"working": ring["done"], "ready": 1.0, "waiting": 1.0}.get(state, 0.0)
         self.ring.show_ring("", share, arc, TEXT)
         self.ring.picture = picture(self.kind, grey=nobody, alpha=CARE_ALPHA, keep=CARE_KEEP)
@@ -495,6 +503,7 @@ class CareCell(QWidget):
         if self.kind == "universal":  # only while it is active (owner, 2026-10-12)
             self.setVisible(state != "none")
             self.title.setText(tr("Treinador universal"))
+            fit(self.title, self.width() - 4)
         self.name.setText(escape_text(ring["name"]))
         self.games.setText(str(ring.get("games") or ""))
         self.games.setVisible(bool(ring.get("games")))  # an empty one still took room and pushed the name off centre
@@ -657,7 +666,7 @@ def tip_icon(name: str) -> str:
         pixmap.fill(Qt.transparent)
         painter = QPainter(pixmap)
         painter.scale(2, 2)
-        mark.render(painter, QPoint(0, 0))
+        mark.render(painter, QPoint(0, 0), QRegion(), QWidget.RenderFlag.DrawChildren)  # no background: white corners (2026-10-16)
         painter.end()
         pixmap.save(str(folder / f"{name}.png"))
         _tip_icons[name] = (folder / f"{name}.png").as_posix()
@@ -1075,8 +1084,8 @@ def chip(text: str, background: str) -> QLabel:
 
 
 class SaleStripe(QFrame):
-    """The best "SALE" (THEORY.md 7.7) as a blue stripe, as the game marks those players (owner, 2026-10-15): the
-    "SALE" tag and its marks (reforço, pechincha) on top with how many more, the player under it, then the price and
+    """The best buy (THEORY.md 7.7) as a blue stripe, as the game marks its "SALE" players (owner, 2026-10-15): the
+    "SALE" tag when it has one and its marks (reforço, pechincha) on top with how many more, the player under it, then the price and
     the estimated resale profit; the 3 as a table on hover."""
 
     def __init__(self):
@@ -1086,7 +1095,8 @@ class SaleStripe(QFrame):
         grid.setSpacing(2)
         top = QHBoxLayout()
         top.setSpacing(4)
-        top.addWidget(chip("SALE", "#3d8bff"))
+        self.ribbon = chip("SALE", "#3d8bff")  # only when the best one has the game's ribbon
+        top.addWidget(self.ribbon)
         self.tags = [chip("", "rgba(255, 255, 255, 40)") for _ in range(2)]
         for tag in self.tags:
             top.addWidget(tag)
@@ -1108,6 +1118,7 @@ class SaleStripe(QFrame):
         self.setVisible(bool(sale))
         if not sale:
             return
+        self.ribbon.setVisible(sale.get("sale", True))
         for tag, word in zip(self.tags, sale["tags"] + ["", ""]):
             tag.setText(tr(word))
             tag.setVisible(bool(word))
@@ -1147,6 +1158,7 @@ class ClubCard(QFrame):
         self.setObjectName("card")
         self.colour = ""
         self.timer = ACCENT  # running timers: the club's colour half faded once the logo is in
+        self.full = COLOURS[GREEN]  # full rings: the club's colour a little stronger (owner, 2026-10-15)
         row = QHBoxLayout(self)
         row.setContentsMargins(0, 0, 0, 0)
         row.setSpacing(0)
@@ -1227,7 +1239,7 @@ class ClubCard(QFrame):
         self.care_cells = [CareCell(kind, TRAINING_WIDTH) for kind in ("doctor", "lawyer")]
         self.universal_cell = CareCell("universal", TRAINING_WIDTH)  # beside them, while active (owner, 2026-10-12)
         for cell in (*self.care_cells, self.universal_cell):
-            care.addWidget(cell)
+            care.addWidget(cell, 0, Qt.AlignTop)  # rings level, however many lines each has under it (owner, 2026-10-15)
         care.addStretch(1)
         trainings.addLayout(care)
         trainings.addStretch(1)
@@ -1281,7 +1293,7 @@ class ClubCard(QFrame):
         and the border; the plain card until the logo is in."""
         if not colour or colour == self.colour:
             return
-        self.colour, self.timer = colour, soft(colour)
+        self.colour, self.timer, self.full = colour, soft(colour), soft(colour, FULL)
         c = QColor(colour)
         glow, border = (f"rgba({c.red()},{c.green()},{c.blue()},{alpha})" for alpha in (70, 90))
         self.setStyleSheet(f"QFrame#card {{ background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 {glow}, "
@@ -1311,14 +1323,14 @@ class ClubCard(QFrame):
             if index < len(rings):
                 ring = rings[index]  # only the name under it; on hover the middle says MAX or the time left
                 moving = ring["state"] == "moving"
-                top = vivid(self.colour, COLOURS[GREEN])  # a full part in the club's colour (owner, 2026-10-15)
+                top = self.full  # a full part as every full ring (owner, 2026-10-15)
                 arc, text = (self.timer, TEXT) if moving else (top, top) if ring["state"] == "top" else STADIUM_RING["still"]
                 cell.ring.show_ring(ring["level"], ring["done"], arc, text)
                 cell.ring.hover = ((ring["left"], TEXT) if moving else ("MAX", top) if ring["state"] == "top" else None)
                 cell.say((ring["name"], TEXT if moving else MUTED))
         for cell, ring in zip(self.care_cells, club["care"]):
-            cell.show_care(ring, self.timer)
-        self.universal_cell.show_care(club["universal"], self.timer)
+            cell.show_care(ring, self.timer, self.full)
+        self.universal_cell.show_care(club["universal"], self.timer, self.full)
         self.prep_title.setText(tr(club["prep_title"]))
         self._show_prep(club["prep"]["steps"])
         self.boosts.show_boosts(club["prep"].get("boosts") or [])
@@ -1355,9 +1367,9 @@ class ClubCard(QFrame):
             if index >= len(rows):
                 continue
             player, position, left, colour, done, skipped = rows[index]
-            ring.set(tr(left), colour, done, skipped, self.timer)  # the cone inside; the time on hover (owner, 2026-10-10)
+            ring.set(tr(left), colour, done, skipped, self.timer, self.full)  # the cone inside; the time on hover (owner, 2026-10-10)
             ring.picture = picture("training")
-            ring.hover = (tr(left), COLOURS[GREEN] if colour == GREEN else TEXT)
+            ring.hover = (tr(left), self.full if colour == GREEN else TEXT)
             name.setText(player)
             pos.setText(tr(position))
 

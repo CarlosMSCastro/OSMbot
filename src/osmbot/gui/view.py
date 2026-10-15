@@ -242,7 +242,10 @@ def sale_view(club: dict) -> dict | None:
     grid = {"columns": [("Pos", "l"), ("Força", "r"), ("Jogador", "l"), ("Idade", "r"), ("Preço", "r"), ("Valor", "r"),
                         ("Lucro", "r"), ("", "l")], "rows": rows,
             "foot": "? = esta liga não vendeu ao máximo nos últimos 3 dias" if unsure else ""}
+    from osmbot.transfers.engine import SALE_RATIO
+
     return {"player": f"{best['pos']} {best['rating']} · {best['nome']}", "price": money(best["preco"]),
+            "sale": best["razao"] <= SALE_RATIO,  # the game's "SALE" ribbon: not every pick has it (2026-10-15)
             "profit": f"lucro ~{money(best['lucro'])}{unsure}", "tags": tags(best), "more": len(picks) - 1, "tip": grid}
 
 

@@ -80,6 +80,11 @@ def test_sale_players_appear_and_leave():
     assert appeared == [] and state["1"]["visto"] == 1000  # the first read only learns
     state, appeared, gone = sale_changes(state, sale_rows([item(4, 120, 100)]), 1600)
     assert [r["anuncio"] for r in appeared] == [4] and gone[0]["anuncio"] == 1 and gone[0]["durou"] == 600
+    state, _, _ = sale_changes(state, sale_rows([item(4, 110, 100)]), 2000)  # the game lowered the price
+    _, _, gone = sale_changes(state, {}, 2600)
+    assert (gone[0]["preco_inicial"], gone[0]["preco"], gone[0]["durou"]) == (120, 110, 1000)
+    every = sale_rows(market, ratio=float("inf"))
+    assert list(every) == ["1", "2"]  # all the game's listings, SALE or not; still never a manager's
     assert describe_sales(appeared, "Liga", lambda m: f"{m} €") == "SALE novos (Liga): 1 · DEF 84 J4 (25 anos) 120 €"
 
 
@@ -112,15 +117,20 @@ def test_sale_picks_are_the_affordable_sale_players_by_resale_profit_with_reinfo
 
     assert resale(10e6) == 25e6 and resale(50e6) == 0.75 * 125e6  # the maximum, 75 % of it above 100 M (THEORY.md 7)
     players = [_starter(1, 3, 79), _starter(2, 3, 90, lineup=2), _starter(3, 3, 95, lineup=14)]  # the bench does not count
-    market = [_sale(1, 3, 85, 11e6, 10e6),  # beats the weakest DEF (79), at 1.1×: a bargain
-              _sale(2, 1, 70, 14e6, 10e6),  # a deal only (no forwards in the eleven to compare with)
+    market = [_sale(1, 3, 85, 14.3e6, 11e6),  # beats the weakest DEF (79), at 1.3×
+              _sale(2, 1, 70, 12e6, 10e6),  # to sell again, at 1.2×: a bargain, the best bet
               _sale(3, 3, 99, 30e6, 25e6),  # too dear
-              _sale(4, 3, 60, 1.4e6, 1e6)]  # small profit: last
-    picks = sale_picks(market, players, money=20e6, free_slots=1)
-    assert [(p["nome"], p["reforco"], p["pechincha"]) for p in picks] == [("S1", True, True), ("S2", False, False), ("S4", False, False)]
-    assert picks[0]["lucro"] == 25e6 - 11e6 and picks[0]["fraco"] == "T1 79"
-    assert [p["nome"] for p in sale_picks(market, players, money=20e6, free_slots=0)] == ["S1"]  # no free slot: reinforcements only
-    assert len(sale_picks(market, players, money=20e6, free_slots=2, count=2)) == 2
+              _sale(4, 1, 60, 1.2e6, 1e6),  # worth too little to sell again (under 10 M)
+              _sale(5, 1, 70, 17e6, 10e6),  # no "SALE" (1.7×): still counts
+              _sale(6, 1, 75, 13e6, 10e6),  # 1.3× like S1, smaller profit: after it
+              _sale(7, 2, 70, 19e6, 15e6)]
+    picks = sale_picks(market, players, money=20e6, count=5)
+    assert [(p["nome"], p["reforco"], p["pechincha"]) for p in picks] == [
+        ("S2", False, True), ("S7", False, False), ("S1", True, False), ("S6", False, False), ("S5", False, False)]
+    assert picks[2]["lucro"] == 27.5e6 - 14.3e6 and picks[2]["fraco"] == "T1 79"
+    assert len(sale_picks(market, players, money=20e6)) == 3
+    big = _sale(8, 3, 90, 19e6, 12e6)  # a reinforcement is shown whatever its value
+    assert sale_picks([big], players, 20e6)[0]["reforco"] and not sale_picks([_sale(9, 1, 90, 75e6, 50e6)], players, 80e6)
 
 
 def test_a_league_sells_at_the_maximum_when_one_of_its_clubs_sold_at_2_4_times_the_value_lately():

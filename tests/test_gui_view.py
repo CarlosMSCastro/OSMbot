@@ -333,6 +333,7 @@ def test_the_sale_line_shows_the_best_and_the_three_on_hover():
     sale = sale_view({"sale": {"picks": [pick, deal], "certo": True}})
     assert (sale["player"], sale["price"], sale["profit"]) == ("DEF 85 · S1", "11 M", "lucro ~14 M")
     assert sale["tags"] == ["reforço", "pechincha"] and sale["more"] == 1  # the blue stripe (owner, 2026-10-15)
+    assert sale["sale"] and not sale_view({"sale": {"picks": [{**deal, "razao": 1.7}], "certo": True}})["sale"]  # no ribbon
     rows = sale["tip"]["rows"]
     assert rows[0][0][-1] == "reforço (> T1 79) · pechincha" and rows[1][0][-1] == "" and not sale["tip"]["foot"]
     unsure = sale_view({"sale": {"picks": [deal], "certo": False}})

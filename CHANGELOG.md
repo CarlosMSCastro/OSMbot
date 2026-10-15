@@ -4,6 +4,23 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-PT/1.1.0/); 
 
 Este ficheiro é o **histórico de versões, para quem lê o repo**. O diário interno de cada sessão de trabalho está em [`docs/WORKLOG.md`](docs/WORKLOG.md).
 
+## [0.13.0] — 2026-10-16
+
+O cartão de compras mostra a melhor compra do momento, por uma estratégia tirada dos registos, e os círculos cheios ficam na cor do clube.
+
+### Alterado
+- **Cartão de compras (antes "SALE"):** mostra **a melhor compra** e, ao passar o rato, **as 3 melhores**. Entram jogadores do jogo **com ou sem SALE**: para revender, os de **valor entre 10 e 40 M** (revendem até 100 M e vendem em menos de dia e meio); para reforçar, os melhores do que o titular mais fraco da posição. Só os que cabem no dinheiro do clube, os mais baratos face ao valor primeiro. Já não é preciso ter uma vaga livre na lista de vendas. A etiqueta SALE só aparece quando o jogador a tem.
+- **Pechincha:** até **1,25 × o valor** (era 1,1×, que nunca aparecia: o jogo vende a partir de ~1,19×).
+- **Círculos cheios** (treino pronto, médico, advogado e treinador universal prontos, estádio no máximo): na **cor do clube**, um pouco mais forte do que a dos temporizadores, em vez de verde.
+
+### Adicionado
+- **Registo de todos os anúncios do jogo** em `logs/<PC>/transferencias/jogo/`: quando aparecem e saem, com o primeiro e o último preço. Os registos mostraram que o jogo baixa os preços cerca de 4 % por dia.
+
+### Corrigido
+- **Hovers com o círculo verde:** sem os cantos brancos à volta.
+- **Médico, advogado e treinador universal:** os círculos ficam alinhados.
+- **"Treinador universal":** já não aparece cortado; a letra encolhe até caber.
+
 ## [0.12.3] — 2026-10-15
 
 Os vídeos já não param com a janela das boss coins por reclamar, os erros do servidor do jogo ficam explicados no registo, e a janela tem vários retoques.

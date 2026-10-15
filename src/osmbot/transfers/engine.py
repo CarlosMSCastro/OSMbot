@@ -82,8 +82,9 @@ def sale_options(market: list[dict], position: str, budget: int, count: int = 3)
     return sorted(rows, key=lambda r: (-(r["rating"] or 0), r["preco"]))[:count]
 
 
-BARGAIN = 1.1  # a "SALE" at no more than this × value is a bargain (owner, 2026-10-14)
+BARGAIN = 1.25  # a "SALE" at no more than this × value is a bargain (owner, 2026-10-15: the game sells from ~1.19×)
 BIG_SALE, BIG_SALE_SHARE = 100e6, 0.75  # above 100 M the owner asks 75 % of the maximum (THEORY.md 7)
+FLIP_VALUE = (10e6, 40e6)  # bought to sell again at once: up to a 100 M maximum, sold within ~1.5 days (2026-10-15)
 SELLS_AT_MAX = 2.4  # a league sale at this × value or more: the league buys at the maximum (THEORY.md 7.7)
 
 
@@ -102,11 +103,12 @@ def sells_at_max(transfers: list[dict], now: float, days: float = 3) -> bool:
                and t.get("timestamp", 0) >= now - days * 86400 for t in transfers)
 
 
-def sale_picks(market: list[dict], players: list[dict], money: float, free_slots: int, count: int = 3) -> list[dict]:
-    """The "SALE" players worth a look on the club card (THEORY.md 7.7): those the club can pay for, best estimated
-    resale profit first. Each says if it beats the lowest starter of its general position (``reforco``: shown even
-    with no free sale slot), and if it is a bargain (``pechincha``, at most 1.1 × value). A pure deal needs a free
-    slot, to list it again at once."""
+def sale_picks(market: list[dict], players: list[dict], money: float, count: int = 3) -> list[dict]:
+    """The game's players worth buying now (THEORY.md 7.7, owner 2026-10-15): to sell again at once, those valued
+    10-40 M (they sell at the maximum within about a day and a half), and to strengthen the eleven, any that beats the
+    lowest starter of its general position (``reforco``); all the club can pay for, "SALE" or not. Cheapest against
+    their value first (what a slot earns per day goes with it, DISCOVERY.md 3), then the biggest profit; the first is
+    the best bet. ``pechincha``: at most 1.25 × value."""
     from osmbot.theory.lineup import rating
 
     weakest: dict[str, dict] = {}
@@ -115,22 +117,25 @@ def sale_picks(market: list[dict], players: list[dict], money: float, free_slots
         if position and p.get("lineup") in range(1, 12) and (position not in weakest or rating(p) < rating(weakest[position])):
             weakest[position] = p
     picks = []
-    for row in sale_rows(market).values():
+    for row in sale_rows(market, ratio=float("inf")).values():
         if row["preco"] > money:
             continue
         low = weakest.get(row["pos"])
         better = bool(low) and (row["rating"] or 0) > rating(low)
-        if not better and free_slots <= 0:
+        if not better and not FLIP_VALUE[0] <= row["valor"] <= FLIP_VALUE[1]:
             continue
         picks.append({**row, "lucro": resale(row["valor"]) - row["preco"], "reforco": better,
                       "fraco": f"{low['name']} {rating(low)}" if better else None, "pechincha": row["razao"] <= BARGAIN})
-    return sorted(picks, key=lambda r: -r["lucro"])[:count]
+    return sorted(picks, key=lambda r: (r["razao"], -r["lucro"]))[:count]
 
 
 def sale_changes(before: dict | None, rows: dict[str, dict], now: float) -> tuple[dict, list[dict], list[dict]]:
-    """(new "SALE" state, those that appeared, those that left) between two reads. Each keeps when it was first seen;
-    the first read only learns what is there."""
-    state = {key: {**row, "visto": (before or {}).get(key, {}).get("visto", now)} for key, row in rows.items()}
+    """(new state, those that appeared, those that left) between two reads of the game's listings ("SALE" or all of
+    them). Each keeps when it was first seen and its price then (``preco_inicial``: the game lowers its prices day by
+    day, DISCOVERY.md 3); one that left says its last price. The first read only learns what is there."""
+    old = before or {}
+    state = {key: {**row, "visto": old.get(key, {}).get("visto", now),
+                   "preco_inicial": old.get(key, {}).get("preco_inicial", row["preco"])} for key, row in rows.items()}
     if before is None:
         return state, [], []
     appeared = [state[key] for key in rows if key not in before]

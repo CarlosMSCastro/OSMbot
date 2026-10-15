@@ -2,7 +2,7 @@
 
 Entradas mais recentes primeiro. Cada sessão: o que se fez · o que ficou por fazer · próximo passo.
 
-## 2026-10-15 (tarde) — Pull e `dist` 0.12.2 (DESKTOP-KAM70RR)
+## 2026-10-15/16 — `dist` 0.12.2, 0.12.3 e 0.13.0, mercado do jogo (DESKTOP-KAM70RR)
 
 - **Pull** (pergunta do dono): sem alterações locais, 2 commits atrás, avanço direto; só a versão mudou no `pyproject`. Feito pelo dono.
 - **`dist` reconstruído na 0.12.2** (pedido do dono): 403 testes; portátil 553 MB, zip 206 MB, instalador 148 MB; `status` da versão portátil testado; notas em `dist/release-notes-v0.12.2.md` (só a 0.12.2: a 0.12.0 e a 0.12.1 já saíram do outro PC).
@@ -17,7 +17,12 @@ Entradas mais recentes primeiro. Cada sessão: o que se fez · o que ficou por f
 - **Versão paga (conversa, para o futuro):** venda futura com repo privado nessa altura, licença sem a qual não há boss coins, plano recomendado com a peça das boss coins vinda de um servidor do dono, teste de compra com um colega. Registado em **D-056 (Em aberto)**; nada construído.
 - **Versões (pergunta do dono):** a 1.0 passa a ser a primeira versão vendida, com plano por fases: agora, congelamento, versão paga 0.20+, 1.0.0-rc com o colega, 1.0.0 (**D-057**). Atualizados `CLAUDE.md` (convenção), `CHANGELOG.md` (cabeçalho) e `PROJECT_BRIEF.md` (critérios do 1.0: os de 2026-10-09 passam a fechar o congelamento).
 - **0.12.3** (pedido do dono): versão em `pyproject.toml` e `__init__.py`, `CHANGELOG`, `README` (estado), `dist` reconstruído e `dist/release-notes-v0.12.3.md`. 406 testes.
-- **Próximo passo:** o dono faz commit, push e o Release da 0.12.3; no PC do trabalho, confirmar o título real da janela das boss coins quando voltar a aparecer.
+- **Para a 0.13.0 (pedidos do dono):** círculos cheios na cor do clube a 70 % em vez de verde (`soft(colour, FULL)`, `THEORY.md` §19); médico, advogado e treinador universal alinhados pelo topo (o círculo do universal subia); "Treinador universal" cortado no ecrã do dono ("Treinador universa"): o título encolhe a letra até caber (`fit`).
+- **Mercado do jogo (perguntas do dono, só leituras e registos):** os anúncios do jogo descem ~4 %/dia (1,5× → 1,2× em ~6 dias, nunca sobem); compras ao jogo entre 1,20× e 1,79×. `DISCOVERY.md` §3. O dono aceitou: **pechincha até 1,25×** (`BARGAIN`) e **registo de todos os anúncios do jogo** em `transferencias/jogo/` (primeiro e último preço; `sale_changes` guarda `preco_inicial`). 406 testes. Estratégia de compra a partir dos registos (vagas sempre cheias; revenda de jogadores de 10–40 M de valor, os mais baratos face ao valor; reforços sem pressa) e **cartão com a melhor hipótese e as 3 melhores no hover** (D-058, `sale_picks` sem a vaga livre, `FLIP_VALUE`, etiqueta SALE só quando a melhor a tem). 406 testes.
+- **Mercado do dono (2026-10-16, só leitura):** 12 jogadores à venda, quase todos ao máximo com revenda abaixo de 100 M (como a estratégia). A rever pelo dono: um MED à venda há 131 h (a esse preço a mediana é ~32 h), dois titulares do Betis à venda antes do jogo, um ATA de 19 anos a 75 %.
+- **Hovers com o círculo verde:** cantos brancos à volta da marca (o `render` do `StepIcon` desenhava o fundo da janela); agora só `DrawChildren`.
+- **0.13.0** (pedido do dono): versão, `CHANGELOG`, `README`, `PROJECT_BRIEF`, `dist` e `dist/release-notes-v0.13.0.md`. 406 testes.
+- **Próximo passo:** o dono faz commit, push e o Release da 0.13.0; confirmar na janela o hover do cartão de compras (na captura, a etiqueta "reforço (> …)" aparecia cortada) e, no PC do trabalho, o título real da janela das boss coins.
 
 ## 2026-10-15 — Pré-época e tempos em dias (PT-LA-02-0095-N)
 

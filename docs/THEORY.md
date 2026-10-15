@@ -313,12 +313,16 @@ Pelo mesmo preço, o do jogo tem **+6 de rating** que o de utilizador (PL) e o "
   - Ou seja: (1) quantos "SALE" novos apareceram; (2) para as posições em que o plantel tem um titular fraco, compara o rating dele com os "SALE" disponíveis nessa posição e diz se há melhores.
 - **Horas certas:** mais tarde, com análise de dados, quando o dono souber a hora ao certo; por agora vai verificando "mais ou menos".
 - **Titular "fraco" (resolvido, 2026-09-27):** **ambos os critérios contam** — é "fraco" quem for o **mais baixo da sua posição** entre os titulares, **ou** quem estiver **abaixo da média do 11** (não precisa de ser os dois ao mesmo tempo).
-- **Os SALE no cartão do clube (dono, 2026-10-14, depois de ver o rival do Qarabag comprar ao valor):** um SALE interessa para **reforçar** e também para **revender** (§7 ponto 4: comprar SALE e listar logo ao máximo). Sem mínimo de lucro (os números de 14/10 mostraram que quase todos dão lucro; o que filtra é o dinheiro):
-  - Só os que **cabem em conta + poupança**; o cartão mostra **os 3 melhores** pelo lucro estimado.
+- **Compras para o cartão do clube (dono, 2026-10-14, depois de ver o rival do Qarabag comprar ao valor):** um SALE interessa para **reforçar** e também para **revender** (§7 ponto 4: comprar SALE e listar logo ao máximo). Sem mínimo de lucro (os números de 14/10 mostraram que quase todos dão lucro; o que filtra é o dinheiro):
+  - **Estratégia de compra (dono, 2026-10-15, substitui os critérios de 14/10: vaga livre e ordem pelo lucro):** o dono tem **sempre as vagas cheias** ("toda a estratégia é ter sempre jogadores à venda"), por isso a pergunta é com que jogador encher a próxima vaga que vagar. Proposta do Claude a partir dos registos (`DISCOVERY.md` §3), aceite pelo dono:
+    1. Vagas de venda sempre cheias.
+    2. **Revenda:** jogadores do jogo, **com ou sem SALE**, de **valor 10–40 M** (revendem entre 25 e 100 M e vendem em menos de ~1,5 dias), que cabem em **conta + poupança**; os **mais baratos face ao valor** primeiro (o que uma vaga rende por dia anda com isso; com o mesmo preço/valor, o de maior lucro). Põe-se logo à venda ao máximo.
+    3. Para revender, nada acima de 40 M de valor (prende a vaga 3 dias ou mais); os do dono acima de 100 M continuam a 75 %.
+    4. **Reforço:** rating maior do que o titular mais baixo da **mesma posição geral** (ATA/MED/DEF/GR), de qualquer valor, se couber no dinheiro; sem pressa, esperar 3–4 dias (o preço desce ~4 %/dia); de preferência jovens.
+  - **No cartão (dono, 2026-10-15):** a faixa mostra **a melhor hipótese** (a 1.ª pela ordem acima, revenda ou reforço) e o hover **as 3 melhores**. A etiqueta "SALE" só aparece se a melhor a tiver (≤ 1,5×).
   - **Lucro estimado** = preço máximo de revenda − preço; máximo ≈ **2,5 × valor** (**[H]**: as vendas de 14/10 saíram a 2,48–2,49×), **75 %** disso acima de 100 M (§7 ponto 2).
-  - **Reforço:** rating maior do que o titular mais baixo da **mesma posição geral** (ATA/MED/DEF/GR) — o titular mais baixo da posição é sempre "fraco". Aparece mesmo sem vaga de venda.
-  - **Negócio:** só com uma **vaga livre** na lista de vendas (para revender já).
-  - **Pechincha:** preço ≤ **1,1 × valor**, marcado à parte.
+  - **Pechincha:** preço ≤ **1,25 × valor**, marcado à parte (dono, 2026-10-15; era 1,1×, que nunca aparecia: o jogo vende a partir de ~1,19× e baixa os preços dia a dia, `DISCOVERY.md` §3).
+  - **Registo (dono, 2026-10-15):** além dos SALE, o bot guarda todos os anúncios do jogo (`logs/<PC>/transferencias/jogo/`): quando aparecem e saem, com o primeiro e o último preço.
   - **"?" no lucro** quando a liga **não vende ao máximo**: nenhuma venda de um clube da liga a ≥ 2,4× o valor nas transferências dos últimos 3 dias (Espanha, 12–13/10, `DISCOVERY.md`).
   - Só avisa; comprar continua a ser do dono (regra 5).
 
@@ -567,6 +571,7 @@ Há **3 componentes** a melhorar, cada um com **níveis 0, 1, 2 e 3**:
   - *Hover no valor do plantel (dono, 2026-10-15):* a tabela do jogo por valor do plantel (clube, valor, jogadores, valor médio por jogador) à volta do clube: em **1.º, os 2 de baixo**; senão **1 acima e 1 abaixo** (em último, só o de cima). Sem o nome do treinador (o bot não o lê).
   - *Formato dos dois hovers (dono, 2026-10-15):* tabelas como as do jogo, com os nomes das colunas por cima e o nosso clube destacado. Campeonato: **# · Clube · J · DG · Pts** e o objetivo por baixo; valor do plantel: **# · Clube · Valor · Jogadores · Média**.
   - *Cores e objetivo (dono, 2026-10-15):* a linha do nosso clube numa faixa da **cor do clube** (meio transparente). Ao lado do objetivo, o **certo verde** se o lugar atual o cumpre (nesse lugar ou acima) e o **"!" amarelo** se está abaixo; sem marca na pré-época (`weekNr` < 1), porque a tabela ainda não conta. O hover do adversário passa a linhas: nome, valor do plantel, jogadores, média.
+  - *Círculos cheios (dono, 2026-10-15):* um círculo cheio (treino pronto, médico/advogado/treinador universal pronto, parte do estádio no máximo) fica na **cor do clube**, um pouco mais forte do que a dos temporizadores a correr (que é a cor do clube meio apagada). Antes ficava sempre verde, fosse qual fosse o clube. O amarelo de "à espera" mantém-se, porque pede atenção. **[S]** "Um pouco mais forte" = 70 % da cor do clube (o temporizador tem 50 %).
 - **Criar a liga:** o dono ainda nunca criou uma; vai ser **pública**. O jogo deixa escolher o número de clubes, pública ou privada e convidar amigos. O custo varia com o número de clubes/jornadas e talvez com a popularidade da liga.
 
 ## 20. Inventário: usar o que vai expirar

@@ -3,7 +3,9 @@
 Every read of the board already brings each league's transfer list (every 3 minutes). Here it is compared with
 the read before (kept in ``~/.osmbot/mercado.json``, so a restart doesn't lose it); when the engine went round or
 a manager's player left the list, one line goes to ``<repo>/logs/<machine>/transferencias/motor/<league>.jsonl``
-(one JSON record per line, for the study) and a short line to the bot's log.
+(one JSON record per line, for the study) and a short line to the bot's log. The game's own listings go to
+``transferencias/sale/`` (the "SALE" ones, ≤ 1.5 × value) and ``transferencias/jogo/`` (all of them, 2026-10-15):
+when each appears and when it leaves, with its first and last price.
 """
 from __future__ import annotations
 
@@ -49,6 +51,9 @@ def watch(client, league_id: int, league_name: str, market: list[dict], owner: i
         data[str(league_id)], record = observe(state, market, now, owner)
         # "SALE" players: when each appears and how long it stays (owner, 2026-10-12)
         data[str(league_id)]["sale"], appeared, gone = sale_changes((state or {}).get("sale"), sale_rows(market), now)
+        # every game listing, "SALE" or not: the price it comes in at and how it drops (owner, 2026-10-15)
+        every = sale_rows(market, ratio=float("inf"))
+        data[str(league_id)]["do_jogo"], listed, delisted = sale_changes((state or {}).get("do_jogo"), every, now)
         try:
             STATE_FILE.parent.mkdir(parents=True, exist_ok=True)
             STATE_FILE.write_text(json.dumps(data, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
@@ -60,6 +65,9 @@ def watch(client, league_id: int, league_name: str, market: list[dict], owner: i
         logs.record("transferencias/sale", {"evento": "apareceu", "liga": league_id, **row})
     for row in gone:
         logs.record("transferencias/sale", {"evento": "saiu", "liga": league_id, **row})
+    for event, rows in (("apareceu", listed), ("saiu", delisted)):
+        for row in rows:
+            logs.record("transferencias/jogo", {"evento": event, "liga": league_id, **row})
     if appeared:
         from osmbot.game.dashboard import money
         log(describe_sales(appeared, league_name or str(league_id), money))
