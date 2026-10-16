@@ -144,6 +144,13 @@ def active_changes(settings: list[dict]) -> list[str]:
     return changes
 
 
+def old_players_event(events: list[dict], now: float) -> bool:
+    """Whether an event going on now gives more training progression to old players (Golden Oldies; owner,
+    2026-10-16: then the 30+ are considered for training too, THEORY.md 5). From the forum's lines."""
+    return any(e["start"] <= now < e["end"] and any("old players" in line.lower() for line in e.get("efeitos") or [])
+               for e in events)
+
+
 def months_needed(today: date) -> list[str]:
     """The months whose schedule the bot should have: this one, and the next from the 25th (the staff posts it
     around the 25th-30th, DISCOVERY.md section 6b)."""

@@ -4,6 +4,13 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-PT/1.1.0/); 
 
 Este ficheiro é o **histórico de versões, para quem lê o repo**. O diário interno de cada sessão de trabalho está em [`docs/WORKLOG.md`](docs/WORKLOG.md).
 
+## [0.13.4] — 2026-10-16
+
+Nos eventos que dão mais progressão aos jogadores velhos, os de 30+ também podem ser postos a treinar.
+
+### Adicionado
+- **Eventos de veteranos (D-060):** enquanto decorre um evento do calendário que dá mais progressão aos jogadores velhos (p. ex. o Golden Oldies, 17–18/10), o limite dos 30 anos sai: os de 30+ são considerados com a mesma regra (rotação, previsão do jogo, o melhor). No registo, "30+ no evento dos veteranos". Cada treino fica com a idade, a previsão e o ganho, para medir se o bónus compensa.
+
 ## [0.13.3] — 2026-10-16
 
 Nos eventos de treinos, os treinos postos antes do evento já não ficam horas a ocupar o lugar.

@@ -50,6 +50,7 @@ def summarize_trainings(sessions: list[dict], timers: list[dict], now: float | N
 ALL_TRAINERS = (1, 2, 3, 4)
 TRAINING_SETTING_NAME = "TrainingSession"  # gamesettings entry for the 8h training (hypothesis, see DISCOVERY.md)
 PAUSE_BETWEEN_WRITES = 1.5  # seconds
+NO_AGE_LIMIT = 200  # an event that favours old players (Golden Oldies): the 30+ are considered too (owner, 2026-10-16)
 
 
 def ready_sessions(sessions: list[dict], now: float) -> list[dict]:
@@ -61,7 +62,8 @@ def ready_sessions(sessions: list[dict], now: float) -> list[dict]:
 
 
 def plan_new_trainings(players: list[dict], sessions: list[dict], listed_ids: set[int],
-                       done: dict[int, int] | None = None, forecasts: dict[int, int] | None = None) -> dict[int, Player]:
+                       done: dict[int, int] | None = None, forecasts: dict[int, int] | None = None,
+                       max_age: int = 30) -> dict[int, Player]:
     """Which player each free trainer slot should train now (owner's policy, THEORY.md section 5).
 
     A slot is free when no session in ``sessions`` uses it. Players already in a session, and
@@ -72,7 +74,7 @@ def plan_new_trainings(players: list[dict], sessions: list[dict], listed_ids: se
     free = [t for t in ALL_TRAINERS if t not in busy]
     unavailable = {s["playerId"] for s in sessions} | set(listed_ids)
     return plan_training([Player.from_api(p) for p in players], free, unavailable_ids=unavailable, sessions=done,
-                         forecasts=forecasts or None)
+                         forecasts=forecasts or None, max_age=max_age)
 
 
 ROUNDS_FILE = Path.home() / ".osmbot" / "treinos.json"  # per machine: the sessions the bot started this round
@@ -187,10 +189,15 @@ def run_train(confirm: bool, limit: int | None = None) -> int:
     Returns the failures."""
     from osmbot.game.client import NeedsBrowserLogin, OsmClient
 
+    from osmbot.events.calendar import old_players_event
+    from osmbot.game.events import calendar_events
+
     failed = 0
     try:
         client = OsmClient()
         done = 0
+        now = time.time()
+        max_age = NO_AGE_LIMIT if old_players_event(calendar_events(now, days=1), now) else 30
         for slot, team, base in _teams(client):
             _, sessions = client.get(f"{base}/trainingsessions/ongoing")
             _, players = client.get(f"{base}/players")
@@ -208,7 +215,7 @@ def run_train(confirm: bool, limit: int | None = None) -> int:
             ready = ready_sessions(sessions, time.time())
             # Preview assumes the ready sessions get collected first; a real run only uses truly free slots.
             considered = sessions if confirm else [s for s in sessions if s not in ready]
-            plan = plan_new_trainings(players, considered, listed, rotation, forecast)
+            plan = plan_new_trainings(players, considered, listed, rotation, forecast, max_age=max_age)
             note = ""
             if ready:
                 note = (" (ainda ha %d treino(s) por recolher: corre 'osmbot recolher' primeiro)" if confirm
@@ -219,6 +226,8 @@ def run_train(confirm: bool, limit: int | None = None) -> int:
                     print("  (limite)")
                     break
                 label = f"{player.name} ({POSITIONS[int(player.position)]}, {player.age} anos, rating {player.rating})"
+                if player.age >= 30 and max_age == NO_AGE_LIMIT and int(player.position) != 4:
+                    label += " · 30+ no evento dos veteranos"
                 extra = (f" · previsão {forecast[player.id]}" if player.id in forecast else "") + \
                     f" · {rotation.get(player.id, 0) + 1}.º treino na jornada"  # data to judge the rotation (owner, 2026-10-12)
                 if not confirm:

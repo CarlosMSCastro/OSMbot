@@ -283,6 +283,8 @@ Lido no Chrome (só leitura, sem sessão). "Staff" = equipa do OSM no fórum (Sp
 
 **Comparação com o que medimos (§3, 10–11/10, durante o Transfer Madness):** os lotes a cada ~2 h batem com "8 vezes por dia"; vender ao máximo até 167 M€ bate com "mais hipótese nos eventos". Fora do evento, o staff diz que acima de 100 de rating quase não se vende, e que o preço absoluto conta mais do que a % do máximo: baixar de 100 % para 75 % ajuda pouco a 140 M€. **[H]** O bot pode detetar cada passagem do motor pela descida de preço dos jogadores de fora da liga (só leitura). Desde 2026-10-11 regista-o (D-034, `logs/<PC>/transferencias/motor/`); confirmar a hipótese quando houver registos (as descidas devem coincidir com as horas das vendas).
 
+- **[H] (2026-10-16) Eventos de veteranos (Golden Oldies, 17–18/10):** o fórum diz "Higher training progression, when claiming results, for old players". Por saber: (1) se `trainingforecasts` já conta o bónus ou se ele só aparece ao recolher; (2) a idade a partir da qual conta; (3) se também vale para treinos postos antes do evento e recolhidos (ou acabados com boss coins, D-059) já dentro dele. O bot regista em `treinos/` a idade, a previsão e o ganho de cada treino (D-060): comparar os 30+ com os outros, dentro e fora do evento.
+
 ## 6d. Estratégia: pesquisa web (2026-10-16)
 
 *Pedido do dono: ideias diferenciadas em fóruns e sites antigos. O fórum oficial bloqueia leitores automáticos (Anubis); o que vem de lá é pelo resumo da pesquisa. Não há Reddit sobre o OSM. Quase tudo é de sites de fãs, alguns com anos.*

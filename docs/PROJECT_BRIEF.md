@@ -8,7 +8,7 @@
 
 | # | Automação | Estado |
 |---|---|---|
-| 1 | **Treinos**: recolher e voltar a pôr a treinar quando acabam (política em `THEORY.md` §5; rotação entre titulares desde a 0.11.0, D-035; desempate pela previsão do jogo e treinos vistos noutro PC desde a 0.11.3, D-037) | **Feito e em uso** (`osmbot ativo`) |
+| 1 | **Treinos**: recolher e voltar a pôr a treinar quando acabam (política em `THEORY.md` §5; rotação entre titulares desde a 0.11.0, D-035; desempate pela previsão do jogo e treinos vistos noutro PC desde a 0.11.3, D-037; nos eventos de veteranos os de 30+ também são considerados desde a 0.13.4, D-060) | **Feito e em uso** (`osmbot ativo`) |
 | 2 | **Vídeos da loja** (1 boss coin cada, até 9 por hora): pagam os amigáveis (4 boss coins cada) | **Feito** |
 | 3 | **Vídeos de treino** (−2h cada, 4 por 3h): o treino acaba mais cedo e o ciclo volta a treinar mais cedo; regra "uniformizar"; nunca salta janelas (D-021) | **Feito** |
 | 4 | **Vídeos de dinheiro** (3 por dia: ~300k, ~600k, 3 boss coins) | **Feito** (no clube com mais poupança) |

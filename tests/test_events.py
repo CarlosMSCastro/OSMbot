@@ -143,3 +143,16 @@ def test_on_a_training_event_day_the_bot_looks_for_it_from_0530_every_10_minutes
     assert training_event_wake([event], [["treinos 120 min"]], at(6, 10)) is None  # it began: nothing to wait for
     assert training_event_wake([event], [], at(7, 30)) is None  # after 07:00
     assert training_event_wake([{"tags": ["olheiro"], "start": day}], [], at(5, 40)) is None  # not a training event
+
+
+def test_an_event_for_old_players_lets_the_30_plus_be_trained_while_it_lasts():
+    from osmbot.events.calendar import old_players_event
+    from osmbot.game.trainings import plan_new_trainings
+
+    golden = {"start": 1000.0, "end": 2000.0,
+              "efeitos": ["Higher training progression, when claiming results, for old players", "Faster training: 2H"]}
+    assert old_players_event([golden], 1500.0) and not old_players_event([golden], 2500.0)
+    assert not old_players_event([{**golden, "efeitos": ["Faster Scout: 2H instead of 16H"]}], 1500.0)
+    old = {"id": 1, "name": "Velho", "position": 2, "age": 32, "statOvr": 90, "statAtt": 90, "statDef": 90, "lineup": 6}
+    assert plan_new_trainings([old], [], set()) == {}  # the owner's rule: no 30+ outfield player
+    assert plan_new_trainings([old], [], set(), max_age=200)[2].id == 1  # in the event they are considered
