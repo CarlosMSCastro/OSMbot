@@ -91,11 +91,28 @@ def track_sales(state: dict, listed: dict[int, dict], squad: set[int], now: floa
     sales = list(state.get("sales") or [])
     new_listings, new_sales = [], []
     if not first:
-        new_sales = [{**item, "sold": now} for pid, item in before.items() if pid not in listed and pid not in squad]
+        new_sales = [{**item, "player": pid, "sold": now} for pid, item in before.items() if pid not in listed and pid not in squad]
         new_listings = [item for pid, item in listed.items() if pid not in before]
         sales = (sales + new_sales)[len(new_listings):]
     return {"listed": listed, "sales": sales, "new_listings": new_listings, "new_sales": new_sales}
 
+
+
+def settle_sales(sales: list[dict], transfers: list[dict], team_id: int) -> None:
+    """Each new sale as the league's transfers have it (2026-10-16), changed in place. What the bot last saw of a
+    listing can be old: with the bot stopped, or on another PC (``~/.osmbot`` is per machine), the owner may have
+    listed the player again at another price. A sale found in the transfers (the club as the seller) takes its price
+    and time from there (``confirmada``); when that price is not the one last seen, the player was listed again
+    meanwhile and the time he went on the list is unknown (``since`` None)."""
+    for sale in sales:
+        found = [t for t in transfers if (t.get("player") or {}).get("id") == sale.get("player")
+                 and (t.get("sourceTeam") or {}).get("id") == team_id and t.get("price")]
+        if not found:
+            continue
+        last = max(found, key=lambda t: t.get("timestamp") or 0)
+        if last["price"] != sale["price"]:
+            sale["since"] = None
+        sale.update(price=last["price"], sold=last.get("timestamp") or sale["sold"], confirmada=True)
 
 ELEVEN = 11
 MAIN_STAT = {1: "statAtt", 2: "statOvr", 3: "statDef", 4: "statDef"}  # the number in bold for each position

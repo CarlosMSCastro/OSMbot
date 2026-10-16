@@ -306,6 +306,7 @@ Pelo mesmo preço, o do jogo tem **+6 de rating** que o de utilizador (PL) e o "
 ### 7.7 Mercado: jogadores novos desaparecem depressa
 
 - Em **ligas com muitos jogadores**, nas **horas em que aparecem jogadores novos** na lista de transferências, eles são **logo comprados** por outros.
+- **Ao contrário, numa liga com poucos treinadores** (dono, 2026-10-16: o Qarabag, com 2 treinadores reais), há tempo: pode esperar-se que o preço de um anúncio do jogo desça antes de comprar.
 - **Automação desejada pelo dono** (não urgente): ser **notificado quando aparecem jogadores novos** na lista de transferências, para poder comprar a tempo. Ver `PROJECT_BRIEF.md`.
 - **Horas / frequência de renovação da lista:** o dono **não sabe** (sabe que há horas em que aparecem novos). Só se descobre observando o mercado.
 - **Alertar sobre (dono):** jogadores **"SALE"** e de **posições de que precisa**, entendendo por "precisa" as posições com **ratings abaixo da média no 11 inicial**.
@@ -353,6 +354,14 @@ Razões plausíveis:
 
 **Opinião nossa:** faz sentido mantê-lo. Sem ele a rotação **poderia** funcionar em ATT e DEF (no limite), mas em MID e GK depende de os mínimos serem os palpitados, e sem margem nenhuma para lesões.
 - **Confirmado (2026-09-27):** os mínimos reais batem certo com os palpitados (ATT 3, MID 4, DEF 4, GK 2 — ver §7.2), e o jogo **bloqueia mesmo listar para venda** quando isso deixaria a posição abaixo do mínimo (testado em ATT/MID/DEF). A análise acima confirma-se: sem o jogador fraco, MID e GK ficariam exatamente no mínimo, sem margem para lesões/suspensões.
+
+### 7.9 Trocas no 11: a posição específica conta *(dono, 2026-10-16)*
+
+- Só se troca um titular por outro da **mesma posição específica** (p. ex. MC por MC). Um MCO não substitui diretamente um MC; para isso é preciso gastar uma **troca de posição universal** (item do inventário).
+- Essa troca fica para **emergência** (p. ex. vendeu-se o titular antes do jogo e não há negócio a fazer). Contra um adversário fraco, e com o objetivo da liga quase cumprido, aceita-se jogar com o titular mais fraco em vez de gastar a troca.
+- **Reforçar primeiro onde o titular está abaixo da média da equipa** (dono, 2026-10-16): um GR de 79 numa equipa de média ~73 não precisa de reforço, mesmo que haja um GR melhor barato.
+- Quer ter o titular à venda **vendido antes do jogo**: o dinheiro paga o suplente que falta (no caso, um ATA para o banco), e a gestão dos médios vê-se depois.
+- **No cartão de compras** (D-058, confirmado pelo dono a 2026-10-16): um jogador do jogo é **reforço** se for melhor do que o titular mais fraco **da mesma posição específica**, e só onde esse titular está **abaixo da média do 11**. Um titular **à venda** conta como quem entraria para o lugar dele: o melhor do resto do plantel na mesma posição específica que não esteja também à venda; sem ninguém, o lugar fica aberto (qualquer um é reforço). A média é a do 11 assim. **[S]** A condição física não entra (um suplente cansado conta como se estivesse em forma).
 
 ## 8. Estádio
 
@@ -506,7 +515,7 @@ Há **3 componentes** a melhorar, cada um com **níveis 0, 1, 2 e 3**:
 - Reclamar. O site gasta a recompensa logo na carteira certa; o bot faz o mesmo: **energia** → carteira de energia; **boss coins** → carteira de boss coins (o dono: "vão para a carteira, não há nada a ver").
 - Qualquer outra recompensa (p. ex. o saco do dia 21): reclamar e **deixar no inventário**, sem gastar. **[S]** O pedido que a gasta nunca foi observado.
 - **Janela "Unclaimed Energy"** (energia por reclamar, p. ex. depois do prémio das missões; aparece no browser dos vídeos e tapa o jogo): carregar **sempre em Claim**; a energia vai para a carteira de energia (dono, 2026-10-09: "dá claim sempre"; D-028).
-- **Janela das boss coins por reclamar** ("Boss Coins não reclamadas", vista pelo dono a 2026-10-15): igual, **Claim**; as boss coins vão para a carteira (D-055). **[S]** O título em inglês, no browser dos vídeos, ainda não foi visto; o bot aceita "Unclaimed Boss Coins" e variantes.
+- **Janela das boss coins por reclamar** ("Boss Coins não reclamadas", vista pelo dono a 2026-10-15): igual, **Claim**; as boss coins vão para a carteira (D-055). No browser dos vídeos o título é "**Unclaimed Boss Coins**", com um botão **Claim** (visto na captura de 2026-10-15 16:08, PC do trabalho); o bot aceita esse título e variantes.
 
 **Missões**
 - As **3 missões diárias** (as que têm `order`) reclamam-se quando o progresso chega ao objetivo (`threshold`, do catálogo `missions`). O bot já treina jogadores, por isso são as que se cumprem sozinhas.

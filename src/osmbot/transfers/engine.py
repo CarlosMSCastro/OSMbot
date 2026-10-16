@@ -69,7 +69,8 @@ def sale_rows(market: list[dict], ratio: float = SALE_RATIO) -> dict[str, dict]:
             continue
         position = player.get("position")
         rows[str(item["id"])] = {"anuncio": item["id"], "jogador": player.get("id"), "nome": player.get("name"),
-                                 "pos": POSITIONS.get(position), "rating": player.get(MAIN_STAT.get(position, "statOvr")),
+                                 "pos": POSITIONS.get(position), "especifica": player.get("specificPosition"),
+                                 "rating": player.get(MAIN_STAT.get(position, "statOvr")),
                                  "idade": player.get("age"), "preco": price, "valor": value,
                                  "razao": round(price / value, 2), "fora_da_liga": bool(team.get("isForeignTeam")),
                                  "desde": item.get("timeStampForSale")}
@@ -103,29 +104,59 @@ def sells_at_max(transfers: list[dict], now: float, days: float = 3) -> bool:
                and t.get("timestamp", 0) >= now - days * 86400 for t in transfers)
 
 
+def _spot(player: dict):
+    """What a player is compared by: his specific position (MC is not MCO, THEORY.md 7.9), or the general one when
+    the game does not say it."""
+    return player.get("specificPosition") or ("pos", player.get("position"))
+
+
+def weak_spots(players: list[dict], listed: set[int]) -> dict:
+    """The eleven's places worth strengthening (THEORY.md 7.9): for each specific position, the weakest starter, if
+    he is below the average of the eleven as it would play. A starter on the transfer list counts as whoever would take his place: the best
+    of the rest of the squad in that specific position not on the list either (none: 0, the place is open).
+    {spot: (level, text for "reforço (> …)")}."""
+    from osmbot.theory.lineup import rating
+
+    starters = [p for p in players if p.get("lineup") in range(1, 12)]
+    if not starters:
+        return {}
+    rest = [p for p in players if p not in starters and p["id"] not in listed]
+    eleven = []
+    for p in starters:
+        level, text = rating(p), f"{p['name']} {rating(p)}"
+        if p["id"] in listed:
+            cover = max((q for q in rest if _spot(q) == _spot(p)), key=rating, default=None)
+            level, text = (rating(cover), f"{cover['name']} {rating(cover)}") if cover else (0, f"{p['name']} à venda")
+        eleven.append((_spot(p), level, text))
+    average = sum(level for _, level, _ in eleven) / len(eleven)  # the eleven as it would play
+    spots: dict = {}
+    for spot, level, text in eleven:
+        if spot not in spots or level < spots[spot][0]:
+            spots[spot] = (level, text)
+    return {spot: weak for spot, weak in spots.items() if weak[0] < average}
+
+
 def sale_picks(market: list[dict], players: list[dict], money: float, count: int = 3) -> list[dict]:
     """The game's players worth buying now (THEORY.md 7.7, owner 2026-10-15): to sell again at once, those valued
     10-40 M (they sell at the maximum within about a day and a half), and to strengthen the eleven, any that beats the
-    lowest starter of its general position (``reforco``); all the club can pay for, "SALE" or not. Cheapest against
-    their value first (what a slot earns per day goes with it, DISCOVERY.md 3), then the biggest profit; the first is
-    the best bet. ``pechincha``: at most 1.25 × value."""
-    from osmbot.theory.lineup import rating
-
-    weakest: dict[str, dict] = {}
-    for p in players:
-        position = POSITIONS.get(p.get("position"))
-        if position and p.get("lineup") in range(1, 12) and (position not in weakest or rating(p) < rating(weakest[position])):
-            weakest[position] = p
+    weakest starter of its specific position where he is below the eleven's average (``reforco``, ``weak_spots``);
+    all the club can pay for, "SALE" or not. Cheapest against their value first (what a slot earns per day goes with
+    it, DISCOVERY.md 3), then the biggest profit; the first is the best bet. ``pechincha``: at most 1.25 × value."""
+    squad = {p["id"] for p in players}
+    listed = {(item.get("player") or {}).get("id") for item in market  # the club's own listings, not the game's
+              if not (item.get("team") or {}).get("isForeignTeam")} & squad
+    spots = weak_spots(players, listed)
     picks = []
     for row in sale_rows(market, ratio=float("inf")).values():
         if row["preco"] > money:
             continue
-        low = weakest.get(row["pos"])
-        better = bool(low) and (row["rating"] or 0) > rating(low)
+        spot = row["especifica"] or ("pos", next((k for k, v in POSITIONS.items() if v == row["pos"]), None))
+        weak = spots.get(spot)
+        better = bool(weak) and (row["rating"] or 0) > weak[0]
         if not better and not FLIP_VALUE[0] <= row["valor"] <= FLIP_VALUE[1]:
             continue
         picks.append({**row, "lucro": resale(row["valor"]) - row["preco"], "reforco": better,
-                      "fraco": f"{low['name']} {rating(low)}" if better else None, "pechincha": row["razao"] <= BARGAIN})
+                      "fraco": weak[1] if better else None, "pechincha": row["razao"] <= BARGAIN})
     return sorted(picks, key=lambda r: (r["razao"], -r["lucro"]))[:count]
 
 

@@ -133,6 +133,30 @@ def test_sale_picks_are_the_affordable_sale_players_by_resale_profit_with_reinfo
     assert sale_picks([big], players, 20e6)[0]["reforco"] and not sale_picks([_sale(9, 1, 90, 75e6, 50e6)], players, 80e6)
 
 
+def test_reinforcements_go_by_specific_position_below_the_average_and_a_listed_starter_counts_as_his_cover():
+    from osmbot.transfers.engine import sale_picks, weak_spots
+
+    def player(pid, spec, rating, lineup):
+        return {**_starter(pid, 2, rating, lineup), "specificPosition": spec}
+
+    def offer(aid, spec, rating):
+        item = _sale(aid, 2, rating, 100e6, 80e6)  # valued 80 M: never a pick to sell again
+        item["player"]["specificPosition"] = spec
+        return item
+
+    mc, mco, gr = 2, 1, 6
+    players = [player(1, mc, 96, 6), player(2, mco, 115, 7), player(3, gr, 118, 1),
+               player(4, mc, 111, 14), player(5, mco, 100, 15)]
+    mine = {"id": 50, "price": 55e6, "team": {"userId": 7, "isForeignTeam": False}, "player": {"id": 1}}  # MC 96 listed
+    assert weak_spots(players, set()) == {mc: (96, "T1 96")}  # MCO 115 and GR 118 are above the average (109.7)
+    assert weak_spots(players, {1}) == {mc: (111, "T4 111")}  # the listed MC counts as the MC on the bench (average 114.7)
+    market = [offer(10, mco, 118), offer(11, mc, 105), offer(12, mc, 112), mine]
+    picks = sale_picks(market, players, money=200e6)
+    assert [(p["nome"], p["fraco"]) for p in picks] == [("S12", "T4 111")]  # MCO 118: not an MC; MC 105 < 111
+    alone = [player(1, mc, 96, 6), player(2, mco, 115, 7), player(3, gr, 118, 1)]
+    assert weak_spots(alone, {1}) == {mc: (0, "T1 à venda")}  # nobody to take his place: the place is open
+
+
 def test_a_league_sells_at_the_maximum_when_one_of_its_clubs_sold_at_2_4_times_the_value_lately():
     from osmbot.transfers.engine import sells_at_max
 

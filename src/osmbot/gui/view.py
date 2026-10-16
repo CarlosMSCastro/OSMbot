@@ -235,11 +235,11 @@ def sale_view(club: dict) -> dict | None:
         return (["reforço"] if p["reforco"] else []) + (["pechincha"] if p["pechincha"] else [])
 
     best = picks[0]
-    rows = [([p["pos"], str(p["rating"]), p["nome"], str(p["idade"]), money(p["preco"]), f"{p['razao']}×",
+    rows = [([p["pos"], str(p["rating"]), p["nome"], str(p["idade"]), money(p["preco"]), f"{p['razao']:.2f}".rstrip("0").rstrip(".").replace(".", ",") + "×",
               f"~{money(p['lucro'])}{unsure}", " · ".join(f"{tag} (> {p['fraco']})" if tag == "reforço" and p["fraco"] else tag
                                                           for tag in tags(p))],
              False) for p in picks]
-    grid = {"columns": [("Pos", "l"), ("Força", "r"), ("Jogador", "l"), ("Idade", "r"), ("Preço", "r"), ("Valor", "r"),
+    grid = {"columns": [("Pos", "l"), ("Força", "r"), ("Jogador", "l"), ("Idade", "r"), ("Preço", "r"), ("× valor", "r"),
                         ("Lucro", "r"), ("", "l")], "rows": rows,
             "foot": "? = esta liga não vendeu ao máximo nos últimos 3 dias" if unsure else ""}
     from osmbot.transfers.engine import SALE_RATIO

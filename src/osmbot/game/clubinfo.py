@@ -176,7 +176,8 @@ def club_extra(client, team: dict, base: str, players: list[dict], slot, market:
     listed = {item["player"]["id"]: {"name": item["player"].get("name", "?"), "price": item.get("price") or 0,
                                      "value": values_now[item["player"]["id"]], "since": item.get("timeStampForSale")}
               for item in market if item["player"]["id"] in squad}
-    sold = sales.update(f"{league}/{team['id']}", listed, squad, team.get("name", "?"))
+    sold = sales.update(f"{league}/{team['id']}", listed, squad, team.get("name", "?"),
+                        transfers=lambda: _list(client, f"{league}/transfers"), team_id=team["id"])
     owner = next((t.get("userId") for t in teams if t["id"] == team["id"]), None)
     try:  # the engine records (D-034): never in the way of the card
         market_watch.watch(client, got[0][1]["id"], got[0][1].get("name", ""), market, owner)

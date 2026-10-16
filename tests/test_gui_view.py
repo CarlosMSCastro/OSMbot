@@ -336,6 +336,7 @@ def test_the_sale_line_shows_the_best_and_the_three_on_hover():
     assert sale["sale"] and not sale_view({"sale": {"picks": [{**deal, "razao": 1.7}], "certo": True}})["sale"]  # no ribbon
     rows = sale["tip"]["rows"]
     assert rows[0][0][-1] == "reforço (> T1 79) · pechincha" and rows[1][0][-1] == "" and not sale["tip"]["foot"]
+    assert rows[0][0][5] == "1,1×" and sale["tip"]["columns"][5][0] == "× valor"  # price against value, with a comma
     unsure = sale_view({"sale": {"picks": [deal], "certo": False}})
     assert unsure["profit"] == "lucro ~9 M?" and unsure["tip"]["foot"] == "? = esta liga não vendeu ao máximo nos últimos 3 dias"
 

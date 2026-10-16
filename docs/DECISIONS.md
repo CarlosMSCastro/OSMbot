@@ -181,6 +181,7 @@ A cada leitura do quadro (3 em 3 min), o bot compara a lista de transferências 
 ### D-058 · Cartão de compras: a melhor hipótese pela estratégia dos registos · Aceite · 2026-10-16
 O cartão SALE passa a mostrar **a melhor compra** e, no hover, **as 3 melhores**, pela estratégia de `THEORY.md` §7.7: revendas de jogadores do jogo de valor 10–40 M (com ou sem SALE) e reforços, que caibam no dinheiro, os mais baratos face ao valor primeiro. Sai o critério da vaga livre (o dono tem sempre as vagas cheias). Pechincha até 1,25×. O bot guarda também todos os anúncios do jogo (`transferencias/jogo/`).
 **Porquê:** os registos mostram que o jogo compra ao máximo nas 3 ligas, que o tempo até vender cresce com o preço (o lucro por dia de vaga é parecido entre 25 e 100 M de revenda e cai acima) e que os preços do jogo descem ~4 %/dia (`DISCOVERY.md` §3). Só avisa; comprar continua a ser do dono.
+**Revisto a 2026-10-16 (dono):** o reforço compara pela posição específica, só onde o titular está abaixo da média do 11, e um titular à venda conta como quem o substitui (`THEORY.md` §7.9).
 
 ### D-057 · A 1.0 é a primeira versão vendida · Aceite · 2026-10-15
 Pergunta do dono: "como é que gerimos as versões?" Plano por fases:

@@ -4,6 +4,17 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-PT/1.1.0/); 
 
 Este ficheiro é o **histórico de versões, para quem lê o repo**. O diário interno de cada sessão de trabalho está em [`docs/WORKLOG.md`](docs/WORKLOG.md).
 
+## [0.13.2] — 2026-10-16
+
+O cartão de compras só mostra reforços onde fazem falta, e as vendas no registo ficam com o preço e a hora verdadeiros.
+
+### Alterado
+- **Reforços no cartão de compras:** comparados com o titular da **mesma posição específica** (um MCO já não é reforço de um MC), e só onde esse titular está **abaixo da média do 11**. Um titular à venda conta como quem entraria para o lugar dele (o melhor do resto do plantel nessa posição que não esteja também à venda); sem ninguém, o lugar fica aberto.
+- **Hover do cartão de compras:** a coluna "Valor" passa a "× valor", com vírgula ("1,23×").
+
+### Corrigido
+- **Vendas com o preço errado no registo:** com o bot parado (ou a correr noutro PC), um jogador voltado a pôr à venda a outro preço aparecia vendido ao preço antigo. O preço e a hora da venda vêm agora das transferências da liga ("vendido às …"); se o jogador foi listado de novo com o bot parado, o registo diz isso.
+
 ## [0.13.0] — 2026-10-16
 
 O cartão de compras mostra a melhor compra do momento, por uma estratégia tirada dos registos, e os círculos cheios ficam na cor do clube.

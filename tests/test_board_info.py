@@ -66,6 +66,25 @@ def test_the_games_listing_time_wins():
     assert state["new_sales"][0]["since"] == 500.0 and state["new_sales"][0]["sold"] == 4000.0
 
 
+def test_a_sale_takes_its_price_and_time_from_the_leagues_transfers():
+    from osmbot.board.info import settle_sales
+    from osmbot.game.sales import describe
+
+    listed = {7: {"name": "A", "price": 104_000_000, "value": 44_700_000, "since": 1000.0},
+              8: {"name": "B", "price": 89_000_000, "value": 35_600_000, "since": 2000.0}}
+    state = track_sales(track_sales({}, listed, {7, 8}, now=3000.0), {}, set(), now=90_000.0)  # the bot was stopped
+    transfers = [{"player": {"id": 7}, "sourceTeam": {"id": 5}, "price": 83_970_000, "timestamp": 50_000.0},  # listed again
+                 {"player": {"id": 8}, "sourceTeam": {"id": 5}, "price": 89_000_000, "timestamp": 60_000.0},
+                 {"player": {"id": 8}, "sourceTeam": {"id": 6}, "price": 1, "timestamp": 70_000.0}]  # another club's
+    settle_sales(state["new_sales"], transfers, team_id=5)
+    a, b = state["new_sales"]
+    assert (a["price"], a["sold"], a["since"], a["confirmada"]) == (83_970_000, 50_000.0, None, True)
+    assert (b["price"], b["sold"], b["since"]) == (89_000_000, 60_000.0, 2000.0) and state["sales"][0] is a
+    lines = describe("Clube", state)
+    assert "vendido por 83,97 M (75% do máximo" in lines[0] and "listado de novo com o bot parado, vendido às " in lines[0]
+    assert "demorou" not in lines[0] and "à venda desde " in lines[1] and "vendido às " in lines[1]
+
+
 def test_the_teams_strength_is_the_best_player_for_each_place_of_the_current_formation():
     from osmbot.board.info import team_rating
 
