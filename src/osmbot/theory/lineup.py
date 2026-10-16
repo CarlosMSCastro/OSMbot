@@ -7,6 +7,11 @@ from osmbot.theory.tactics import Formation, choose_formation
 
 MAIN_STAT = {1: "statAtt", 2: "statOvr", 3: "statDef", 4: "statDef"}  # the rating that counts for each position
 ELEVEN = range(1, 12)
+# The bench's places and the position each is for, as the game lays it out (seen in the 3 clubs' benches and confirmed
+# by the owner, 2026-10-16): 12 GR, 13 DEF, 14 MED, 15 ATA, 16 DEF, 17 MED, 18 ATA
+BENCH_PLACES = {12: 4, 13: 3, 14: 2, 15: 1, 16: 3, 17: 2, 18: 1}
+POSITION_WORDS = {1: ("um avançado", "do ataque"), 2: ("um médio", "do meio-campo"), 3: ("um defesa", "da defesa"),
+                  4: ("um guarda-redes", "da baliza")}
 TACKLING = {0: "Cuidadoso", 1: "Normal", 2: "Agressivo", 3: "Extremo"}  # the tactics' `style` (game's TacticStyleOfPlay)
 REFEREES = {1: "muito rigoroso", 2: "rigoroso", 3: "normal", 4: "brando", 5: "muito brando"}  # `strictness`
 ACCEPTED = {1: {1}, 2: {2}, 3: {2}, 4: {2, 3}, 5: {2, 3}}  # strictness -> tackling the owner accepts (sections 3, 21; very lenient: also Aggressive, 2026-10-14)
@@ -32,15 +37,21 @@ def rating(player: dict) -> int:
 
 
 def bench_warnings(players: list[dict]) -> list[str]:
-    """What is out of the rule on the bench: a worse substitute ahead of a better one of the same position (always:
+    """What is out of the rule on the bench: a player in a place of another position (the bench has places per
+    position, ``BENCH_PLACES``), a worse substitute ahead of a better one in the places of the same position (always:
     on an injury the first one comes on), and a fit substitute better than a starter of his specific position (the game:
     players do better in their specific position, so a striker is not compared with a winger)."""
     available = [p for p in players if not p.get("unavailable")]
     starters = [p for p in available if p.get("lineup") in ELEVEN]
     bench = sorted((p for p in available if (p.get("lineup") or 0) > 11), key=lambda p: p["lineup"])
     warnings = []
+    for p in bench:  # the owner may cover a place on purpose (2026-10-16: a defender as the attack's substitute)
+        place = BENCH_PLACES.get(p["lineup"])
+        if place and p.get("position") in POSITION_WORDS and p["position"] != place:
+            warnings.append(f"Tens {POSITION_WORDS[p['position']][0]} a suplente {POSITION_WORDS[place][1]}: "
+                            f"{p['name']} {rating(p)}")
     for position in MAIN_STAT:
-        subs = [p for p in bench if p.get("position") == position]
+        subs = [p for p in bench if p.get("position") == position and BENCH_PLACES.get(p["lineup"], position) == position]
         for i, ahead in enumerate(subs):
             better = max(subs[i + 1:], key=rating, default=None)
             if better and rating(better) > rating(ahead):

@@ -127,3 +127,9 @@ def test_the_warnings_are_translated():
         assert tr("Formação 5-2-3: devia ser 4-3-3 A") == "Formation 5-2-3: should be 4-3-3 A"
     finally:
         set_language("pt", save=False)
+
+
+def test_a_player_in_a_bench_place_of_another_position_is_named_as_such():
+    # FC Van, 2026-10-16: no forward to spare, the owner put a defender in the attack's place (15)
+    players = ELEVEN + [p("Chalobah", 3, 13, 101), p("Akanni", 3, 15, 51), p("Anton", 3, 16, 100), p("Lau", 1, 18, 50)]
+    assert bench_warnings(players) == ["Tens um defesa a suplente do ataque: Akanni 51"]  # not "Akanni before Anton"

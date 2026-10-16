@@ -4,6 +4,13 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-PT/1.1.0/); 
 
 Este ficheiro é o **histórico de versões, para quem lê o repo**. O diário interno de cada sessão de trabalho está em [`docs/WORKLOG.md`](docs/WORKLOG.md).
 
+## [0.13.5] — 2026-10-16
+
+O aviso do banco passa a ler o banco como o jogo: por lugares de cada posição.
+
+### Corrigido
+- **Aviso do banco:** o banco tem lugares fixos por posição (12 GR, 13 e 16 DEF, 14 e 17 MED, 15 e 18 ATA). Um jogador num lugar de outra posição deixa de dar avisos sem sentido ("Akanni 51 entra antes de Anton 103") e passa a ser dito como é: "Tens um defesa a suplente do ataque: Akanni 51". A ordem dos suplentes compara só quem está nos lugares da sua posição.
+
 ## [0.13.4] — 2026-10-16
 
 Nos eventos que dão mais progressão aos jogadores velhos, os de 30+ também podem ser postos a treinar.
