@@ -365,6 +365,8 @@ def test_every_task_runs_on_every_pass_not_only_the_first(mode):
     tasks = {name: counted(name, (0, [])) for name in
              ("stadium", "sponsors", "rewards", "prematch", "medical", "savings", "inventory")}
     tasks.update({name: counted(name) for name in ("transfers", "matches", "events", "ads")})
+    tasks["boost"] = counted("boost", 0)
+    tasks["event_wake"] = counted("event_wake")
     extra = {"board": lambda payload: None} if mode == "window" else {"use_screen": False}
     with pytest.raises(SystemExit):
         run_active(claim=counted("claim", 0), train=counted("train", 0), finish_times=lambda: [], slots=lambda: [],

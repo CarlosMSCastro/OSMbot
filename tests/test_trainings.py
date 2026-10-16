@@ -154,3 +154,44 @@ def test_a_session_seen_ready_to_collect_still_counts_after_it_is_collected(monk
     assert [r["evento"] for r in rows] == ["recolher", "pôr"]
     assert rows[0]["ganho"] == 31 and rows[0]["previsao"] == 20 and rows[0]["n_na_jornada"] == 1
     assert rows[1]["jogador"]["id"] == 2 and rows[1]["candidatos"][0]["treinos"] == 1
+
+
+def test_at_a_training_event_the_trainings_put_before_it_are_finished_with_boss_coins(monkeypatch, tmp_path):
+    """Owner, 2026-10-16: the game does not shorten them; one PUT finishes and collects (seen that day)."""
+    import time
+
+    import osmbot.game.client as client_module
+    from osmbot import logs
+    from osmbot.game import trainings
+
+    base = "leagues/1/teams/2"
+    now = time.time()
+    player = dict(api_player(1, 2, ovr=110, lineup=5), name="A")
+    running = {"id": 400, "playerId": 1, "weekNr": 7, "trainer": 2, "player": player,
+               "countdownTimer": {"finishedTimestamp": now + 3 * 3600 + 600, "isClaimed": False}}
+    state = {"minutes": 480}
+    sent = []
+
+    class FakeClient:
+        def get(self, path):
+            return 200, {"user/accounts": {"teamSlots": {"1": {"team": {"id": 2, "leagueId": 1, "name": "T"}}}},
+                         "leagues/1/gamesettings": [{"name": "TrainingSession", "value": state["minutes"]},
+                                                    {"name": "TrainingUniversalSession", "value": 90}],
+                         f"{base}/trainingsessions/ongoing": [running],
+                         "bosscoinproducts": [{"id": 506 + h, "name": "TrainingBoostCost", "value": 2 * h, "increment": h}
+                                              for h in range(1, 9)],
+                         "user/bosscoinwallet": {"amount": 100}}[path]
+
+        def request(self, method, path, form=None):
+            sent.append((method, path, form))
+            return 200, {"progressImprovement": 40, "variableTrainingProgression": 0, "trainingSession": {"player": player}}
+
+    monkeypatch.setattr(client_module, "OsmClient", FakeClient)
+    monkeypatch.setattr(trainings, "PAUSE_BETWEEN_WRITES", 0)
+    monkeypatch.setattr(logs, "repo_folder", lambda: tmp_path)
+    trainings._before_event.clear()
+    assert trainings.run_event_boost(confirm=True) == 0 and sent == []  # no event: nothing, it only remembers
+    state["minutes"] = 120  # the event began
+    assert trainings.run_event_boost(confirm=True) == 0
+    assert sent == [("PUT", f"https://web-api.onlinesoccermanager.com/api/v1.1/{base}/trainingsessions/400/boost",
+                     {"productId": 510})]  # 3h10 left = 4 h = 8 boss coins

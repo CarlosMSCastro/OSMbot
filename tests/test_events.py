@@ -128,3 +128,18 @@ def test_event_lines_in_english():
             "Event in the game (Spain): trainings 120 min, transfer list places 6"
     finally:
         set_language("pt", save=False)
+
+
+def test_on_a_training_event_day_the_bot_looks_for_it_from_0530_every_10_minutes_until_it_shows():
+    from datetime import datetime
+
+    from osmbot.game.events import training_event_wake
+
+    day = datetime(2026, 10, 17).timestamp()
+    event = {"tags": ["treinos", "lendas"], "start": day}
+    at = lambda h, m=0: day + h * 3600 + m * 60
+    assert training_event_wake([event], [], at(-2)) == at(5, 30)  # the evening before: wake at 05:30
+    assert training_event_wake([event], [], at(5, 40)) == at(5, 50)  # in the window: every 10 min
+    assert training_event_wake([event], [["treinos 120 min"]], at(6, 10)) is None  # it began: nothing to wait for
+    assert training_event_wake([event], [], at(7, 30)) is None  # after 07:00
+    assert training_event_wake([{"tags": ["olheiro"], "start": day}], [], at(5, 40)) is None  # not a training event

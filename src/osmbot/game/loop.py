@@ -45,7 +45,7 @@ from osmbot.game.rewards import run_rewards
 from osmbot.game.sponsors import run_sponsors
 from osmbot.game.savings import run_savings
 from osmbot.game.stadium import run_stadium
-from osmbot.game.trainings import COUNTS, pending_finish_times, run_claim, run_train
+from osmbot.game.trainings import COUNTS, pending_finish_times, run_claim, run_event_boost, run_train
 
 LOG_FILE = Path.home() / ".osmbot" / "bot.log"
 JITTER = (5.0, 60.0)  # seconds added after a training finishes, so timing is never exact
@@ -356,7 +356,8 @@ def run_active(dry_run: bool = False, *, claim=run_claim, train=run_train, finis
                prematch=lambda confirm: run_prematch(confirm), medical=lambda confirm: run_medical(confirm),
                transfers=lambda: save_transfers(log=_log), savings=lambda confirm: run_savings(confirm),
                events=lambda: events_module.refresh(log=_log), inventory=lambda confirm: run_inventory(confirm, log=_log),
-               matches=lambda: log_rounds(log=_log),
+               matches=lambda: log_rounds(log=_log), boost=lambda confirm: run_event_boost(confirm),
+               event_wake=lambda now: events_module.training_wake(now),
                snapshot=None, use_screen: bool | None = None,
                sleep=time.sleep, clock=time.time, rng=random, board=None) -> None:
     """Loop until Ctrl+C (or ``request_stop``) or the first failure. With ``dry_run`` do one simulated pass and show the board once.
@@ -460,6 +461,15 @@ def run_active(dry_run: bool = False, *, claim=run_claim, train=run_train, finis
                         raise
                     except Exception as error:
                         _log(f"Poupança: erro ({error}); volto a tentar")
+                if boost:
+                    try:  # a training event began: finish the trainings put before it (THEORY.md section 5)
+                        boost_failed = _quiet(boost, not dry_run)
+                        if boost_failed:
+                            _log(f"Evento de treinos: {boost_failed} falha(s) ao acabar treinos; volto a tentar")
+                    except OSError:
+                        raise
+                    except Exception as error:
+                        _log(f"Evento de treinos: erro ({error}); volto a tentar")
                 before = counts()
                 failed = _quiet(claim, not dry_run) + _quiet(train, not dry_run)
                 if changed(before):
@@ -586,6 +596,10 @@ def run_active(dry_run: bool = False, *, claim=run_claim, train=run_train, finis
                 times = [ts for _, ts in wakes] or finish_times()
                 times = times + [t for t in stadium_times + reward_times + prematch_times + medical_times + savings_times
                                  + inventory_times if t > clock()]
+                event_time = event_wake(clock()) if event_wake else None
+                if event_time:  # a training event due today: look for it from 05:30 every 10 min
+                    times.append(event_time)
+                    wakes = wakes + [("evento de treinos", event_time)]
                 wakes = sorted(wakes + [("depósito na poupança", t) for t in savings_times if t > clock()], key=lambda e: e[1])
                 wait = next_wait(times, clock(), rng.uniform(*JITTER))
                 if ads_failed:

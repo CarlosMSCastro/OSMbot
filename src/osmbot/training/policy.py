@@ -16,6 +16,7 @@ handled yet: the owner has not said how to use it.
 """
 from __future__ import annotations
 
+import math
 from typing import Iterable, Mapping, Optional, Sequence
 
 from osmbot.models import Player, Position
@@ -109,3 +110,34 @@ def round_sessions(ongoing: Sequence[Mapping], recorded: Mapping[str, int], week
     for player_id in seen.values():
         counts[player_id] = counts.get(player_id, 0) + 1
     return counts
+
+
+UNIVERSAL_TRAINER = 5
+BOOST_PRODUCT = "TrainingBoostCost"  # bosscoinproducts: one per whole hour left, 2 boss coins each (DISCOVERY.md 3)
+
+
+def boost_product(products: Sequence[Mapping], left: float) -> Optional[Mapping]:
+    """The product the game charges to finish a training with ``left`` seconds to go, as the site picks it: the
+    biggest ``increment`` (hours) not above the hours left rounded up (20 min = 1 h). None: no product fits."""
+    hours = math.ceil(left / 3600)
+    fits = [p for p in products if p.get("name") == BOOST_PRODUCT and 0 < (p.get("increment") or 0) <= hours]
+    return max(fits, key=lambda p: p["increment"], default=None)
+
+
+def pre_event_sessions(sessions: Sequence[Mapping], now: float, minutes: tuple[int, int],
+                       before: Iterable = ()) -> list[Mapping]:
+    """The trainings still running that began before a training event (owner, 2026-10-16: finish them with boss
+    coins rather than keep the slot busy for hours; THEORY.md 5): those seen before the event began (``before``,
+    session ids) and any with more left than a session lasts now (``minutes``: a trainer's and the universal
+    trainer's, in the event). A training put in the event is never one of them."""
+    known = {str(x) for x in before}
+    picked = []
+    for s in sessions:
+        timer = s.get("countdownTimer") or {}
+        left = (timer.get("finishedTimestamp") or 0) - now
+        if timer.get("isClaimed") or left <= 0:
+            continue
+        lasts = (minutes[1] if s.get("trainer") == UNIVERSAL_TRAINER else minutes[0]) * 60
+        if str(s.get("id")) in known or left > lasts + 60:
+            picked.append(s)
+    return picked

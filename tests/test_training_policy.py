@@ -141,3 +141,30 @@ def test_rotation_ties_go_to_the_highest_forecast_then_the_best(make_player):
     assert pick_trainee(squad, Position.GK, sessions={}, forecasts={star.id: 13, young.id: 29}) is young
     assert pick_trainee(squad, Position.GK, sessions={young.id: 1}, forecasts={star.id: 13, young.id: 29}) is star
     assert pick_trainee(squad, Position.GK, sessions={}, forecasts={star.id: 20, young.id: 20}) is star  # same: the best
+
+
+def test_finishing_a_training_costs_what_the_game_charges_for_the_hours_left_rounded_up():
+    from osmbot.training.policy import boost_product
+
+    products = [{"id": 506 + h, "name": "TrainingBoostCost", "value": 2 * h, "increment": h} for h in range(1, 9)]
+    products.append({"id": 80, "name": "TrainingBoostCostPerHour", "value": 2, "increment": 0})
+    assert boost_product(products, 20 * 60)["value"] == 2  # 20 min = 1 h (the owner: it can be done under 1 h)
+    assert boost_product(products, 3 * 3600 + 20 * 60)["value"] == 8  # 3h20 = 4 h
+    assert boost_product(products, 8 * 3600)["id"] == 514 and boost_product(products, 9 * 3600)["value"] == 16
+    assert boost_product([], 3600) is None
+
+
+def test_the_trainings_put_before_a_training_event_are_the_ones_to_finish():
+    from osmbot.training.policy import pre_event_sessions
+
+    now = 1_000_000.0
+
+    def session(sid, left, trainer=1, claimed=False):
+        return {"id": sid, "trainer": trainer, "countdownTimer": {"finishedTimestamp": now + left, "isClaimed": claimed}}
+
+    sessions = [session(1, 5 * 3600),  # an 8 h one with 5 h to go: more than the event's 2 h
+                session(2, 90 * 60),  # 1h30 to go: put in the event, or before it (only the bot's memory says)
+                session(3, 100 * 60, trainer=5),  # the universal trainer lasts 1h30 in the event: began before it
+                session(4, -60), session(5, 4 * 3600, claimed=True)]  # ready to collect / already collected
+    assert [s["id"] for s in pre_event_sessions(sessions, now, (120, 90))] == [1, 3]
+    assert [s["id"] for s in pre_event_sessions(sessions, now, (120, 90), before={2})] == [1, 2, 3]

@@ -127,6 +127,30 @@ def check_every(now: float) -> float:
     return EARLY_EVERY if EARLY[0] <= moment.hour * 60 + moment.minute < EARLY[1] else CHECK_EVERY
 
 
+def training_event_wake(events: list[dict], active: list[list[str]], now: float) -> float | None:
+    """When the bot should look again for a training event that the forum's schedule puts today (owner,
+    2026-10-16: finish the trainings put before it as soon as it begins): at 05:30, then every 10 min until 07:00
+    or until some league shows it (``active``: each league's changes, e.g. ["treinos 120 min"]). Pure."""
+    if any(change.startswith("treinos ") for changes in active for change in changes):
+        return None
+    for event in events:
+        if "treinos" not in (event.get("tags") or []):
+            continue
+        day = datetime.fromtimestamp(event["start"]).replace(hour=0, minute=0, second=0, microsecond=0).timestamp()
+        opens, closes = day + EARLY[0] * 60, day + EARLY[1] * 60
+        if now < opens <= now + 86400:
+            return opens
+        if opens <= now < closes:
+            return now + EARLY_EVERY
+    return None
+
+
+def training_wake(now: float | None = None) -> float | None:
+    """``training_event_wake`` with the schedule the bot keeps and what the leagues show now."""
+    now = time.time() if now is None else now
+    return training_event_wake(calendar_events(now, days=2), list(_active.values()), now)
+
+
 def check_league(client, league_id: int, name: str = "", settings: list[dict] | None = None, log=None,
                  now: float | None = None) -> list[str]:
     """What an event changed in this league's settings (read at most once an hour); logged when it changes.

@@ -4,6 +4,14 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-PT/1.1.0/); 
 
 Este ficheiro é o **histórico de versões, para quem lê o repo**. O diário interno de cada sessão de trabalho está em [`docs/WORKLOG.md`](docs/WORKLOG.md).
 
+## [0.13.3] — 2026-10-16
+
+Nos eventos de treinos, os treinos postos antes do evento já não ficam horas a ocupar o lugar.
+
+### Adicionado
+- **Evento de treinos (D-059):** quando o evento começa, o bot acaba com boss coins os treinos que estavam a correr antes dele (o jogo não os encurta) e põe logo treinos do evento. Custa o que o jogo cobra: 2 boss coins por hora que falta, arredondada para cima (2 a 16 por treino). Um só pedido acaba e recolhe o treino; fica registado com o custo e o ganho.
+- **Procura do evento:** nos dias de evento de treinos do calendário, o bot acorda às 05:30 e volta a ver de 10 em 10 min até às 07:00, ou até o evento aparecer.
+
 ## [0.13.2] — 2026-10-16
 
 O cartão de compras só mostra reforços onde fazem falta, e as vendas no registo ficam com o preço e a hora verdadeiros.

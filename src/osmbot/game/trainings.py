@@ -13,7 +13,7 @@ from pathlib import Path
 
 from osmbot import logs
 from osmbot.models import Player
-from osmbot.training.policy import TRAINER_POSITION, plan_training, round_sessions
+from osmbot.training.policy import TRAINER_POSITION, boost_product, plan_training, pre_event_sessions, round_sessions
 
 POSITIONS = {1: "ATA", 2: "MED", 3: "DEF", 4: "GR"}
 COUNTS = {"claimed": 0, "started": 0}  # successful writes in this run, for the board summary
@@ -251,6 +251,73 @@ def run_train(confirm: bool, limit: int | None = None) -> int:
         raise SystemExit(str(error))
     if not confirm:
         print("\nSimulação: nada alterado")
+    return failed
+
+
+_before_event: dict[str, set[str]] = {}  # per club: the sessions running while there was no training event
+
+
+def run_event_boost(confirm: bool) -> int:
+    """At the start of a training event, finish with boss coins the trainings put before it (owner, 2026-10-16;
+    THEORY.md 5): the game does not shorten them, so a slot would stay busy for hours. One request finishes and
+    collects (seen 2026-10-16: 2 boss coins, the training's result in the answer). Without ``confirm`` only shows
+    what it would do. Returns the failures."""
+    from osmbot.events.calendar import NORMAL
+    from osmbot.game.client import NeedsBrowserLogin, OsmClient
+
+    failed = 0
+    try:
+        client = OsmClient()
+        products = None
+        for slot, team, base in _teams(client):
+            _, settings = client.get(f"leagues/{team['leagueId']}/gamesettings")
+            values = {g.get("name"): g.get("value") for g in settings} if isinstance(settings, list) else {}
+            minutes = (values.get("TrainingSession") or NORMAL["TrainingSession"],
+                       values.get("TrainingUniversalSession") or NORMAL["TrainingUniversalSession"])
+            _, sessions = client.get(f"{base}/trainingsessions/ongoing")
+            sessions = sessions if isinstance(sessions, list) else []
+            if minutes[0] >= NORMAL["TrainingSession"]:  # no training event: remember what is running now
+                _before_event[base] = {str(s["id"]) for s in sessions if s.get("id")}
+                continue
+            note_seen(base, sessions)
+            for session in pre_event_sessions(sessions, time.time(), minutes, _before_event.get(base, ())):
+                if products is None:
+                    _, products = client.get("bosscoinproducts")
+                    products = products if isinstance(products, list) else []
+                left = session["countdownTimer"]["finishedTimestamp"] - time.time()
+                product = boost_product(products, left)
+                name = session["player"]["name"]
+                if product is None:
+                    print(f"Evento de treinos ({team['name']}): {name} sem preço para acabar; fica a correr")
+                    continue
+                if not confirm:
+                    print(f"Evento de treinos ({team['name']}): acabaria {name} por {product['value']} boss coins")
+                    continue
+                _, wallet = client.get("user/bosscoinwallet")
+                if (wallet or {}).get("amount", 0) < product["value"]:
+                    print(f"Evento de treinos ({team['name']}): sem boss coins para acabar {name} ({product['value']})")
+                    continue
+                status, body = client.request(
+                    "PUT", f"https://web-api.onlinesoccermanager.com/api/v1.1/{base}/trainingsessions/{session['id']}/boost",
+                    {"productId": product["id"]})
+                gain = body.get("progressImprovement") if isinstance(body, dict) else None
+                print(f"Evento de treinos ({team['name']}): {name} acabado com {product['value']} boss coins "
+                      f"(faltavam {_span(left)})" + (f", +{gain}" if status == 200 and gain is not None else "")
+                      if status == 200 else f"Evento de treinos ({team['name']}): {name} falhou ao acabar ({status})")
+                if status == 200:
+                    after = (body.get("trainingSession") or {}).get("player") if isinstance(body, dict) else None
+                    logs.record("treinos", {  # as a collected one, plus what it cost (owner, 2026-10-16)
+                        "evento": "acabar com boss coins", "clube": base, "sessao": session["id"],
+                        "semana": session.get("weekNr"), "treinador": session.get("trainer"),
+                        "jogador": _brief(Player.from_api(session["player"])), "custo": product["value"],
+                        "faltava_s": round(left), "previsao": (session.get("trainingForecast") or {}).get("forecast"),
+                        "ganho": gain, "bonus": body.get("variableTrainingProgression") if isinstance(body, dict) else None,
+                        "rating_depois": Player.from_api(after).rating if after else None})
+                failed += status != 200
+                COUNTS["claimed"] += status == 200
+                time.sleep(PAUSE_BETWEEN_WRITES)
+    except NeedsBrowserLogin as error:
+        raise SystemExit(str(error))
     return failed
 
 
