@@ -281,6 +281,23 @@ Lido no Chrome (só leitura, sem sessão). "Staff" = equipa do OSM no fórum (Sp
 
 **Comparação com o que medimos (§3, 10–11/10, durante o Transfer Madness):** os lotes a cada ~2 h batem com "8 vezes por dia"; vender ao máximo até 167 M€ bate com "mais hipótese nos eventos". Fora do evento, o staff diz que acima de 100 de rating quase não se vende, e que o preço absoluto conta mais do que a % do máximo: baixar de 100 % para 75 % ajuda pouco a 140 M€. **[H]** O bot pode detetar cada passagem do motor pela descida de preço dos jogadores de fora da liga (só leitura). Desde 2026-10-11 regista-o (D-034, `logs/<PC>/transferencias/motor/`); confirmar a hipótese quando houver registos (as descidas devem coincidir com as horas das vendas).
 
+## 6d. Estratégia: pesquisa web (2026-10-16)
+
+*Pedido do dono: ideias diferenciadas em fóruns e sites antigos. O fórum oficial bloqueia leitores automáticos (Anubis); o que vem de lá é pelo resumo da pesquisa. Não há Reddit sobre o OSM. Quase tudo é de sites de fãs, alguns com anos.*
+
+| Ideia | Fonte | Estado |
+|---|---|---|
+| **Bónus de nacionalidade:** 6 titulares da mesma nacionalidade dão um bónus escondido ao jogo; um moderador do fórum fala em **~25 %** (como o estágio); outros sites dizem 5 jogadores, ou "parecido com acertar nos especialistas" | fórum oficial (tópicos 42395, 53594, 76379, via pesquisa), osmguide.com/tips, onlinesoccermanagerguide (FAQ) | **Reportado, mas não se vê nos nossos jogos (2026-10-16).** Teste com 251 jogos de liga e taça das 3 ligas com o onze real (D-044; sem estágio; nacionalidades lidas dos plantéis atuais e do histórico de transferências, 95 % conhecidas): diferença de golos explicada pela diferença de força, casa e treinador humano. Ter 6+ titulares da mesma nacionalidade dá **−0,28 golos (±0,17)**, perto de zero e nunca positivo (5+: −0,11; 7+: −0,22; só jogos entre bots, 125: −0,37 ±0,20). Um bónus de 25 % (~150 pontos de força, ~+1,1 golos por jogo) está **excluído**; acima de ~1–2 % de força é improvável. A força do jogo também **não o inclui** (força/rating igual com e sem 6+: −5 ±5 pontos). Cuidado: só 8 lados com treinador tinham 6+, e quem tem treinador foi lido no fim (pode ter mudado) |
+| **Os anúncios do jogo descem** ×0,97 em cada passagem do motor, 2 vezes por dia (blog de 2014, desatualizado noutras partes); outro site: os não vendidos ficam mais baratos no fim da época | osmhulp.wordpress.com, onlinesoccermanagerguide (FAQ) | Bate com o **[V]** do §3 (−4,2 %/dia nos nossos registos) |
+| **O motor compra 0–6 jogadores ao acaso de ~2 em 2 h** e pára enquanto os jogos são simulados | fórum oficial (tópico 14071, via pesquisa) | **Reportado**; bate com os lotes de ~2 h do §3 |
+| **Avançados vendem pior** | osmguide.com/tips, osmtip.nl; um admin do fórum diz que não está confirmado | **[V] fraco** (registo do motor, vendidos ao máximo): horas por milhão de preço, ATA **~1,6×** as de MED/DEF (até 10 M: 1,8 contra ~1,0; acima: 0,62 contra ~0,38); 13 ATA vendidos, amostra pequena |
+| **Treino secreto antes do estágio:** o adversário deixa de ser avisado do estágio; o treino secreto também impede que lhe mandem o analista; +2,5 % | osmhelper.com (via pesquisa), wiki do jogo (fandom) | **Reportado** |
+| **Mudanças até à simulação:** onze, tática e compras contam até o jogo ser simulado (às vezes minutos depois da hora); o relatório do analista atualiza-se se o adversário mudar de formação | onlinesoccermanagerguide (FAQ), osmguide.com | **Reportado** |
+| **Relvado do estádio:** +2/4/6 % em casa nos níveis 1/2/3 | osmhelper.com (via pesquisa) | **Reportado** |
+| **Torneio de campeões:** o estádio volta ao início e os jogadores de rating alto perdem o progresso de treino; o mercado é caótico no arranque, compra-se melhor no fim da liga | onlinesoccermanagerguide (FAQ) | **Reportado** (parte já em `THEORY.md`: tudo em jogadores na passagem) |
+| **Plantel de 18–21 jogadores**; início de época e eventos de transferências vendem mais (vagas sempre cheias, 6 em eventos) | osmguide.com/tips, osmtip.nl | **Reportado**; as vagas cheias já são a estratégia do dono |
+| Desarme pelo árbitro: verde temerário, azul e amarelo agressivo, laranja normal, vermelho cuidadoso | onlinesoccermanagerguide (FAQ) | **Reportado**; perto da regra do dono (`THEORY.md`) |
+
 ## 7. Próximos passos de descoberta
 
 Já feito (ver §3): mapa dos endpoints de leitura e de escrita dos treinos, dos vídeos (loja, treino, dinheiro), dos slots, do estádio, dos patrocinadores, do início de sessão, das missões e dos vídeos acumulados; formato do `tokenRefresh`; páginas da loja e do treino.

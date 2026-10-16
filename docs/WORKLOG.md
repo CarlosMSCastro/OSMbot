@@ -22,6 +22,8 @@ Entradas mais recentes primeiro. Cada sessão: o que se fez · o que ficou por f
 - **Mercado do dono (2026-10-16, só leitura):** 12 jogadores à venda, quase todos ao máximo com revenda abaixo de 100 M (como a estratégia). A rever pelo dono: um MED à venda há 131 h (a esse preço a mediana é ~32 h), dois titulares do Betis à venda antes do jogo, um ATA de 19 anos a 75 %.
 - **Hovers com o círculo verde:** cantos brancos à volta da marca (o `render` do `StepIcon` desenhava o fundo da janela); agora só `DrawChildren`.
 - **0.13.0** (pedido do dono): versão, `CHANGELOG`, `README`, `PROJECT_BRIEF`, `dist` e `dist/release-notes-v0.13.0.md`. 406 testes.
+- **Pesquisa web de estratégia (pedido do dono, depois da 0.13.0):** `DISCOVERY.md` §6d. Bónus de nacionalidade (6 titulares da mesma nacionalidade, ~25 % segundo um moderador) **testado em 251 jogos e não confirmado** (−0,28 ±0,17 golos depois de força, casa e treinador humano; a força do jogo também não o inclui). O resto: treino secreto antes do estágio, avançados vendem mais devagar (confirmado de leve nos registos: ~1,6×).
+- **`OSMPro/` (pedido do dono, "pode ir pro repo"):** listas de vídeos de OSM de dois canais portugueses, lidas com o `yt-dlp` (só a lista): @OSMPROworld (43) e @andresantana_yt (1136 de OSM em 1445, por categoria: dicas, táticas, torneios, 17 séries do Modo Carreira…). Datas exatas em todos, exceto 3 só para membros do canal (só o ano, "~2021"). O dono explica depois para que são.
 - **Próximo passo:** o dono faz commit, push e o Release da 0.13.0; confirmar na janela o hover do cartão de compras (na captura, a etiqueta "reforço (> …)" aparecia cortada) e, no PC do trabalho, o título real da janela das boss coins.
 
 ## 2026-10-15 — Pré-época e tempos em dias (PT-LA-02-0095-N)
