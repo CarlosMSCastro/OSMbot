@@ -2,6 +2,17 @@
 
 Entradas mais recentes primeiro. Cada sessão: o que se fez · o que ficou por fazer · próximo passo.
 
+## 2026-10-17 — Bot no Mac (MacBook, Intel)
+
+- **Pedido do dono:** pôr o bot a correr no Mac para desligar o PC de casa (nunca os dois ligados ao mesmo tempo).
+- **Feito** (os pontos 1–3 de 2026-10-14): `awake.keep_awake` no Mac lança `caffeinate -dims -w <pid>` (ecrã, inatividade, disco, sistema na corrente; acaba com o bot) e termina-o ao parar; "Pasta dos logs" e "Capturas das falhas" abrem no Finder (`gui/window.show_folder`, `open`); atalho `tools/OSMbot.command` (cria o venv se faltar, abre a janela). README com a secção Mac. 415 testes. `caffeinate` verificado em real (`pmset -g assertions`); `osmbot status` (só leitura) com a sessão de 12/10 deste Mac: OK.
+- **Por testar pelo dono (ponto 4):** a janela no Mac (ícone na barra de cima, quadro, Login, Abrir). Fechar a tampa adormece o Mac: deixar aberto e na corrente.
+- **Próximo passo:** o dono abre a janela no Mac e confirma que o quadro carrega; só depois de o bot estar a trabalhar aqui, o PC de casa é desligado (ou o bot parado lá: Bot → Sair).
+- **Pacotes para Mac (D-061, pedido do dono):** `tools/build_mac.py --zip --dmg` → `dist/mac/OSMbot.app` (649 MB, x86_64), `OSMbot-0.13.5-mac-portable.zip` (226 MB), `OSMbot-0.13.5-mac.dmg` (261 MB). Python do python-build-standalone 3.12.15 (20261003), com o binário em `Contents/MacOS/python3` para a app ser o próprio processo (nome e ícone no Dock); PySide6 só com Core, Gui, Widgets e DBus (no Mac o QtGui liga ao DBus). Assinatura ad hoc (o `python3` primeiro, depois a app). Download com o `certifi` (o Python do Homebrew não tem certificados). Este Mac não tem as ferramentas da Apple (`otool`, `strings`): as ligações do Qt vistas com uma leitura dos binários em Python. Verificado com a app: `status` (só leitura, sai para `~/.osmbot/app.log` quando não há terminal), a janela importa com o Qt da app e o logótipo em `Contents/Resources`, o Firefox da app abre (155.0). **Por testar pelo dono:** abrir a app no Finder (aviso do Gatekeeper, ícone no Dock e na barra de cima, Abrir, Login).
+- **`dist/` por sistema:** `build_portable.py` passa a escrever em `dist/windows/` com `OSMbot-<versão>-windows-portable.zip` e `-windows-setup.exe` (`/F` do Inno Setup). **Não testado** (só no Windows): o dono vê no próximo build.
+- **Janela no Mac (dono: "não tem a barrinha de cima", "não me cabe no ecrã"):** o menu (Bot, Ver, Idioma, Ajuda) ia para a barra do macOS no topo do ecrã; passa a ficar dentro da janela, como no Windows (`setNativeMenuBar(False)`). O quadro precisava de 1489 px de largura num ecrã de 1440 × 824 (MacBook Air 13"): no Mac a coluna do clube passa de 380 para 330 px e a da direita de 340 para 300 (o texto no Mac sai ¼ mais pequeno, 72 dpi); medido com os dados reais (só leituras): 1399 × 772. A janela abre no máximo do tamanho do ecrã e inteira dentro dele. Cmd+Q com o bot a trabalhar só esconde a janela (como o X). App reconstruída. **Por ver pelo dono** no ecrã.
+- 416 testes.
+
 ## 2026-10-16 — Análise do mercado do FC Van (PT-LA-02-0095-N)
 
 - **Dinheiro e lista do FC Van** (pedido do dono, só leituras): 215,8 M no saldo, 0 na poupança; 2 de 4 vagas usadas (de Gea e B. Fernandes a 2,5×, há 12,5 h); a liga compra ao máximo (várias vendas a 2,5× nas últimas 18 h). `sale_picks`: revendas A. Rossi (GR 96, 1,20×, +25,5 M), Parrott (ATA 88, 1,21×, +21,7 M), Léo Jardim, Chevalier; reforço Pacho (DEF 117, 128 M, 1,24×, sobre Chalobah 107). Nada comprado (comprar pede OK, regra 5).

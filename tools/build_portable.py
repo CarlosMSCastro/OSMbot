@@ -1,6 +1,6 @@
 """Build the Windows portable folder of osmbot (D-016): ``python tools/build_portable.py [--zip]``.
 
-Result: ``dist/osmbot-portable/`` with ``OSMbot.exe`` (a renamed copy of the official, signed
+Result: ``dist/windows/osmbot-portable/`` with ``OSMbot.exe`` (a renamed copy of the official, signed
 embeddable ``pythonw.exe``, so no console; ``app/sitecustomize.py`` turns it into the osmbot window),
 ``OSMbot-consola.exe`` (the same for ``python.exe``: console menu and commands), the Python
 runtime next to it, osmbot's dependencies and the Playwright Firefox. Copy the folder (or the .zip)
@@ -23,7 +23,8 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 DIST = ROOT / "dist"
-OUT = DIST / "osmbot-portable"
+OUT_DIR = DIST / "windows"  # dist/windows here, dist/mac on the Mac (D-061)
+OUT = OUT_DIR / "osmbot-portable"
 PYTHON_VERSION = "3.12.10"  # same minor version as the dependencies are installed for
 EMBED_URL = f"https://www.python.org/ftp/python/{PYTHON_VERSION}/python-{PYTHON_VERSION}-embed-amd64.zip"
 
@@ -152,8 +153,8 @@ def run(*command: str) -> None:
 
 
 def fetch_embedded_python() -> Path:
-    DIST.mkdir(exist_ok=True)
-    archive = DIST / f"python-{PYTHON_VERSION}-embed-amd64.zip"
+    OUT_DIR.mkdir(parents=True, exist_ok=True)
+    archive = OUT_DIR / f"python-{PYTHON_VERSION}-embed-amd64.zip"
     if not archive.exists():
         print(f"A descarregar {EMBED_URL} ...")
         urllib.request.urlretrieve(EMBED_URL, archive)
@@ -198,16 +199,17 @@ def project_version() -> str:
 
 
 def build_installer(icon: Path) -> None:
-    """Compile tools/installer.iss with Inno Setup into dist/OSMbot-Setup.exe."""
+    """Compile tools/installer.iss with Inno Setup into dist/windows/OSMbot-<version>-windows-setup.exe."""
     iscc = next((p for p in ISCC_PATHS if p.exists()), None)
     if not iscc:
         raise SystemExit("Inno Setup nao encontrado. Instala-o: winget install JRSoftware.InnoSetup")
-    command = [str(iscc), "/Qp", f"/DAppVersion={project_version()}", f"/DSourceDir={OUT}", f"/DOutDir={DIST}"]
+    command = [str(iscc), "/Qp", f"/DAppVersion={project_version()}", f"/DSourceDir={OUT}", f"/DOutDir={OUT_DIR}",
+               f"/FOSMbot-{project_version()}-windows-setup"]
     if icon.exists():
         command.append(f"/DIconFile={icon}")
     print("A criar o instalador (demora uns minutos) ...")
     run(*command, str(ROOT / "tools" / "installer.iss"))
-    target = DIST / "OSMbot-Setup.exe"
+    target = OUT_DIR / f"OSMbot-{project_version()}-windows-setup.exe"
     print(f"Instalador: {target}  ({target.stat().st_size / 1e6:.0f} MB)")
 
 
@@ -269,7 +271,7 @@ def build(make_zip: bool, make_installer: bool = False, icon: Path = ICON) -> No
     print(f"Pronto: {OUT}  ({size:.0f} MB)")
     if make_zip:
         print("A criar o .zip ...")
-        target = shutil.make_archive(str(DIST / "osmbot-portable"), "zip", DIST, "osmbot-portable")
+        target = shutil.make_archive(str(OUT_DIR / f"OSMbot-{project_version()}-windows-portable"), "zip", OUT_DIR, "osmbot-portable")
         print(f"Zip: {target}  ({Path(target).stat().st_size / 1e6:.0f} MB)")
     if make_installer:
         build_installer(icon)
@@ -277,8 +279,8 @@ def build(make_zip: bool, make_installer: bool = False, icon: Path = ICON) -> No
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__.split("\n")[0])
-    parser.add_argument("--zip", action="store_true", help="also create dist/osmbot-portable.zip")
-    parser.add_argument("--installer", action="store_true", help="also create dist/OSMbot-Setup.exe (needs Inno Setup)")
+    parser.add_argument("--zip", action="store_true", help="also create dist/windows/OSMbot-<version>-windows-portable.zip")
+    parser.add_argument("--installer", action="store_true", help="also create dist/windows/OSMbot-<version>-windows-setup.exe (needs Inno Setup)")
     parser.add_argument("--icone", type=Path, default=ICON, help="icon (.ico) for the shortcuts; default: osmbot's own")
     arguments = parser.parse_args()
     build(arguments.zip, arguments.installer, arguments.icone)

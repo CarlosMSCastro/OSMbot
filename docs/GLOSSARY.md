@@ -48,6 +48,6 @@
 - **actionId** — nome interno de cada tipo de vídeo: `BusinessClub` (loja), `TrainingTimer` (treino), `Multistep1` a `3` (dinheiro).
 - **Despertar** — o momento em que o bot volta a verificar tudo: o mais próximo entre o fim do próximo treino e a reposição dos vídeos (máx. 30 min).
 - **Ensaio / `--simular`** — executar uma passagem sem escrever nada na conta.
-- **Portátil / instalador** — as duas versões para Windows (`OSMbot.exe` numa pasta, ou `OSMbot-Setup.exe`).
+- **Portátil / instalador** — as versões empacotadas: no Windows, `OSMbot.exe` numa pasta ou o `OSMbot-<versão>-windows-setup.exe`; no Mac, a `OSMbot.app` num zip ou no `.dmg` (D-061).
 
 *Acrescentar termos à medida que forem verificados.*

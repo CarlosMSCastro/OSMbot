@@ -31,7 +31,7 @@ O comando `login` abre uma janela de Firefox a sério (não Chromium — o popup
 
 ## Utilização
 
-`osmbot` sem argumentos (ou o `OSMbot.exe` da pasta portátil, que não abre consola) abre a **janela** (D-024, só Windows por agora):
+`osmbot` sem argumentos (ou o `OSMbot.exe` da pasta portátil, que não abre consola) abre a **janela** (D-024; no Mac, duplo clique em `tools/OSMbot.command`):
 
 - abre pequena, com **Abrir**, **Login** e **Sair**. Num PC novo, começa pelo Login;
 - **Abrir** mostra "A carregar o jogo…", põe o bot a trabalhar e a janela cresce para o **quadro** (D-030): em cima as diárias (ao passar o rato: o prémio de hoje, as missões e o prémio do dia), o próximo evento (ao passar o rato, o calendário do mês), o inventário (ao passar o rato, o que expira e quando) e "A trabalhar desde"; um cartão por clube na cor do clube (próximo jogo, liga, taça, valor do plantel, dinheiro e vendas, patrocinadores, estádio, treinos, médico e advogado, pré-jogo); à direita as boss coins e a linha do tempo (o que vem a seguir por cima do "agora", o que o bot já fez por baixo). O quadro relê o jogo de 3 em 3 min;
@@ -54,9 +54,17 @@ O resto é por comandos:
 
 Só **uma máquina com o bot ligado de cada vez**. O registo fica em `~/.osmbot/bot.log` e também no repo, em `logs/<nome do PC>/AAAA-MM-DD.log` (D-022), para o ver noutra máquina depois do teu commit/push. O bot encontra o repo sozinho (D-023): o código de onde corre, ou uma pasta `OSMbot` ao lado da pasta do bot ou na pasta pessoal, `Documents` ou `Desktop`. Só se o repo estiver noutro sítio: `osmbot pasta-logs <pasta do repo>`.
 
+## Mac
+
+Corre a partir do código (sem pacote): `git pull` e duplo clique em `tools/OSMbot.command` (cria o venv na primeira vez e abre a janela; o ícone fica na barra de cima). Com o bot a trabalhar, o Mac não adormece nem apaga o ecrã (`caffeinate`, só enquanto o bot corre); **fechar a tampa adormece-o na mesma**, por isso deixa-o aberto e ligado à corrente. Se o macOS bloquear o atalho na primeira vez: botão direito → Abrir.
+
+## Mac: app e .dmg
+
+`python tools/build_mac.py --zip --dmg` (no Mac, com o venv ativado) cria, em `dist/mac/`, a `OSMbot.app` (Python, dependências e Firefox lá dentro), `OSMbot-<versão>-mac-portable.zip` e `OSMbot-<versão>-mac.dmg` (abre-se e arrasta-se o OSMbot para Aplicações). A app é do processador do Mac que a constrói e não é assinada pela Apple: na 1.ª vez, botão direito → Abrir. Comandos pelo Terminal: `OSMbot.app/Contents/MacOS/OSMbot status`. Ver D-061.
+
 ## Windows: pasta portátil e instalador
 
-`python tools/build_portable.py --zip --installer` cria, em `dist/` (fora do git), `osmbot-portable.zip` (Python, dependências e Firefox lá dentro; abre-se `OSMbot.exe`, só a janela, sem consola; os comandos correm com `OSMbot-consola.exe`, p. ex. `OSMbot-consola.exe menu`) e `OSMbot-Setup.exe` (instalador por utilizador, sem administrador; precisa do Inno Setup para ser construído). A sessão não viaja: fica em `%USERPROFILE%\.osmbot` de cada PC e faz-se *Login* uma vez em cada um. Ver `docs/DECISIONS.md` D-016.
+`python tools/build_portable.py --zip --installer` cria, em `dist/windows/` (fora do git), `OSMbot-<versão>-windows-portable.zip` (Python, dependências e Firefox lá dentro; abre-se `OSMbot.exe`, só a janela, sem consola; os comandos correm com `OSMbot-consola.exe`, p. ex. `OSMbot-consola.exe menu`) e `OSMbot-<versão>-windows-setup.exe` (instalador por utilizador, sem administrador; precisa do Inno Setup para ser construído). A sessão não viaja: fica em `%USERPROFILE%\.osmbot` de cada PC e faz-se *Login* uma vez em cada um. Ver `docs/DECISIONS.md` D-016.
 
 ## Documentação
 

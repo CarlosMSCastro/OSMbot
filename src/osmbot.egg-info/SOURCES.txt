@@ -1,6 +1,7 @@
 README.md
 pyproject.toml
 src/osmbot/__init__.py
+src/osmbot/awake.py
 src/osmbot/cli.py
 src/osmbot/i18n.py
 src/osmbot/logs.py
@@ -39,6 +40,7 @@ src/osmbot/game/specialists.py
 src/osmbot/game/sponsors.py
 src/osmbot/game/stadium.py
 src/osmbot/game/status.py
+src/osmbot/game/timers.py
 src/osmbot/game/trainings.py
 src/osmbot/game/transfers.py
 src/osmbot/gui/__init__.py
@@ -48,12 +50,15 @@ src/osmbot/gui/assets/Sora-OFL.txt
 src/osmbot/gui/assets/Sora.ttf
 src/osmbot/gui/assets/ball.png
 src/osmbot/gui/assets/bosscoin.png
+src/osmbot/gui/assets/calendar.png
+src/osmbot/gui/assets/camp.png
 src/osmbot/gui/assets/clubfunds.png
 src/osmbot/gui/assets/doctor.png
 src/osmbot/gui/assets/fundo.jpg
 src/osmbot/gui/assets/inventory.png
 src/osmbot/gui/assets/lawyer.png
 src/osmbot/gui/assets/missions.png
+src/osmbot/gui/assets/secret.png
 src/osmbot/gui/assets/stadium.png
 src/osmbot/gui/assets/timer.png
 src/osmbot/gui/assets/training.png
@@ -75,6 +80,7 @@ src/osmbot/stadium/__init__.py
 src/osmbot/stadium/policy.py
 src/osmbot/theory/__init__.py
 src/osmbot/theory/fitness.py
+src/osmbot/theory/lineup.py
 src/osmbot/theory/specialists.py
 src/osmbot/theory/tactics.py
 src/osmbot/training/__init__.py
@@ -83,6 +89,7 @@ src/osmbot/transfers/__init__.py
 src/osmbot/transfers/engine.py
 src/osmbot/transfers/history.py
 tests/test_ads.py
+tests/test_awake.py
 tests/test_board_info.py
 tests/test_build_portable.py
 tests/test_client.py
@@ -95,6 +102,7 @@ tests/test_gui_window.py
 tests/test_i18n.py
 tests/test_inspect_writes.py
 tests/test_inventory.py
+tests/test_lineup.py
 tests/test_logs.py
 tests/test_loop.py
 tests/test_matchlog.py

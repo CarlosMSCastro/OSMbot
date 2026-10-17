@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import ctypes
 import os
+import subprocess
 import sys
 import threading
 import time
@@ -117,10 +118,11 @@ FULL = 0.7  # a full ring: the club's colour a little stronger than a running ti
 
 
 def logo_path() -> Path:
-    """The logo: next to OSMbot.exe in the portable/installed bot, in tools/assets when run from the repo."""
-    here = Path(sys.executable).parent / "osmbot.ico"
-    if here.exists():
-        return here
+    """The logo: next to OSMbot.exe in the portable/installed bot, in Contents/Resources in the Mac app, in
+    tools/assets when run from the repo."""
+    for here in (Path(sys.executable).parent / "osmbot.ico", Path(sys.executable).parent.parent / "Resources" / "osmbot.ico"):
+        if here.exists():
+            return here
     return Path(__file__).resolve().parents[3] / "tools" / "assets" / "osmbot.ico"
 
 
@@ -170,6 +172,14 @@ def hide_own_console() -> None:
             ctypes.windll.user32.ShowWindow(console, 0)
     except Exception:
         pass
+
+
+def show_folder(folder: Path) -> None:
+    """Open the folder in the Explorer (Windows) or the Finder (Mac)."""
+    if sys.platform == "win32":
+        os.startfile(folder)
+    elif sys.platform == "darwin":
+        subprocess.Popen(["open", str(folder)])
 
 
 def tray_icon(logo: QIcon, working: bool) -> QIcon:
@@ -1145,6 +1155,9 @@ def divider() -> QFrame:
 
 
 TRAINING_WIDTH = 104  # one column of the trainings and of the doctor/lawyer
+# The Mac draws text at 72 dpi (a quarter smaller than Windows) and a 13" Mac is 1440 px wide: the club column and the
+# right column are narrower there, so the board fits (owner, 2026-10-17)
+MAC = sys.platform == "darwin"
 
 
 class ClubCard(QFrame):
@@ -1221,7 +1234,7 @@ class ClubCard(QFrame):
         club.addStretch(1)
         left = QWidget()
         left.setLayout(club)
-        left.setFixedWidth(380)  # room for the squad value circle by the name (owner, 2026-10-13)
+        left.setFixedWidth(330 if MAC else 380)  # room for the squad value circle by the name (owner, 2026-10-13)
         row.addWidget(left)
         row.addWidget(divider())
 
@@ -1599,7 +1612,7 @@ class MainWindow(QMainWindow):
     "Bot" and in the tray icon."""
 
     GAP = 14  # board: between the clubs and the right column
-    SIDE = 340  # board: the right column (boss coins, timeline)
+    SIDE = 300 if MAC else 340  # board: the right column (boss coins, timeline)
 
     def __init__(self, app: QApplication):
         super().__init__()
@@ -1786,6 +1799,7 @@ class MainWindow(QMainWindow):
 
     def _build_menu(self) -> None:
         style = self.style()
+        self.menuBar().setNativeMenuBar(False)  # in the window, as on Windows, not in the Mac's bar at the top of the screen
         self.menuBar().clear()
         self.start_action = QAction(style.standardIcon(QStyle.SP_MediaPlay), tr("Iniciar"), self, triggered=self.start_bot)
         self.stop_action = QAction(style.standardIcon(QStyle.SP_MediaStop), tr("Parar"), self, triggered=self.stop_bot)
@@ -1859,9 +1873,13 @@ class MainWindow(QMainWindow):
             self.setMaximumSize(16777215, 16777215)
             if self.width() < BOARD_SIZE.width():
                 centre = self.frameGeometry().center()
-                self.resize(BOARD_SIZE)
+                screen = (self.screen() or QApplication.primaryScreen()).availableGeometry()
+                title = self.frameGeometry().height() - self.height()  # never taller or wider than the screen (the Mac's)
+                self.resize(min(BOARD_SIZE.width(), screen.width()), min(BOARD_SIZE.height(), screen.height() - max(title, 28)))
                 frame = self.frameGeometry()
                 frame.moveCenter(centre)
+                frame.moveLeft(max(screen.left(), min(frame.left(), screen.right() - frame.width())))  # all of it on the screen
+                frame.moveTop(max(screen.top(), min(frame.top(), screen.bottom() - frame.height())))
                 self.move(frame.topLeft())
         else:
             self.setFixedSize(LAUNCHER_SIZE)
@@ -2177,14 +2195,12 @@ class MainWindow(QMainWindow):
         repo = repo_folder()
         folder = repo / "logs" / machine() if repo else Path.home() / ".osmbot"
         folder.mkdir(parents=True, exist_ok=True)
-        if sys.platform == "win32":
-            os.startfile(folder)
+        show_folder(folder)
 
     def open_failures(self) -> None:
         folder = Path.home() / ".osmbot" / "failures"
         folder.mkdir(parents=True, exist_ok=True)
-        if sys.platform == "win32":
-            os.startfile(folder)
+        show_folder(folder)
 
     def about(self) -> None:
         if language() == "en":
