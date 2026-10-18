@@ -619,3 +619,13 @@ Na checklist do cartão, o passo fica **amarelo** quando o jogo o dá como feito
 **Especialistas:** como já estava (D-042), amarelo fora da regra (§4); o hover passa a dizer que papel está errado e quem a regra pede.
 
 **Treino secreto e estágio na janela** (dono, 2026-10-14): por baixo dos 8 passos, no fim da lista, com os ícones do próprio jogo (o escudo com cadeado e a tenda). **Marcado** para o próximo jogo: texto **verde** e ícone a cores com um anel verde. **Não marcado**: texto **cinzento** e ícone a cinzento. Sem jogo nesta jornada (o jogo não deixa marcar): igual a não marcado, e o hover diz porquê. Só mostra: comprar continua a ser decisão do dono (§6).
+
+## 22. Experiência do treinador (XP, `skillRating`)
+
+*Fonte: o dono, 2026-10-17 ("estou stuck nos 397-398k, não entendo porque não subo"). Só registo para estudar; o bot não muda nada por causa disto. Factos em `DISCOVERY.md` §3.*
+
+- **O que se regista:** depois de cada jornada, uma linha por jogo do dono (liga ou taça) em `logs/<PC>/xp/`: resultado, adversário humano (com o rating) ou CPU, o rating total da conta, o saldo nessa liga (`leagueSkillRating`) e quanto mudaram desde a leitura anterior, os bónus da jornada e o nível (falta para o seguinte). `osmbot xp` mostra a tabela e a média da variação por resultado e tipo de adversário.
+- **[S]** A variação de um jogo é a do saldo **dessa liga** (o total mistura as ligas). Só conta para as médias quando a leitura anterior foi a jornada anterior (`jornadas` 1).
+- **[S]** Os amigáveis não contam para o rating (não se registam).
+- **[?]** Como o jogo calcula o rating (quanto dá uma vitória, quanto tira uma derrota, se depende do rating do adversário): sem fonte pública; o registo é para o descobrir.
+

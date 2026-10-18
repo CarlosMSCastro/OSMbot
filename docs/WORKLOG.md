@@ -2,6 +2,17 @@
 
 Entradas mais recentes primeiro. Cada sessão: o que se fez · o que ficou por fazer · próximo passo.
 
+## 2026-10-17 (cont.) — Registo da XP do treinador
+
+- **Pedido do dono:** logs da XP ("stuck nos 397-398k") e procurar as regras online.
+- **Apurado (só leituras):** a XP é o `skillRating` da conta (397 927, nível 9; o 10 começa nos 450 000). `leagues/{L}/managers` dá o saldo por liga (`leagueSkillRating`), que fica negativo: perder tira pontos. Último bónus: +25 por vitória contra a CPU. Na web: nada sobre o cálculo; fórum bloqueado (Anubis). `DISCOVERY.md` §3.
+- **Construído (D-062):** `game/xplog.py` (passo `xp` no ciclo, depois do registo dos jogos), `logs/<PC>/xp/`, comando `osmbot xp`. 1.ª leitura feita: Betis 5-0 (V, CPU, +25) e FC Van 2-0 (V, CPU, +25), base 397 927. 420 testes.
+- **Piloto das legendas (OSMPro, grátis):** `youtube-transcript-api` (numa pasta temporária, fora do projeto) em 3 vídeos de Dicas: segundos por vídeo, sem descarregar nada. O de táticas tem legendas **feitas pelo autor** (texto limpo); os outros dois só automáticas (percebe-se a ideia, mas com erros: "SM" por OSM, "trens" por treinadores). Sem o que está no ecrã. O dos pontos de treinador explica como se ganham (`DISCOVERY.md` §3, [R]). Depois: **todas** as legendas, para o repo (D-063, `tools/osmpro_legendas.py`, a correr neste Mac).
+- **Estudo dos vídeos (D-063):** `OSMPro/_kb/` com `legendas/`, `notas/` (1 por vídeo: conclusões numeradas, comparação com a teoria, dúvidas) e `ESTADO.md` gerado por `tools/osmpro_estado.py`. 3 notas feitas (Dicas: pontos de treinador, moral e condição, contra-táticas; 27 conclusões). Ordem combinada: Dicas, Táticas, "Não te esqueças da tática!", Atualizações, Curiosidades, Torneios, Modo Carreira.
+- **Legendas: o YouTube bloqueou o IP** (`IpBlocked`) ao fim de 18 vídeos, com 3–6 s de pausa. O script passa a 20–40 s e, num bloqueio, espera 1 h (para ao 6.º seguido). ~1180 vídeos = 8–12 h.
+- **Ainda bloqueado às 23:35:** a lista de legendas responde, mas o texto dá `IpBlocked`; o `yt-dlp` dá 429 no mesmo pedido. Parado. Opções: esperar (horas, não se sabe quantas), outra rede, ou o `yt-dlp` com os cookies do browser (decisão do dono).
+- **Próximo passo:** com algumas jornadas registadas, ver em `osmbot xp` quanto dão V/E/D contra CPU e contra humanos. **O bot aberto tem de ser reiniciado** para usar o código novo.
+
 ## 2026-10-17 — Bot no Mac (MacBook, Intel)
 
 - **Pedido do dono:** pôr o bot a correr no Mac para desligar o PC de casa (nunca os dois ligados ao mesmo tempo).

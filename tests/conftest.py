@@ -30,6 +30,9 @@ def _no_repo_logs(monkeypatch, tmp_path):
     from osmbot.game import matchlog
 
     monkeypatch.setattr(matchlog, "FILE", tmp_path / "jogos.json")  # nor the match log's state
+    from osmbot.game import xplog
+
+    monkeypatch.setattr(xplog, "FILE", tmp_path / "xp.json")  # nor the XP log's state
 
 
 @pytest.fixture

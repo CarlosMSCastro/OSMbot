@@ -38,6 +38,7 @@ from osmbot.game import stadium as stadium_module
 from osmbot.board import timeline
 from osmbot.game.inventory import run_inventory
 from osmbot.game.matchlog import log_rounds
+from osmbot.game.xplog import log_xp
 from osmbot.game.medical import run_medical
 from osmbot.game.transfers import save_transfers
 from osmbot.game.prematch import run_prematch
@@ -356,7 +357,7 @@ def run_active(dry_run: bool = False, *, claim=run_claim, train=run_train, finis
                prematch=lambda confirm: run_prematch(confirm), medical=lambda confirm: run_medical(confirm),
                transfers=lambda: save_transfers(log=_log), savings=lambda confirm: run_savings(confirm),
                events=lambda: events_module.refresh(log=_log), inventory=lambda confirm: run_inventory(confirm, log=_log),
-               matches=lambda: log_rounds(log=_log), boost=lambda confirm: run_event_boost(confirm),
+               matches=lambda: log_rounds(log=_log), xp=lambda: log_xp(log=_log), boost=lambda confirm: run_event_boost(confirm),
                event_wake=lambda now: events_module.training_wake(now),
                snapshot=None, use_screen: bool | None = None,
                sleep=time.sleep, clock=time.time, rng=random, board=None) -> None:
@@ -572,6 +573,13 @@ def run_active(dry_run: bool = False, *, claim=run_claim, train=run_train, finis
                         raise
                     except Exception as error:
                         _log(f"Registo dos jogos: erro ({error}); volto a tentar")
+                if xp:
+                    try:  # read-only: the manager's rating after each of the owner's matches
+                        xp()
+                    except OSError:
+                        raise
+                    except Exception as error:
+                        _log(f"Registo da XP: erro ({error}); volto a tentar")
                 if events:
                     try:  # the forum's schedule of events, only when a month is missing (D-038)
                         events()

@@ -62,6 +62,7 @@ def main(argv: list[str] | None = None) -> None:
     folder.add_argument("caminho", nargs="?", help="the OSMbot repo folder on this PC")
     subparsers.add_parser("slots", help="Read-only: free transfer-list slots per club.")
     subparsers.add_parser("treinos", help="Read-only: training sessions (ready / time left) and next match.")
+    subparsers.add_parser("xp", help="Local only: the manager's XP per match, from logs/*/xp.")
     subparsers.add_parser(
         "inspect-writes",
         help="Discovery: you act in the window, it lists the write requests the site makes (no values).",
@@ -136,6 +137,10 @@ def main(argv: list[str] | None = None) -> None:
         run_trainings()
     elif args.command == "status":
         run_status()
+    elif args.command == "xp":
+        from osmbot.game.xplog import run_report
+
+        run_report()
     elif args.command == "probe":
         run_probe(args.path, args.slot)
 

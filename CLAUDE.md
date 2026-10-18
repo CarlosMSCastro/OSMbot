@@ -10,7 +10,7 @@ Um bot para o **Online Soccer Manager (OSM)** — o jogo de gestão de futebol d
 
 ## Estado atual
 
-O bot já **escreve na conta** (modo ativo). Versão atual em `pyproject.toml` e `CHANGELOG.md`; o que falta fazer em `docs/WORKLOG.md`; decisões (alcance A3/A4, risco aceite, autonomia por níveis) em `docs/DECISIONS.md`. O repo é **público** (D-016): sem nomes de clubes, ligas, jogadores ou utilizadores de terceiros em ficheiros versionados, **exceto em `logs/`** (D-022: o registo do bot, completo, aceite pelo dono). Para diagnosticar o bot noutra máquina, ler `logs/<PC>/AAAA-MM-DD.log`.
+O bot já **escreve na conta** (modo ativo). Versão atual em `pyproject.toml` e `CHANGELOG.md`; o que falta fazer em `docs/WORKLOG.md`; decisões (alcance A3/A4, risco aceite, autonomia por níveis) em `docs/DECISIONS.md`. O repo é **público** (D-016): sem nomes de clubes, ligas, jogadores ou utilizadores de terceiros em ficheiros versionados, **exceto em `logs/`** (D-022: o registo do bot, completo, aceite pelo dono) **e em `OSMPro/_kb/`** (D-063: as legendas dos vídeos). Para diagnosticar o bot noutra máquina, ler `logs/<PC>/AAAA-MM-DD.log`.
 
 ## Código
 
