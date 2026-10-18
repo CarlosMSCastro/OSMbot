@@ -4,6 +4,26 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-PT/1.1.0/); 
 
 Este ficheiro é o **histórico de versões, para quem lê o repo**. O diário interno de cada sessão de trabalho está em [`docs/WORKLOG.md`](docs/WORKLOG.md).
 
+## [0.13.7] — 2026-10-18
+
+O bot passa a registar a experiência (XP) do treinador depois de cada jogo, e as legendas dos vídeos do OSMPro entram no repo para estudo.
+
+### Adicionado
+- **Registo da XP do treinador (D-062):** só leituras. Depois de cada jornada, uma linha por jogo do dono (liga ou taça) em `logs/<PC>/xp/AAAA-MM.jsonl`: resultado, adversário humano (com o rating) ou CPU, rating da conta, saldo nessa liga e quanto mudaram, bónus da jornada e nível. No registo do bot, "XP: …".
+- **Comando `osmbot xp`:** lê os registos de todos os PCs e mostra a tabela e a média da variação por resultado e tipo de adversário.
+- **Estudo dos vídeos do OSMPro (D-063):** `tools/osmpro_legendas.py` guarda as legendas de cada vídeo em `OSMPro/_kb/legendas/` (retoma onde parou e espera quando o YouTube bloqueia); `tools/osmpro_estado.py` gera `OSMPro/_kb/ESTADO.md` (o que está transcrito e analisado). Primeiras notas de análise em `OSMPro/_kb/notas/`.
+
+## [0.13.6] — 2026-10-17
+
+O bot passa a correr no Mac.
+
+### Adicionado
+- **Versão para Mac (D-061):** `python tools/build_mac.py --zip --dmg` constrói `dist/mac/OSMbot.app`, o zip portátil e o `.dmg`. O `dist/` passa a ter uma pasta por sistema (`dist/windows/`, `dist/mac/`).
+- **Mac acordado:** enquanto o bot corre, o Mac não adormece nem desliga o ecrã (`caffeinate`, termina com o bot; fechar a tampa continua a adormecer).
+
+### Alterado
+- **Janela no Mac:** colunas mais estreitas para caber num ecrã de 13", nunca maior do que o ecrã, menu dentro da janela; abrir pastas usa o Finder.
+
 ## [0.13.5] — 2026-10-16
 
 O aviso do banco passa a ler o banco como o jogo: por lugares de cada posição.
