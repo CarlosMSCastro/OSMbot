@@ -51,6 +51,12 @@ def test_friendly_opponents_exclude_the_club_and_this_weeks_friendlies():
     assert friendly_choices(teams, matches, 1, 14) == [3, 5]
 
 
+def test_friendly_opponents_exclude_the_next_official_opponent():
+    teams = [{"id": i} for i in range(1, 6)]
+    assert friendly_choices(teams, [match(15, 5, 1)], 1, 14) == [2, 3, 4]  # the game refuses it (400)
+    assert friendly_choices(teams, [match(15, 5, 1), match(15, 1, 3, kind=1)], 1, 14) == [2, 3, 4, 5]  # unclear: none left out
+
+
 class FakeClient:
     def __init__(self, steps, match_in=3600, coins=100, sent=None, post_status=200, clubs=6, friendlies=1,
                  settings=({"id": 60, "name": "SpyInstructionTimer", "value": 60},), week=14):
@@ -127,15 +133,15 @@ def test_plays_the_missing_friendlies_and_sends_the_analyst_to_the_next_opponent
     client = FakeClient([step(7, 1), step(5, 0)])  # the owner played 1: 3 to go
     (failures, _), lines = prepare(client)
     assert failures == 0
-    assert client.posts == [(f"{BASE}/matches", {"opponentId": c, "productId": 62}) for c in (3, 4, 5)] +         [(f"{BASE}/spyinstructions", {"instructionTeamId": 3, "timerGameSettingId": 60})]
+    assert client.posts == [(f"{BASE}/matches", {"opponentId": c, "productId": 62}) for c in (4, 5, 6)] +         [(f"{BASE}/spyinstructions", {"instructionTeamId": 3, "timerGameSettingId": 60})]
     assert prematch.COUNTS == {"friendlies": 3, "analyses": 1, "collected": 0}
-    assert "Amigável: Club 2-0 T3" in lines
+    assert "Amigável: Club 2-0 T4" in lines  # not T3, the next opponent: the game refuses it
 
 
 def test_coins_for_only_some_of_the_friendlies():
     client = FakeClient([step(7, 0), step(5, 1)], friendlies=0, coins=9)
     _, lines = prepare(client)
-    assert [form["opponentId"] for _, form in client.posts] == [2, 3]
+    assert [form["opponentId"] for _, form in client.posts] == [2, 4]
     assert "! Club: sem boss coins para o amigável (1); 2 de 4 ficam por fazer" in lines
 
 
@@ -164,15 +170,15 @@ def test_simulation_writes_nothing():
     client = FakeClient([step(7, 0), step(5, 0)])
     _, lines = prepare(client, confirm=False)
     assert client.posts == []
-    assert "Club: faria 3 amigável(eis) contra T3, T4, T5" in lines
+    assert "Club: faria 3 amigável(eis) contra T4, T5, T6" in lines
 
 
 def test_a_refused_friendly_tries_another_opponent_and_a_server_error_is_a_failure():
-    client = FakeClient([step(7, 0), step(5, 1)], post_status=400)
+    client = FakeClient([step(7, 0), step(5, 1)], post_status=400, clubs=7)
     assert prepare(client)[0] == (0, None)
-    assert [form["opponentId"] for _, form in client.posts] == [3, 4, 5]  # 3 refusals: wait for the next pass
+    assert [form["opponentId"] for _, form in client.posts] == [4, 5, 6]  # 3 refusals: wait for the next pass
     prepare(client)  # the next pass: the refused clubs are not asked again this round (D-032)
-    assert [form["opponentId"] for _, form in client.posts] == [3, 4, 5, 6]
+    assert [form["opponentId"] for _, form in client.posts] == [4, 5, 6, 7]
     from osmbot.game import refusals
 
     refusals.FILE.unlink()

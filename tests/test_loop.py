@@ -334,6 +334,24 @@ def test_the_window_gets_the_board_and_its_stop_button_ends_the_loop_like_ctrl_c
     assert "Parado" in loop.LOG_FILE.read_text(encoding="utf-8")
 
 
+def test_a_window_already_gone_at_the_stop_does_not_hide_why_it_stopped():
+    clock_state = {"t": 1_000_000.0}
+    snap = {"coins": 1, "clubs": [], "ads": {"shop": {"open": False, "reopen": None}, "training": {"open": False, "reopen": None}}}
+
+    def sleep(seconds):
+        clock_state["t"] += seconds
+        if clock_state["t"] > 1_000_000.0 + 120:
+            loop.request_stop()
+
+    def board(payload):
+        if payload["status"] == "PARADO":
+            raise RuntimeError("Signal source has been deleted")  # Qt, when the window closed first (Mac, 2026-10-18)
+
+    loop.run_active(claim=lambda c: 0, train=lambda c: 0, finish_times=lambda: [], ads=None, stadium=None, sponsors=None,
+                    rewards=None, snapshot=lambda: snap, board=board, sleep=sleep, clock=lambda: clock_state["t"], rng=FixedRng())
+    assert "Parado" in loop.LOG_FILE.read_text(encoding="utf-8")
+
+
 def test_errors_and_warnings_are_kept_for_the_window():
     loop._notices.clear()
     loop._log("Vídeos: erro (shop_ads: os boss coins não subiram); volto a tentar")

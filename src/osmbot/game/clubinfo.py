@@ -12,7 +12,7 @@ import time
 from osmbot.board.info import cup_phase, league_summary, next_match, squad_value, team_rating, value_table
 from osmbot.game import market as market_watch, sales
 from osmbot.game.specialists import check
-from osmbot.theory.lineup import bench_warnings, position_warnings, tactic_notes, tactic_warnings
+from osmbot.theory.lineup import bench_warnings, empty_places, places, position_warnings, tactic_notes, tactic_warnings
 from osmbot.medical.policy import open_cases
 from osmbot.prematch.policy import friendlies_played
 
@@ -216,7 +216,7 @@ def club_extra(client, team: dict, base: str, players: list[dict], slot, market:
     status, current = got[6]  # the game ticks any 4 specialists; yellow when they are not the owner's rule (D-042)
     why = {SPECIALISTS_STEP: check(players, current if status == 200 and isinstance(current, dict) else None),
            BENCH_STEP: bench_warnings(players),  # THEORY.md section 21: yellow with the reason on hover
-           ELEVEN_STEP: tactic_warnings(tactic, strictness, mine, theirs, players),
+           ELEVEN_STEP: empty_places(players, tactic) + tactic_warnings(tactic, strictness, mine, theirs, players),
            POSITIONS_STEP: position_warnings(players, tactic)}  # who is out of position, on the hover
     steps = [(name, False, RULE) if why.get(kind) and done_ else (name, done_, extra)
              for (kind, _), (name, done_, extra) in zip(CHECKLIST, steps)]
@@ -240,7 +240,7 @@ def club_extra(client, team: dict, base: str, players: list[dict], slot, market:
     standings = _cached(("standings", league), FIXTURES_FOR, lambda: _list(client, f"{league}/standings"))
     return {
         "team_id": team["id"], "week": week, "logo": logo, "logo_key": team.get("baseId") or str(team["id"]),
-        "next": upcoming,
+        "next": upcoming, "places": places(tactic),  # the formation's places, for the buying card
         "cup": cup_phase(rounds, matches, team["id"], week),
         "value": squad_value(values, team["id"]), "strength": strength,
         "value_table": value_table(values, {t["id"]: t["name"] for t in teams}, team["id"]),

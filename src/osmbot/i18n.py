@@ -182,7 +182,9 @@ PATTERNS = [(re.compile(pattern), replace) for pattern, replace in (
     (r"Nenhum SALE (\w+) cabe no dinheiro", lambda m: f"No SALE {_w(m[1])} you can afford"),
     (r"^(ATA|MED|DEF|GR) (\d+) · (.+)$", lambda m: f"{_w(m[1])} {m[2]} · {m[3]}"),  # the SALE stripe's player
     (r"^lucro ~(.+)$", lambda m: f"profit ~{m[1]}"),
-    (r"^((?:reforço|pechincha).*)$", lambda m: m[1].replace("reforço", "upgrade").replace("pechincha", "bargain")),
+    (r"^((?:suplente|reforço|pechincha).*)$", lambda m: re.sub(r"lugar (\d+) vazio", r"place \1 empty", m[1].replace(" sem suplente", " with no backup")
+     .replace("suplente", "backup").replace("reforço", "upgrade").replace("pechincha", "bargain"))),
+    (r"^Lugar (\d+) do 11 vazio(.*)$", lambda m: f"Place {m[1]} of the eleven empty{m[2]}"),
     (r"^\? = esta liga não vendeu ao máximo nos últimos 3 dias$",
      lambda m: "? = this league has not sold at the maximum in the last 3 days"),
     # top bar, coins

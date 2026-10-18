@@ -110,24 +110,41 @@ def _spot(player: dict):
     return player.get("specificPosition") or ("pos", player.get("position"))
 
 
-def weak_spots(players: list[dict], listed: set[int]) -> dict:
-    """The eleven's places worth strengthening (THEORY.md 7.9): for each specific position, the weakest starter, if
-    he is below the average of the eleven as it would play. A starter on the transfer list counts as whoever would take his place: the best
-    of the rest of the squad in that specific position not on the list either (none: 0, the place is open).
-    {spot: (level, text for "reforço (> …)")}."""
+def _eleven(players: list[dict], listed: set[int], places: dict[int, int] | None = None) -> tuple[list, list[dict]]:
+    """The eleven as it would play and the players left outside it. A starter on the transfer list, or an empty place
+    of the formation (``places``: place -> specific position, ``theory.lineup.places``), counts as whoever would take
+    it: the best of the rest of the squad in that specific position, available and not on the list (none: 0, the
+    place is open); each of them covers one place only. ([(spot, level, text)], [the rest])."""
     from osmbot.theory.lineup import rating
 
     starters = [p for p in players if p.get("lineup") in range(1, 12)]
+    taken = {p["lineup"] for p in starters}
+    empty = [(place, spot) for place, spot in sorted((places or {}).items()) if place not in taken]
     if not starters:
+        return [], []
+    rest = [p for p in players if p not in starters and p["id"] not in listed and not p.get("unavailable")]
+    used: set = set()
+
+    def cover(spot, missing: str) -> tuple[int, str]:
+        best = max((q for q in rest if _spot(q) == spot and q["id"] not in used), key=rating, default=None)
+        if not best:
+            return 0, missing
+        used.add(best["id"])
+        return rating(best), f"{best['name']} {rating(best)}"
+
+    eleven = [(_spot(p), *(cover(_spot(p), f"{p['name']} à venda") if p["id"] in listed else (rating(p), f"{p['name']} {rating(p)}")))
+              for p in starters]
+    eleven += [(spot, *cover(spot, f"lugar {place} vazio")) for place, spot in empty]
+    return eleven, [q for q in rest if q["id"] not in used]
+
+
+def weak_spots(players: list[dict], listed: set[int], places: dict[int, int] | None = None) -> dict:
+    """The eleven's places worth strengthening (THEORY.md 7.9): for each specific position, the weakest starter, if
+    he is below the average of the eleven as it would play (``_eleven``: a listed starter or an empty place counts as
+    whoever would take it). {spot: (level, text for "reforço (> …)")}."""
+    eleven, _ = _eleven(players, listed, places)
+    if not eleven:
         return {}
-    rest = [p for p in players if p not in starters and p["id"] not in listed]
-    eleven = []
-    for p in starters:
-        level, text = rating(p), f"{p['name']} {rating(p)}"
-        if p["id"] in listed:
-            cover = max((q for q in rest if _spot(q) == _spot(p)), key=rating, default=None)
-            level, text = (rating(cover), f"{cover['name']} {rating(cover)}") if cover else (0, f"{p['name']} à venda")
-        eleven.append((_spot(p), level, text))
     average = sum(level for _, level, _ in eleven) / len(eleven)  # the eleven as it would play
     spots: dict = {}
     for spot, level, text in eleven:
@@ -136,16 +153,35 @@ def weak_spots(players: list[dict], listed: set[int]) -> dict:
     return {spot: weak for spot, weak in spots.items() if weak[0] < average}
 
 
-def sale_picks(market: list[dict], players: list[dict], money: float, count: int = 3) -> list[dict]:
+GENERAL = {6: 4, 3: 3, 9: 3, 12: 3, 1: 2, 2: 2, 5: 2, 7: 2, 10: 2, 4: 1, 8: 1, 11: 1}  # specific -> general position
+
+
+def depth_gaps(players: list[dict], listed: set[int], places: dict[int, int] | None = None) -> dict:
+    """The general positions (GR, DEF, MED, ATA) of the eleven, as it would play, with no backup (THEORY.md 7.9,
+    owner 2026-10-18: by the general position, not the specific one): nobody of that position outside it, available,
+    not on the list and not tired (below the yellow line). {position code: text for "suplente (…)"}."""
+    from osmbot.theory.fitness import YELLOW_BELOW
+
+    eleven, rest = _eleven(players, listed, places)
+    needed = {spot[1] if isinstance(spot, tuple) else GENERAL.get(spot) for spot, _, _ in eleven}
+    return {pos: f"{POSITIONS[pos]} sem suplente" for pos in sorted(needed - {None}, reverse=True)
+            if not any(q.get("position") == pos and q.get("fitness", 100) >= YELLOW_BELOW for q in rest)}
+
+
+def sale_picks(market: list[dict], players: list[dict], money: float, count: int = 3,
+               places: dict[int, int] | None = None) -> list[dict]:
     """The game's players worth buying now (THEORY.md 7.7, owner 2026-10-15): to sell again at once, those valued
     10-40 M (they sell at the maximum within about a day and a half), and to strengthen the eleven, any that beats the
     weakest starter of its specific position where he is below the eleven's average (``reforco``, ``weak_spots``);
-    all the club can pay for, "SALE" or not. Cheapest against their value first (what a slot earns per day goes with
-    it, DISCOVERY.md 3), then the biggest profit; the first is the best bet. ``pechincha``: at most 1.25 × value."""
+    all the club can pay for, "SALE" or not; and any of a general position of the eleven with no backup
+    (``suplente``, ``depth_gaps``), first, whatever its rating (owner, 2026-10-18). Cheapest against their value first
+    (what a slot earns per day goes with it, DISCOVERY.md 3), then the biggest profit; the first is the best bet.
+    ``pechincha``: at most 1.25 × value. ``places``: the formation's places, so an empty one counts."""
     squad = {p["id"] for p in players}
     listed = {(item.get("player") or {}).get("id") for item in market  # the club's own listings, not the game's
               if not (item.get("team") or {}).get("isForeignTeam")} & squad
-    spots = weak_spots(players, listed)
+    spots = weak_spots(players, listed, places)
+    gaps = depth_gaps(players, listed, places)
     picks = []
     for row in sale_rows(market, ratio=float("inf")).values():
         if row["preco"] > money:
@@ -153,11 +189,13 @@ def sale_picks(market: list[dict], players: list[dict], money: float, count: int
         spot = row["especifica"] or ("pos", next((k for k, v in POSITIONS.items() if v == row["pos"]), None))
         weak = spots.get(spot)
         better = bool(weak) and (row["rating"] or 0) > weak[0]
-        if not better and not FLIP_VALUE[0] <= row["valor"] <= FLIP_VALUE[1]:
+        general = next((k for k, v in POSITIONS.items() if v == row["pos"]), None)
+        if not better and general not in gaps and not FLIP_VALUE[0] <= row["valor"] <= FLIP_VALUE[1]:
             continue
         picks.append({**row, "lucro": resale(row["valor"]) - row["preco"], "reforco": better,
-                      "fraco": weak[1] if better else None, "pechincha": row["razao"] <= BARGAIN})
-    return sorted(picks, key=lambda r: (r["razao"], -r["lucro"]))[:count]
+                      "fraco": weak[1] if better else None, "suplente": gaps.get(general),
+                      "pechincha": row["razao"] <= BARGAIN})
+    return sorted(picks, key=lambda r: (not r["suplente"], r["razao"], -r["lucro"]))[:count]
 
 
 def sale_changes(before: dict | None, rows: dict[str, dict], now: float) -> tuple[dict, list[dict], list[dict]]:

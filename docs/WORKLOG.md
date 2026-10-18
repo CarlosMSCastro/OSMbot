@@ -2,6 +2,16 @@
 
 Entradas mais recentes primeiro. Cada sessão: o que se fez · o que ficou por fazer · próximo passo.
 
+## 2026-10-18 — Pull, `dist/windows` 0.13.7, revisão dos registos, DC do FC Van (DESKTOP-KAM70RR)
+
+- **Pull (dono) e `dist`:** o commit 0.13.7 do Mac deixou `__init__.__version__` em 0.13.5 (o teste da versão falhou aqui); corrigido. `dist/` antigo apagado (pedido do dono), o Python embutido passado para `dist/windows/`; `build_portable.py --zip --installer` → `dist/windows/` (portátil 553 MB, `OSMbot-0.13.7-windows-portable.zip` 206 MB, `-windows-setup.exe` 148 MB). Instalado em `%LOCALAPPDATA%\OSMbot` e aberto.
+- **Revisão dos registos de 16–18/10** (pedido do dono): Golden Oldies (previsão já com o bónus, sem corte nos 30, cresce com a idade), bónus da recolha até +100, vendas acima de 70 M fora dos eventos, amigável recusado contra o próximo adversário: `DISCOVERY.md` (§3, §6c). Paragens: PC de casa desligado pelo menu Iniciar às 04:33 de 17/10 (registo do Windows, utilizador do dono), por isso nenhum PC viu o início do evento nem correu o D-059; Mac parado 16:32–19:20 de 17/10 num vídeo da loja, com leituras soltas de hora a hora (**[H]** Mac a dormir: tampa fechada ou bateria; por confirmar pelo dono); Mac parado às 14:05 de hoje com "Signal source has been deleted" (por confirmar se o dono fechou a app).
+- **Corrigido (OK do dono):** amigáveis já não pedem o próximo adversário oficial (`friendly_choices`, `THEORY.md` §6); a paragem já não é escondida por um erro ao desenhar "PARADO" com a janela fechada (`loop.run_active`).
+- **DC do FC Van** (pedido do dono): o lugar 3 do 11 estava vazio desde a venda do Chalobah (17/10 19:23) e o `weak_spots` só via quem estava no 11; nenhum DC do mercado a ≤ 1,25× (o mais barato, Saliba, 1,27×). O dono comprou depois o Saliba. **Construído (a e b, OK do dono):** lugar vazio no 11 = aviso amarelo no passo "Onze" (`theory.lineup.empty_places`) e conta como quem o ocuparia nos reforços (`engine._eleven`, `places` vindos de `club_extra`); **posição sem suplente** (`engine.depth_gaps`: ninguém fora do 11, disponível, não à venda e com condição ≥ 80) → sugestão "suplente", primeiro no cartão. `THEORY.md` §7.9. 424 testes.
+- **Suplente pela posição geral** (escolha do dono, opção 3): pela específica havia 2–7 posições sem suplente por clube e o cartão mostrava quase só suplentes. `depth_gaps` passa a GR/DEF/MED/ATA (`GENERAL`). Com dados reais: só o Betis tem a defesa sem suplente (Bastoni DEF 100, 33,7 M, 1,27×, também reforço sobre o Bartra 69); FC Van e Qarabag sem falta. 424 testes. Fica **[S]**: o suplente não tem de ser pechincha.
+- **Respostas do dono:** às 14:05 fechou a app (é só a mensagem, já corrigida). 17/10: acha que a fechou por esquecimento, mas o registo não tem paragem nem "Bot ligado" entre as 16:28 e as 19:30, só leituras soltas de hora a hora: a app estava aberta e parada, o mais provável com o Mac a dormir (**[H]**).
+- **Próximo passo:** versão (0.13.8?) e `dist` para o bot a correr ter as correções de hoje.
+
 ## 2026-10-17 (cont.) — Registo da XP do treinador
 
 - **Pedido do dono:** logs da XP ("stuck nos 397-398k") e procurar as regras online.

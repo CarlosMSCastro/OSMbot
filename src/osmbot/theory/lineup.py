@@ -78,6 +78,16 @@ def places(tactic: dict | None) -> dict[int, int]:
     return dict(enumerate(codes, start=1))
 
 
+def empty_places(players: list[dict], tactic: dict | None) -> list[str]:
+    """Places of the eleven with nobody in them (FC Van, 2026-10-18: a starter sold and the place left empty), with
+    the specific position the formation wants there when known (THEORY.md section 21)."""
+    taken = {p.get("lineup") for p in players}
+    if not taken & set(ELEVEN):  # no eleven read: nothing to say
+        return []
+    spots = places(tactic)
+    return [f"Lugar {n} do 11 vazio" + (f" ({SPECIFIC[spots[n]]})" if n in spots else "") for n in ELEVEN if n not in taken]
+
+
 def position_warnings(players: list[dict], tactic: dict | None) -> list[str]:
     """Starters out of their specific position, as the game counts its step "Position your players" (the game:
     players do better in their specific position; THEORY.md section 21)."""

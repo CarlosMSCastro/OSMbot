@@ -179,7 +179,7 @@ def collect(client) -> dict:
         try:  # the game's players worth buying: to sell again at once or to strengthen the eleven (THEORY.md 7.7)
             from osmbot.game.clubinfo import league_sells_at_max
 
-            club["sale"] = {"picks": sale_picks(market, players, budget),
+            club["sale"] = {"picks": sale_picks(market, players, budget, places=club.get("places")),
                             "certo": league_sells_at_max(client, team["leagueId"])}
         except OSError:
             raise

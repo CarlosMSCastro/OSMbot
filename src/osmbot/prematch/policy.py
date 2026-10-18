@@ -109,7 +109,9 @@ def next_opponent(matches: list[dict], team_id: int, week: int) -> int | None:
 
 def friendly_choices(teams: list[dict], matches: list[dict], team_id: int, week: int) -> list[int]:
     """Clubs of the league the club can still play a friendly against this week (one per opponent per week).
-    Any of them will do (owner, 2026-10-08)."""
+    Any of them will do (owner, 2026-10-08), except the next official opponent: the game refuses it (400, 5 of 5
+    times seen, 2026-10-13 to 17)."""
     played = {_other(m, team_id) for m in matches
               if m["matchType"] == FRIENDLY_MATCH and m["weekNr"] == week and _involves(m, team_id)}
+    played.add(next_opponent(matches, team_id, week))
     return [t["id"] for t in teams if t["id"] != team_id and t["id"] not in played]

@@ -660,7 +660,10 @@ def run_active(dry_run: bool = False, *, claim=run_claim, train=run_train, finis
             screen.close()
             print(chr(10).join(_recent))
         if board:
-            draw("PARADO")
+            try:
+                draw("PARADO")
+            except Exception:  # the window already closed (Qt: "Signal source has been deleted", Mac 2026-10-18):
+                pass  # this must never hide why the bot stopped
         _screen_on = False
         _redraw = None
         _refresh = None

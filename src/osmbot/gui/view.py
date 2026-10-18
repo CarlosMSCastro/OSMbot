@@ -224,7 +224,8 @@ def tired_view(club: dict) -> tuple[str, str]:
 def sale_view(club: dict) -> dict | None:
     """The "SALE" worth a look (THEORY.md 7.7), for a blue stripe as the game's (owner, 2026-10-15): the best one, its
     price and estimated resale profit ("?" when the league does not sell at the maximum), its marks and how many more;
-    on hover the 3 as a table, with "reforço" (better than the weakest starter) and "pechincha". None: no stripe."""
+    on hover the 3 as a table, with "suplente" (a specific position with no backup), "reforço" (better than the
+    weakest starter) and "pechincha". None: no stripe."""
     sale = club.get("sale") or {}
     picks = sale.get("picks") or []
     if not picks:
@@ -232,12 +233,15 @@ def sale_view(club: dict) -> dict | None:
     unsure = "" if sale.get("certo") else "?"
 
     def tags(p: dict) -> list[str]:
-        return (["reforço"] if p["reforco"] else []) + (["pechincha"] if p["pechincha"] else [])
+        return (["suplente"] if p.get("suplente") else []) + (["reforço"] if p["reforco"] else []) +             (["pechincha"] if p["pechincha"] else [])
+
+    def detail(tag: str, p: dict) -> str:  # on hover, why: "suplente (DC sem suplente)", "reforço (> Ndicka 109)"
+        why = {"suplente": p.get("suplente"), "reforço": p["fraco"] and f"> {p['fraco']}"}.get(tag)
+        return f"{tag} ({why})" if why else tag
 
     best = picks[0]
     rows = [([p["pos"], str(p["rating"]), p["nome"], str(p["idade"]), money(p["preco"]), f"{p['razao']:.2f}".rstrip("0").rstrip(".").replace(".", ",") + "×",
-              f"~{money(p['lucro'])}{unsure}", " · ".join(f"{tag} (> {p['fraco']})" if tag == "reforço" and p["fraco"] else tag
-                                                          for tag in tags(p))],
+              f"~{money(p['lucro'])}{unsure}", " · ".join(detail(tag, p) for tag in tags(p))],
              False) for p in picks]
     grid = {"columns": [("Pos", "l"), ("Força", "r"), ("Jogador", "l"), ("Idade", "r"), ("Preço", "r"), ("× valor", "r"),
                         ("Lucro", "r"), ("", "l")], "rows": rows,

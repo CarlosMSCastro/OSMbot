@@ -152,9 +152,49 @@ def test_reinforcements_go_by_specific_position_below_the_average_and_a_listed_s
     assert weak_spots(players, {1}) == {mc: (111, "T4 111")}  # the listed MC counts as the MC on the bench (average 114.7)
     market = [offer(10, mco, 118), offer(11, mc, 105), offer(12, mc, 112), mine]
     picks = sale_picks(market, players, money=200e6)
-    assert [(p["nome"], p["fraco"]) for p in picks] == [("S12", "T4 111")]  # MCO 118: not an MC; MC 105 < 111
+    assert [(p["nome"], p["fraco"], p["suplente"]) for p in picks] == [("S12", "T4 111", None)]  # MCO 118: not an MC
     alone = [player(1, mc, 96, 6), player(2, mco, 115, 7), player(3, gr, 118, 1)]
     assert weak_spots(alone, {1}) == {mc: (0, "T1 à venda")}  # nobody to take his place: the place is open
+
+
+def test_an_empty_place_counts_as_whoever_would_take_it_and_a_position_with_no_backup_gets_one_first():
+    """FC Van, 2026-10-18: the DC sold, place 3 empty; the only DC left (109, tired) on the bench."""
+    from osmbot.transfers.engine import depth_gaps, sale_picks, weak_spots
+
+    def player(pid, spec, rating, lineup, fitness=100):
+        return {**_starter(pid, 3, rating, lineup), "specificPosition": spec, "fitness": fitness}
+
+    def offer(aid, spec, rating, price, value):
+        item = _sale(aid, 3, rating, price, value)
+        item["player"]["specificPosition"] = spec
+        return item
+
+    dc, de, dd = 3, 9, 12
+    players = [player(1, de, 118, 2), player(2, dc, 118, 4), player(3, dd, 118, 5), player(4, dc, 109, 13, fitness=75),
+               player(5, de, 90, 14), player(6, dd, 51, 16)]
+    places = {2: de, 3: dc, 4: dc, 5: dd}
+    assert weak_spots(players, set()) == {}  # without the formation the empty place is not seen
+    assert weak_spots(players, set(), places) == {dc: (109, "T4 109")}  # the bench DC would play: below 115.75
+    assert depth_gaps(players, set(), places) == {}  # T4 plays; the DE 90 and the DD 51 are defenders on the bench
+    assert depth_gaps([p for p in players if p["id"] not in (5, 6)], set(), places) == {3: "DEF sem suplente"}
+    alone = [p for p in players if p["id"] != 4]
+    assert weak_spots(alone, set(), places) == {dc: (0, "lugar 3 vazio")}  # nobody: the place is open
+    market = [offer(10, dc, 105, 53.5e6, 42.2e6), offer(11, dc, 107, 63.9e6, 47.2e6), offer(12, de, 70, 12e6, 10e6)]
+    thin = [p for p in players if p["id"] not in (5, 6)]  # only the 4 defenders the eleven needs
+    picks = sale_picks(market, thin, money=141.9e6, places=places)
+    assert [(p["nome"], p["suplente"], p["reforco"]) for p in picks] == [
+        ("S12", "DEF sem suplente", False), ("S10", "DEF sem suplente", False), ("S11", "DEF sem suplente", False)]  # by × value
+    tired_only = thin + [player(7, de, 80, 15, fitness=70)]
+    assert depth_gaps(tired_only, set(), places) == {3: "DEF sem suplente"}  # a tired backup does not count
+
+
+def test_the_empty_places_of_the_eleven_are_warned_with_the_position_the_formation_wants():
+    from osmbot.theory.lineup import empty_places
+
+    players = [{"lineup": n} for n in range(1, 12) if n != 3]
+    assert empty_places(players, {"formation": 433, "formationDetail": "A"}) == ["Lugar 3 do 11 vazio (DC)"]
+    assert empty_places(players, None) == ["Lugar 3 do 11 vazio"]
+    assert empty_places([{"lineup": 0}], None) == []  # no eleven read
 
 
 def test_a_league_sells_at_the_maximum_when_one_of_its_clubs_sold_at_2_4_times_the_value_lately():

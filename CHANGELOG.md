@@ -4,6 +4,19 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-PT/1.1.0/); 
 
 Este ficheiro é o **histórico de versões, para quem lê o repo**. O diário interno de cada sessão de trabalho está em [`docs/WORKLOG.md`](docs/WORKLOG.md).
 
+## [0.13.8] — 2026-10-18
+
+O cartão de compras passa a ver lugares vazios no 11 e posições sem suplente, e os amigáveis deixam de pedir o próximo adversário.
+
+### Adicionado
+- **Lugar vazio no 11:** o passo "Onze" do pré-jogo fica amarelo com "Lugar 3 do 11 vazio (DC)" (a posição que a formação pede). No cartão de compras, o lugar conta como quem o ocuparia, como o titular à venda.
+- **Suplente no cartão de compras:** quando uma posição (GR, DEF, MED, ATA) do 11 não tem ninguém fora dele disponível, fora da lista de vendas e com condição de 80 % ou mais, o cartão sugere primeiro jogadores dessa posição ("suplente (DEF sem suplente)").
+
+### Corrigido
+- **Amigáveis:** o bot já não pede amigável ao próximo adversário oficial, que o jogo recusa sempre (400).
+- **Paragem com a janela fechada:** fechar a app já não deixa no registo "Parou: erro (Signal source has been deleted)"; fica o motivo real.
+- **Versão na janela:** a 0.13.7 mostrava 0.13.5.
+
 ## [0.13.7] — 2026-10-18
 
 O bot passa a registar a experiência (XP) do treinador depois de cada jogo, e as legendas dos vídeos do OSMPro entram no repo para estudo.
