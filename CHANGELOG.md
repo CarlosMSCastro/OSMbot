@@ -4,6 +4,17 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-PT/1.1.0/); 
 
 Este ficheiro é o **histórico de versões, para quem lê o repo**. O diário interno de cada sessão de trabalho está em [`docs/WORKLOG.md`](docs/WORKLOG.md).
 
+## [0.13.9] — 2026-10-19
+
+No fim de um evento de treinos "ao recolher", o bot paga em boss coins o que falta aos treinos para não perderem o bónus. Um amigável que fique para fazer a meio de uma passagem e um clube novo já não ficam à espera.
+
+### Adicionado
+- **Fim dos eventos "ao recolher" (D-064):** nos eventos em que o bónus de treino conta ao recolher (Training Camp Mania, Golden Oldies, Extreme Training, Stadium Blitz), das 22:30 às 23:00 do último dia o bot acaba com boss coins (2 por hora que falta) os treinos que só acabariam depois do fim. Recolhidos depois do fim, perdiam o bónus (visto no Golden Oldies). O bot acorda às 22:30 desse dia; cada treino acabado fica em `treinos/` com o custo e o motivo.
+
+### Corrigido
+- **Amigável perdido a meio de uma passagem:** um amigável (ou outra hora do pré-jogo, estádio, médico…) que ficasse para fazer enquanto o bot via vídeos era esquecido no fim da passagem, e o bot dormia até ao relógio seguinte (FC Van: 44 min). Agora faz logo outra passagem.
+- **Clube novo:** quando a janela vê um clube que não estava na leitura anterior, o bot faz logo uma passagem (treinos, patrocinadores, amigáveis, estádio), em vez de esperar pelo próximo relógio. No registo: "Clube novo (…): passagem já".
+
 ## [0.13.8] — 2026-10-18
 
 O cartão de compras passa a ver lugares vazios no 11 e posições sem suplente, e os amigáveis deixam de pedir o próximo adversário.

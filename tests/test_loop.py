@@ -393,3 +393,49 @@ def test_every_task_runs_on_every_pass_not_only_the_first(mode):
     assert calls == {name: passes for name in ("claim", "train", *tasks)}
     log = loop.LOG_FILE.read_text(encoding="utf-8")
     assert "erro (" not in log and "Próxima verificação" in log
+
+
+_NO_EXTRAS = dict(ads=None, stadium=None, sponsors=None, rewards=None, medical=None, transfers=None, savings=None,
+                  events=None, inventory=None, matches=None, xp=None, boost=None, event_wake=None)
+
+
+def test_a_time_that_goes_by_during_the_pass_wakes_the_bot_at_once_not_never():
+    """FC Van, 2026-10-19: a friendly due at 10:36, the pass (videos) over at 10:37, and the bot slept for 44 min."""
+    now = {"t": 1_000_000.0}
+    sleeps = []
+
+    def claim(confirm):
+        now["t"] += 600  # the pass takes 10 min
+        return 0
+
+    def sleep(seconds):
+        sleeps.append(seconds)
+        raise KeyboardInterrupt
+
+    run_active(claim=claim, train=lambda c: 0, finish_times=lambda: [now["t"] + 3 * 3600], sleep=sleep,
+               clock=lambda: now["t"], rng=FixedRng(), use_screen=False, snapshot=lambda: None,
+               prematch=lambda c: (0, [1_000_000.0 + 100]), **_NO_EXTRAS)
+    assert sleeps == [MIN_WAIT]
+
+
+def test_the_window_asks_for_a_pass_when_it_sees_a_new_club():
+    clock_state = {"t": 1_000_000.0}
+    passes = []
+    snap = {"coins": 1, "clubs": [], "ads": {"shop": {"open": False, "reopen": None}, "training": {"open": False, "reopen": None}}}
+
+    def claim(confirm):
+        passes.append(clock_state["t"])
+        if len(passes) == 2:
+            loop.request_stop()
+        return 0
+
+    def sleep(seconds):
+        clock_state["t"] += seconds
+        if clock_state["t"] > 1_000_000.0 + 120 and len(passes) == 1:
+            loop.request_pass("Clube novo (SV Ried)")  # the window's read saw it 2 min into a 1-hour wait
+
+    loop.run_active(claim=claim, train=lambda c: 0, finish_times=lambda: [1_000_000.0 + 3600], snapshot=lambda: snap,
+                    board=lambda payload: None, sleep=sleep, clock=lambda: clock_state["t"], rng=FixedRng(),
+                    prematch=None, **_NO_EXTRAS)
+    assert len(passes) == 2 and passes[1] - passes[0] < 200
+    assert "Clube novo (SV Ried): passagem já" in loop.LOG_FILE.read_text(encoding="utf-8")

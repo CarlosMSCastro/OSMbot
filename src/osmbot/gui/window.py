@@ -2049,6 +2049,12 @@ class MainWindow(QMainWindow):
     def on_read(self, result: dict) -> None:
         self.reading = False
         if "snapshot" in result:
+            before = {c["name"] for c in (self.payload.get("snapshot") or {}).get("clubs") or []}
+            new = [c["name"] for c in result["snapshot"].get("clubs") or [] if c["name"] not in before]
+            if before and new and self.running():  # a club the bot has not handled has no timer to wake it (owner, 2026-10-19)
+                from osmbot.game.loop import request_pass
+
+                request_pass(f"Clube novo ({', '.join(new)})")
             self.payload = {**self.payload, "snapshot": newest(result["snapshot"], self.payload.get("snapshot"))}
             if not self.running():
                 self.payload["status"] = "PARADO"

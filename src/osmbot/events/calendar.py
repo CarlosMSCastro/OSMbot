@@ -151,6 +151,30 @@ def old_players_event(events: list[dict], now: float) -> bool:
                for e in events)
 
 
+END_BOOST = (22 * 60 + 30, 23 * 60)  # local: an event ends at ~23:00 in Portugal (DISCOVERY.md 6c); act from 22:30
+
+
+def claims_bonus(event: dict) -> bool:
+    """Whether an event gives more training progression to a training collected while it lasts (Training Camp Mania,
+    Stadium Blitz, Golden Oldies, Extreme Training; not Intense Friendlies, which is only for friendlies)."""
+    return any("progression" in line.lower() and not re.search(r"every friendly\s*$", line, re.I)
+               for line in event.get("efeitos") or [])
+
+
+def claim_bonus_end(events: list[dict], now: float) -> tuple[float, float] | None:
+    """The last half hour of the next such event, (22:30, 23:00) of its last day as timestamps (owner, 2026-10-19:
+    finish then with boss coins the trainings that would be collected after it, THEORY.md 5). None: no such event."""
+    windows = []
+    for event in events:
+        if not claims_bonus(event):
+            continue
+        day = (datetime.fromtimestamp(event["end"]) - timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0)
+        opens, closes = ((day + timedelta(minutes=m)).timestamp() for m in END_BOOST)
+        if closes > now:
+            windows.append((opens, closes))
+    return min(windows, default=None)
+
+
 def months_needed(today: date) -> list[str]:
     """The months whose schedule the bot should have: this one, and the next from the 25th (the staff posts it
     around the 25th-30th, DISCOVERY.md section 6b)."""

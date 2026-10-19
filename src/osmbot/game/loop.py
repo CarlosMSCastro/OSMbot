@@ -46,7 +46,7 @@ from osmbot.game.rewards import run_rewards
 from osmbot.game.sponsors import run_sponsors
 from osmbot.game.savings import run_savings
 from osmbot.game.stadium import run_stadium
-from osmbot.game.trainings import COUNTS, pending_finish_times, run_claim, run_event_boost, run_train
+from osmbot.game.trainings import COUNTS, pending_finish_times, run_claim, run_event_boost, run_event_end_boost, run_train
 
 LOG_FILE = Path.home() / ".osmbot" / "bot.log"
 JITTER = (5.0, 60.0)  # seconds added after a training finishes, so timing is never exact
@@ -86,9 +86,18 @@ _notices: deque[tuple[str, str, str]] = deque(maxlen=200)  # (hh:mm:ss, "Erro"/"
 _stop = threading.Event()  # set by the window's "Parar": the loop stops at its next pause, as with Ctrl+C
 
 
+_pass_now: dict[str, str] = {}  # set by the window: why a waiting loop should do a pass at once
+
+
 def request_stop() -> None:
     """Ask a running loop to stop (the window's "Parar"); it stops at the next pause and logs "Parado"."""
     _stop.set()
+
+
+def request_pass(reason: str) -> None:
+    """Ask a waiting loop for a pass now, e.g. the window saw a club the bot has not handled yet (owner, 2026-10-19:
+    a new club has no timer of its own to wake the bot)."""
+    _pass_now["reason"] = reason
 
 
 def _check_stop() -> None:
@@ -357,7 +366,7 @@ def run_active(dry_run: bool = False, *, claim=run_claim, train=run_train, finis
                prematch=lambda confirm: run_prematch(confirm), medical=lambda confirm: run_medical(confirm),
                transfers=lambda: save_transfers(log=_log), savings=lambda confirm: run_savings(confirm),
                events=lambda: events_module.refresh(log=_log), inventory=lambda confirm: run_inventory(confirm, log=_log),
-               matches=lambda: log_rounds(log=_log), xp=lambda: log_xp(log=_log), boost=lambda confirm: run_event_boost(confirm),
+               matches=lambda: log_rounds(log=_log), xp=lambda: log_xp(log=_log), boost=lambda confirm: run_event_boost(confirm) + run_event_end_boost(confirm),
                event_wake=lambda now: events_module.training_wake(now),
                snapshot=None, use_screen: bool | None = None,
                sleep=time.sleep, clock=time.time, rng=random, board=None) -> None:
@@ -383,6 +392,7 @@ def run_active(dry_run: bool = False, *, claim=run_claim, train=run_train, finis
     _notices.clear()
     _history.clear()
     _stop.clear()
+    _pass_now.clear()
     _stats["start"] = clock()
     COUNTS.update(claimed=0, started=0)
     stadium_module.COUNTS["upgrades"] = sponsors_module.COUNTS["signed"] = 0
@@ -448,6 +458,8 @@ def run_active(dry_run: bool = False, *, claim=run_claim, train=run_train, finis
         while True:
             try:
                 _check_stop()
+                _pass_now.clear()  # this pass sees whatever the window asked for
+                pass_start = clock()
                 _now("recolher e pôr treinos")
                 draw("A TRABALHAR")
                 ads_failed = False
@@ -602,8 +614,10 @@ def run_active(dry_run: bool = False, *, claim=run_claim, train=run_train, finis
                 tired_before = _check_fitness(last_snapshot, tired_before)
                 wakes = wake_events(last_snapshot, clock())
                 times = [ts for _, ts in wakes] or finish_times()
-                times = times + [t for t in stadium_times + reward_times + prematch_times + medical_times + savings_times
-                                 + inventory_times if t > clock()]
+                # a time that went by during this pass (e.g. a friendly due while the videos ran, FC Van 2026-10-19)
+                # means a pass at once, not a lost wake
+                times = times + [max(t, clock()) for t in stadium_times + reward_times + prematch_times + medical_times
+                                 + savings_times + inventory_times if t > pass_start]
                 event_time = event_wake(clock()) if event_wake else None
                 if event_time:  # a training event due today: look for it from 05:30 every 10 min
                     times.append(event_time)
@@ -646,6 +660,9 @@ def run_active(dry_run: bool = False, *, claim=run_claim, train=run_train, finis
                     sleep(wait)
                 while shown and clock() < deadline:
                     _check_stop()
+                    if _pass_now:
+                        _log(f"{_pass_now.pop('reason', '')}: passagem já")
+                        break
                     draw("ATIVO")
                     sleep(min(1.0, max(0.0, deadline - clock())))
             except KeyboardInterrupt:

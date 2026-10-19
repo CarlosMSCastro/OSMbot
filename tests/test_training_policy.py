@@ -168,3 +168,22 @@ def test_the_trainings_put_before_a_training_event_are_the_ones_to_finish():
                 session(4, -60), session(5, 4 * 3600, claimed=True)]  # ready to collect / already collected
     assert [s["id"] for s in pre_event_sessions(sessions, now, (120, 90))] == [1, 3]
     assert [s["id"] for s in pre_event_sessions(sessions, now, (120, 90), before={2})] == [1, 2, 3]
+
+
+def test_at_the_end_of_a_claim_bonus_event_the_trainings_that_would_finish_after_it_are_the_ones_to_finish():
+    from osmbot.training.policy import event_end_sessions
+
+    opens = 1_000_000.0  # 22:30 of the event's last day
+    end = opens + 1800  # 23:00
+    now = opens + 300
+
+    def session(sid, finish, trainer=1, claimed=False):
+        return {"id": sid, "trainer": trainer, "countdownTimer": {"finishedTimestamp": finish, "isClaimed": claimed}}
+
+    sessions = [session(1, end + 3600),  # put at 22:00 (2 h): finishes at 00:00, after the end
+                session(2, end - 300),  # finishes at 22:55: too close to the end, finished too
+                session(3, end - 1200),  # finishes at 22:40: collected in time as usual
+                session(4, opens + 7300),  # put at 22:31, in the half hour: left to run (it would only buy trainings)
+                session(5, end + 1800, trainer=5),  # universal trainer, 1h30, put at 22:00
+                session(6, now - 60), session(7, end + 600, claimed=True)]  # ready to collect / already collected
+    assert [s["id"] for s in event_end_sessions(sessions, now, (opens, end), (120, 90))] == [1, 2, 5]

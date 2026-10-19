@@ -195,3 +195,49 @@ def test_at_a_training_event_the_trainings_put_before_it_are_finished_with_boss_
     assert trainings.run_event_boost(confirm=True) == 0
     assert sent == [("PUT", f"https://web-api.onlinesoccermanager.com/api/v1.1/{base}/trainingsessions/400/boost",
                      {"productId": 510})]  # 3h10 left = 4 h = 8 boss coins
+
+
+def test_in_the_last_half_hour_of_a_claim_bonus_event_the_trainings_that_would_finish_after_it_are_finished(
+        monkeypatch, tmp_path):
+    """Owner, 2026-10-19: collected after the end they lose the event's bonus (DISCOVERY.md 6c)."""
+    import time
+
+    import osmbot.game.client as client_module
+    import osmbot.game.events as events_module
+    from osmbot import logs
+    from osmbot.game import trainings
+
+    base = "leagues/1/teams/2"
+    now = time.time()
+    player = dict(api_player(1, 2, ovr=110, lineup=5), name="A")
+    late = {"id": 401, "playerId": 1, "weekNr": 7, "trainer": 2, "player": player,
+            "countdownTimer": {"finishedTimestamp": now + 90 * 60, "isClaimed": False}}  # put 30 min ago, 2 h
+    sent = []
+    event = {"efeitos": ["Extreme Training Progression (when claiming) with every Training and Friendly"]}
+    state = {"window": (now - 300, now + 1500)}  # 22:35: the event ends in 25 min
+
+    class FakeClient:
+        def get(self, path):
+            return 200, {"user/accounts": {"teamSlots": {"1": {"team": {"id": 2, "leagueId": 1, "name": "T"}}}},
+                         "leagues/1/gamesettings": [{"name": "TrainingSession", "value": 120},
+                                                    {"name": "TrainingUniversalSession", "value": 90}],
+                         f"{base}/trainingsessions/ongoing": [late],
+                         "bosscoinproducts": [{"id": 506 + h, "name": "TrainingBoostCost", "value": 2 * h, "increment": h}
+                                              for h in range(1, 9)],
+                         "user/bosscoinwallet": {"amount": 100}}[path]
+
+        def request(self, method, path, form=None):
+            sent.append((method, path, form))
+            return 200, {"progressImprovement": 40, "variableTrainingProgression": 0, "trainingSession": {"player": player}}
+
+    monkeypatch.setattr(client_module, "OsmClient", FakeClient)
+    monkeypatch.setattr(trainings, "PAUSE_BETWEEN_WRITES", 0)
+    monkeypatch.setattr(logs, "repo_folder", lambda: tmp_path)
+    monkeypatch.setattr(events_module, "calendar_events", lambda now, days=7: [event])
+    monkeypatch.setattr("osmbot.events.calendar.claim_bonus_end", lambda events, now: state["window"])
+    state["window"] = (now + 600, now + 2400)  # 22:20: not yet
+    assert trainings.run_event_end_boost(confirm=True) == 0 and sent == []
+    state["window"] = (now - 300, now + 1500)
+    assert trainings.run_event_end_boost(confirm=True) == 0
+    assert sent == [("PUT", f"https://web-api.onlinesoccermanager.com/api/v1.1/{base}/trainingsessions/401/boost",
+                     {"productId": 508})]  # 1h30 left = 2 h = 4 boss coins

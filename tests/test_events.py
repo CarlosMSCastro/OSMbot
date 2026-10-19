@@ -156,3 +156,26 @@ def test_an_event_for_old_players_lets_the_30_plus_be_trained_while_it_lasts():
     old = {"id": 1, "name": "Velho", "position": 2, "age": 32, "statOvr": 90, "statAtt": 90, "statDef": 90, "lineup": 6}
     assert plan_new_trainings([old], [], set()) == {}  # the owner's rule: no 30+ outfield player
     assert plan_new_trainings([old], [], set(), max_age=200)[2].id == 1  # in the event they are considered
+
+
+def test_the_bot_wakes_at_2230_on_the_last_day_of_an_event_that_gives_its_bonus_when_collecting():
+    from datetime import datetime
+
+    from osmbot.events.calendar import claim_bonus_end, claims_bonus
+    from osmbot.game.events import event_end_wake
+
+    extreme = {"start": datetime(2026, 10, 31).timestamp(), "end": datetime(2026, 11, 1).timestamp(),
+               "efeitos": ["Extreme Training Progression (when claiming) with every Training and Friendly",
+                           "Faster training: 3H normal trainers and 2H Universal Trainer"]}
+    golden = {"efeitos": ["Higher training progression, when claiming results, for old players"]}
+    blitz = {"efeitos": ["More progression and faster trainings: 5H regular trainers, 4H Universal Trainer"]}
+    friendlies = {"efeitos": ["Extra Training Progression with every Friendly"]}
+    staff = {"efeitos": ["Faster trainers: Normal trainers 2H and Universal Trainer 1:30H"]}
+    assert claims_bonus(extreme) and claims_bonus(golden) and claims_bonus(blitz)
+    assert not claims_bonus(friendlies) and not claims_bonus(staff)
+    at = lambda h, m=0: datetime(2026, 10, 31, h, m).timestamp()
+    assert claim_bonus_end([extreme], at(12)) == (at(22, 30), at(23))
+    assert event_end_wake([extreme], at(12)) == at(22, 30)
+    assert event_end_wake([extreme], at(22, 40)) is None  # in the half hour: the pass itself finishes them
+    assert claim_bonus_end([extreme], at(23, 5)) is None  # over
+    assert claim_bonus_end([{**extreme, "efeitos": staff["efeitos"]}], at(12)) is None

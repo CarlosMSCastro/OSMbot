@@ -141,3 +141,25 @@ def pre_event_sessions(sessions: Sequence[Mapping], now: float, minutes: tuple[i
         if str(s.get("id")) in known or left > lasts + 60:
             picked.append(s)
     return picked
+
+
+END_MARGIN = 10 * 60  # s: a training finishing this close to the event's end is finished with boss coins too
+
+
+def event_end_sessions(sessions: Sequence[Mapping], now: float, window: tuple[float, float],
+                       minutes: tuple[int, int]) -> list[Mapping]:
+    """The trainings that would be collected after an event that gives its bonus when collecting (owner, 2026-10-19;
+    THEORY.md 5): still running, finishing after the event's end (``window``: its last half hour, from and to) less
+    ``END_MARGIN``, and put before that half hour began (``minutes``: a trainer's and the universal trainer's), so
+    a training put in the half hour itself is left to run: finishing it would only buy trainings."""
+    opens, end = window
+    picked = []
+    for s in sessions:
+        timer = s.get("countdownTimer") or {}
+        finish = timer.get("finishedTimestamp") or 0
+        if timer.get("isClaimed") or finish <= now or finish <= end - END_MARGIN:
+            continue
+        lasts = (minutes[1] if s.get("trainer") == UNIVERSAL_TRAINER else minutes[0]) * 60
+        if finish - lasts < opens:
+            picked.append(s)
+    return picked

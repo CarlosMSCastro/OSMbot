@@ -18,7 +18,7 @@ from datetime import date, datetime
 from pathlib import Path
 
 from osmbot import logs
-from osmbot.events.calendar import active_changes, months_needed, parse_schedule, upcoming
+from osmbot.events.calendar import active_changes, claim_bonus_end, months_needed, parse_schedule, upcoming
 
 FILE = Path.home() / ".osmbot" / "eventos.json"
 TOPIC = 67089
@@ -145,10 +145,19 @@ def training_event_wake(events: list[dict], active: list[list[str]], now: float)
     return None
 
 
+def event_end_wake(events: list[dict], now: float) -> float | None:
+    """When the bot should wake for the last half hour of an event that gives its bonus when a training is
+    collected (22:30 of its last day; owner, 2026-10-19). Pure."""
+    window = claim_bonus_end(events, now)
+    return window[0] if window and now < window[0] <= now + 86400 else None
+
+
 def training_wake(now: float | None = None) -> float | None:
-    """``training_event_wake`` with the schedule the bot keeps and what the leagues show now."""
+    """``training_event_wake`` and ``event_end_wake`` with the schedule the bot keeps and what the leagues show now."""
     now = time.time() if now is None else now
-    return training_event_wake(calendar_events(now, days=2), list(_active.values()), now)
+    events = calendar_events(now, days=2)
+    times = [t for t in (training_event_wake(events, list(_active.values()), now), event_end_wake(events, now)) if t]
+    return min(times, default=None)
 
 
 def check_league(client, league_id: int, name: str = "", settings: list[dict] | None = None, log=None,
