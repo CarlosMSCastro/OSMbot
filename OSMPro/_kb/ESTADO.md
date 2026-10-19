@@ -2,21 +2,21 @@
 
 Gerado por `tools/osmpro_estado.py`; não editar à mão. Transcrito = legendas em `legendas/`; analisado = nota em `notas/` (D-063).
 
-**Total:** 1183 vídeos · 249 transcritos · 0 sem legendas · 22 analisados · 81 conclusões
+**Total:** 1183 vídeos · 313 transcritos · 0 sem legendas · 22 analisados · 81 conclusões
 
 | Categoria | Vídeos | Transcritos | Sem legendas | Analisados | Conclusões |
 |---|---|---|---|---|---|
 | OSMPROworld | 43 | 43 | 0 | 19 | 54 |
 | Dicas | 29 | 29 | 0 | 3 | 27 |
-| Táticas | 27 | 25 | 0 | 0 | 0 |
-| Série "Não te esqueças da tática!" | 31 | 28 | 0 | 0 | 0 |
-| Curiosidades | 17 | 16 | 0 | 0 | 0 |
-| Atualizações do jogo | 22 | 21 | 0 | 0 | 0 |
+| Táticas | 27 | 27 | 0 | 0 | 0 |
+| Série "Não te esqueças da tática!" | 31 | 31 | 0 | 0 | 0 |
+| Curiosidades | 17 | 17 | 0 | 0 | 0 |
+| Atualizações do jogo | 22 | 22 | 0 | 0 | 0 |
 | Feitos incríveis | 7 | 7 | 0 | 0 | 0 |
 | Competições oficiais | 11 | 11 | 0 | 0 | 0 |
 | Entrevistas | 2 | 2 | 0 | 0 | 0 |
-| Torneios | 86 | 52 | 0 | 0 | 0 |
-| Outros de OSM | 71 | 15 | 0 | 0 | 0 |
+| Torneios | 86 | 86 | 0 | 0 | 0 |
+| Outros de OSM | 71 | 38 | 0 | 0 | 0 |
 | Modo Carreira #17 | 33 | 0 | 0 | 0 | 0 |
 | Modo Carreira #16 | 54 | 0 | 0 | 0 | 0 |
 | Modo Carreira #15 | 54 | 0 | 0 | 0 | 0 |
@@ -113,9 +113,9 @@ Gerado por `tools/osmpro_estado.py`; não editar à mão. Transcrito = legendas 
 | 2024-05-23 | Dicas | [THE BASICS for OSM BEGINNERS / OSM PRO](https://www.youtube.com/watch?v=O1fL02E2IU0) | 8:15 | pt whisper medium |  |  |  |
 | 2024-06-20 | Dicas | [😏 Domínio Mundial RÁPIDO! Vamos GANHAR BOSS COINS](https://www.youtube.com/watch?v=6fW7MAPR5zI) | 13:41 | pt whisper medium |  |  |  |
 | 2025-07-27 | Dicas | [How to be the best squad among the best in OSM](https://www.youtube.com/watch?v=7da7tn75LAI) | 19:30 | pt whisper medium |  |  |  |
-| 2020-08-15 | Táticas | [O 433 DOS JOGADORES PRO DO OSM](https://www.youtube.com/watch?v=XGcIrS97x7c) | 19:38 | por fazer |  |  |  |
+| 2020-08-15 | Táticas | [O 433 DOS JOGADORES PRO DO OSM](https://www.youtube.com/watch?v=XGcIrS97x7c) | 19:38 | pt assemblyai |  |  |  |
 | 2020-09-11 | Táticas | [O MELHOR 541 / OSM PRO](https://www.youtube.com/watch?v=i2-kp6MG7pA) | 21:44 | pt whisper medium |  |  |  |
-| 2020-10-17 | Táticas | [THE 4231 THAT CHANGES EVERYTHING IN THE OSM (SUBTITLED!)](https://www.youtube.com/watch?v=Ukul9iQgpHA) | 20:40 | por fazer |  |  |  |
+| 2020-10-17 | Táticas | [THE 4231 THAT CHANGES EVERYTHING IN THE OSM (SUBTITLED!)](https://www.youtube.com/watch?v=Ukul9iQgpHA) | 20:40 | pt assemblyai |  |  |  |
 | 2020-12-05 | Táticas | [THE SECRETS OF THE 442 / OSM PRO](https://www.youtube.com/watch?v=3manfm33wDA) | 28:06 | pt whisper medium |  |  |  |
 | 2021-01-15 | Táticas | [TACTICS 451 / OSM PRO](https://www.youtube.com/watch?v=rUt8dikjh30) | 20:21 | pt whisper medium |  |  |  |
 | 2021-05-12 | Táticas | [(Subtitled) MY GIRLFRIEND DID THE TACTICS 😱 / OSM PRO](https://www.youtube.com/watch?v=sUy7RluJXX0) | 12:59 | pt whisper medium |  |  |  |
@@ -140,8 +140,8 @@ Gerado por `tools/osmpro_estado.py`; não editar à mão. Transcrito = legendas 
 | 2025-06-09 | Táticas | [I REVEALED THE TACTICS! WE WON 10-0 WITH 433! / OSM PRO](https://www.youtube.com/watch?v=uZB2vdebcnw) | 6:21 | pt whisper medium |  |  |  |
 | 2025-07-02 | Táticas | [A new tactic 433B / OSM PRO](https://www.youtube.com/watch?v=7g4rdnfBd8w) | 12:35 | pt whisper medium |  |  |  |
 | 2025-07-12 | Táticas | [THE 442B TACTIC THAT WON FROM THE CAREER MODE WINNER (R_Serafim94)](https://www.youtube.com/watch?v=9wEpMh4wUk4) | 6:21 | pt whisper medium |  |  |  |
-| 2024-01-14 | Série "Não te esqueças da tática!" | [O Início de TUDO / Experimentei um 433B / Ep.1 / Não te esqueças da tática!](https://www.youtube.com/watch?v=ZkVqaJlT9ng) | 19:36 | por fazer |  |  |  |
-| 2024-01-15 | Série "Não te esqueças da tática!" | [O 523A que vai defrontar o Chelsea! / Ep.2 / Não te esqueças da tática!](https://www.youtube.com/watch?v=C6HKKZmxxb4) | 21:09 | por fazer |  |  |  |
+| 2024-01-14 | Série "Não te esqueças da tática!" | [O Início de TUDO / Experimentei um 433B / Ep.1 / Não te esqueças da tática!](https://www.youtube.com/watch?v=ZkVqaJlT9ng) | 19:36 | pt assemblyai |  |  |  |
+| 2024-01-15 | Série "Não te esqueças da tática!" | [O 523A que vai defrontar o Chelsea! / Ep.2 / Não te esqueças da tática!](https://www.youtube.com/watch?v=C6HKKZmxxb4) | 21:09 | pt assemblyai |  |  |  |
 | 2024-01-16 | Série "Não te esqueças da tática!" | [O nosso primeiro jogo! / Ep.3 / Não te esqueças da tática!](https://www.youtube.com/watch?v=YSMa5BZfe_4) | 19:09 | pt whisper medium |  |  |  |
 | 2024-01-17 | Série "Não te esqueças da tática!" | [We were surprised! / Ep. 4 / Don't forget the tactic!](https://www.youtube.com/watch?v=kU1q7ljMFnY) | 19:07 | pt whisper medium |  |  |  |
 | 2024-01-18 | Série "Não te esqueças da tática!" | [A TATICA que vai defrontar o CITY! / Ep.5 / Não te esqueças da tática!](https://www.youtube.com/watch?v=d_sr2TWpKMU) | 23:56 | pt whisper medium |  |  |  |
@@ -162,7 +162,7 @@ Gerado por `tools/osmpro_estado.py`; não editar à mão. Transcrito = legendas 
 | 2024-02-02 | Série "Não te esqueças da tática!" | [The National Championship Quarter-Finals Have Begun! / Ep. 20 / Don't Forget the Tactics!](https://www.youtube.com/watch?v=6HtmjOnIKMU) | 26:03 | pt whisper medium |  |  |  |
 | 2024-02-03 | Série "Não te esqueças da tática!" | [The 5-3-2 Counter Attack to Beat 4-3-3 / Ep.21 / Don't Forget the Tactic!](https://www.youtube.com/watch?v=nvRWuLTYFPQ) | 30:33 | pt whisper medium |  |  |  |
 | 2024-02-04 | Série "Não te esqueças da tática!" | [Ep.22 / Don't forget the tactics!](https://www.youtube.com/watch?v=JBc9cL-v9Io) | 18:17 | pt whisper medium |  |  |  |
-| 2024-02-06 | Série "Não te esqueças da tática!" | [The 343 tactic when used well! / Ep.22 / Don't forget the tactic!](https://www.youtube.com/watch?v=HeECsppdmeE) | 23:03 | por fazer |  |  |  |
+| 2024-02-06 | Série "Não te esqueças da tática!" | [The 343 tactic when used well! / Ep.22 / Don't forget the tactic!](https://www.youtube.com/watch?v=HeECsppdmeE) | 23:03 | pt assemblyai |  |  |  |
 | 2024-02-07 | Série "Não te esqueças da tática!" | [The battle has begun! / Ep. 24 / Don't forget the tactics!](https://www.youtube.com/watch?v=PSDG_Yo0bRg) | 15:01 | pt whisper medium |  |  |  |
 | 2024-02-08 | Série "Não te esqueças da tática!" | [3 crucial games! / Ep.25 / Don't forget the tactics!](https://www.youtube.com/watch?v=d6gEjcX2Qj0) | 22:11 | pt whisper medium |  |  |  |
 | 2024-02-10 | Série "Não te esqueças da tática!" | [Novidades no OSM! / Ep.26 / Não te esqueças da tática!](https://www.youtube.com/watch?v=nuunj37Hoh0) | 25:42 | pt whisper medium |  |  |  |
@@ -176,7 +176,7 @@ Gerado por `tools/osmpro_estado.py`; não editar à mão. Transcrito = legendas 
 | 2021-05-01 | Curiosidades | [OLD BATTLES vs. CURRENT BATTLES / OSM PRO](https://www.youtube.com/watch?v=-lN0mQp7Ksw) | 18:13 | pt whisper medium |  |  |  |
 | 2021-08-13 | Curiosidades | [Número das Camisolas / OSM PRO](https://www.youtube.com/watch?v=DLy0JYQcXYA) | 6:17 | pt whisper medium |  |  |  |
 | 2021-09-04 | Curiosidades | [IS PSG THE BEST TEAM OF ALL TIME? / OSM PRO](https://www.youtube.com/watch?v=3tvq5l2zTSQ) | 17:53 | pt whisper medium |  |  |  |
-| 2021-09-11 | Curiosidades | [Coach Medal Ranking and World Championship / OSM PRO](https://www.youtube.com/watch?v=j3WzimGTQwg) | 27:19 | por fazer |  |  |  |
+| 2021-09-11 | Curiosidades | [Coach Medal Ranking and World Championship / OSM PRO](https://www.youtube.com/watch?v=j3WzimGTQwg) | 27:19 | pt assemblyai |  |  |  |
 | 2021-10-11 | Curiosidades | [4 CURIOSIDADES desconhecidas! / OSM PRO](https://www.youtube.com/watch?v=L8VT6tZu1OQ) | 13:04 | pt whisper medium |  |  |  |
 | 2022-04-16 | Curiosidades | [Brazil or Portugal? Which team is stronger in OSM? / OSM PRO](https://www.youtube.com/watch?v=1BuuDO-zsXA) | 15:01 | pt whisper medium |  |  |  |
 | 2022-04-22 | Curiosidades | [The 2nd MOST VALUABLE squad in OSM history](https://www.youtube.com/watch?v=CnDK_k3NhxI) | 11:18 | pt whisper medium |  |  |  |
@@ -201,7 +201,7 @@ Gerado por `tools/osmpro_estado.py`; não editar à mão. Transcrito = legendas 
 | 2021-07-06 | Atualizações do jogo | [OSM PRO CAREER MODE - COMING](https://www.youtube.com/watch?v=nrEFGHWY0e8) | 9:32 | pt whisper medium |  |  |  |
 | 2021-07-18 | Atualizações do jogo | [1 ANO DE OSM PRO](https://www.youtube.com/watch?v=6Fqwfc9dlrI) | 15:16 | pt whisper medium |  |  |  |
 | 2021-07-26 | Atualizações do jogo | [OSM 2022 - CAMPEONATOS ATUALIZADOS](https://www.youtube.com/watch?v=PxeJNZDceIw) | 48:56 | pt whisper medium |  |  |  |
-| 2021-07-27 | Atualizações do jogo | [OSM 2022 - PRIMEIRA ATUALIZAÇÃO DE LIGAS](https://www.youtube.com/watch?v=veTCLp5EDbY) | 49:29 | por fazer |  |  |  |
+| 2021-07-27 | Atualizações do jogo | [OSM 2022 - PRIMEIRA ATUALIZAÇÃO DE LIGAS](https://www.youtube.com/watch?v=veTCLp5EDbY) | 49:29 | pt assemblyai |  |  |  |
 | 2021-08-05 | Atualizações do jogo | [NOVIDADE - BATALHAS ATUALIZADAS! / DESIGNS ÉPOCA 2021/22 / OSM PRO](https://www.youtube.com/watch?v=x3dVplg5UEQ) | 6:56 | pt whisper medium |  |  |  |
 | 2021-08-17 | Atualizações do jogo | [Liga Estrelas do Clube / OSM PRO](https://www.youtube.com/watch?v=9EdVssSJ__Q) | 30:35 | pt whisper medium |  |  |  |
 | 2022-01-05 | Atualizações do jogo | [Notícias da comunidade / Campeonato Nacional e Seleções Nacionais / OSM PRO](https://www.youtube.com/watch?v=-447Jo-PwVE) | 16:46 | pt whisper medium |  |  |  |
@@ -235,7 +235,7 @@ Gerado por `tools/osmpro_estado.py`; não editar à mão. Transcrito = legendas 
 | 2021-05-25 | Torneios | [TORNEIO OSM PRO - ALL STARS / JORNADA 0](https://www.youtube.com/watch?v=hAQt_26NC0M) | 2:04 | pt whisper medium |  |  |  |
 | 2021-07-02 | Torneios | [TORNEIO OSM PRO - ALL STARS / FINAL DE ÉPOCA](https://www.youtube.com/watch?v=fJ02tGlEjBs) | 9:13 | pt whisper medium |  |  |  |
 | 2021-12-09 | Torneios | [TORNEIO DE NATAL / OSM PRO](https://www.youtube.com/watch?v=LuiKK2zOFZA) | 28:36 | pt whisper medium |  |  |  |
-| 2021-12-10 | Torneios | [TORNEIO DE NATAL / Dia 1 / OSM PRO](https://www.youtube.com/watch?v=jIgxztkj4n4) | 24:03 | por fazer |  |  |  |
+| 2021-12-10 | Torneios | [TORNEIO DE NATAL / Dia 1 / OSM PRO](https://www.youtube.com/watch?v=jIgxztkj4n4) | 24:03 | pt assemblyai |  |  |  |
 | 2021-12-11 | Torneios | [TORNEIO DE NATAL / Dia 2 / OSM PRO](https://www.youtube.com/watch?v=6GIpceorqmc) | 21:55 | pt whisper medium |  |  |  |
 | 2021-12-12 | Torneios | [TORNEIO DE NATAL / FASE DE GRUPOS 1/3 / OSM PRO](https://www.youtube.com/watch?v=Upgjk1wQI0o) | 21:11 | pt whisper medium |  |  |  |
 | 2021-12-13 | Torneios | [TORNEIO DE NATAL / FASE DE GRUPOS 2/3 / OSM PRO](https://www.youtube.com/watch?v=00J_6QS6iIU) | 35:17 | pt whisper medium |  |  |  |
@@ -247,45 +247,45 @@ Gerado por `tools/osmpro_estado.py`; não editar à mão. Transcrito = legendas 
 | 2022-02-06 | Torneios | [TORNEIO DOERAK - Dia 1/8 / OSM PRO](https://www.youtube.com/watch?v=2wLf_YASvrw) | 16:24 | pt whisper medium |  |  |  |
 | 2022-02-06 | Torneios | [TORNEIO DOERAK - 10k subscritores do canal / OSM PRO](https://www.youtube.com/watch?v=Er0XEPXLfcg) | 26:43 | pt whisper medium |  |  |  |
 | 2022-05-09 | Torneios | [OSM PRO - Torneio de MAIO de 2022](https://www.youtube.com/watch?v=kjQaBXRDasA) | 22:20 | pt whisper medium |  |  |  |
-| 2022-05-10 | Torneios | [MAY Tournament / 1st Day of Preparation / OSM PRO](https://www.youtube.com/watch?v=mBbA12IlJPc) | 27:41 | por fazer |  |  |  |
+| 2022-05-10 | Torneios | [MAY Tournament / 1st Day of Preparation / OSM PRO](https://www.youtube.com/watch?v=mBbA12IlJPc) | 27:41 | pt assemblyai |  |  |  |
 | 2022-05-11 | Torneios | [Torneio de MAIO / 2º Dia de Preparação / OSM PRO](https://www.youtube.com/watch?v=etd8lvj6iL8) | 22:45 | pt whisper medium |  |  |  |
 | 2022-05-12 | Torneios | [Torneio de MAIO / Dia 3/12 / OSM PRO](https://www.youtube.com/watch?v=JmiaU7dQMo0) | 32:53 | pt whisper medium |  |  |  |
 | 2022-05-13 | Torneios | [Torneio de MAIO / Dia 4/12 / OSM PRO](https://www.youtube.com/watch?v=ijWnyofTt7s) | 32:33 | pt whisper medium |  |  |  |
 | 2022-05-14 | Torneios | [Torneio de MAIO / Dia 5/12 / OSM PRO](https://www.youtube.com/watch?v=cnb9A6VHxNM) | 27:40 | pt whisper medium |  |  |  |
-| 2022-05-15 | Torneios | [Torneio de MAIO / Dia 6/12 / OSM PRO](https://www.youtube.com/watch?v=nAV552tHWLc) | 32:58 | por fazer |  |  |  |
-| 2022-05-16 | Torneios | [Torneio de MAIO / Dia 7/12 / OSM PRO](https://www.youtube.com/watch?v=RwHAgYqZ_cs) | 29:54 | por fazer |  |  |  |
-| 2022-05-17 | Torneios | [Torneio de MAIO / Dia 8/12 / OSM PRO](https://www.youtube.com/watch?v=qaZp3bwTric) | 36:43 | por fazer |  |  |  |
-| 2022-05-18 | Torneios | [Torneio de MAIO / Dia 9/12 / OSM PRO](https://www.youtube.com/watch?v=eRbdzTyHWog) | 17:26 | por fazer |  |  |  |
-| 2022-05-20 | Torneios | [TORNEIO DE MAIO TERMINADO!! / Dia 12/12 / OSM PRO](https://www.youtube.com/watch?v=0nxOFq0zpX0) | 20:01 | por fazer |  |  |  |
-| 2022-08-29 | Torneios | [TORNEIO DE VERÃO / OSM PRO](https://www.youtube.com/watch?v=Fos7S0EAnK0) | 27:20 | por fazer |  |  |  |
-| 2022-08-30 | Torneios | [DIA 1 - TORNEIO DE VERÃO / OSM PRO (fiz a equipa do campeonato regional!)](https://www.youtube.com/watch?v=jR1EPi7A8_c) | 31:20 | por fazer |  |  |  |
-| 2022-08-31 | Torneios | [DIA 2 - TORNEIO DE VERÃO / OSM PRO](https://www.youtube.com/watch?v=19ErpUlafB0) | 25:07 | por fazer |  |  |  |
-| 2022-09-01 | Torneios | [JOGO 1 - TORNEIO DE VERÃO / OSM PRO](https://www.youtube.com/watch?v=c7qEkOxNYDE) | 22:28 | por fazer |  |  |  |
-| 2022-09-02 | Torneios | [GAME 2 - SUMMER TOURNAMENT / OSM PRO](https://www.youtube.com/watch?v=4L5w0GNPQUU) | 30:36 | por fazer |  |  |  |
-| 2022-09-03 | Torneios | [3ºJ FASE DE GRUPOS / TORNEIO DE VERÃO / OSM PRO](https://www.youtube.com/watch?v=wdi6d9zL_-A) | 28:23 | por fazer |  |  |  |
-| 2022-09-04 | Torneios | [4ºJ FASE DE GRUPOS / TORNEIO DE VERÃO / OSM PRO](https://www.youtube.com/watch?v=rnPcOxWy9k0) | 13:34 | por fazer |  |  |  |
-| 2022-09-05 | Torneios | [5ºJ FASE DE GRUPOS / TORNEIO DE VERÃO / OSM PRO](https://www.youtube.com/watch?v=tHi1NsKtWXk) | 19:27 | por fazer |  |  |  |
-| 2022-09-06 | Torneios | [6ºJ FASE DE GRUPOS / TORNEIO DE VERÃO / OSM PRO](https://www.youtube.com/watch?v=d9i7sYcTJWg) | 24:24 | por fazer |  |  |  |
-| 2022-09-07 | Torneios | [OITAVOS-DE-FINAL / TORNEIO DE VERÃO / OSM PRO](https://www.youtube.com/watch?v=Nqvu-rqVt1k) | 24:46 | por fazer |  |  |  |
-| 2022-09-08 | Torneios | [QUARTOS-DE-FINAL / TORNEIO DE VERÃO / OSM PRO](https://www.youtube.com/watch?v=KTjBU1N714A) | 28:46 | por fazer |  |  |  |
-| 2022-09-09 | Torneios | [MEIA-FINAL / TORNEIO DE VERÃO / OSM PRO](https://www.youtube.com/watch?v=x-fecXwX-v8) | 25:11 | por fazer |  |  |  |
-| 2022-09-10 | Torneios | [FINAL!! / TORNEIO DE VERÃO / OSM PRO](https://www.youtube.com/watch?v=SJHMzM-dXpg) | 30:40 | por fazer |  |  |  |
-| 2022-12-31 | Torneios | [IT'S ON / 2023 New Year's Tournament / OSM PRO](https://www.youtube.com/watch?v=8-aNPOP5IMc) | 34:12 | por fazer |  |  |  |
-| 2023-01-02 | Torneios | [1º dia de Pré-Época / Torneio de Ano Novo 2023 / OSM PRO](https://www.youtube.com/watch?v=iruAncjTUWc) | 10:21 | por fazer |  |  |  |
-| 2023-01-03 | Torneios | [Pre-Season Day 2 / New Year's Tournament 2023 / OSM PRO](https://www.youtube.com/watch?v=YGQEvgAEics) | 33:08 | por fazer |  |  |  |
-| 2023-01-04 | Torneios | [DAY 1/13 / New Year's Tournament 2023 / OSM PRO](https://www.youtube.com/watch?v=xrcnR6Taxn0) | 27:17 | por fazer |  |  |  |
-| 2023-01-05 | Torneios | [DAY 2/13 / New Year's Tournament 2023 / OSM PRO](https://www.youtube.com/watch?v=YZHlEqpQ8i0) | 29:38 | por fazer |  |  |  |
-| 2023-01-06 | Torneios | [DIA 3/13 / Torneio de Ano Novo 2023 / OSM PRO](https://www.youtube.com/watch?v=m2m0PAyXLmI) | 36:47 | por fazer |  |  |  |
-| 2023-01-07 | Torneios | [DIA 4/13 / Torneio de Ano Novo 2023 / OSM PRO](https://www.youtube.com/watch?v=dMv0v7DZ0OI) | 31:25 | por fazer |  |  |  |
-| 2023-01-08 | Torneios | [DAY 5/13 / New Year's Tournament 2023 / OSM PRO](https://www.youtube.com/watch?v=FFGDNeImG7g) | 31:43 | por fazer |  |  |  |
-| 2023-01-09 | Torneios | [DIA 6/13 / Torneio de Ano Novo 2023 / OSM PRO](https://www.youtube.com/watch?v=E9KW4eS0Jh8) | 27:26 | por fazer |  |  |  |
-| 2023-01-10 | Torneios | [DIA 7/13 / Torneio de Ano Novo 2023 / OSM PRO](https://www.youtube.com/watch?v=21-Sy8FZG-I) | 29:49 | por fazer |  |  |  |
-| 2023-01-11 | Torneios | [DIA 8/13 / Torneio de Ano Novo 2023 / OSM PRO](https://www.youtube.com/watch?v=P2ku423xUVA) | 23:11 | por fazer |  |  |  |
-| 2023-01-12 | Torneios | [DIA 9/13 / Torneio de Ano Novo 2023 / OSM PRO](https://www.youtube.com/watch?v=9whlMzTBSis) | 23:03 | por fazer |  |  |  |
+| 2022-05-15 | Torneios | [Torneio de MAIO / Dia 6/12 / OSM PRO](https://www.youtube.com/watch?v=nAV552tHWLc) | 32:58 | pt assemblyai |  |  |  |
+| 2022-05-16 | Torneios | [Torneio de MAIO / Dia 7/12 / OSM PRO](https://www.youtube.com/watch?v=RwHAgYqZ_cs) | 29:54 | pt assemblyai |  |  |  |
+| 2022-05-17 | Torneios | [Torneio de MAIO / Dia 8/12 / OSM PRO](https://www.youtube.com/watch?v=qaZp3bwTric) | 36:43 | pt assemblyai |  |  |  |
+| 2022-05-18 | Torneios | [Torneio de MAIO / Dia 9/12 / OSM PRO](https://www.youtube.com/watch?v=eRbdzTyHWog) | 17:26 | pt assemblyai |  |  |  |
+| 2022-05-20 | Torneios | [TORNEIO DE MAIO TERMINADO!! / Dia 12/12 / OSM PRO](https://www.youtube.com/watch?v=0nxOFq0zpX0) | 20:01 | pt assemblyai |  |  |  |
+| 2022-08-29 | Torneios | [TORNEIO DE VERÃO / OSM PRO](https://www.youtube.com/watch?v=Fos7S0EAnK0) | 27:20 | pt assemblyai |  |  |  |
+| 2022-08-30 | Torneios | [DIA 1 - TORNEIO DE VERÃO / OSM PRO (fiz a equipa do campeonato regional!)](https://www.youtube.com/watch?v=jR1EPi7A8_c) | 31:20 | pt assemblyai |  |  |  |
+| 2022-08-31 | Torneios | [DIA 2 - TORNEIO DE VERÃO / OSM PRO](https://www.youtube.com/watch?v=19ErpUlafB0) | 25:07 | pt assemblyai |  |  |  |
+| 2022-09-01 | Torneios | [JOGO 1 - TORNEIO DE VERÃO / OSM PRO](https://www.youtube.com/watch?v=c7qEkOxNYDE) | 22:28 | pt assemblyai |  |  |  |
+| 2022-09-02 | Torneios | [GAME 2 - SUMMER TOURNAMENT / OSM PRO](https://www.youtube.com/watch?v=4L5w0GNPQUU) | 30:36 | pt assemblyai |  |  |  |
+| 2022-09-03 | Torneios | [3ºJ FASE DE GRUPOS / TORNEIO DE VERÃO / OSM PRO](https://www.youtube.com/watch?v=wdi6d9zL_-A) | 28:23 | pt assemblyai |  |  |  |
+| 2022-09-04 | Torneios | [4ºJ FASE DE GRUPOS / TORNEIO DE VERÃO / OSM PRO](https://www.youtube.com/watch?v=rnPcOxWy9k0) | 13:34 | pt assemblyai |  |  |  |
+| 2022-09-05 | Torneios | [5ºJ FASE DE GRUPOS / TORNEIO DE VERÃO / OSM PRO](https://www.youtube.com/watch?v=tHi1NsKtWXk) | 19:27 | pt assemblyai |  |  |  |
+| 2022-09-06 | Torneios | [6ºJ FASE DE GRUPOS / TORNEIO DE VERÃO / OSM PRO](https://www.youtube.com/watch?v=d9i7sYcTJWg) | 24:24 | pt assemblyai |  |  |  |
+| 2022-09-07 | Torneios | [OITAVOS-DE-FINAL / TORNEIO DE VERÃO / OSM PRO](https://www.youtube.com/watch?v=Nqvu-rqVt1k) | 24:46 | pt assemblyai |  |  |  |
+| 2022-09-08 | Torneios | [QUARTOS-DE-FINAL / TORNEIO DE VERÃO / OSM PRO](https://www.youtube.com/watch?v=KTjBU1N714A) | 28:46 | pt assemblyai |  |  |  |
+| 2022-09-09 | Torneios | [MEIA-FINAL / TORNEIO DE VERÃO / OSM PRO](https://www.youtube.com/watch?v=x-fecXwX-v8) | 25:11 | pt assemblyai |  |  |  |
+| 2022-09-10 | Torneios | [FINAL!! / TORNEIO DE VERÃO / OSM PRO](https://www.youtube.com/watch?v=SJHMzM-dXpg) | 30:40 | pt assemblyai |  |  |  |
+| 2022-12-31 | Torneios | [IT'S ON / 2023 New Year's Tournament / OSM PRO](https://www.youtube.com/watch?v=8-aNPOP5IMc) | 34:12 | pt assemblyai |  |  |  |
+| 2023-01-02 | Torneios | [1º dia de Pré-Época / Torneio de Ano Novo 2023 / OSM PRO](https://www.youtube.com/watch?v=iruAncjTUWc) | 10:21 | pt assemblyai |  |  |  |
+| 2023-01-03 | Torneios | [Pre-Season Day 2 / New Year's Tournament 2023 / OSM PRO](https://www.youtube.com/watch?v=YGQEvgAEics) | 33:08 | pt assemblyai |  |  |  |
+| 2023-01-04 | Torneios | [DAY 1/13 / New Year's Tournament 2023 / OSM PRO](https://www.youtube.com/watch?v=xrcnR6Taxn0) | 27:17 | pt assemblyai |  |  |  |
+| 2023-01-05 | Torneios | [DAY 2/13 / New Year's Tournament 2023 / OSM PRO](https://www.youtube.com/watch?v=YZHlEqpQ8i0) | 29:38 | pt assemblyai |  |  |  |
+| 2023-01-06 | Torneios | [DIA 3/13 / Torneio de Ano Novo 2023 / OSM PRO](https://www.youtube.com/watch?v=m2m0PAyXLmI) | 36:47 | pt assemblyai |  |  |  |
+| 2023-01-07 | Torneios | [DIA 4/13 / Torneio de Ano Novo 2023 / OSM PRO](https://www.youtube.com/watch?v=dMv0v7DZ0OI) | 31:25 | pt assemblyai |  |  |  |
+| 2023-01-08 | Torneios | [DAY 5/13 / New Year's Tournament 2023 / OSM PRO](https://www.youtube.com/watch?v=FFGDNeImG7g) | 31:43 | pt assemblyai |  |  |  |
+| 2023-01-09 | Torneios | [DIA 6/13 / Torneio de Ano Novo 2023 / OSM PRO](https://www.youtube.com/watch?v=E9KW4eS0Jh8) | 27:26 | pt assemblyai |  |  |  |
+| 2023-01-10 | Torneios | [DIA 7/13 / Torneio de Ano Novo 2023 / OSM PRO](https://www.youtube.com/watch?v=21-Sy8FZG-I) | 29:49 | pt assemblyai |  |  |  |
+| 2023-01-11 | Torneios | [DIA 8/13 / Torneio de Ano Novo 2023 / OSM PRO](https://www.youtube.com/watch?v=P2ku423xUVA) | 23:11 | pt assemblyai |  |  |  |
+| 2023-01-12 | Torneios | [DIA 9/13 / Torneio de Ano Novo 2023 / OSM PRO](https://www.youtube.com/watch?v=9whlMzTBSis) | 23:03 | pt assemblyai |  |  |  |
 | 2023-01-13 | Torneios | [DIA 10/13 / Torneio de Ano Novo 2023 / OSM PRO](https://www.youtube.com/watch?v=Uyv5b8FISoc) | 22:16 | pt whisper medium |  |  |  |
 | 2023-01-14 | Torneios | [DIA 11/13 / Torneio de Ano Novo 2023 / OSM PRO](https://www.youtube.com/watch?v=BJ_uVYeQTfM) | 21:02 | pt whisper medium |  |  |  |
-| 2023-01-15 | Torneios | [DIA 12/13 / Torneio de Ano Novo 2023 / OSM PRO](https://www.youtube.com/watch?v=9cRbvkADpE4) | 22:49 | por fazer |  |  |  |
-| 2023-01-16 | Torneios | [IT'S FINISHED!! DAY 13/13 / New Year's Tournament 2023 / OSM PRO](https://www.youtube.com/watch?v=whsOLjnUOsY) | 17:17 | por fazer |  |  |  |
+| 2023-01-15 | Torneios | [DIA 12/13 / Torneio de Ano Novo 2023 / OSM PRO](https://www.youtube.com/watch?v=9cRbvkADpE4) | 22:49 | pt assemblyai |  |  |  |
+| 2023-01-16 | Torneios | [IT'S FINISHED!! DAY 13/13 / New Year's Tournament 2023 / OSM PRO](https://www.youtube.com/watch?v=whsOLjnUOsY) | 17:17 | pt assemblyai |  |  |  |
 | 2023-05-06 | Torneios | [INICIO / Torneio de Primavera 2023 / OSM PRO](https://www.youtube.com/watch?v=Z_ay0qPIQps) | 33:16 | pt whisper medium |  |  |  |
 | 2023-05-08 | Torneios | [Dia 1 / Torneio de Primavera OSM PRO](https://www.youtube.com/watch?v=9N7kzddMkDQ) | 8:11 | pt whisper medium |  |  |  |
 | 2023-05-09 | Torneios | [Day 2 / OSM PRO Spring Tournament](https://www.youtube.com/watch?v=jL6fwt0F7rE) | 14:14 | pt whisper medium |  |  |  |
@@ -324,7 +324,7 @@ Gerado por `tools/osmpro_estado.py`; não editar à mão. Transcrito = legendas 
 | 2021-08-28 | Outros de OSM | [O MELHOR CANAL DO MUNDO DE OSM / OSM PRO](https://www.youtube.com/watch?v=yK-GG-eE_pU) | 1:49 | pt whisper medium |  |  |  |
 | 2022-01-08 | Outros de OSM | [ENTREVISTA Teaser (anda aí alguém?) / OSM PRO](https://www.youtube.com/watch?v=rintueEZcgQ) | 2:22 | pt whisper medium |  |  |  |
 | 2022-01-10 | Outros de OSM | [Temos um intruso / OSM PRO](https://www.youtube.com/watch?v=12sdHPiV7z4) | 0:16 | pt whisper medium |  |  |  |
-| 2022-01-12 | Outros de OSM | [OSM PRO Backstage](https://www.youtube.com/watch?v=p49aboz4UZo) | 1:33 | por fazer |  |  |  |
+| 2022-01-12 | Outros de OSM | [OSM PRO Backstage](https://www.youtube.com/watch?v=p49aboz4UZo) | 1:33 | pt assemblyai |  |  |  |
 | 2022-02-13 | Outros de OSM | [OSM PRO e a história de DOERAKO. 10k subscritores OSM PRO!](https://www.youtube.com/watch?v=DIrw_B9H46o) | 3:52 | pt whisper medium |  |  |  |
 | 2022-02-21 | Outros de OSM | [FULL INTERVIEW / 10,000 OSM PRO subscribers](https://www.youtube.com/watch?v=n30D2EKIflg) | 9:28 | pt whisper medium |  |  |  |
 | 2022-04-01 | Outros de OSM | [NEW TACTIC DISCOVERED IN OSM!! (read the comments!) #shorts](https://www.youtube.com/shorts/0tEAluIjLIo) | 0:48 | pt whisper medium |  |  |  |
@@ -332,28 +332,28 @@ Gerado por `tools/osmpro_estado.py`; não editar à mão. Transcrito = legendas 
 | 2022-05-05 | Outros de OSM | [O que vos motiva a jogar OSM? ! OSM PRO](https://www.youtube.com/watch?v=kNESx_ZYj_Q) | 16:10 | pt whisper medium |  |  |  |
 | 2022-05-27 | Outros de OSM | [Construir o plantel está mais fácil? / OSM PRO ATUALIDADE](https://www.youtube.com/watch?v=j2Y7g9vUFbQ) | 7:47 | pt whisper medium |  |  |  |
 | 2022-06-01 | Outros de OSM | [CAMPEONATO REGIONAL 2022 - Últimas Informações / OSM PRO ATUALIDADE](https://www.youtube.com/watch?v=PRdlnRFXd6U) | 14:55 | pt whisper medium |  |  |  |
-| 2022-06-09 | Outros de OSM | [Horário de Eventos / Campeonato Regional 2022 AO RUBRO! / OSM PRO ATUALIDADE](https://www.youtube.com/watch?v=e1u332sHiuc) | 16:40 | por fazer |  |  |  |
-| 2022-06-15 | Outros de OSM | [Ronda 1 do Campeonato Regional está a TERMINAR / OSM PRO ATUALIDADE](https://www.youtube.com/watch?v=maWxk1AfU5c) | 21:35 | por fazer |  |  |  |
-| 2022-07-09 | Outros de OSM | [CNPG 2022 / O Conquistador / OSM PRO Atualidade](https://www.youtube.com/watch?v=hrs8o_7iUFw) | 25:42 | por fazer |  |  |  |
-| 2022-08-08 | Outros de OSM | [OSM PRO Atualidade / Ronda 3 do Campeonato Regional Português](https://www.youtube.com/watch?v=4waeOHWGyis) | 17:06 | por fazer |  |  |  |
-| 2022-08-16 | Outros de OSM | [I TESTED a 433A from a SUBSCRIBER! / OSM PRO #shorts](https://www.youtube.com/shorts/RGbmQlzvoWI) | 0:32 | por fazer |  |  |  |
-| 2022-08-17 | Outros de OSM | [Seleções Nacionais e NOVIDADES / OSM PRO Atualidade](https://www.youtube.com/watch?v=-PVfmupx6tc) | 12:03 | por fazer |  |  |  |
-| 2022-08-19 | Outros de OSM | [santana100 vs Masterguru! MATA-MATA na Taça / OSM PRO #shorts](https://www.youtube.com/shorts/uaAZgtsGgUA) | 0:49 | por fazer |  |  |  |
-| 2022-08-21 | Outros de OSM | [Campeonato Regional Brasileiro de OSM / Sevo Premier / CR PT e muito mais / OSM PRO ATUALIDADE](https://www.youtube.com/watch?v=Iwo5qAMSjyU) | 16:26 | por fazer |  |  |  |
-| 2022-08-22 | Outros de OSM | [I TESTED a 451 from a SUBSCRIBER! / OSM PRO #shorts](https://www.youtube.com/shorts/G0ynricT8-U) | 0:31 | por fazer |  |  |  |
-| 2022-08-25 | Outros de OSM | [santana100 vs ricardo19382! MATA-MATA na Taça / OSM PRO #shorts](https://www.youtube.com/shorts/bcWfj-0V3Fc) | 1:00 | por fazer |  |  |  |
-| 2022-08-27 | Outros de OSM | [I TESTED a 523A from a SUBSCRIBER! / OSM PRO #shorts](https://www.youtube.com/shorts/1y8GHpWgA28) | 0:39 | por fazer |  |  |  |
-| 2022-09-17 | Outros de OSM | [OSM in the Alvalade locker rooms with Mateus Fernandes and Flávio Nazinho in the Lion's DNA / OSM...](https://www.youtube.com/watch?v=UvjOoRTun8I) | 12:33 | por fazer |  |  |  |
-| 2022-09-17 | Outros de OSM | [Chegou a FINAL do CAMPEONATO REGIONAL PORTUGUÊS 2022 / OSM Atualidade](https://www.youtube.com/watch?v=DEarzP7sQJk) | 24:57 | por fazer |  |  |  |
-| 2022-10-23 | Outros de OSM | [8º Aniversário Portvcale e Liga de Recrutamento / OSM PRO](https://www.youtube.com/watch?v=EFjv34_phyc) | 6:49 | por fazer |  |  |  |
-| 2022-10-30 | Outros de OSM | [CAMPEONATO NACIONAL PORTUGUÊS 2022/23 - Inscrições / OSM PRO](https://www.youtube.com/watch?v=bmz4QL1Bs-Y) | 17:39 | por fazer |  |  |  |
-| 2022-11-19 | Outros de OSM | [Problemas nos servidores / OSM PRO](https://www.youtube.com/watch?v=7B4YWtYOq4s) | 18:01 | por fazer |  |  |  |
-| 2022-12-14 | Outros de OSM | [OSM PRO Atualidade / Campeonato Nacional 16 avos-de-final 1ª metade](https://www.youtube.com/watch?v=E5Fs76CI5bk) | 12:21 | por fazer |  |  |  |
-| 2022-12-27 | Outros de OSM | [OSM PRO / Campeonato Nacional / 1/16 avos Final - Resultados Finais](https://www.youtube.com/watch?v=jVdHfDbkidk) | 11:16 | por fazer |  |  |  |
-| 2023-01-24 | Outros de OSM | [TACTICS 442A Play on the wings / OSM PRO #shorts](https://www.youtube.com/shorts/IrVhKRYtASs) | 0:36 | por fazer |  |  |  |
-| 2023-03-31 | Outros de OSM | [Quase a chegar aos 20 mil! / OSM PRO](https://www.youtube.com/shorts/pfce1ZJcG_E) | 0:20 | por fazer |  |  |  |
-| 2023-04-01 | Outros de OSM | [Ser um Jogador de Futebol / 20k subscritores OSM PRO](https://www.youtube.com/watch?v=QCgcK_9S25k) | 2:39 | por fazer |  |  |  |
-| 2023-04-01 | Outros de OSM | [NEW DISCOVERY the Unbeatable 424B! (read the comments 🤫) / OSM PRO](https://www.youtube.com/shorts/MJkJ8z3trzs) | 0:40 | por fazer |  |  |  |
+| 2022-06-09 | Outros de OSM | [Horário de Eventos / Campeonato Regional 2022 AO RUBRO! / OSM PRO ATUALIDADE](https://www.youtube.com/watch?v=e1u332sHiuc) | 16:40 | pt assemblyai |  |  |  |
+| 2022-06-15 | Outros de OSM | [Ronda 1 do Campeonato Regional está a TERMINAR / OSM PRO ATUALIDADE](https://www.youtube.com/watch?v=maWxk1AfU5c) | 21:35 | pt assemblyai |  |  |  |
+| 2022-07-09 | Outros de OSM | [CNPG 2022 / O Conquistador / OSM PRO Atualidade](https://www.youtube.com/watch?v=hrs8o_7iUFw) | 25:42 | pt assemblyai |  |  |  |
+| 2022-08-08 | Outros de OSM | [OSM PRO Atualidade / Ronda 3 do Campeonato Regional Português](https://www.youtube.com/watch?v=4waeOHWGyis) | 17:06 | pt assemblyai |  |  |  |
+| 2022-08-16 | Outros de OSM | [I TESTED a 433A from a SUBSCRIBER! / OSM PRO #shorts](https://www.youtube.com/shorts/RGbmQlzvoWI) | 0:32 | pt assemblyai |  |  |  |
+| 2022-08-17 | Outros de OSM | [Seleções Nacionais e NOVIDADES / OSM PRO Atualidade](https://www.youtube.com/watch?v=-PVfmupx6tc) | 12:03 | pt assemblyai |  |  |  |
+| 2022-08-19 | Outros de OSM | [santana100 vs Masterguru! MATA-MATA na Taça / OSM PRO #shorts](https://www.youtube.com/shorts/uaAZgtsGgUA) | 0:49 | pt assemblyai |  |  |  |
+| 2022-08-21 | Outros de OSM | [Campeonato Regional Brasileiro de OSM / Sevo Premier / CR PT e muito mais / OSM PRO ATUALIDADE](https://www.youtube.com/watch?v=Iwo5qAMSjyU) | 16:26 | pt assemblyai |  |  |  |
+| 2022-08-22 | Outros de OSM | [I TESTED a 451 from a SUBSCRIBER! / OSM PRO #shorts](https://www.youtube.com/shorts/G0ynricT8-U) | 0:31 | pt assemblyai |  |  |  |
+| 2022-08-25 | Outros de OSM | [santana100 vs ricardo19382! MATA-MATA na Taça / OSM PRO #shorts](https://www.youtube.com/shorts/bcWfj-0V3Fc) | 1:00 | pt assemblyai |  |  |  |
+| 2022-08-27 | Outros de OSM | [I TESTED a 523A from a SUBSCRIBER! / OSM PRO #shorts](https://www.youtube.com/shorts/1y8GHpWgA28) | 0:39 | pt assemblyai |  |  |  |
+| 2022-09-17 | Outros de OSM | [OSM in the Alvalade locker rooms with Mateus Fernandes and Flávio Nazinho in the Lion's DNA / OSM...](https://www.youtube.com/watch?v=UvjOoRTun8I) | 12:33 | pt assemblyai |  |  |  |
+| 2022-09-17 | Outros de OSM | [Chegou a FINAL do CAMPEONATO REGIONAL PORTUGUÊS 2022 / OSM Atualidade](https://www.youtube.com/watch?v=DEarzP7sQJk) | 24:57 | pt assemblyai |  |  |  |
+| 2022-10-23 | Outros de OSM | [8º Aniversário Portvcale e Liga de Recrutamento / OSM PRO](https://www.youtube.com/watch?v=EFjv34_phyc) | 6:49 | pt assemblyai |  |  |  |
+| 2022-10-30 | Outros de OSM | [CAMPEONATO NACIONAL PORTUGUÊS 2022/23 - Inscrições / OSM PRO](https://www.youtube.com/watch?v=bmz4QL1Bs-Y) | 17:39 | pt assemblyai |  |  |  |
+| 2022-11-19 | Outros de OSM | [Problemas nos servidores / OSM PRO](https://www.youtube.com/watch?v=7B4YWtYOq4s) | 18:01 | pt assemblyai |  |  |  |
+| 2022-12-14 | Outros de OSM | [OSM PRO Atualidade / Campeonato Nacional 16 avos-de-final 1ª metade](https://www.youtube.com/watch?v=E5Fs76CI5bk) | 12:21 | pt assemblyai |  |  |  |
+| 2022-12-27 | Outros de OSM | [OSM PRO / Campeonato Nacional / 1/16 avos Final - Resultados Finais](https://www.youtube.com/watch?v=jVdHfDbkidk) | 11:16 | pt assemblyai |  |  |  |
+| 2023-01-24 | Outros de OSM | [TACTICS 442A Play on the wings / OSM PRO #shorts](https://www.youtube.com/shorts/IrVhKRYtASs) | 0:36 | pt assemblyai |  |  |  |
+| 2023-03-31 | Outros de OSM | [Quase a chegar aos 20 mil! / OSM PRO](https://www.youtube.com/shorts/pfce1ZJcG_E) | 0:20 | pt assemblyai |  |  |  |
+| 2023-04-01 | Outros de OSM | [Ser um Jogador de Futebol / 20k subscritores OSM PRO](https://www.youtube.com/watch?v=QCgcK_9S25k) | 2:39 | pt assemblyai |  |  |  |
+| 2023-04-01 | Outros de OSM | [NEW DISCOVERY the Unbeatable 424B! (read the comments 🤫) / OSM PRO](https://www.youtube.com/shorts/MJkJ8z3trzs) | 0:40 | pt assemblyai |  |  |  |
 | 2023-04-22 | Outros de OSM | [OSM PRO ATUALIDADE](https://www.youtube.com/watch?v=KUVdVCU6_rI) | 14:48 | por fazer |  |  |  |
 | 2023-06-01 | Outros de OSM | [Feliz Dia da Criança / OSM PRO](https://www.youtube.com/watch?v=rKoU_a08k8I) | 0:48 | por fazer |  |  |  |
 | 2023-06-08 | Outros de OSM | [(subtitled) THE FUN Fantasy League / OSM PRO](https://www.youtube.com/watch?v=EQq-tG3u0Gg) | 16:38 | por fazer |  |  |  |

@@ -2,6 +2,12 @@
 
 Entradas mais recentes primeiro. Cada sessão: o que se fez · o que ficou por fazer · próximo passo.
 
+## 2026-10-19 (noite) — `dist/windows` 0.13.9, transcrição na AssemblyAI (DESKTOP-KAM70RR)
+
+- **Pull (dono) e `dist`:** 429 testes; `build_portable.py --zip --installer` → `dist/windows/` (portátil 553 MB, `OSMbot-0.13.9-windows-portable.zip` 206 MB, `-windows-setup.exe` 148 MB); versão 0.13.9 confirmada dentro do portátil. O dono corre o instalador. Falta: Mac (pull e construir) antes do Extreme Training de 31/10.
+- **Regra do dono para o `dist`:** só a última versão dos instaladores e portáteis (as notas de versão ficam todas); limpa-se só a pasta do sistema em que se constrói (`dist/windows/` no Windows, `dist/mac/` no Mac).
+- **Transcrição na AssemblyAI (OK do dono):** `tools/osmpro_whisper.py --assemblyai` (chave no `.env.local`, fora do git; REST com `urllib`, sem pacote novo). Downloads um a um com 5 s entre eles, até 4 transcrições em paralelo, frases da AssemblyAI como linhas; sem o Modo Carreira por omissão (`--carreira`); mostra o custo estimado (a 0,21 $/h, por cima) e pergunta (`--sim`); 2 pausas seguidas por falhas do YouTube → para. Crédito grátis: 32,13 $ antes de começar, único, não renova (docs da AssemblyAI). Corrida: 1 de teste + 63 de 100 (sem nenhuma falha), parada pelo Claude Code por falta de memória no PC (o VS Code tinha ~3 GB; Windsurf/Codeium e Codex em 2 janelas). `ESTADO.md`: **313 transcritos**; os 7 da teoria que faltavam já estão. **Falta:** 37 (Torneios e Outros, a começar no `KUVdVCU6_rI`): `python tools/osmpro_whisper.py --assemblyai`.
+
 ## 2026-10-19 — Transcrição do OSMPro: ponto de situação e plano AssemblyAI
 
 - **Whisper na janela do PowerShell** (desde 18/10 20:54): ~70 transcritos; com os 20 de antes, 90 pelo Whisper. Feitas: Dicas 29/29; Táticas 25/27, série 28/31 (os que faltam falharam). Falhas no `~/.osmbot/osmpro_whisper.log` (UTF-16): 6 × `HTTP Error 403: Forbidden` no áudio, passageiras (o `yt-dlp --simulate` responde bem depois); voltam a ser tentadas na próxima corrida. Ritmo ~3 min por vídeo.
