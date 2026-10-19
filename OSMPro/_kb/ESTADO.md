@@ -2,7 +2,7 @@
 
 Gerado por `tools/osmpro_estado.py`; não editar à mão. Transcrito = legendas em `legendas/`; analisado = nota em `notas/` (D-063).
 
-**Total:** 1183 vídeos · 313 transcritos · 0 sem legendas · 22 analisados · 81 conclusões
+**Total:** 1183 vídeos · 349 transcritos · 0 sem legendas · 22 analisados · 81 conclusões
 
 | Categoria | Vídeos | Transcritos | Sem legendas | Analisados | Conclusões |
 |---|---|---|---|---|---|
@@ -16,7 +16,7 @@ Gerado por `tools/osmpro_estado.py`; não editar à mão. Transcrito = legendas 
 | Competições oficiais | 11 | 11 | 0 | 0 | 0 |
 | Entrevistas | 2 | 2 | 0 | 0 | 0 |
 | Torneios | 86 | 86 | 0 | 0 | 0 |
-| Outros de OSM | 71 | 38 | 0 | 0 | 0 |
+| Outros de OSM | 71 | 70 | 0 | 0 | 0 |
 | Modo Carreira #17 | 33 | 0 | 0 | 0 | 0 |
 | Modo Carreira #16 | 54 | 0 | 0 | 0 | 0 |
 | Modo Carreira #15 | 54 | 0 | 0 | 0 | 0 |
@@ -35,7 +35,7 @@ Gerado por `tools/osmpro_estado.py`; não editar à mão. Transcrito = legendas 
 | Modo Carreira #2 | 50 | 0 | 0 | 0 | 0 |
 | Modo Carreira #1 | 48 | 0 | 0 | 0 | 0 |
 | Modo Carreira | 13 | 0 | 0 | 0 | 0 |
-| Talvez OSM | 4 | 0 | 0 | 0 | 0 |
+| Talvez OSM | 4 | 4 | 0 | 0 | 0 |
 
 ## Vídeo a vídeo
 
@@ -354,38 +354,38 @@ Gerado por `tools/osmpro_estado.py`; não editar à mão. Transcrito = legendas 
 | 2023-03-31 | Outros de OSM | [Quase a chegar aos 20 mil! / OSM PRO](https://www.youtube.com/shorts/pfce1ZJcG_E) | 0:20 | pt assemblyai |  |  |  |
 | 2023-04-01 | Outros de OSM | [Ser um Jogador de Futebol / 20k subscritores OSM PRO](https://www.youtube.com/watch?v=QCgcK_9S25k) | 2:39 | pt assemblyai |  |  |  |
 | 2023-04-01 | Outros de OSM | [NEW DISCOVERY the Unbeatable 424B! (read the comments 🤫) / OSM PRO](https://www.youtube.com/shorts/MJkJ8z3trzs) | 0:40 | pt assemblyai |  |  |  |
-| 2023-04-22 | Outros de OSM | [OSM PRO ATUALIDADE](https://www.youtube.com/watch?v=KUVdVCU6_rI) | 14:48 | por fazer |  |  |  |
-| 2023-06-01 | Outros de OSM | [Feliz Dia da Criança / OSM PRO](https://www.youtube.com/watch?v=rKoU_a08k8I) | 0:48 | por fazer |  |  |  |
-| 2023-06-08 | Outros de OSM | [(subtitled) THE FUN Fantasy League / OSM PRO](https://www.youtube.com/watch?v=EQq-tG3u0Gg) | 16:38 | por fazer |  |  |  |
-| 2023-06-13 | Outros de OSM | [(subtitled) New OSM Ranking (Suggestion) / OSM PRO](https://www.youtube.com/watch?v=K5wITuACQKk) | 5:08 | por fazer |  |  |  |
-| 2023-06-23 | Outros de OSM | [OSM News ✌️ / OSM PRO](https://www.youtube.com/watch?v=EjEA0x6swrg) | 9:55 | por fazer |  |  |  |
-| 2023-06-27 | Outros de OSM | [OSM REGIONAL CHAMPIONSHIP in Portugal / OSM PRO](https://www.youtube.com/watch?v=6upqPoI09Hc) | 18:01 | por fazer |  |  |  |
-| 2023-07-01 | Outros de OSM | [CRB 23 / Campeonato Regional Brasileiro 2023 / OSM PRO](https://www.youtube.com/watch?v=2s2gFz9pt2w) | 10:18 | por fazer |  |  |  |
-| 2023-09-17 | Outros de OSM | [ÉPOCA 23/24 CHEGOU AO OSM! / OSM PRO](https://www.youtube.com/watch?v=kGchFchk6rE) | 1:03:52 | por fazer |  |  |  |
-| 2023-09-22 | Outros de OSM | [Conversas de OSM: Estrilho / OSM PRO](https://www.youtube.com/watch?v=k7FJSugpCVY) | 14:07 | por fazer |  |  |  |
-| 2023-09-26 | Outros de OSM | [NOVIDADES DE OSM - CR23 e WNC23 / OSM PRO](https://www.youtube.com/watch?v=tuWYl1iZm_Y) | 16:09 | por fazer |  |  |  |
-| 2023-10-02 | Outros de OSM | [(subtitled) FAST MONEY on OSM / Players +100 in GROUP BATTLES / Online Soccer Manager / OSM PRO](https://www.youtube.com/watch?v=crlPdOuieJI) | 4:44 | por fazer |  |  |  |
-| 2023-10-19 | Outros de OSM | [Portuguese National Championship 23/24 / OSM PRO](https://www.youtube.com/watch?v=A9KRB3ioHJs) | 7:23 | por fazer |  |  |  |
-| 2023-11-20 | Outros de OSM | [Copa OSM 2023 - CAMPEONATO DO MUNDO 2023 OFICIAL / OSM PRO](https://www.youtube.com/watch?v=C825b3iVlZw) | 7:10 | por fazer |  |  |  |
-| 2024-01-12 | Outros de OSM | [O Português que tem 1.44 MILHÕES DE SUBSCRITORES / CLEVOO / OSM PRO](https://www.youtube.com/watch?v=wLK_tJ5AMN0) | 23:03 | por fazer |  |  |  |
-| 2024-03-16 | Outros de OSM | [HOW TO WIN EVERYTHING WITH THE SMALLEST TEAM? IN 6 STEPS. / OSM PRO 2024](https://www.youtube.com/watch?v=EB9eB6-DF8k) | 5:29 | por fazer |  |  |  |
-| 2024-03-22 | Outros de OSM | [THE DAY OF DECISION! OSM PRO](https://www.youtube.com/watch?v=hpD0Q79lwGA) | 21:50 | por fazer |  |  |  |
-| 2024-04-01 | Outros de OSM | [A melhor TÁTICA do OSM... um 334B! (leiam os comentários) / OSM PRO](https://www.youtube.com/shorts/skFZQ7qcKHs) | 0:55 | por fazer |  |  |  |
-| 2024-04-25 | Outros de OSM | [Música - Bem vindo ao OSM PRO (Videoclipe Oficial)](https://www.youtube.com/watch?v=o1jJChl-ffY) | 1:57 | por fazer |  |  |  |
-| 2024-06-24 | Outros de OSM | [National OSM Championship 2024](https://www.youtube.com/watch?v=p4-pS4-uC5M) | 15:22 | por fazer |  |  |  |
-| 2024-07-14 | Outros de OSM | [COMEÇOU o Campeonato Nacional de OSM e revelámos uma nova tática](https://www.youtube.com/watch?v=sZGnEyxEl_s) | 18:19 | por fazer |  |  |  |
-| 2024-07-22 | Outros de OSM | [The Secret Stages and Training Well Explained to Win at OSM](https://www.youtube.com/shorts/3yrrFc8137M) | 0:36 | por fazer |  |  |  |
-| 2024-11-19 | Outros de OSM | [The Ultimate SCOUT Guide in OSM / The Best Players in Online Soccer Manager](https://www.youtube.com/watch?v=tpY5EBWkfM0) | 22:53 | por fazer |  |  |  |
-| 2024-12-04 | Outros de OSM | [O TORNEIO DE NATAL 2024 DE OSM](https://www.youtube.com/watch?v=ergjVMGF1WY) | 7:28 | por fazer |  |  |  |
-| 2024-12-07 | Outros de OSM | [TORNEIO DE NATAL 2024 COMEÇOU! / OSM PRO](https://www.youtube.com/watch?v=ZEksTNciqvI) | 40:47 | por fazer |  |  |  |
-| 2024-12-12 | Outros de OSM | [Ep. 5 🎅 2nd away game in the OSM Christmas Tournament with subscribers ⚽](https://www.youtube.com/watch?v=AeA7PulJPhs) | 23:35 | por fazer |  |  |  |
-| 2024-12-31 | Outros de OSM | [OSM 2024 National Championship and World Domination](https://www.youtube.com/watch?v=50mB9ZgUE8g) | 19:41 | por fazer |  |  |  |
-| 2025-01-09 | Outros de OSM | [I SPENT 10,000 BOSS COINS! (with subtitles! Configure in settings!)](https://www.youtube.com/watch?v=D2oKh_MyvTE) | 19:43 | por fazer |  |  |  |
-| 2025-01-15 | Outros de OSM | [A PRÓXIMAS competições de OSM!](https://www.youtube.com/watch?v=Bx6YNpso228) | 12:40 | por fazer |  |  |  |
-| 2025-04-01 | Outros de OSM | [THIS TACTIC BROKE OSM! 100 WIN RATE (read the comments)](https://www.youtube.com/shorts/9tPe2TXMpsM) | 0:56 | por fazer |  |  |  |
-| 2025-05-19 | Outros de OSM | [What's new in OSM? / OSM PRO](https://www.youtube.com/watch?v=kSgTegnGJPU) | 11:15 | por fazer |  |  |  |
-| 2025-06-22 | Outros de OSM | [LIGAS ATUALIZADAS E CAMPEONATO DO MUNDO DE CLUBES / OSM PRO](https://www.youtube.com/watch?v=znoAXPmf4_o) | 44:20 | por fazer |  |  |  |
-| 2025-10-21 | Outros de OSM | [and 16 years later I gave up on OSM](https://www.youtube.com/watch?v=DXfnga0EwBI) | 23:45 | por fazer |  |  |  |
+| 2023-04-22 | Outros de OSM | [OSM PRO ATUALIDADE](https://www.youtube.com/watch?v=KUVdVCU6_rI) | 14:48 | pt assemblyai |  |  |  |
+| 2023-06-01 | Outros de OSM | [Feliz Dia da Criança / OSM PRO](https://www.youtube.com/watch?v=rKoU_a08k8I) | 0:48 | pt assemblyai |  |  |  |
+| 2023-06-08 | Outros de OSM | [(subtitled) THE FUN Fantasy League / OSM PRO](https://www.youtube.com/watch?v=EQq-tG3u0Gg) | 16:38 | pt assemblyai |  |  |  |
+| 2023-06-13 | Outros de OSM | [(subtitled) New OSM Ranking (Suggestion) / OSM PRO](https://www.youtube.com/watch?v=K5wITuACQKk) | 5:08 | pt assemblyai |  |  |  |
+| 2023-06-23 | Outros de OSM | [OSM News ✌️ / OSM PRO](https://www.youtube.com/watch?v=EjEA0x6swrg) | 9:55 | pt assemblyai |  |  |  |
+| 2023-06-27 | Outros de OSM | [OSM REGIONAL CHAMPIONSHIP in Portugal / OSM PRO](https://www.youtube.com/watch?v=6upqPoI09Hc) | 18:01 | pt assemblyai |  |  |  |
+| 2023-07-01 | Outros de OSM | [CRB 23 / Campeonato Regional Brasileiro 2023 / OSM PRO](https://www.youtube.com/watch?v=2s2gFz9pt2w) | 10:18 | pt assemblyai |  |  |  |
+| 2023-09-17 | Outros de OSM | [ÉPOCA 23/24 CHEGOU AO OSM! / OSM PRO](https://www.youtube.com/watch?v=kGchFchk6rE) | 1:03:52 | pt assemblyai |  |  |  |
+| 2023-09-22 | Outros de OSM | [Conversas de OSM: Estrilho / OSM PRO](https://www.youtube.com/watch?v=k7FJSugpCVY) | 14:07 | pt assemblyai |  |  |  |
+| 2023-09-26 | Outros de OSM | [NOVIDADES DE OSM - CR23 e WNC23 / OSM PRO](https://www.youtube.com/watch?v=tuWYl1iZm_Y) | 16:09 | pt assemblyai |  |  |  |
+| 2023-10-02 | Outros de OSM | [(subtitled) FAST MONEY on OSM / Players +100 in GROUP BATTLES / Online Soccer Manager / OSM PRO](https://www.youtube.com/watch?v=crlPdOuieJI) | 4:44 | pt assemblyai |  |  |  |
+| 2023-10-19 | Outros de OSM | [Portuguese National Championship 23/24 / OSM PRO](https://www.youtube.com/watch?v=A9KRB3ioHJs) | 7:23 | pt assemblyai |  |  |  |
+| 2023-11-20 | Outros de OSM | [Copa OSM 2023 - CAMPEONATO DO MUNDO 2023 OFICIAL / OSM PRO](https://www.youtube.com/watch?v=C825b3iVlZw) | 7:10 | pt assemblyai |  |  |  |
+| 2024-01-12 | Outros de OSM | [O Português que tem 1.44 MILHÕES DE SUBSCRITORES / CLEVOO / OSM PRO](https://www.youtube.com/watch?v=wLK_tJ5AMN0) | 23:03 | pt assemblyai |  |  |  |
+| 2024-03-16 | Outros de OSM | [HOW TO WIN EVERYTHING WITH THE SMALLEST TEAM? IN 6 STEPS. / OSM PRO 2024](https://www.youtube.com/watch?v=EB9eB6-DF8k) | 5:29 | pt assemblyai |  |  |  |
+| 2024-03-22 | Outros de OSM | [THE DAY OF DECISION! OSM PRO](https://www.youtube.com/watch?v=hpD0Q79lwGA) | 21:50 | pt assemblyai |  |  |  |
+| 2024-04-01 | Outros de OSM | [A melhor TÁTICA do OSM... um 334B! (leiam os comentários) / OSM PRO](https://www.youtube.com/shorts/skFZQ7qcKHs) | 0:55 | pt assemblyai |  |  |  |
+| 2024-04-25 | Outros de OSM | [Música - Bem vindo ao OSM PRO (Videoclipe Oficial)](https://www.youtube.com/watch?v=o1jJChl-ffY) | 1:57 | pt assemblyai |  |  |  |
+| 2024-06-24 | Outros de OSM | [National OSM Championship 2024](https://www.youtube.com/watch?v=p4-pS4-uC5M) | 15:22 | pt assemblyai |  |  |  |
+| 2024-07-14 | Outros de OSM | [COMEÇOU o Campeonato Nacional de OSM e revelámos uma nova tática](https://www.youtube.com/watch?v=sZGnEyxEl_s) | 18:19 | pt assemblyai |  |  |  |
+| 2024-07-22 | Outros de OSM | [The Secret Stages and Training Well Explained to Win at OSM](https://www.youtube.com/shorts/3yrrFc8137M) | 0:36 | pt assemblyai |  |  |  |
+| 2024-11-19 | Outros de OSM | [The Ultimate SCOUT Guide in OSM / The Best Players in Online Soccer Manager](https://www.youtube.com/watch?v=tpY5EBWkfM0) | 22:53 | pt assemblyai |  |  |  |
+| 2024-12-04 | Outros de OSM | [O TORNEIO DE NATAL 2024 DE OSM](https://www.youtube.com/watch?v=ergjVMGF1WY) | 7:28 | pt assemblyai |  |  |  |
+| 2024-12-07 | Outros de OSM | [TORNEIO DE NATAL 2024 COMEÇOU! / OSM PRO](https://www.youtube.com/watch?v=ZEksTNciqvI) | 40:47 | pt assemblyai |  |  |  |
+| 2024-12-12 | Outros de OSM | [Ep. 5 🎅 2nd away game in the OSM Christmas Tournament with subscribers ⚽](https://www.youtube.com/watch?v=AeA7PulJPhs) | 23:35 | pt assemblyai |  |  |  |
+| 2024-12-31 | Outros de OSM | [OSM 2024 National Championship and World Domination](https://www.youtube.com/watch?v=50mB9ZgUE8g) | 19:41 | pt assemblyai |  |  |  |
+| 2025-01-09 | Outros de OSM | [I SPENT 10,000 BOSS COINS! (with subtitles! Configure in settings!)](https://www.youtube.com/watch?v=D2oKh_MyvTE) | 19:43 | pt assemblyai |  |  |  |
+| 2025-01-15 | Outros de OSM | [A PRÓXIMAS competições de OSM!](https://www.youtube.com/watch?v=Bx6YNpso228) | 12:40 | pt assemblyai |  |  |  |
+| 2025-04-01 | Outros de OSM | [THIS TACTIC BROKE OSM! 100 WIN RATE (read the comments)](https://www.youtube.com/shorts/9tPe2TXMpsM) | 0:56 | pt assemblyai |  |  |  |
+| 2025-05-19 | Outros de OSM | [What's new in OSM? / OSM PRO](https://www.youtube.com/watch?v=kSgTegnGJPU) | 11:15 | pt assemblyai |  |  |  |
+| 2025-06-22 | Outros de OSM | [LIGAS ATUALIZADAS E CAMPEONATO DO MUNDO DE CLUBES / OSM PRO](https://www.youtube.com/watch?v=znoAXPmf4_o) | 44:20 | pt assemblyai |  |  |  |
+| 2025-10-21 | Outros de OSM | [and 16 years later I gave up on OSM](https://www.youtube.com/watch?v=DXfnga0EwBI) | 23:45 | pt assemblyai |  |  |  |
 | ~2021 | Outros de OSM | [Trailer - THE WORLD'S BEST OSM COACH (funny moments)](https://www.youtube.com/watch?v=Csd6bR4MsOY) | 0:35 | por fazer |  |  |  |
 | 2025-09-03 | Modo Carreira #17 | [Ep. 1 / 17th CAREER MODE / OSM PRO](https://www.youtube.com/watch?v=Y81mUbgIk7M) | 14:11 | por fazer |  |  |  |
 | 2025-09-04 | Modo Carreira #17 | [Ep. 2 / 17th CAREER MODE / OSM PRO](https://www.youtube.com/watch?v=U6RbldKyKPI) | 17:49 | por fazer |  |  |  |
@@ -1220,7 +1220,7 @@ Gerado por `tools/osmpro_estado.py`; não editar à mão. Transcrito = legendas 
 | 2025-09-02 | Modo Carreira | [17TH CAREER MODE / OSM PRO](https://www.youtube.com/watch?v=LauJPyse8fM) | 33:55 | por fazer |  |  |  |
 | ~2021 | Modo Carreira | [Esclarecimentos #7 Modo Carreira](https://www.youtube.com/watch?v=NYgRrvUeJqg) | 6:40 | por fazer |  |  |  |
 | ~2021 | Modo Carreira | [(Testes) NOVO MODO CARREIRA / OSM PRO](https://www.youtube.com/watch?v=RrkbO-80qH4) | 10:49 | por fazer |  |  |  |
-| 2023-08-05 | Talvez OSM | [12° Modo Carreira prestes a começar!](https://www.youtube.com/shorts/uhX4rxN4btY) | 0:15 | por fazer |  |  |  |
-| 2025-02-04 | Talvez OSM | [Regional 2025 Begins and Career Mode is Coming!](https://www.youtube.com/watch?v=CibQRIVIkyE) | 14:18 | por fazer |  |  |  |
-| 2025-02-10 | Talvez OSM | [APERTEM OS CINTOS !! Modo Carreira e Liga de Recrutamento a Chegar!](https://www.youtube.com/watch?v=d3q06CYIGHs) | 9:16 | por fazer |  |  |  |
-| 2025-09-01 | Talvez OSM | [17th Career Mode starting!](https://www.youtube.com/shorts/R6E7B6CJpvg) | 1:06 | por fazer |  |  |  |
+| 2023-08-05 | Talvez OSM | [12° Modo Carreira prestes a começar!](https://www.youtube.com/shorts/uhX4rxN4btY) | 0:15 | pt assemblyai |  |  |  |
+| 2025-02-04 | Talvez OSM | [Regional 2025 Begins and Career Mode is Coming!](https://www.youtube.com/watch?v=CibQRIVIkyE) | 14:18 | pt assemblyai |  |  |  |
+| 2025-02-10 | Talvez OSM | [APERTEM OS CINTOS !! Modo Carreira e Liga de Recrutamento a Chegar!](https://www.youtube.com/watch?v=d3q06CYIGHs) | 9:16 | pt assemblyai |  |  |  |
+| 2025-09-01 | Talvez OSM | [17th Career Mode starting!](https://www.youtube.com/shorts/R6E7B6CJpvg) | 1:06 | pt assemblyai |  |  |  |
