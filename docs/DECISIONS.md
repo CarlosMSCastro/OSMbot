@@ -182,6 +182,8 @@ A cada leitura do quadro (3 em 3 min), o bot compara a lista de transferências 
 
 O dono quer **todas** as legendas dos vídeos de `OSMPro/` (~1180, ~455 h) no git, para trabalhar em vários PCs ("responsabilidade minha"). Exceção ao D-016, como o `logs/` (D-022): o texto é dos autores dos vídeos e tem nomes de terceiros. `tools/osmpro_legendas.py` (`youtube-transcript-api`, grátis, nada descarregado além do texto) escreve `OSMPro/_kb/legendas/<id>.json` com os dados da lista, a língua e se é automática; prefere as feitas pelo autor. A análise faz-se depois, aos poucos.
 
+**Atualização (2026-10-18, pedido do dono: "uma solução mais eficiente e prática"):** o YouTube bloqueia as legendas ao fim de 12–18 vídeos por IP, com ou sem pausa (Mac e Windows; também pelo `yt-dlp`, 429), mas o áudio descarrega. Passa a `tools/osmpro_whisper.py`: áudio pelo `yt-dlp` numa pasta temporária (apagado logo, nunca no repo), transcrição local com o `faster-whisper` `medium` na GTX 1060 (~6× o tempo real, texto melhor do que as legendas automáticas), pela ordem da teoria primeiro (~7 h), o resto depois (~77 h no total). Mesmo formato em `legendas/<id>.json`, com `fonte`. O `osmpro_legendas.py` fica para quando o YouTube deixar.
+
 ### D-062 · Registo da XP do treinador por jogo · Aceite · 2026-10-17
 
 Pedido do dono (preso nos 397–398k). Só leituras, no mesmo passo do registo dos jogos: `game/xplog.log_xp` escreve uma linha por jogo do dono em `logs/<PC>/xp/AAAA-MM.jsonl` (resultado, adversário humano/CPU e rating, rating total, saldo da liga e variações, bónus, nível) e diz no registo do bot "XP: …". Estado em `~/.osmbot/xp.json`. `osmbot xp` lê os registos de todos os PCs e mostra a tabela e as médias. `THEORY.md` §22, `DISCOVERY.md` §3.

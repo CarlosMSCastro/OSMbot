@@ -2,12 +2,12 @@
 
 Gerado por `tools/osmpro_estado.py`; não editar à mão. Transcrito = legendas em `legendas/`; analisado = nota em `notas/` (D-063).
 
-**Total:** 1183 vídeos · 18 transcritos · 0 sem legendas · 3 analisados · 27 conclusões
+**Total:** 1183 vídeos · 50 transcritos · 0 sem legendas · 22 analisados · 81 conclusões
 
 | Categoria | Vídeos | Transcritos | Sem legendas | Analisados | Conclusões |
 |---|---|---|---|---|---|
-| OSMPROworld | 43 | 18 | 0 | 0 | 0 |
-| Dicas | 29 | 0 | 0 | 3 | 27 |
+| OSMPROworld | 43 | 30 | 0 | 19 | 54 |
+| Dicas | 29 | 20 | 0 | 3 | 27 |
 | Táticas | 27 | 0 | 0 | 0 | 0 |
 | Série "Não te esqueças da tática!" | 31 | 0 | 0 | 0 | 0 |
 | Curiosidades | 17 | 0 | 0 | 0 | 0 |
@@ -41,36 +41,36 @@ Gerado por `tools/osmpro_estado.py`; não editar à mão. Transcrito = legendas 
 
 | Data | Categoria | Título | Duração | Legendas | Analisado | Conclusões | Nota |
 |---|---|---|---|---|---|---|---|
-| 2026-06-23 | OSMPROworld | [10-0 VICTORY! DESTROY YOUR OPPONENTS WITH THIS OSM TACTIC / OSM PRO](https://www.youtube.com/shorts/udA7GbDi0Aw) | 0:33 | en auto |  |  |  |
-| 2026-06-20 | OSMPROworld | [10-0 VICTORY! DESTROY YOUR OPPONENTS WITH THIS OSM TACTIC / OSM PRO](https://www.youtube.com/shorts/yEyWu7pZ7PI) | 0:36 | en auto |  |  |  |
-| 2026-06-17 | OSMPROworld | [10-0 VICTORY! DESTROY YOUR OPPONENTS WITH THIS OSM TACTIC / OSM PRO](https://www.youtube.com/shorts/7fHkj9A7n_I) | 1:07 | en auto |  |  |  |
-| 2026-05-29 | OSMPROworld | [The 451 that annihilates the 433 (watch the full video) / OSM PRO](https://www.youtube.com/shorts/GEOcldpDXGM) | 1:01 | en auto |  |  |  |
-| 2026-05-27 | OSMPROworld | [OSM: Who doesn't like this tactic? (watch the full video) / OSM PRO](https://www.youtube.com/shorts/0cf6spnIbug) | 0:42 | en auto |  |  |  |
-| 2026-05-25 | OSMPROworld | [523 DESTROY 433 Tactics in OSM! (Pro Counter Guide) / OSM PRO](https://www.youtube.com/shorts/LvON5uJmGhQ) | 0:28 | en auto |  |  |  |
-| 2026-05-24 | OSMPROworld | [10-0 VICTORY! DESTROY YOUR OPPONENTS WITH THIS OSM TACTIC / OSM PRO](https://www.youtube.com/watch?v=eLuydwIUqtU) | 5:21 | en auto |  |  |  |
-| 2026-05-22 | OSMPROworld | [DESTROY 433 Tactics in OSM! (Pro Counter Guide) / OSM PRO](https://www.youtube.com/shorts/9Iknig8Dzds) | 0:23 | en auto |  |  |  |
-| 2026-05-20 | OSMPROworld | [OSM: How the timming bar works (watch the full video) / OSM PRO](https://www.youtube.com/shorts/iDCBe9rhpoQ) | 0:29 | en auto |  |  |  |
-| 2026-05-18 | OSMPROworld | [The best player in the world has revealed one of his 433! (watch the full video)/ OSM PRO](https://www.youtube.com/shorts/q4sW6ClZ6PI) | 0:42 | en auto |  |  |  |
-| 2026-05-17 | OSMPROworld | [3 Ways to DESTROY 433 Tactics in OSM! (Pro Counter Guide) / OSM PRO](https://www.youtube.com/watch?v=A24_31baB1I) | 12:50 | en auto |  |  |  |
-| 2026-05-16 | OSMPROworld | [OSM: How the pressure bar works (watch the full video) / OSM PRO](https://www.youtube.com/shorts/wzkR2haxBmk) | 0:25 | en auto |  |  |  |
-| 2026-05-11 | OSMPROworld | [OSM: How the referee works (watch the full video) / OSM PRO](https://www.youtube.com/shorts/KQjI65qrSvA) | 0:29 | en auto |  |  |  |
-| 2026-05-10 | OSMPROworld | [The best player in the world has revealed one of his 433! / OSM PRO](https://www.youtube.com/watch?v=gYsKxMAn1O8) | 6:50 | en auto |  |  |  |
-| 2026-02-16 | OSMPROworld | [Why did we remain SILENT for an entire year?](https://www.youtube.com/watch?v=lkUccxYGc20) | 4:25 | pt auto |  |  |  |
-| 2025-07-28 | OSMPROworld | [PERFECT SQUAD! Players +120 FAST! / OSM PRO](https://www.youtube.com/watch?v=DcG3Qv_Sw24) | 21:19 | pt auto |  |  |  |
-| 2025-07-13 | OSMPROworld | [THE 442B TACTIC THAT WON FROM THE CAREER MODE WINNER (R_Serafim94)](https://www.youtube.com/watch?v=UGtRiBq9suY) | 6:03 | pt auto |  |  |  |
-| 2025-06-08 | OSMPROworld | [WE WON 10-0 AND REVEALED THE TACTICS, A 433! / OSM PRO](https://www.youtube.com/watch?v=opM0CmWJ_Ks) | 8:18 | pt auto |  |  |  |
-| 2025-05-26 | OSMPROworld | [TIER LIST in OSM! Our BEST TACTICS / OSM PRO](https://www.youtube.com/watch?v=NadYTsKqGoI) | 19:59 | por fazer |  |  |  |
-| 2025-01-17 | OSMPROworld | [I SPENT 10,000 BOSS COINS IN 10 MINUTES!!!](https://www.youtube.com/watch?v=gbRj9m4IIRQ) | 19:43 | por fazer |  |  |  |
-| 2024-11-19 | OSMPROworld | [The Ultimate OSM Scout Guide / Find the Best Players in Online Soccer Manager](https://www.youtube.com/watch?v=ZDnW4-XzjAI) | 16:01 | por fazer |  |  |  |
-| 2024-09-23 | OSMPROworld | [523 THE MOST USED TACTIC IN THE WORLD TOP 30 / OSM PRO / Learn how to play 523 META](https://www.youtube.com/watch?v=EqB5OHGK_6U) | 21:06 | por fazer |  |  |  |
-| 2024-09-09 | OSMPROworld | [🔥 How to BEAT Every TACTIC in OSM / OSM PRO](https://www.youtube.com/watch?v=p4cMIlwKQAg) | 10:08 | por fazer |  |  |  |
-| 2024-08-20 | OSMPROworld | [OSM 24/25 IS HERE! 🔥 Do You Agree with the NEW RATINGS? / OSM PRO](https://www.youtube.com/watch?v=38mP3GWdCMI) | 38:58 | por fazer |  |  |  |
-| 2024-08-12 | OSMPROworld | [The Three Most Used Tactics in OSM 24/25 / OSM PRO](https://www.youtube.com/watch?v=Uv5V8z7983U) | 6:00 | por fazer |  |  |  |
-| 2024-08-07 | OSMPROworld | [How to change our name in OSM? / OSM PRO](https://www.youtube.com/watch?v=5Gg2eztojkg) | 2:33 | por fazer |  |  |  |
-| 2024-08-07 | OSMPROworld | [How to Sell Players in OSM: Tips and Strategies  / OSM PRO](https://www.youtube.com/shorts/Be2DW7SG_II) | 0:52 | por fazer |  |  |  |
-| 2024-08-05 | OSMPROworld | [Smart Buying Tips: Get Players at Advantageous Prices / OSM PRO](https://www.youtube.com/shorts/EWpbdu3ABqo) | 0:46 | por fazer |  |  |  |
-| 2024-08-03 | OSMPROworld | [Building the Ultimate Squad: Training Young Players Under 20 / OSM Tips / OSM PRO](https://www.youtube.com/shorts/W9a9hO4v0zw) | 0:24 | por fazer |  |  |  |
-| 2024-08-01 | OSMPROworld | [Few people know this advice! / OSM PRO](https://www.youtube.com/shorts/ZArmpo_dygI) | 0:31 | por fazer |  |  |  |
+| 2026-06-23 | OSMPROworld | [10-0 VICTORY! DESTROY YOUR OPPONENTS WITH THIS OSM TACTIC / OSM PRO](https://www.youtube.com/shorts/udA7GbDi0Aw) | 0:33 | en auto | 2026-10-18 | 1 | [nota](notas/udA7GbDi0Aw.md) |
+| 2026-06-20 | OSMPROworld | [10-0 VICTORY! DESTROY YOUR OPPONENTS WITH THIS OSM TACTIC / OSM PRO](https://www.youtube.com/shorts/yEyWu7pZ7PI) | 0:36 | en auto | 2026-10-18 | 1 | [nota](notas/yEyWu7pZ7PI.md) |
+| 2026-06-17 | OSMPROworld | [10-0 VICTORY! DESTROY YOUR OPPONENTS WITH THIS OSM TACTIC / OSM PRO](https://www.youtube.com/shorts/7fHkj9A7n_I) | 1:07 | en auto | 2026-10-18 | 1 | [nota](notas/7fHkj9A7n_I.md) |
+| 2026-05-29 | OSMPROworld | [The 451 that annihilates the 433 (watch the full video) / OSM PRO](https://www.youtube.com/shorts/GEOcldpDXGM) | 1:01 | en auto | 2026-10-18 | 1 | [nota](notas/GEOcldpDXGM.md) |
+| 2026-05-27 | OSMPROworld | [OSM: Who doesn't like this tactic? (watch the full video) / OSM PRO](https://www.youtube.com/shorts/0cf6spnIbug) | 0:42 | en auto | 2026-10-18 | 1 | [nota](notas/0cf6spnIbug.md) |
+| 2026-05-25 | OSMPROworld | [523 DESTROY 433 Tactics in OSM! (Pro Counter Guide) / OSM PRO](https://www.youtube.com/shorts/LvON5uJmGhQ) | 0:28 | en auto | 2026-10-18 | 1 | [nota](notas/LvON5uJmGhQ.md) |
+| 2026-05-24 | OSMPROworld | [10-0 VICTORY! DESTROY YOUR OPPONENTS WITH THIS OSM TACTIC / OSM PRO](https://www.youtube.com/watch?v=eLuydwIUqtU) | 5:21 | en auto | 2026-10-18 | 5 | [nota](notas/eLuydwIUqtU.md) |
+| 2026-05-22 | OSMPROworld | [DESTROY 433 Tactics in OSM! (Pro Counter Guide) / OSM PRO](https://www.youtube.com/shorts/9Iknig8Dzds) | 0:23 | en auto | 2026-10-18 | 1 | [nota](notas/9Iknig8Dzds.md) |
+| 2026-05-20 | OSMPROworld | [OSM: How the timming bar works (watch the full video) / OSM PRO](https://www.youtube.com/shorts/iDCBe9rhpoQ) | 0:29 | en auto | 2026-10-18 | 1 | [nota](notas/iDCBe9rhpoQ.md) |
+| 2026-05-18 | OSMPROworld | [The best player in the world has revealed one of his 433! (watch the full video)/ OSM PRO](https://www.youtube.com/shorts/q4sW6ClZ6PI) | 0:42 | en auto | 2026-10-18 | 1 | [nota](notas/q4sW6ClZ6PI.md) |
+| 2026-05-17 | OSMPROworld | [3 Ways to DESTROY 433 Tactics in OSM! (Pro Counter Guide) / OSM PRO](https://www.youtube.com/watch?v=A24_31baB1I) | 12:50 | en auto | 2026-10-18 | 11 | [nota](notas/A24_31baB1I.md) |
+| 2026-05-16 | OSMPROworld | [OSM: How the pressure bar works (watch the full video) / OSM PRO](https://www.youtube.com/shorts/wzkR2haxBmk) | 0:25 | en auto | 2026-10-18 | 1 | [nota](notas/wzkR2haxBmk.md) |
+| 2026-05-11 | OSMPROworld | [OSM: How the referee works (watch the full video) / OSM PRO](https://www.youtube.com/shorts/KQjI65qrSvA) | 0:29 | en auto | 2026-10-18 | 1 | [nota](notas/KQjI65qrSvA.md) |
+| 2026-05-10 | OSMPROworld | [The best player in the world has revealed one of his 433! / OSM PRO](https://www.youtube.com/watch?v=gYsKxMAn1O8) | 6:50 | en auto | 2026-10-18 | 4 | [nota](notas/gYsKxMAn1O8.md) |
+| 2026-02-16 | OSMPROworld | [Why did we remain SILENT for an entire year?](https://www.youtube.com/watch?v=lkUccxYGc20) | 4:25 | pt auto | 2026-10-18 | 1 | [nota](notas/lkUccxYGc20.md) |
+| 2025-07-28 | OSMPROworld | [PERFECT SQUAD! Players +120 FAST! / OSM PRO](https://www.youtube.com/watch?v=DcG3Qv_Sw24) | 21:19 | pt auto | 2026-10-18 | 10 | [nota](notas/DcG3Qv_Sw24.md) |
+| 2025-07-13 | OSMPROworld | [THE 442B TACTIC THAT WON FROM THE CAREER MODE WINNER (R_Serafim94)](https://www.youtube.com/watch?v=UGtRiBq9suY) | 6:03 | pt auto | 2026-10-18 | 3 | [nota](notas/UGtRiBq9suY.md) |
+| 2025-06-08 | OSMPROworld | [WE WON 10-0 AND REVEALED THE TACTICS, A 433! / OSM PRO](https://www.youtube.com/watch?v=opM0CmWJ_Ks) | 8:18 | pt auto | 2026-10-18 | 3 | [nota](notas/opM0CmWJ_Ks.md) |
+| 2025-05-26 | OSMPROworld | [TIER LIST in OSM! Our BEST TACTICS / OSM PRO](https://www.youtube.com/watch?v=NadYTsKqGoI) | 19:59 | en auto | 2026-10-18 | 6 | [nota](notas/NadYTsKqGoI.md) |
+| 2025-01-17 | OSMPROworld | [I SPENT 10,000 BOSS COINS IN 10 MINUTES!!!](https://www.youtube.com/watch?v=gbRj9m4IIRQ) | 19:43 | ar autor |  |  |  |
+| 2024-11-19 | OSMPROworld | [The Ultimate OSM Scout Guide / Find the Best Players in Online Soccer Manager](https://www.youtube.com/watch?v=ZDnW4-XzjAI) | 16:01 | en auto |  |  |  |
+| 2024-09-23 | OSMPROworld | [523 THE MOST USED TACTIC IN THE WORLD TOP 30 / OSM PRO / Learn how to play 523 META](https://www.youtube.com/watch?v=EqB5OHGK_6U) | 21:06 | en auto |  |  |  |
+| 2024-09-09 | OSMPROworld | [🔥 How to BEAT Every TACTIC in OSM / OSM PRO](https://www.youtube.com/watch?v=p4cMIlwKQAg) | 10:08 | en auto |  |  |  |
+| 2024-08-20 | OSMPROworld | [OSM 24/25 IS HERE! 🔥 Do You Agree with the NEW RATINGS? / OSM PRO](https://www.youtube.com/watch?v=38mP3GWdCMI) | 38:58 | pt-BR auto |  |  |  |
+| 2024-08-12 | OSMPROworld | [The Three Most Used Tactics in OSM 24/25 / OSM PRO](https://www.youtube.com/watch?v=Uv5V8z7983U) | 6:00 | pt-BR auto |  |  |  |
+| 2024-08-07 | OSMPROworld | [How to change our name in OSM? / OSM PRO](https://www.youtube.com/watch?v=5Gg2eztojkg) | 2:33 | en auto |  |  |  |
+| 2024-08-07 | OSMPROworld | [How to Sell Players in OSM: Tips and Strategies  / OSM PRO](https://www.youtube.com/shorts/Be2DW7SG_II) | 0:52 | en auto |  |  |  |
+| 2024-08-05 | OSMPROworld | [Smart Buying Tips: Get Players at Advantageous Prices / OSM PRO](https://www.youtube.com/shorts/EWpbdu3ABqo) | 0:46 | en auto |  |  |  |
+| 2024-08-03 | OSMPROworld | [Building the Ultimate Squad: Training Young Players Under 20 / OSM Tips / OSM PRO](https://www.youtube.com/shorts/W9a9hO4v0zw) | 0:24 | en auto |  |  |  |
+| 2024-08-01 | OSMPROworld | [Few people know this advice! / OSM PRO](https://www.youtube.com/shorts/ZArmpo_dygI) | 0:31 | pt-BR auto |  |  |  |
 | 2024-07-30 | OSMPROworld | [Maximize Your Profits: The Ultimate OSM Guide / OSM PRO](https://www.youtube.com/shorts/ev-YmRYrkm4) | 0:35 | por fazer |  |  |  |
 | 2024-07-26 | OSMPROworld | [MILLIONAIRE SQUAD! Players +120 FAST! / OSM PRO](https://www.youtube.com/watch?v=UzJ_2AQK6u8) | 7:17 | por fazer |  |  |  |
 | 2024-06-30 | OSMPROworld | [THE 352 TACTICS you expected to find in OSM!](https://www.youtube.com/watch?v=hWtVe_RQuaU) | 16:40 | por fazer |  |  |  |
@@ -84,26 +84,26 @@ Gerado por `tools/osmpro_estado.py`; não editar à mão. Transcrito = legendas 
 | 2023-10-07 | OSMPROworld | [THE NEW BEST OSM TACTIC 23/24 / WIN 93,32% IN ALL YOUR MATCHES! / OSM PRO](https://www.youtube.com/watch?v=tRqflI-ad5M) | 5:59 | por fazer |  |  |  |
 | 2023-09-14 | OSMPROworld | [FAST MONEY on OSM 23/24 / Players +100 in CREW BATTLES / Online Soccer Manager / OSM PRO](https://www.youtube.com/watch?v=Yl0GGQsiLbc) | 4:54 | por fazer |  |  |  |
 | 2023-08-31 | OSMPROworld | [THE BEST OSM 433 TACTIC / Learn how to play 433 META / OSM PRO](https://www.youtube.com/watch?v=CwovcwUFSA0) | 10:04 | por fazer |  |  |  |
-| 2020-07-25 | Dicas | [COMEÇAR EM GRANDE COM AS MELHORES DICAS / OSM PRO](https://www.youtube.com/watch?v=VTNL5vJ5y3U) | 20:11 | por fazer |  |  |  |
-| 2020-08-01 | Dicas | [Unlimited FREE Boss Coins [Real Video] / OSM Pro](https://www.youtube.com/watch?v=QTGbtjdzo70) | 5:09 | por fazer |  |  |  |
-| 2020-08-22 | Dicas | [GROUPS ARE WORTH IT / OSM PRO](https://www.youtube.com/watch?v=VJp5U3VPxzc) | 12:20 | por fazer |  |  |  |
-| 2020-08-29 | Dicas | [BÓNUS DE NACIONALIDADE / OSM PRO](https://www.youtube.com/watch?v=YVBPk8drQDc) | 5:34 | por fazer |  |  |  |
-| 2020-09-05 | Dicas | [GROUP BATTLES / OSM PRO](https://www.youtube.com/watch?v=GvYVpCHb-SA) | 15:30 | por fazer |  |  |  |
-| 2020-10-10 | Dicas | [AMIGÁVEIS EFICAZES / OSM PRO](https://www.youtube.com/watch?v=vMMftquBVFQ) | 7:51 | por fazer |  |  |  |
-| 2020-10-31 | Dicas | [How to reach the top 1 in the OSM world ranking? (Coach Points)](https://www.youtube.com/watch?v=vhmaQczjBpI) | 12:09 | por fazer | 2026-10-17 | 9 | [nota](notas/vhmaQczjBpI.md) |
-| 2020-11-14 | Dicas | [THE BEST YOUNG TALENTS AT THE SCOUTING CENTER / OSM PRO](https://www.youtube.com/watch?v=Mmo6NTrz9Ls) | 13:01 | por fazer |  |  |  |
-| 2020-12-12 | Dicas | [HOW TO USE THE DATA ANALYST (SPY) / OSM PRO](https://www.youtube.com/watch?v=4d46aRmIzOU) | 8:25 | por fazer |  |  |  |
-| 2021-02-01 | Dicas | [ESCOLHER A PRÓXIMA LIGA / OSM PRO](https://www.youtube.com/watch?v=33XNcvUS8f0) | 18:54 | por fazer |  |  |  |
-| 2021-02-15 | Dicas | [MAXIMUM BONUS our team can get / OSM PRO](https://www.youtube.com/watch?v=fIoVe2DB8mM) | 10:22 | por fazer |  |  |  |
-| 2021-03-15 | Dicas | [CONSTRUIR UM PLANTEL BILIONÁRIO / OSM PRO](https://www.youtube.com/watch?v=Tq8pCmilpcM) | 18:44 | por fazer |  |  |  |
-| 2021-04-15 | Dicas | [Managing Player MORALE and CONDITION / OSM PRO](https://www.youtube.com/watch?v=Wb43-ZjbXw8) | 12:01 | por fazer | 2026-10-17 | 10 | [nota](notas/Wb43-ZjbXw8.md) |
-| 2021-05-18 | Dicas | [7-STEP OSM BEGINNER'S GUIDE / OSM PRO](https://www.youtube.com/watch?v=fhlmnIHcfy4) | 10:07 | por fazer |  |  |  |
-| 2022-02-26 | Dicas | [The Right Experts in OSM / OSM Pro](https://www.youtube.com/watch?v=QzhXi7yz0R8) | 11:51 | por fazer |  |  |  |
-| 2022-08-06 | Dicas | [(subtitled) FAST money and MILLIONAIRE squad! Players +100 FAST! / OSM PRO](https://www.youtube.com/watch?v=EfHyzY6C5AI) | 19:11 | por fazer |  |  |  |
-| 2022-09-18 | Dicas | [(subtitled) OSM 2023 / scout's BEST YOUNG players / OSM PRO](https://www.youtube.com/watch?v=XBh9ilXt0kc) | 11:05 | por fazer |  |  |  |
-| 2022-10-09 | Dicas | [(subtitled) NEW APP "OSM Scout" / Discover the BEST players in OLHEIRO! / OSM PRO](https://www.youtube.com/watch?v=pW2uk17GR2c) | 5:49 | por fazer |  |  |  |
-| 2023-02-06 | Dicas | [(subtitled) How to WIN against all TACTICS in OSM / OSM PRO](https://www.youtube.com/watch?v=4-o9IjVaEJY) | 9:14 | por fazer | 2026-10-17 | 8 | [nota](notas/4-o9IjVaEJY.md) |
-| 2023-10-29 | Dicas | [(subtitled in your language) ALL the ways to EARN FREE BOSS COINS / OSM PRO](https://www.youtube.com/watch?v=gaDmr7yp6tg) | 5:38 | por fazer |  |  |  |
+| 2020-07-25 | Dicas | [COMEÇAR EM GRANDE COM AS MELHORES DICAS / OSM PRO](https://www.youtube.com/watch?v=VTNL5vJ5y3U) | 20:11 | pt whisper medium |  |  |  |
+| 2020-08-01 | Dicas | [Unlimited FREE Boss Coins [Real Video] / OSM Pro](https://www.youtube.com/watch?v=QTGbtjdzo70) | 5:09 | pt whisper medium |  |  |  |
+| 2020-08-22 | Dicas | [GROUPS ARE WORTH IT / OSM PRO](https://www.youtube.com/watch?v=VJp5U3VPxzc) | 12:20 | pt whisper medium |  |  |  |
+| 2020-08-29 | Dicas | [BÓNUS DE NACIONALIDADE / OSM PRO](https://www.youtube.com/watch?v=YVBPk8drQDc) | 5:34 | pt whisper medium |  |  |  |
+| 2020-09-05 | Dicas | [GROUP BATTLES / OSM PRO](https://www.youtube.com/watch?v=GvYVpCHb-SA) | 15:30 | pt whisper medium |  |  |  |
+| 2020-10-10 | Dicas | [AMIGÁVEIS EFICAZES / OSM PRO](https://www.youtube.com/watch?v=vMMftquBVFQ) | 7:51 | pt whisper medium |  |  |  |
+| 2020-10-31 | Dicas | [How to reach the top 1 in the OSM world ranking? (Coach Points)](https://www.youtube.com/watch?v=vhmaQczjBpI) | 12:09 | pt whisper medium | 2026-10-17 | 9 | [nota](notas/vhmaQczjBpI.md) |
+| 2020-11-14 | Dicas | [THE BEST YOUNG TALENTS AT THE SCOUTING CENTER / OSM PRO](https://www.youtube.com/watch?v=Mmo6NTrz9Ls) | 13:01 | pt whisper medium |  |  |  |
+| 2020-12-12 | Dicas | [HOW TO USE THE DATA ANALYST (SPY) / OSM PRO](https://www.youtube.com/watch?v=4d46aRmIzOU) | 8:25 | pt whisper medium |  |  |  |
+| 2021-02-01 | Dicas | [ESCOLHER A PRÓXIMA LIGA / OSM PRO](https://www.youtube.com/watch?v=33XNcvUS8f0) | 18:54 | pt whisper medium |  |  |  |
+| 2021-02-15 | Dicas | [MAXIMUM BONUS our team can get / OSM PRO](https://www.youtube.com/watch?v=fIoVe2DB8mM) | 10:22 | pt whisper medium |  |  |  |
+| 2021-03-15 | Dicas | [CONSTRUIR UM PLANTEL BILIONÁRIO / OSM PRO](https://www.youtube.com/watch?v=Tq8pCmilpcM) | 18:44 | pt whisper medium |  |  |  |
+| 2021-04-15 | Dicas | [Managing Player MORALE and CONDITION / OSM PRO](https://www.youtube.com/watch?v=Wb43-ZjbXw8) | 12:01 | pt whisper medium | 2026-10-17 | 10 | [nota](notas/Wb43-ZjbXw8.md) |
+| 2021-05-18 | Dicas | [7-STEP OSM BEGINNER'S GUIDE / OSM PRO](https://www.youtube.com/watch?v=fhlmnIHcfy4) | 10:07 | pt whisper medium |  |  |  |
+| 2022-02-26 | Dicas | [The Right Experts in OSM / OSM Pro](https://www.youtube.com/watch?v=QzhXi7yz0R8) | 11:51 | pt whisper medium |  |  |  |
+| 2022-08-06 | Dicas | [(subtitled) FAST money and MILLIONAIRE squad! Players +100 FAST! / OSM PRO](https://www.youtube.com/watch?v=EfHyzY6C5AI) | 19:11 | pt whisper medium |  |  |  |
+| 2022-09-18 | Dicas | [(subtitled) OSM 2023 / scout's BEST YOUNG players / OSM PRO](https://www.youtube.com/watch?v=XBh9ilXt0kc) | 11:05 | pt whisper medium |  |  |  |
+| 2022-10-09 | Dicas | [(subtitled) NEW APP "OSM Scout" / Discover the BEST players in OLHEIRO! / OSM PRO](https://www.youtube.com/watch?v=pW2uk17GR2c) | 5:49 | pt whisper medium |  |  |  |
+| 2023-02-06 | Dicas | [(subtitled) How to WIN against all TACTICS in OSM / OSM PRO](https://www.youtube.com/watch?v=4-o9IjVaEJY) | 9:14 | pt whisper medium | 2026-10-17 | 8 | [nota](notas/4-o9IjVaEJY.md) |
+| 2023-10-29 | Dicas | [(subtitled in your language) ALL the ways to EARN FREE BOSS COINS / OSM PRO](https://www.youtube.com/watch?v=gaDmr7yp6tg) | 5:38 | pt whisper medium |  |  |  |
 | 2024-02-09 | Dicas | [OS MELHORES JOVENS NO OLHEIRO EM 2024 / OSM PRO](https://www.youtube.com/watch?v=cuK66iHIjBo) | 21:00 | por fazer |  |  |  |
 | 2024-03-18 | Dicas | [DICA DO DIA / Mais uma dica importante a seguir / OSM PRO](https://www.youtube.com/shorts/TlDU1gc686w) | 0:45 | por fazer |  |  |  |
 | 2024-03-19 | Dicas | [DICA DO DIA / A importância de uma grande tática! / OSM PRO](https://www.youtube.com/shorts/CKEWmlm-eAk) | 0:44 | por fazer |  |  |  |

@@ -40,6 +40,8 @@ def transcript(video_id: str) -> str:
         return "por fazer"
     if data.get("erro"):
         return "sem legendas"
+    if data.get("fonte"):  # transcribed here (tools/osmpro_whisper.py)
+        return f"{data.get('lingua')} {data['fonte']}"
     return f"{data.get('lingua')} {'auto' if data.get('automatica') else 'autor'}"
 
 
