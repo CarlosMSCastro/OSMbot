@@ -2,6 +2,12 @@
 
 Entradas mais recentes primeiro. Cada sessão: o que se fez · o que ficou por fazer · próximo passo.
 
+## 2026-10-20 — Cartão de compras: só SALE e posição específica
+
+- **Pedido do dono:** a faixa e o hover das compras mostram a posição específica (EE, MC, DC…) em vez de ATA/MED/DEF (`gui/view.py`, `sale_view`; tradução em `i18n.py`), e só sugerem jogadores com "SALE" (≤ 1,5×; `transfers/engine.py`, `sale_picks`). THEORY §7.7 atualizada; 429 testes.
+- O "reforço" já comparava pela posição específica (§7.9). O "suplente" continua a ser **escolhido pela posição geral** (confirmado pelo dono, 2026-10-20), mas cada jogador **mostra a específica**, também no hover dos cansados ("DC 88 · …"), para não ter de abrir o jogo.
+- **0.13.10** (pedido do dono): `pyproject`, `__init__`, `CHANGELOG`, `README`, `dist/windows` e `dist/release-notes-v0.13.10.md` (com a 0.13.9, que não teve notas de release). Commit e `gh release create v0.13.10` entregues ao dono (só os ficheiros de Windows; os do Mac com `gh release upload` no Mac).
+
 ## 2026-10-19 (noite) — `dist/windows` 0.13.9, transcrição na AssemblyAI (DESKTOP-KAM70RR)
 
 - **Pull (dono) e `dist`:** 429 testes; `build_portable.py --zip --installer` → `dist/windows/` (portátil 553 MB, `OSMbot-0.13.9-windows-portable.zip` 206 MB, `-windows-setup.exe` 148 MB); versão 0.13.9 confirmada dentro do portátil. O dono corre o instalador. Falta: Mac (pull e construir) antes do Extreme Training de 31/10.

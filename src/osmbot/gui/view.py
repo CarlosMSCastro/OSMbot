@@ -211,11 +211,14 @@ def tired_view(club: dict) -> tuple[str, str]:
     cover = club.get("cover") or {}
     text = " · ".join(f"{p['name']} {p['fitness']}%" + (f" (sem suplente {p['pos']})" if p["pos"] in cover else "")
                       for p in club.get("tired") or [])
+    from osmbot.theory.lineup import SPECIFIC
+
     tips = []
     for pos, options in cover.items():
-        if options:
+        if options:  # each with its specific position, to see it without opening the game (owner, 2026-10-20)
             tips.append(f"SALE {pos} que cabem no dinheiro:\n" + "\n".join(
-                f"{o['rating']} · {o['nome']} ({o['idade']} anos) · {money(o['preco'])}" for o in options))
+                f"{SPECIFIC.get(o.get('especifica')) or o['pos']} {o['rating']} · {o['nome']} ({o['idade']} anos) · {money(o['preco'])}"
+                for o in options))
         else:
             tips.append(f"Nenhum SALE {pos} cabe no dinheiro")
     return text, "\n\n".join(tips)
@@ -239,8 +242,13 @@ def sale_view(club: dict) -> dict | None:
         why = {"suplente": p.get("suplente"), "reforço": p["fraco"] and f"> {p['fraco']}"}.get(tag)
         return f"{tag} ({why})" if why else tag
 
+    from osmbot.theory.lineup import SPECIFIC
+
+    def pos(p: dict) -> str:  # the specific position (EE, MC), as the reinforcements compare (owner, 2026-10-20)
+        return SPECIFIC.get(p.get("especifica")) or p["pos"]
+
     best = picks[0]
-    rows = [([p["pos"], str(p["rating"]), p["nome"], str(p["idade"]), money(p["preco"]), f"{p['razao']:.2f}".rstrip("0").rstrip(".").replace(".", ",") + "×",
+    rows = [([pos(p), str(p["rating"]), p["nome"], str(p["idade"]), money(p["preco"]), f"{p['razao']:.2f}".rstrip("0").rstrip(".").replace(".", ",") + "×",
               f"~{money(p['lucro'])}{unsure}", " · ".join(detail(tag, p) for tag in tags(p))],
              False) for p in picks]
     grid = {"columns": [("Pos", "l"), ("Força", "r"), ("Jogador", "l"), ("Idade", "r"), ("Preço", "r"), ("× valor", "r"),
@@ -248,7 +256,7 @@ def sale_view(club: dict) -> dict | None:
             "foot": "? = esta liga não vendeu ao máximo nos últimos 3 dias" if unsure else ""}
     from osmbot.transfers.engine import SALE_RATIO
 
-    return {"player": f"{best['pos']} {best['rating']} · {best['nome']}", "price": money(best["preco"]),
+    return {"player": f"{pos(best)} {best['rating']} · {best['nome']}", "price": money(best["preco"]),
             "sale": best["razao"] <= SALE_RATIO,  # the game's "SALE" ribbon: not every pick has it (2026-10-15)
             "profit": f"lucro ~{money(best['lucro'])}{unsure}", "tags": tags(best), "more": len(picks) - 1, "tip": grid}
 

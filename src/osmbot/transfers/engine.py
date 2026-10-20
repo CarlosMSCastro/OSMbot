@@ -173,7 +173,7 @@ def sale_picks(market: list[dict], players: list[dict], money: float, count: int
     """The game's players worth buying now (THEORY.md 7.7, owner 2026-10-15): to sell again at once, those valued
     10-40 M (they sell at the maximum within about a day and a half), and to strengthen the eleven, any that beats the
     weakest starter of its specific position where he is below the eleven's average (``reforco``, ``weak_spots``);
-    all the club can pay for, "SALE" or not; and any of a general position of the eleven with no backup
+    only "SALE" ones the club can pay for (owner, 2026-10-20); and any of a general position of the eleven with no backup
     (``suplente``, ``depth_gaps``), first, whatever its rating (owner, 2026-10-18). Cheapest against their value first
     (what a slot earns per day goes with it, DISCOVERY.md 3), then the biggest profit; the first is the best bet.
     ``pechincha``: at most 1.25 × value. ``places``: the formation's places, so an empty one counts."""
@@ -183,7 +183,7 @@ def sale_picks(market: list[dict], players: list[dict], money: float, count: int
     spots = weak_spots(players, listed, places)
     gaps = depth_gaps(players, listed, places)
     picks = []
-    for row in sale_rows(market, ratio=float("inf")).values():
+    for row in sale_rows(market).values():
         if row["preco"] > money:
             continue
         spot = row["especifica"] or ("pos", next((k for k, v in POSITIONS.items() if v == row["pos"]), None))

@@ -4,6 +4,14 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-PT/1.1.0/); 
 
 Este ficheiro é o **histórico de versões, para quem lê o repo**. O diário interno de cada sessão de trabalho está em [`docs/WORKLOG.md`](docs/WORKLOG.md).
 
+## [0.13.10] — 2026-10-20
+
+O cartão de compras só sugere jogadores com "SALE" e mostra a posição específica de cada um.
+
+### Alterado
+- **Só "SALE":** o cartão de compras (faixa azul e as 3 melhores ao passar o rato) só sugere jogadores do jogo a 1,5 × o valor ou menos; os de revenda sem "SALE" deixam de aparecer.
+- **Posição específica:** cada jogador sugerido mostra a posição específica (EE, MC, DC…) em vez de ATA/MED/DEF, também no hover dos cansados sem suplente ("DC 88 · …"), para não ser preciso abrir a lista de transferências no jogo. O suplente continua a ser escolhido pela posição geral; o reforço já comparava pela específica.
+
 ## [0.13.9] — 2026-10-19
 
 No fim de um evento de treinos "ao recolher", o bot paga em boss coins o que falta aos treinos para não perderem o bónus. Um amigável que fique para fazer a meio de uma passagem e um clube novo já não ficam à espera.

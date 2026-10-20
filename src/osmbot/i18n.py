@@ -134,6 +134,7 @@ def _an(word: str) -> str:
 
 _SPECIFIC = {"MO": "CAM", "MC": "CM", "DC": "CB", "PL": "ST", "MDC": "CDM", "GR": "GK", "ME": "LM", "EE": "LW",
              "DE": "LB", "MD": "RM", "ED": "RW", "DD": "RB"}
+WORDS.update({code: name for code, name in _SPECIFIC.items() if code not in WORDS})  # the SALE hover's "Pos" column
 _ROLE = {"Capitão": "Captain", "Penáltis": "Penalties", "Livres": "Free kicks", "Cantos": "Corners"}
 PATTERNS = [(re.compile(pattern), replace) for pattern, replace in (
     # pre-match warnings (THEORY.md section 21)
@@ -178,9 +179,9 @@ PATTERNS = [(re.compile(pattern), replace) for pattern, replace in (
     (r"(▸ )?(\d+)\.º (.+) · (\d+) pts", lambda m: f"{m[1] or ''}{_ordinal(m[2])} {m[3]} · {m[4]} pts"),
     (r"Objetivo: (\d+)\.º( ou acima)?", lambda m: f"Goal: {_ordinal(m[1])}" + (" or better" if m[2] else "")),
     (r"(?s)SALE (\w+) que cabem no dinheiro:\n(.+)",
-     lambda m: f"SALE {_w(m[1])} you can afford:\n" + m[2].replace(" anos)", " years)")),
+     lambda m: f"SALE {_w(m[1])} you can afford:\n" + re.sub(r"(?m)^(\w+) ", lambda p: f"{_w(p[1])} ", m[2]).replace(" anos)", " years)")),
     (r"Nenhum SALE (\w+) cabe no dinheiro", lambda m: f"No SALE {_w(m[1])} you can afford"),
-    (r"^(ATA|MED|DEF|GR) (\d+) · (.+)$", lambda m: f"{_w(m[1])} {m[2]} · {m[3]}"),  # the SALE stripe's player
+    (rf"^(ATA|MED|DEF|{'|'.join(_SPECIFIC)}) (\d+) · (.+)$", lambda m: f"{_w(m[1])} {m[2]} · {m[3]}"),  # the SALE stripe's player
     (r"^lucro ~(.+)$", lambda m: f"profit ~{m[1]}"),
     (r"^((?:suplente|reforço|pechincha).*)$", lambda m: re.sub(r"lugar (\d+) vazio", r"place \1 empty", m[1].replace(" sem suplente", " with no backup")
      .replace("suplente", "backup").replace("reforço", "upgrade").replace("pechincha", "bargain"))),

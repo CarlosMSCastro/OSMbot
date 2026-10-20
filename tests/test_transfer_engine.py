@@ -121,15 +121,15 @@ def test_sale_picks_are_the_affordable_sale_players_by_resale_profit_with_reinfo
               _sale(2, 1, 70, 12e6, 10e6),  # to sell again, at 1.2×: a bargain, the best bet
               _sale(3, 3, 99, 30e6, 25e6),  # too dear
               _sale(4, 1, 60, 1.2e6, 1e6),  # worth too little to sell again (under 10 M)
-              _sale(5, 1, 70, 17e6, 10e6),  # no "SALE" (1.7×): still counts
+              _sale(5, 1, 70, 17e6, 10e6),  # no "SALE" (1.7×): out (owner, 2026-10-20)
               _sale(6, 1, 75, 13e6, 10e6),  # 1.3× like S1, smaller profit: after it
               _sale(7, 2, 70, 19e6, 15e6)]
     picks = sale_picks(market, players, money=20e6, count=5)
     assert [(p["nome"], p["reforco"], p["pechincha"]) for p in picks] == [
-        ("S2", False, True), ("S7", False, False), ("S1", True, False), ("S6", False, False), ("S5", False, False)]
+        ("S2", False, True), ("S7", False, False), ("S1", True, False), ("S6", False, False)]
     assert picks[2]["lucro"] == 27.5e6 - 14.3e6 and picks[2]["fraco"] == "T1 79"
     assert len(sale_picks(market, players, money=20e6)) == 3
-    big = _sale(8, 3, 90, 19e6, 12e6)  # a reinforcement is shown whatever its value
+    big = _sale(8, 3, 90, 17e6, 12e6)  # a reinforcement is shown whatever its value
     assert sale_picks([big], players, 20e6)[0]["reforco"] and not sale_picks([_sale(9, 1, 90, 75e6, 50e6)], players, 80e6)
 
 

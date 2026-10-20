@@ -315,10 +315,10 @@ def test_a_tired_starter_without_cover_says_so_and_the_sale_options_show_on_hove
     from osmbot.gui.view import tired_view
 
     club = {"tired": [{"name": "Jogador 1", "pos": "DEF", "fitness": 68}, {"name": "Jogador 2", "pos": "MED", "fitness": 76}],
-            "cover": {"DEF": [{"nome": "Jogador 9", "rating": 88, "idade": 24, "preco": 9_000_000}]}}
+            "cover": {"DEF": [{"nome": "Jogador 9", "pos": "DEF", "especifica": 3, "rating": 88, "idade": 24, "preco": 9_000_000}]}}
     text, tip = tired_view(club)
     assert text == "Jogador 1 68% (sem suplente DEF) · Jogador 2 76%"
-    assert tip == "SALE DEF que cabem no dinheiro:\n88 · Jogador 9 (24 anos) · 9 M"
+    assert tip == "SALE DEF que cabem no dinheiro:\nDC 88 · Jogador 9 (24 anos) · 9 M"  # the specific position (2026-10-20)
     assert tired_view({**club, "cover": {"DEF": []}})[1] == "Nenhum SALE DEF cabe no dinheiro"
     assert tired_view({"tired": []}) == ("", "")
 
@@ -337,6 +337,8 @@ def test_the_sale_line_shows_the_best_and_the_three_on_hover():
     rows = sale["tip"]["rows"]
     assert rows[0][0][-1] == "reforço (> T1 79) · pechincha" and rows[1][0][-1] == "" and not sale["tip"]["foot"]
     assert rows[0][0][5] == "1,1×" and sale["tip"]["columns"][5][0] == "× valor"  # price against value, with a comma
+    winger = sale_view({"sale": {"picks": [{**pick, "especifica": 8}], "certo": True}})  # EE, not MED (owner, 2026-10-20)
+    assert winger["player"] == "EE 85 · S1" and winger["tip"]["rows"][0][0][0] == "EE"
     unsure = sale_view({"sale": {"picks": [deal], "certo": False}})
     assert unsure["profit"] == "lucro ~9 M?" and unsure["tip"]["foot"] == "? = esta liga não vendeu ao máximo nos últimos 3 dias"
 
