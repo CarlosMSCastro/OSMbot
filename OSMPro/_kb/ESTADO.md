@@ -2,7 +2,7 @@
 
 Gerado por `tools/osmpro_estado.py`; não editar à mão. Transcrito = legendas em `legendas/`; analisado = nota em `notas/` (D-063).
 
-**Total:** 1183 vídeos · 349 transcritos · 0 sem legendas · 263 analisados · 1295 conclusões
+**Total:** 1183 vídeos · 349 transcritos · 0 sem legendas · 349 analisados · 1850 conclusões
 
 | Categoria | Vídeos | Transcritos | Sem legendas | Analisados | Conclusões |
 |---|---|---|---|---|---|
@@ -15,7 +15,7 @@ Gerado por `tools/osmpro_estado.py`; não editar à mão. Transcrito = legendas 
 | Feitos incríveis | 7 | 7 | 0 | 7 | 52 |
 | Competições oficiais | 11 | 11 | 0 | 11 | 58 |
 | Entrevistas | 2 | 2 | 0 | 2 | 12 |
-| Torneios | 86 | 86 | 0 | 0 | 0 |
+| Torneios | 86 | 86 | 0 | 86 | 555 |
 | Outros de OSM | 71 | 70 | 0 | 70 | 186 |
 | Modo Carreira #17 | 33 | 0 | 0 | 0 | 0 |
 | Modo Carreira #16 | 54 | 0 | 0 | 0 | 0 |
@@ -230,92 +230,92 @@ Gerado por `tools/osmpro_estado.py`; não editar à mão. Transcrito = legendas 
 | 2022-05-17 | Competições oficiais | [Brazilian Regional Championship 2022 / OSM PRO](https://www.youtube.com/watch?v=-9iEpGzMBuo) | 28:13 | pt whisper medium | 2026-10-21 | 5 | [nota](notas/-9iEpGzMBuo.md) |
 | 2022-12-24 | Entrevistas | [(subtitled) I interviewed an OSM trainer / OSM PRO](https://www.youtube.com/watch?v=AyY8TPgtG6k) | 5:54 | pt whisper medium | 2026-10-21 | 5 | [nota](notas/AyY8TPgtG6k.md) |
 | 2024-02-18 | Entrevistas | [O Campeão do Mundo é BRASILEIRO! / OSM PRO](https://www.youtube.com/watch?v=K7sUx_20MJQ) | 28:36 | pt whisper medium | 2026-10-21 | 7 | [nota](notas/K7sUx_20MJQ.md) |
-| 2021-05-09 | Torneios | [TORNEIO OSM PRO - ALL STARS](https://www.youtube.com/watch?v=o6uk-cnzp-Y) | 1:51 | pt whisper medium |  |  |  |
-| 2021-05-22 | Torneios | [TORNEIO OSM PRO - ALL STARS / SORTEIO DOS 20 PARTICIPANTES](https://www.youtube.com/watch?v=9wWFbLX7Wqw) | 6:04 | pt whisper medium |  |  |  |
-| 2021-05-25 | Torneios | [TORNEIO OSM PRO - ALL STARS / JORNADA 0](https://www.youtube.com/watch?v=hAQt_26NC0M) | 2:04 | pt whisper medium |  |  |  |
-| 2021-07-02 | Torneios | [TORNEIO OSM PRO - ALL STARS / FINAL DE ÉPOCA](https://www.youtube.com/watch?v=fJ02tGlEjBs) | 9:13 | pt whisper medium |  |  |  |
-| 2021-12-09 | Torneios | [TORNEIO DE NATAL / OSM PRO](https://www.youtube.com/watch?v=LuiKK2zOFZA) | 28:36 | pt whisper medium |  |  |  |
-| 2021-12-10 | Torneios | [TORNEIO DE NATAL / Dia 1 / OSM PRO](https://www.youtube.com/watch?v=jIgxztkj4n4) | 24:03 | pt assemblyai |  |  |  |
-| 2021-12-11 | Torneios | [TORNEIO DE NATAL / Dia 2 / OSM PRO](https://www.youtube.com/watch?v=6GIpceorqmc) | 21:55 | pt whisper medium |  |  |  |
-| 2021-12-12 | Torneios | [TORNEIO DE NATAL / FASE DE GRUPOS 1/3 / OSM PRO](https://www.youtube.com/watch?v=Upgjk1wQI0o) | 21:11 | pt whisper medium |  |  |  |
-| 2021-12-13 | Torneios | [TORNEIO DE NATAL / FASE DE GRUPOS 2/3 / OSM PRO](https://www.youtube.com/watch?v=00J_6QS6iIU) | 35:17 | pt whisper medium |  |  |  |
-| 2021-12-14 | Torneios | [TORNEIO DE NATAL / FASE DE GRUPOS 3/3 / OSM PRO](https://www.youtube.com/watch?v=jhj3ukuJM3A) | 29:04 | pt whisper medium |  |  |  |
-| 2021-12-15 | Torneios | [TORNEIO DE NATAL / OITAVOS-DE-FINAL vs Campeão Nacional Brasileiro / OSM PRO](https://www.youtube.com/watch?v=ddRnmtD4crU) | 25:05 | pt whisper medium |  |  |  |
-| 2021-12-16 | Torneios | [TORNEIO DE NATAL / QUARTOS-DE-FINAL cheio de surpresas! / OSM PRO](https://www.youtube.com/watch?v=sUfWsW9_C5M) | 26:04 | pt whisper medium |  |  |  |
-| 2021-12-17 | Torneios | [TORNEIO DE NATAL / MEIA-FINAL será que o Peru passa?? / OSM PRO](https://www.youtube.com/watch?v=j7hwXAVCK6g) | 16:57 | pt whisper medium |  |  |  |
-| 2021-12-18 | Torneios | [CHRISTMAS TOURNAMENT FINAL! / OSM PRO](https://www.youtube.com/watch?v=STeQwA6O95A) | 13:21 | pt whisper medium |  |  |  |
-| 2022-02-06 | Torneios | [TORNEIO DOERAK - Dia 1/8 / OSM PRO](https://www.youtube.com/watch?v=2wLf_YASvrw) | 16:24 | pt whisper medium |  |  |  |
-| 2022-02-06 | Torneios | [TORNEIO DOERAK - 10k subscritores do canal / OSM PRO](https://www.youtube.com/watch?v=Er0XEPXLfcg) | 26:43 | pt whisper medium |  |  |  |
-| 2022-05-09 | Torneios | [OSM PRO - Torneio de MAIO de 2022](https://www.youtube.com/watch?v=kjQaBXRDasA) | 22:20 | pt whisper medium |  |  |  |
-| 2022-05-10 | Torneios | [MAY Tournament / 1st Day of Preparation / OSM PRO](https://www.youtube.com/watch?v=mBbA12IlJPc) | 27:41 | pt assemblyai |  |  |  |
-| 2022-05-11 | Torneios | [Torneio de MAIO / 2º Dia de Preparação / OSM PRO](https://www.youtube.com/watch?v=etd8lvj6iL8) | 22:45 | pt whisper medium |  |  |  |
-| 2022-05-12 | Torneios | [Torneio de MAIO / Dia 3/12 / OSM PRO](https://www.youtube.com/watch?v=JmiaU7dQMo0) | 32:53 | pt whisper medium |  |  |  |
-| 2022-05-13 | Torneios | [Torneio de MAIO / Dia 4/12 / OSM PRO](https://www.youtube.com/watch?v=ijWnyofTt7s) | 32:33 | pt whisper medium |  |  |  |
-| 2022-05-14 | Torneios | [Torneio de MAIO / Dia 5/12 / OSM PRO](https://www.youtube.com/watch?v=cnb9A6VHxNM) | 27:40 | pt whisper medium |  |  |  |
-| 2022-05-15 | Torneios | [Torneio de MAIO / Dia 6/12 / OSM PRO](https://www.youtube.com/watch?v=nAV552tHWLc) | 32:58 | pt assemblyai |  |  |  |
-| 2022-05-16 | Torneios | [Torneio de MAIO / Dia 7/12 / OSM PRO](https://www.youtube.com/watch?v=RwHAgYqZ_cs) | 29:54 | pt assemblyai |  |  |  |
-| 2022-05-17 | Torneios | [Torneio de MAIO / Dia 8/12 / OSM PRO](https://www.youtube.com/watch?v=qaZp3bwTric) | 36:43 | pt assemblyai |  |  |  |
-| 2022-05-18 | Torneios | [Torneio de MAIO / Dia 9/12 / OSM PRO](https://www.youtube.com/watch?v=eRbdzTyHWog) | 17:26 | pt assemblyai |  |  |  |
-| 2022-05-20 | Torneios | [TORNEIO DE MAIO TERMINADO!! / Dia 12/12 / OSM PRO](https://www.youtube.com/watch?v=0nxOFq0zpX0) | 20:01 | pt assemblyai |  |  |  |
-| 2022-08-29 | Torneios | [TORNEIO DE VERÃO / OSM PRO](https://www.youtube.com/watch?v=Fos7S0EAnK0) | 27:20 | pt assemblyai |  |  |  |
-| 2022-08-30 | Torneios | [DIA 1 - TORNEIO DE VERÃO / OSM PRO (fiz a equipa do campeonato regional!)](https://www.youtube.com/watch?v=jR1EPi7A8_c) | 31:20 | pt assemblyai |  |  |  |
-| 2022-08-31 | Torneios | [DIA 2 - TORNEIO DE VERÃO / OSM PRO](https://www.youtube.com/watch?v=19ErpUlafB0) | 25:07 | pt assemblyai |  |  |  |
-| 2022-09-01 | Torneios | [JOGO 1 - TORNEIO DE VERÃO / OSM PRO](https://www.youtube.com/watch?v=c7qEkOxNYDE) | 22:28 | pt assemblyai |  |  |  |
-| 2022-09-02 | Torneios | [GAME 2 - SUMMER TOURNAMENT / OSM PRO](https://www.youtube.com/watch?v=4L5w0GNPQUU) | 30:36 | pt assemblyai |  |  |  |
-| 2022-09-03 | Torneios | [3ºJ FASE DE GRUPOS / TORNEIO DE VERÃO / OSM PRO](https://www.youtube.com/watch?v=wdi6d9zL_-A) | 28:23 | pt assemblyai |  |  |  |
-| 2022-09-04 | Torneios | [4ºJ FASE DE GRUPOS / TORNEIO DE VERÃO / OSM PRO](https://www.youtube.com/watch?v=rnPcOxWy9k0) | 13:34 | pt assemblyai |  |  |  |
-| 2022-09-05 | Torneios | [5ºJ FASE DE GRUPOS / TORNEIO DE VERÃO / OSM PRO](https://www.youtube.com/watch?v=tHi1NsKtWXk) | 19:27 | pt assemblyai |  |  |  |
-| 2022-09-06 | Torneios | [6ºJ FASE DE GRUPOS / TORNEIO DE VERÃO / OSM PRO](https://www.youtube.com/watch?v=d9i7sYcTJWg) | 24:24 | pt assemblyai |  |  |  |
-| 2022-09-07 | Torneios | [OITAVOS-DE-FINAL / TORNEIO DE VERÃO / OSM PRO](https://www.youtube.com/watch?v=Nqvu-rqVt1k) | 24:46 | pt assemblyai |  |  |  |
-| 2022-09-08 | Torneios | [QUARTOS-DE-FINAL / TORNEIO DE VERÃO / OSM PRO](https://www.youtube.com/watch?v=KTjBU1N714A) | 28:46 | pt assemblyai |  |  |  |
-| 2022-09-09 | Torneios | [MEIA-FINAL / TORNEIO DE VERÃO / OSM PRO](https://www.youtube.com/watch?v=x-fecXwX-v8) | 25:11 | pt assemblyai |  |  |  |
-| 2022-09-10 | Torneios | [FINAL!! / TORNEIO DE VERÃO / OSM PRO](https://www.youtube.com/watch?v=SJHMzM-dXpg) | 30:40 | pt assemblyai |  |  |  |
-| 2022-12-31 | Torneios | [IT'S ON / 2023 New Year's Tournament / OSM PRO](https://www.youtube.com/watch?v=8-aNPOP5IMc) | 34:12 | pt assemblyai |  |  |  |
-| 2023-01-02 | Torneios | [1º dia de Pré-Época / Torneio de Ano Novo 2023 / OSM PRO](https://www.youtube.com/watch?v=iruAncjTUWc) | 10:21 | pt assemblyai |  |  |  |
-| 2023-01-03 | Torneios | [Pre-Season Day 2 / New Year's Tournament 2023 / OSM PRO](https://www.youtube.com/watch?v=YGQEvgAEics) | 33:08 | pt assemblyai |  |  |  |
-| 2023-01-04 | Torneios | [DAY 1/13 / New Year's Tournament 2023 / OSM PRO](https://www.youtube.com/watch?v=xrcnR6Taxn0) | 27:17 | pt assemblyai |  |  |  |
-| 2023-01-05 | Torneios | [DAY 2/13 / New Year's Tournament 2023 / OSM PRO](https://www.youtube.com/watch?v=YZHlEqpQ8i0) | 29:38 | pt assemblyai |  |  |  |
-| 2023-01-06 | Torneios | [DIA 3/13 / Torneio de Ano Novo 2023 / OSM PRO](https://www.youtube.com/watch?v=m2m0PAyXLmI) | 36:47 | pt assemblyai |  |  |  |
-| 2023-01-07 | Torneios | [DIA 4/13 / Torneio de Ano Novo 2023 / OSM PRO](https://www.youtube.com/watch?v=dMv0v7DZ0OI) | 31:25 | pt assemblyai |  |  |  |
-| 2023-01-08 | Torneios | [DAY 5/13 / New Year's Tournament 2023 / OSM PRO](https://www.youtube.com/watch?v=FFGDNeImG7g) | 31:43 | pt assemblyai |  |  |  |
-| 2023-01-09 | Torneios | [DIA 6/13 / Torneio de Ano Novo 2023 / OSM PRO](https://www.youtube.com/watch?v=E9KW4eS0Jh8) | 27:26 | pt assemblyai |  |  |  |
-| 2023-01-10 | Torneios | [DIA 7/13 / Torneio de Ano Novo 2023 / OSM PRO](https://www.youtube.com/watch?v=21-Sy8FZG-I) | 29:49 | pt assemblyai |  |  |  |
-| 2023-01-11 | Torneios | [DIA 8/13 / Torneio de Ano Novo 2023 / OSM PRO](https://www.youtube.com/watch?v=P2ku423xUVA) | 23:11 | pt assemblyai |  |  |  |
-| 2023-01-12 | Torneios | [DIA 9/13 / Torneio de Ano Novo 2023 / OSM PRO](https://www.youtube.com/watch?v=9whlMzTBSis) | 23:03 | pt assemblyai |  |  |  |
-| 2023-01-13 | Torneios | [DIA 10/13 / Torneio de Ano Novo 2023 / OSM PRO](https://www.youtube.com/watch?v=Uyv5b8FISoc) | 22:16 | pt whisper medium |  |  |  |
-| 2023-01-14 | Torneios | [DIA 11/13 / Torneio de Ano Novo 2023 / OSM PRO](https://www.youtube.com/watch?v=BJ_uVYeQTfM) | 21:02 | pt whisper medium |  |  |  |
-| 2023-01-15 | Torneios | [DIA 12/13 / Torneio de Ano Novo 2023 / OSM PRO](https://www.youtube.com/watch?v=9cRbvkADpE4) | 22:49 | pt assemblyai |  |  |  |
-| 2023-01-16 | Torneios | [IT'S FINISHED!! DAY 13/13 / New Year's Tournament 2023 / OSM PRO](https://www.youtube.com/watch?v=whsOLjnUOsY) | 17:17 | pt assemblyai |  |  |  |
-| 2023-05-06 | Torneios | [INICIO / Torneio de Primavera 2023 / OSM PRO](https://www.youtube.com/watch?v=Z_ay0qPIQps) | 33:16 | pt whisper medium |  |  |  |
-| 2023-05-08 | Torneios | [Dia 1 / Torneio de Primavera OSM PRO](https://www.youtube.com/watch?v=9N7kzddMkDQ) | 8:11 | pt whisper medium |  |  |  |
-| 2023-05-09 | Torneios | [Day 2 / OSM PRO Spring Tournament](https://www.youtube.com/watch?v=jL6fwt0F7rE) | 14:14 | pt whisper medium |  |  |  |
-| 2023-05-10 | Torneios | [October 1st / OSM PRO Spring Tournament](https://www.youtube.com/watch?v=e7TkjxNQ008) | 22:15 | pt whisper medium |  |  |  |
-| 2023-05-11 | Torneios | [Dia 2/10 / Torneio de Primavera OSM PRO](https://www.youtube.com/watch?v=nmXyV6z-ETc) | 20:53 | pt whisper medium |  |  |  |
-| 2023-05-12 | Torneios | [October 3rd / OSM PRO Spring Tournament](https://www.youtube.com/watch?v=7dB5O3osJ9s) | 22:42 | pt whisper medium |  |  |  |
-| 2023-05-13 | Torneios | [Dia 4/10 / Torneio de Primavera OSM PRO](https://www.youtube.com/watch?v=dtgoa8JbB00) | 29:37 | pt whisper medium |  |  |  |
-| 2023-05-14 | Torneios | [Dia 5/10 / Torneio de Primavera OSM PRO](https://www.youtube.com/watch?v=Thkg8R-qp48) | 49:24 | pt whisper medium |  |  |  |
-| 2023-05-15 | Torneios | [Dia 6/10 / Torneio de Primavera OSM PRO](https://www.youtube.com/watch?v=5I0kG2waFL0) | 27:25 | pt whisper medium |  |  |  |
-| 2023-05-16 | Torneios | [Dia 7/10 / Torneio de Primavera OSM PRO](https://www.youtube.com/watch?v=4rPXOUkU89I) | 20:24 | pt whisper medium |  |  |  |
-| 2023-05-17 | Torneios | [Dia 8/10 / Torneio de Primavera OSM PRO](https://www.youtube.com/watch?v=zAFKA_8-z1g) | 27:26 | pt whisper medium |  |  |  |
-| 2023-05-18 | Torneios | [Dia 9/10 / Torneio de Primavera OSM PRO](https://www.youtube.com/watch?v=K-6ZSnm8o0U) | 16:13 | pt whisper medium |  |  |  |
-| 2023-05-19 | Torneios | [Fim. Dia 10/10 / Torneio de Primavera OSM PRO](https://www.youtube.com/watch?v=KHrlkId6Iqo) | 19:41 | pt whisper medium |  |  |  |
-| 2024-12-08 | Torneios | [Ep.1 🎅 Torneio de Natal no OSM com inscritos – Quem Leva o Troféu? ⚽](https://www.youtube.com/watch?v=fFkRfqiPfM4) | 14:19 | pt whisper medium |  |  |  |
-| 2024-12-09 | Torneios | [Ep.2 🎅 Torneio de Natal no OSM com inscritos – Quem Leva o Troféu? ⚽](https://www.youtube.com/watch?v=ytnegWRju1s) | 24:47 | pt whisper medium |  |  |  |
-| 2024-12-10 | Torneios | [Ep.3 🎅 LET'S GO 433! Christmas Tournament at OSM with registered players – Who Takes the Trophy? ⚽](https://www.youtube.com/watch?v=YlyJTOJEdjQ) | 29:46 | pt whisper medium |  |  |  |
-| 2024-12-11 | Torneios | [Ep.4 🎅 Our first game in the OSM Christmas Tournament with subscribers ⚽](https://www.youtube.com/watch?v=UbLSsxQf7W4) | 18:41 | pt whisper medium |  |  |  |
-| 2024-12-13 | Torneios | [Ep.6 🎅 Obrigados a ganhar no Torneio de Natal de OSM com inscritos ⚽](https://www.youtube.com/watch?v=IwrO4OcH6vM) | 29:04 | pt whisper medium |  |  |  |
-| 2024-12-14 | Torneios | [Ep. 7 🎅 Against King Fénix's 424 in the OSM Christmas Subscriber Tournament ⚽](https://www.youtube.com/watch?v=LglmdSgkNII) | 22:47 | pt whisper medium |  |  |  |
-| 2024-12-15 | Torneios | [Ep.8 🎅 Jogo decisivo no Torneio de Natal de OSM com inscritos ⚽](https://www.youtube.com/watch?v=r0YeSOretI8) | 24:19 | pt whisper medium |  |  |  |
-| 2024-12-16 | Torneios | [Ep.9 🎅 Internship vs Internship at the OSM Christmas Tournament with registered participants ⚽](https://www.youtube.com/watch?v=fGfd4PJHN2Y) | 18:13 | pt whisper medium |  |  |  |
-| 2024-12-17 | Torneios | [Ep.10 🎅 INTERNSHIP vs INTERNSHIP in the OSM Christmas Tournament with subscribers ⚽](https://www.youtube.com/watch?v=f2LXn7otrjo) | 21:40 | pt whisper medium |  |  |  |
-| 2024-12-18 | Torneios | [Ep.11 🎅 Os 16 que seguiram em frente no Torneio de Natal de OSM com inscritos ⚽](https://www.youtube.com/watch?v=4dKppQcVbTA) | 19:05 | pt whisper medium |  |  |  |
-| 2024-12-19 | Torneios | [Ep.12 🎅 Os 16 que seguiram em frente no Torneio de Natal de OSM com inscritos ⚽](https://www.youtube.com/watch?v=pfZgxRbjNvA) | 21:38 | pt whisper medium |  |  |  |
-| 2024-12-20 | Torneios | [Ep.13 🎅 No Torneio de Natal de OSM com inscritos ⚽](https://www.youtube.com/watch?v=LDwwZgjkJ6A) | 18:03 | pt whisper medium |  |  |  |
-| 2024-12-21 | Torneios | [Ep.14 🎅 No Torneio de Natal de OSM com inscritos ⚽](https://www.youtube.com/watch?v=B7xGMW6ZSG0) | 24:03 | pt whisper medium |  |  |  |
-| 2024-12-22 | Torneios | [Ep.15 🎅 Que são os 4 finalistas do Torneio de Natal de OSM com inscritos ⚽](https://www.youtube.com/watch?v=r60h6DE5GYE) | 17:56 | pt whisper medium |  |  |  |
-| 2024-12-23 | Torneios | [Ep.16 🎅 1ª mão da meia-final! Torneio de Natal de OSM com inscritos ⚽](https://www.youtube.com/watch?v=Murnf6OCvSk) | 16:49 | pt whisper medium |  |  |  |
-| 2024-12-24 | Torneios | [Ep.17 🎅 OS FINALISTAS! Torneio de Natal de OSM com inscritos ⚽](https://www.youtube.com/watch?v=dZWmsyKaWL0) | 12:59 | pt whisper medium |  |  |  |
-| 2024-12-25 | Torneios | [TERMINOU O TORNEIO DE NATAL DE OSM 2024](https://www.youtube.com/watch?v=6LJGUQRlCIg) | 12:39 | pt whisper medium |  |  |  |
+| 2021-05-09 | Torneios | [TORNEIO OSM PRO - ALL STARS](https://www.youtube.com/watch?v=o6uk-cnzp-Y) | 1:51 | pt whisper medium | 2026-10-21 | 2 | [nota](notas/o6uk-cnzp-Y.md) |
+| 2021-05-22 | Torneios | [TORNEIO OSM PRO - ALL STARS / SORTEIO DOS 20 PARTICIPANTES](https://www.youtube.com/watch?v=9wWFbLX7Wqw) | 6:04 | pt whisper medium | 2026-10-21 | 4 | [nota](notas/9wWFbLX7Wqw.md) |
+| 2021-05-25 | Torneios | [TORNEIO OSM PRO - ALL STARS / JORNADA 0](https://www.youtube.com/watch?v=hAQt_26NC0M) | 2:04 | pt whisper medium | 2026-10-21 | 1 | [nota](notas/hAQt_26NC0M.md) |
+| 2021-07-02 | Torneios | [TORNEIO OSM PRO - ALL STARS / FINAL DE ÉPOCA](https://www.youtube.com/watch?v=fJ02tGlEjBs) | 9:13 | pt whisper medium | 2026-10-21 | 3 | [nota](notas/fJ02tGlEjBs.md) |
+| 2021-12-09 | Torneios | [TORNEIO DE NATAL / OSM PRO](https://www.youtube.com/watch?v=LuiKK2zOFZA) | 28:36 | pt whisper medium | 2026-10-21 | 11 | [nota](notas/LuiKK2zOFZA.md) |
+| 2021-12-10 | Torneios | [TORNEIO DE NATAL / Dia 1 / OSM PRO](https://www.youtube.com/watch?v=jIgxztkj4n4) | 24:03 | pt assemblyai | 2026-10-21 | 6 | [nota](notas/jIgxztkj4n4.md) |
+| 2021-12-11 | Torneios | [TORNEIO DE NATAL / Dia 2 / OSM PRO](https://www.youtube.com/watch?v=6GIpceorqmc) | 21:55 | pt whisper medium | 2026-10-21 | 8 | [nota](notas/6GIpceorqmc.md) |
+| 2021-12-12 | Torneios | [TORNEIO DE NATAL / FASE DE GRUPOS 1/3 / OSM PRO](https://www.youtube.com/watch?v=Upgjk1wQI0o) | 21:11 | pt whisper medium | 2026-10-21 | 9 | [nota](notas/Upgjk1wQI0o.md) |
+| 2021-12-13 | Torneios | [TORNEIO DE NATAL / FASE DE GRUPOS 2/3 / OSM PRO](https://www.youtube.com/watch?v=00J_6QS6iIU) | 35:17 | pt whisper medium | 2026-10-21 | 10 | [nota](notas/00J_6QS6iIU.md) |
+| 2021-12-14 | Torneios | [TORNEIO DE NATAL / FASE DE GRUPOS 3/3 / OSM PRO](https://www.youtube.com/watch?v=jhj3ukuJM3A) | 29:04 | pt whisper medium | 2026-10-21 | 9 | [nota](notas/jhj3ukuJM3A.md) |
+| 2021-12-15 | Torneios | [TORNEIO DE NATAL / OITAVOS-DE-FINAL vs Campeão Nacional Brasileiro / OSM PRO](https://www.youtube.com/watch?v=ddRnmtD4crU) | 25:05 | pt whisper medium | 2026-10-21 | 8 | [nota](notas/ddRnmtD4crU.md) |
+| 2021-12-16 | Torneios | [TORNEIO DE NATAL / QUARTOS-DE-FINAL cheio de surpresas! / OSM PRO](https://www.youtube.com/watch?v=sUfWsW9_C5M) | 26:04 | pt whisper medium | 2026-10-21 | 8 | [nota](notas/sUfWsW9_C5M.md) |
+| 2021-12-17 | Torneios | [TORNEIO DE NATAL / MEIA-FINAL será que o Peru passa?? / OSM PRO](https://www.youtube.com/watch?v=j7hwXAVCK6g) | 16:57 | pt whisper medium | 2026-10-21 | 5 | [nota](notas/j7hwXAVCK6g.md) |
+| 2021-12-18 | Torneios | [CHRISTMAS TOURNAMENT FINAL! / OSM PRO](https://www.youtube.com/watch?v=STeQwA6O95A) | 13:21 | pt whisper medium | 2026-10-21 | 3 | [nota](notas/STeQwA6O95A.md) |
+| 2022-02-06 | Torneios | [TORNEIO DOERAK - Dia 1/8 / OSM PRO](https://www.youtube.com/watch?v=2wLf_YASvrw) | 16:24 | pt whisper medium | 2026-10-21 | 5 | [nota](notas/2wLf_YASvrw.md) |
+| 2022-02-06 | Torneios | [TORNEIO DOERAK - 10k subscritores do canal / OSM PRO](https://www.youtube.com/watch?v=Er0XEPXLfcg) | 26:43 | pt whisper medium | 2026-10-21 | 5 | [nota](notas/Er0XEPXLfcg.md) |
+| 2022-05-09 | Torneios | [OSM PRO - Torneio de MAIO de 2022](https://www.youtube.com/watch?v=kjQaBXRDasA) | 22:20 | pt whisper medium | 2026-10-21 | 6 | [nota](notas/kjQaBXRDasA.md) |
+| 2022-05-10 | Torneios | [MAY Tournament / 1st Day of Preparation / OSM PRO](https://www.youtube.com/watch?v=mBbA12IlJPc) | 27:41 | pt assemblyai | 2026-10-21 | 8 | [nota](notas/mBbA12IlJPc.md) |
+| 2022-05-11 | Torneios | [Torneio de MAIO / 2º Dia de Preparação / OSM PRO](https://www.youtube.com/watch?v=etd8lvj6iL8) | 22:45 | pt whisper medium | 2026-10-21 | 11 | [nota](notas/etd8lvj6iL8.md) |
+| 2022-05-12 | Torneios | [Torneio de MAIO / Dia 3/12 / OSM PRO](https://www.youtube.com/watch?v=JmiaU7dQMo0) | 32:53 | pt whisper medium | 2026-10-21 | 9 | [nota](notas/JmiaU7dQMo0.md) |
+| 2022-05-13 | Torneios | [Torneio de MAIO / Dia 4/12 / OSM PRO](https://www.youtube.com/watch?v=ijWnyofTt7s) | 32:33 | pt whisper medium | 2026-10-21 | 10 | [nota](notas/ijWnyofTt7s.md) |
+| 2022-05-14 | Torneios | [Torneio de MAIO / Dia 5/12 / OSM PRO](https://www.youtube.com/watch?v=cnb9A6VHxNM) | 27:40 | pt whisper medium | 2026-10-21 | 11 | [nota](notas/cnb9A6VHxNM.md) |
+| 2022-05-15 | Torneios | [Torneio de MAIO / Dia 6/12 / OSM PRO](https://www.youtube.com/watch?v=nAV552tHWLc) | 32:58 | pt assemblyai | 2026-10-21 | 10 | [nota](notas/nAV552tHWLc.md) |
+| 2022-05-16 | Torneios | [Torneio de MAIO / Dia 7/12 / OSM PRO](https://www.youtube.com/watch?v=RwHAgYqZ_cs) | 29:54 | pt assemblyai | 2026-10-21 | 9 | [nota](notas/RwHAgYqZ_cs.md) |
+| 2022-05-17 | Torneios | [Torneio de MAIO / Dia 8/12 / OSM PRO](https://www.youtube.com/watch?v=qaZp3bwTric) | 36:43 | pt assemblyai | 2026-10-21 | 7 | [nota](notas/qaZp3bwTric.md) |
+| 2022-05-18 | Torneios | [Torneio de MAIO / Dia 9/12 / OSM PRO](https://www.youtube.com/watch?v=eRbdzTyHWog) | 17:26 | pt assemblyai | 2026-10-21 | 7 | [nota](notas/eRbdzTyHWog.md) |
+| 2022-05-20 | Torneios | [TORNEIO DE MAIO TERMINADO!! / Dia 12/12 / OSM PRO](https://www.youtube.com/watch?v=0nxOFq0zpX0) | 20:01 | pt assemblyai | 2026-10-21 | 6 | [nota](notas/0nxOFq0zpX0.md) |
+| 2022-08-29 | Torneios | [TORNEIO DE VERÃO / OSM PRO](https://www.youtube.com/watch?v=Fos7S0EAnK0) | 27:20 | pt assemblyai | 2026-10-21 | 3 | [nota](notas/Fos7S0EAnK0.md) |
+| 2022-08-30 | Torneios | [DIA 1 - TORNEIO DE VERÃO / OSM PRO (fiz a equipa do campeonato regional!)](https://www.youtube.com/watch?v=jR1EPi7A8_c) | 31:20 | pt assemblyai | 2026-10-21 | 8 | [nota](notas/jR1EPi7A8_c.md) |
+| 2022-08-31 | Torneios | [DIA 2 - TORNEIO DE VERÃO / OSM PRO](https://www.youtube.com/watch?v=19ErpUlafB0) | 25:07 | pt assemblyai | 2026-10-21 | 8 | [nota](notas/19ErpUlafB0.md) |
+| 2022-09-01 | Torneios | [JOGO 1 - TORNEIO DE VERÃO / OSM PRO](https://www.youtube.com/watch?v=c7qEkOxNYDE) | 22:28 | pt assemblyai | 2026-10-21 | 8 | [nota](notas/c7qEkOxNYDE.md) |
+| 2022-09-02 | Torneios | [GAME 2 - SUMMER TOURNAMENT / OSM PRO](https://www.youtube.com/watch?v=4L5w0GNPQUU) | 30:36 | pt assemblyai | 2026-10-21 | 9 | [nota](notas/4L5w0GNPQUU.md) |
+| 2022-09-03 | Torneios | [3ºJ FASE DE GRUPOS / TORNEIO DE VERÃO / OSM PRO](https://www.youtube.com/watch?v=wdi6d9zL_-A) | 28:23 | pt assemblyai | 2026-10-21 | 9 | [nota](notas/wdi6d9zL_-A.md) |
+| 2022-09-04 | Torneios | [4ºJ FASE DE GRUPOS / TORNEIO DE VERÃO / OSM PRO](https://www.youtube.com/watch?v=rnPcOxWy9k0) | 13:34 | pt assemblyai | 2026-10-21 | 5 | [nota](notas/rnPcOxWy9k0.md) |
+| 2022-09-05 | Torneios | [5ºJ FASE DE GRUPOS / TORNEIO DE VERÃO / OSM PRO](https://www.youtube.com/watch?v=tHi1NsKtWXk) | 19:27 | pt assemblyai | 2026-10-21 | 4 | [nota](notas/tHi1NsKtWXk.md) |
+| 2022-09-06 | Torneios | [6ºJ FASE DE GRUPOS / TORNEIO DE VERÃO / OSM PRO](https://www.youtube.com/watch?v=d9i7sYcTJWg) | 24:24 | pt assemblyai | 2026-10-21 | 5 | [nota](notas/d9i7sYcTJWg.md) |
+| 2022-09-07 | Torneios | [OITAVOS-DE-FINAL / TORNEIO DE VERÃO / OSM PRO](https://www.youtube.com/watch?v=Nqvu-rqVt1k) | 24:46 | pt assemblyai | 2026-10-21 | 5 | [nota](notas/Nqvu-rqVt1k.md) |
+| 2022-09-08 | Torneios | [QUARTOS-DE-FINAL / TORNEIO DE VERÃO / OSM PRO](https://www.youtube.com/watch?v=KTjBU1N714A) | 28:46 | pt assemblyai | 2026-10-21 | 9 | [nota](notas/KTjBU1N714A.md) |
+| 2022-09-09 | Torneios | [MEIA-FINAL / TORNEIO DE VERÃO / OSM PRO](https://www.youtube.com/watch?v=x-fecXwX-v8) | 25:11 | pt assemblyai | 2026-10-21 | 8 | [nota](notas/x-fecXwX-v8.md) |
+| 2022-09-10 | Torneios | [FINAL!! / TORNEIO DE VERÃO / OSM PRO](https://www.youtube.com/watch?v=SJHMzM-dXpg) | 30:40 | pt assemblyai | 2026-10-21 | 5 | [nota](notas/SJHMzM-dXpg.md) |
+| 2022-12-31 | Torneios | [IT'S ON / 2023 New Year's Tournament / OSM PRO](https://www.youtube.com/watch?v=8-aNPOP5IMc) | 34:12 | pt assemblyai | 2026-10-21 | 4 | [nota](notas/8-aNPOP5IMc.md) |
+| 2023-01-02 | Torneios | [1º dia de Pré-Época / Torneio de Ano Novo 2023 / OSM PRO](https://www.youtube.com/watch?v=iruAncjTUWc) | 10:21 | pt assemblyai | 2026-10-21 | 3 | [nota](notas/iruAncjTUWc.md) |
+| 2023-01-03 | Torneios | [Pre-Season Day 2 / New Year's Tournament 2023 / OSM PRO](https://www.youtube.com/watch?v=YGQEvgAEics) | 33:08 | pt assemblyai | 2026-10-21 | 6 | [nota](notas/YGQEvgAEics.md) |
+| 2023-01-04 | Torneios | [DAY 1/13 / New Year's Tournament 2023 / OSM PRO](https://www.youtube.com/watch?v=xrcnR6Taxn0) | 27:17 | pt assemblyai | 2026-10-21 | 8 | [nota](notas/xrcnR6Taxn0.md) |
+| 2023-01-05 | Torneios | [DAY 2/13 / New Year's Tournament 2023 / OSM PRO](https://www.youtube.com/watch?v=YZHlEqpQ8i0) | 29:38 | pt assemblyai | 2026-10-21 | 7 | [nota](notas/YZHlEqpQ8i0.md) |
+| 2023-01-06 | Torneios | [DIA 3/13 / Torneio de Ano Novo 2023 / OSM PRO](https://www.youtube.com/watch?v=m2m0PAyXLmI) | 36:47 | pt assemblyai | 2026-10-21 | 6 | [nota](notas/m2m0PAyXLmI.md) |
+| 2023-01-07 | Torneios | [DIA 4/13 / Torneio de Ano Novo 2023 / OSM PRO](https://www.youtube.com/watch?v=dMv0v7DZ0OI) | 31:25 | pt assemblyai | 2026-10-21 | 6 | [nota](notas/dMv0v7DZ0OI.md) |
+| 2023-01-08 | Torneios | [DAY 5/13 / New Year's Tournament 2023 / OSM PRO](https://www.youtube.com/watch?v=FFGDNeImG7g) | 31:43 | pt assemblyai | 2026-10-21 | 7 | [nota](notas/FFGDNeImG7g.md) |
+| 2023-01-09 | Torneios | [DIA 6/13 / Torneio de Ano Novo 2023 / OSM PRO](https://www.youtube.com/watch?v=E9KW4eS0Jh8) | 27:26 | pt assemblyai | 2026-10-21 | 6 | [nota](notas/E9KW4eS0Jh8.md) |
+| 2023-01-10 | Torneios | [DIA 7/13 / Torneio de Ano Novo 2023 / OSM PRO](https://www.youtube.com/watch?v=21-Sy8FZG-I) | 29:49 | pt assemblyai | 2026-10-21 | 6 | [nota](notas/21-Sy8FZG-I.md) |
+| 2023-01-11 | Torneios | [DIA 8/13 / Torneio de Ano Novo 2023 / OSM PRO](https://www.youtube.com/watch?v=P2ku423xUVA) | 23:11 | pt assemblyai | 2026-10-21 | 4 | [nota](notas/P2ku423xUVA.md) |
+| 2023-01-12 | Torneios | [DIA 9/13 / Torneio de Ano Novo 2023 / OSM PRO](https://www.youtube.com/watch?v=9whlMzTBSis) | 23:03 | pt assemblyai | 2026-10-21 | 8 | [nota](notas/9whlMzTBSis.md) |
+| 2023-01-13 | Torneios | [DIA 10/13 / Torneio de Ano Novo 2023 / OSM PRO](https://www.youtube.com/watch?v=Uyv5b8FISoc) | 22:16 | pt whisper medium | 2026-10-21 | 6 | [nota](notas/Uyv5b8FISoc.md) |
+| 2023-01-14 | Torneios | [DIA 11/13 / Torneio de Ano Novo 2023 / OSM PRO](https://www.youtube.com/watch?v=BJ_uVYeQTfM) | 21:02 | pt whisper medium | 2026-10-21 | 6 | [nota](notas/BJ_uVYeQTfM.md) |
+| 2023-01-15 | Torneios | [DIA 12/13 / Torneio de Ano Novo 2023 / OSM PRO](https://www.youtube.com/watch?v=9cRbvkADpE4) | 22:49 | pt assemblyai | 2026-10-21 | 5 | [nota](notas/9cRbvkADpE4.md) |
+| 2023-01-16 | Torneios | [IT'S FINISHED!! DAY 13/13 / New Year's Tournament 2023 / OSM PRO](https://www.youtube.com/watch?v=whsOLjnUOsY) | 17:17 | pt assemblyai | 2026-10-21 | 3 | [nota](notas/whsOLjnUOsY.md) |
+| 2023-05-06 | Torneios | [INICIO / Torneio de Primavera 2023 / OSM PRO](https://www.youtube.com/watch?v=Z_ay0qPIQps) | 33:16 | pt whisper medium | 2026-10-21 | 4 | [nota](notas/Z_ay0qPIQps.md) |
+| 2023-05-08 | Torneios | [Dia 1 / Torneio de Primavera OSM PRO](https://www.youtube.com/watch?v=9N7kzddMkDQ) | 8:11 | pt whisper medium | 2026-10-21 | 4 | [nota](notas/9N7kzddMkDQ.md) |
+| 2023-05-09 | Torneios | [Day 2 / OSM PRO Spring Tournament](https://www.youtube.com/watch?v=jL6fwt0F7rE) | 14:14 | pt whisper medium | 2026-10-21 | 8 | [nota](notas/jL6fwt0F7rE.md) |
+| 2023-05-10 | Torneios | [October 1st / OSM PRO Spring Tournament](https://www.youtube.com/watch?v=e7TkjxNQ008) | 22:15 | pt whisper medium | 2026-10-21 | 6 | [nota](notas/e7TkjxNQ008.md) |
+| 2023-05-11 | Torneios | [Dia 2/10 / Torneio de Primavera OSM PRO](https://www.youtube.com/watch?v=nmXyV6z-ETc) | 20:53 | pt whisper medium | 2026-10-21 | 4 | [nota](notas/nmXyV6z-ETc.md) |
+| 2023-05-12 | Torneios | [October 3rd / OSM PRO Spring Tournament](https://www.youtube.com/watch?v=7dB5O3osJ9s) | 22:42 | pt whisper medium | 2026-10-21 | 6 | [nota](notas/7dB5O3osJ9s.md) |
+| 2023-05-13 | Torneios | [Dia 4/10 / Torneio de Primavera OSM PRO](https://www.youtube.com/watch?v=dtgoa8JbB00) | 29:37 | pt whisper medium | 2026-10-21 | 8 | [nota](notas/dtgoa8JbB00.md) |
+| 2023-05-14 | Torneios | [Dia 5/10 / Torneio de Primavera OSM PRO](https://www.youtube.com/watch?v=Thkg8R-qp48) | 49:24 | pt whisper medium | 2026-10-21 | 7 | [nota](notas/Thkg8R-qp48.md) |
+| 2023-05-15 | Torneios | [Dia 6/10 / Torneio de Primavera OSM PRO](https://www.youtube.com/watch?v=5I0kG2waFL0) | 27:25 | pt whisper medium | 2026-10-21 | 5 | [nota](notas/5I0kG2waFL0.md) |
+| 2023-05-16 | Torneios | [Dia 7/10 / Torneio de Primavera OSM PRO](https://www.youtube.com/watch?v=4rPXOUkU89I) | 20:24 | pt whisper medium | 2026-10-21 | 6 | [nota](notas/4rPXOUkU89I.md) |
+| 2023-05-17 | Torneios | [Dia 8/10 / Torneio de Primavera OSM PRO](https://www.youtube.com/watch?v=zAFKA_8-z1g) | 27:26 | pt whisper medium | 2026-10-21 | 6 | [nota](notas/zAFKA_8-z1g.md) |
+| 2023-05-18 | Torneios | [Dia 9/10 / Torneio de Primavera OSM PRO](https://www.youtube.com/watch?v=K-6ZSnm8o0U) | 16:13 | pt whisper medium | 2026-10-21 | 5 | [nota](notas/K-6ZSnm8o0U.md) |
+| 2023-05-19 | Torneios | [Fim. Dia 10/10 / Torneio de Primavera OSM PRO](https://www.youtube.com/watch?v=KHrlkId6Iqo) | 19:41 | pt whisper medium | 2026-10-21 | 6 | [nota](notas/KHrlkId6Iqo.md) |
+| 2024-12-08 | Torneios | [Ep.1 🎅 Torneio de Natal no OSM com inscritos – Quem Leva o Troféu? ⚽](https://www.youtube.com/watch?v=fFkRfqiPfM4) | 14:19 | pt whisper medium | 2026-10-21 | 7 | [nota](notas/fFkRfqiPfM4.md) |
+| 2024-12-09 | Torneios | [Ep.2 🎅 Torneio de Natal no OSM com inscritos – Quem Leva o Troféu? ⚽](https://www.youtube.com/watch?v=ytnegWRju1s) | 24:47 | pt whisper medium | 2026-10-21 | 8 | [nota](notas/ytnegWRju1s.md) |
+| 2024-12-10 | Torneios | [Ep.3 🎅 LET'S GO 433! Christmas Tournament at OSM with registered players – Who Takes the Trophy? ⚽](https://www.youtube.com/watch?v=YlyJTOJEdjQ) | 29:46 | pt whisper medium | 2026-10-21 | 8 | [nota](notas/YlyJTOJEdjQ.md) |
+| 2024-12-11 | Torneios | [Ep.4 🎅 Our first game in the OSM Christmas Tournament with subscribers ⚽](https://www.youtube.com/watch?v=UbLSsxQf7W4) | 18:41 | pt whisper medium | 2026-10-21 | 6 | [nota](notas/UbLSsxQf7W4.md) |
+| 2024-12-13 | Torneios | [Ep.6 🎅 Obrigados a ganhar no Torneio de Natal de OSM com inscritos ⚽](https://www.youtube.com/watch?v=IwrO4OcH6vM) | 29:04 | pt whisper medium | 2026-10-21 | 7 | [nota](notas/IwrO4OcH6vM.md) |
+| 2024-12-14 | Torneios | [Ep. 7 🎅 Against King Fénix's 424 in the OSM Christmas Subscriber Tournament ⚽](https://www.youtube.com/watch?v=LglmdSgkNII) | 22:47 | pt whisper medium | 2026-10-21 | 9 | [nota](notas/LglmdSgkNII.md) |
+| 2024-12-15 | Torneios | [Ep.8 🎅 Jogo decisivo no Torneio de Natal de OSM com inscritos ⚽](https://www.youtube.com/watch?v=r0YeSOretI8) | 24:19 | pt whisper medium | 2026-10-21 | 7 | [nota](notas/r0YeSOretI8.md) |
+| 2024-12-16 | Torneios | [Ep.9 🎅 Internship vs Internship at the OSM Christmas Tournament with registered participants ⚽](https://www.youtube.com/watch?v=fGfd4PJHN2Y) | 18:13 | pt whisper medium | 2026-10-21 | 6 | [nota](notas/fGfd4PJHN2Y.md) |
+| 2024-12-17 | Torneios | [Ep.10 🎅 INTERNSHIP vs INTERNSHIP in the OSM Christmas Tournament with subscribers ⚽](https://www.youtube.com/watch?v=f2LXn7otrjo) | 21:40 | pt whisper medium | 2026-10-21 | 7 | [nota](notas/f2LXn7otrjo.md) |
+| 2024-12-18 | Torneios | [Ep.11 🎅 Os 16 que seguiram em frente no Torneio de Natal de OSM com inscritos ⚽](https://www.youtube.com/watch?v=4dKppQcVbTA) | 19:05 | pt whisper medium | 2026-10-21 | 7 | [nota](notas/4dKppQcVbTA.md) |
+| 2024-12-19 | Torneios | [Ep.12 🎅 Os 16 que seguiram em frente no Torneio de Natal de OSM com inscritos ⚽](https://www.youtube.com/watch?v=pfZgxRbjNvA) | 21:38 | pt whisper medium | 2026-10-21 | 2 | [nota](notas/pfZgxRbjNvA.md) |
+| 2024-12-20 | Torneios | [Ep.13 🎅 No Torneio de Natal de OSM com inscritos ⚽](https://www.youtube.com/watch?v=LDwwZgjkJ6A) | 18:03 | pt whisper medium | 2026-10-21 | 5 | [nota](notas/LDwwZgjkJ6A.md) |
+| 2024-12-21 | Torneios | [Ep.14 🎅 No Torneio de Natal de OSM com inscritos ⚽](https://www.youtube.com/watch?v=B7xGMW6ZSG0) | 24:03 | pt whisper medium | 2026-10-21 | 4 | [nota](notas/B7xGMW6ZSG0.md) |
+| 2024-12-22 | Torneios | [Ep.15 🎅 Que são os 4 finalistas do Torneio de Natal de OSM com inscritos ⚽](https://www.youtube.com/watch?v=r60h6DE5GYE) | 17:56 | pt whisper medium | 2026-10-21 | 6 | [nota](notas/r60h6DE5GYE.md) |
+| 2024-12-23 | Torneios | [Ep.16 🎅 1ª mão da meia-final! Torneio de Natal de OSM com inscritos ⚽](https://www.youtube.com/watch?v=Murnf6OCvSk) | 16:49 | pt whisper medium | 2026-10-21 | 9 | [nota](notas/Murnf6OCvSk.md) |
+| 2024-12-24 | Torneios | [Ep.17 🎅 OS FINALISTAS! Torneio de Natal de OSM com inscritos ⚽](https://www.youtube.com/watch?v=dZWmsyKaWL0) | 12:59 | pt whisper medium | 2026-10-21 | 9 | [nota](notas/dZWmsyKaWL0.md) |
+| 2024-12-25 | Torneios | [TERMINOU O TORNEIO DE NATAL DE OSM 2024](https://www.youtube.com/watch?v=6LJGUQRlCIg) | 12:39 | pt whisper medium | 2026-10-21 | 5 | [nota](notas/6LJGUQRlCIg.md) |
 | 2021-01-17 | Outros de OSM | [Quantos custa cada ESTÁGIO / OSM PRO #Shorts](https://www.youtube.com/shorts/UxiyRKuwh1k) | 0:24 | pt whisper medium | 2026-10-21 | 1 | [nota](notas/UxiyRKuwh1k.md) |
 | 2021-08-06 | Outros de OSM | [SUPER TACTICAL 343B / OSM PRO #shorts](https://www.youtube.com/shorts/FZR4ix5psKA) | 0:30 | pt whisper medium | 2026-10-21 | 1 | [nota](notas/FZR4ix5psKA.md) |
 | 2021-08-09 | Outros de OSM | [santana100 vs Renato Pratas / OSM PRO #shorts](https://www.youtube.com/shorts/AR0R4mvHn6o) | 0:50 | pt whisper medium | 2026-10-21 | 1 | [nota](notas/AR0R4mvHn6o.md) |
