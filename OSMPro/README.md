@@ -11,4 +11,5 @@ Vídeos de OSM de dois canais portugueses, para estudar (pedido do dono, 2026-10
 
 - `_kb/legendas/<id>.json`: o texto de cada vídeo, transcrito no PC com o Whisper (`tools/osmpro_whisper.py`, teoria primeiro; retoma onde parou). As primeiras 30 vieram das legendas do YouTube (`tools/osmpro_legendas.py`), que bloqueia ao fim de ~15 vídeos.
 - `_kb/notas/<id>.md`: as conclusões de cada vídeo, 1 a 1, comparadas com `docs/THEORY.md`.
+- `_kb/sintese/<categoria>.md`: o que a categoria diz, junto por tema, com marcas (forte, regra, ideia, hipótese, choca com a teoria, a medir, desatualizado) e as notas de onde vem. Lê-se uma categoria de cada vez, do mais antigo ao mais recente, de 10 em 10 vídeos; a estrutura vai-se ajustando ao que se aprende. Nada é decidido aqui.
 - `_kb/ESTADO.md`: o que está transcrito e analisado, por vídeo e por categoria. Gerado por `tools/osmpro_estado.py`; não editar à mão.
