@@ -19,3 +19,19 @@ def uncovered(players: list[dict], tired: list[dict]) -> list[str]:
     eleven and available, whatever his condition (owner, 2026-10-13; THEORY.md section 16)."""
     cover = {POSITIONS.get(p["position"]) for p in players if p["lineup"] not in STARTING_ELEVEN and not p["unavailable"]}
     return sorted({p["pos"] for p in tired} - cover)
+
+
+MATCH_DROP = 4  # [S] condition lost from one match to the next when a starter plays both (THEORY.md 16, 208 cases)
+
+
+def rest_warnings(players: list[dict], first: dict | None, second: dict | None) -> list[dict]:
+    """Starters still green who would reach the next important match yellow if they play the one before (owner,
+    2026-10-22, THEORY.md 16). ``first``/``second``: the next two matches as {"opponent", "important"}; only when the
+    first is not important and the second is. Returns [{name, fitness, then, first, second}], most tired first."""
+    if not first or not second or first.get("important") or not second.get("important"):
+        return []
+    warned = [{"name": p["name"], "fitness": p["fitness"], "then": p["fitness"] - MATCH_DROP,
+               "first": first["opponent"], "second": second["opponent"]}
+              for p in players if p["lineup"] in STARTING_ELEVEN and not p["unavailable"]
+              and YELLOW_BELOW <= p["fitness"] < YELLOW_BELOW + MATCH_DROP]
+    return sorted(warned, key=lambda p: p["fitness"])

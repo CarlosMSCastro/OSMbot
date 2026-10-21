@@ -295,6 +295,8 @@ def club_view(club: dict, now: float, shortened: dict | None = None) -> dict:
 
     free = club.get("free_slots") or 0
     alert = f"{free} vaga{'s' if free > 1 else ''} livre{'s' if free > 1 else ''} na lista de transferências" if free else ""
+    alerts = ([alert] if alert else []) + [  # under it, one per line: on the list too long (THEORY.md 7.5)
+        f"{s['name']} à venda há {span(s['for'])} (normal ~{span(s['normal'])} a este preço)" for s in club.get("stale") or []]
     funds, savings = club.get("money") or (None, None)
     total = None if funds is None else funds + (savings or 0)
     sales = [f"✓ {s['name']} vendido · +{money(s['price'])}" for s in club.get("sales") or []]
@@ -356,12 +358,14 @@ def club_view(club: dict, now: float, shortened: dict | None = None) -> dict:
     tired_text, tired_tip = tired_view(club)
 
     return {"name": club["name"], "logo": club.get("logo"), "logo_key": club.get("logo_key") or club["name"],
-            "subtitle": subtitle, "facts": facts, "alert": alert, "header": header, "cup_line": cup_line, "match": match, "prep_title": prep_title,
+            "subtitle": subtitle, "facts": facts, "alert": alert, "alerts": alerts,"header": header, "cup_line": cup_line, "match": match, "prep_title": prep_title,
             "money": _money(total), "sales": sales, "sponsors": sponsor_row, "squad": squad_view(club.get("value"), club.get("value_table")),
             "stadium": {"still": still, "moving": moving},
             "prep": {"steps": steps, "boosts": boosts},
             "trainings": trainings,
-            "tired": tired_text, "tired_tip": tired_tip, "sale": sale_view(club), "value_badge": rating_badge(club.get("strength")), "table_tip": table_tip,
+            "tired": tired_text, "tired_tip": tired_tip, "rest": [  # THEORY.md 16: rest him before the important one
+                f"{p['name']} {p['fitness']}%: se jogar contra o {p['first']}, chega a ~{p['then']}% contra o {p['second']}"
+                for p in club.get("rest") or []], "sale": sale_view(club), "value_badge": rating_badge(club.get("strength")), "table_tip": table_tip,
             "injured": _people(club.get("injured") or [], "no médico", now),
             "suspended": _people(club.get("suspended") or [], "no advogado", now),
             "stadium_rings": stadium_rings(club.get("stadium"), now),

@@ -51,3 +51,10 @@ def test_the_choice_is_remembered_on_this_pc(tmp_path, monkeypatch):
 
 def test_the_new_sale_line_in_english(english):
     assert tr("SALE novos (Spain): 6 · DEF 88 J (25 anos) 12,3 M e mais 1") ==         "New SALE (Spain): 6 · DEF 88 J (25 years) 12,3 M and 1 more"
+
+
+def test_the_purchase_profit_and_stale_lines_in_english(english):
+    assert tr("Compra: F (C) comprado por 8,86 M (1,37 × o valor), de Fiorentina") ==         "Purchase: F (C) bought for 8,86 M (1,37 × value), from Fiorentina"
+    assert tr("Venda: A (C) vendido por 20 M (100% do máximo ≈ 20 M); à venda desde 1/1 10:00, vendido até 1/1 11:00, "
+              "demorou 1h00; lucro +8 M em 25h00").endswith("took 1h00; profit +8 M in 25h00")
+    assert tr("K à venda há 95h00 (normal ~46h00 a este preço)") == "K on the list for 95h00 (usually ~46h00 at this price)"

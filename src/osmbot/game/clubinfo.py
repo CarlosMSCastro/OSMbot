@@ -9,12 +9,17 @@ from __future__ import annotations
 
 import time
 
-from osmbot.board.info import cup_phase, league_summary, next_match, squad_value, team_rating, value_table
+from osmbot.board.info import cup_phase, league_summary, next_match, next_matches, squad_value, stale_listings, team_rating, value_table
 from osmbot.game import market as market_watch, sales
+from osmbot.game.transfers import saved_transfers
 from osmbot.game.specialists import check
-from osmbot.theory.lineup import bench_warnings, empty_places, places, position_warnings, tactic_notes, tactic_warnings
+from osmbot.theory.lineup import age_warnings, bench_warnings, empty_places, places, position_warnings, tactic_notes, tactic_warnings
 from osmbot.medical.policy import open_cases
 from osmbot.prematch.policy import friendlies_played
+from osmbot.theory.fitness import rest_warnings
+from osmbot.theory.tactics import match_strength
+
+GUESS_FORMATION = 433  # [S] another club's eleven is unknown before the analysis: his best 4-3-3 (THEORY.md 16)
 
 FIXTURES_FOR = 10 * 60.0
 SPECIALISTS_STEP = 4  # matchpreparation step "Select specialists"
@@ -177,7 +182,9 @@ def club_extra(client, team: dict, base: str, players: list[dict], slot, market:
                                      "value": values_now[item["player"]["id"]], "since": item.get("timeStampForSale")}
               for item in market if item["player"]["id"] in squad}
     sold = sales.update(f"{league}/{team['id']}", listed, squad, team.get("name", "?"),
-                        transfers=lambda: _list(client, f"{league}/transfers"), team_id=team["id"])
+                        transfers=lambda: _list(client, f"{league}/transfers") + saved_transfers(team["leagueId"]),
+                        team_id=team["id"])
+    stale = stale_listings(listed, sales.sale_times(), time.time())  # "parado na lista" (THEORY.md 7.5)
     owner = next((t.get("userId") for t in teams if t["id"] == team["id"]), None)
     try:  # the engine records (D-034): never in the way of the card
         market_watch.watch(client, got[0][1]["id"], got[0][1].get("name", ""), market, owner)
@@ -213,10 +220,23 @@ def club_extra(client, team: dict, base: str, players: list[dict], slot, market:
     referees = _cached(("referees", league), FIXTURES_FOR, lambda: _list(client, f"{league}/referees"))
     strictness = next((r.get("strictness") for r in referees if upcoming and r["id"] == upcoming.get("referee_id")), None)
     mine, theirs = _match_strengths(client, team, league, teams, week, upcoming, strength, done)
+
+    def important(match: dict) -> dict:  # stronger opponent or a direct rival (owner, 2026-10-22, THEORY.md 16)
+        rival = match["opponent_id"]
+        rating = _cached(("strength_guess", league, rival, week), FIXTURES_FOR,  # [S] his eleven unknown: best 4-3-3
+                         lambda: team_rating(_list(client, f"{league}/teams/{rival}/players"), GUESS_FORMATION))
+        home = not match.get("neutral")
+        stronger = bool(rating and strength) and match_strength(rating, home=home and match["side"] == "A") \
+            > match_strength(strength, home=home and match["side"] == "H")
+        return {"opponent": match["opponent"], "important": match["danger"] or stronger}
+
+    pair = [important(m) for m in next_matches(matches, teams, team["id"], week)]
+    rest = rest_warnings(players, *(pair + [None, None])[:2])
     status, current = got[6]  # the game ticks any 4 specialists; yellow when they are not the owner's rule (D-042)
     why = {SPECIALISTS_STEP: check(players, current if status == 200 and isinstance(current, dict) else None),
            BENCH_STEP: bench_warnings(players),  # THEORY.md section 21: yellow with the reason on hover
-           ELEVEN_STEP: empty_places(players, tactic) + tactic_warnings(tactic, strictness, mine, theirs, players),
+           ELEVEN_STEP: empty_places(players, tactic) + age_warnings(players)
+           + tactic_warnings(tactic, strictness, mine, theirs, players),
            POSITIONS_STEP: position_warnings(players, tactic)}  # who is out of position, on the hover
     steps = [(name, False, RULE) if why.get(kind) and done_ else (name, done_, extra)
              for (kind, _), (name, done_, extra) in zip(CHECKLIST, steps)]
@@ -245,7 +265,7 @@ def club_extra(client, team: dict, base: str, players: list[dict], slot, market:
         "value": squad_value(values, team["id"]), "strength": strength,
         "value_table": value_table(values, {t["id"]: t["name"] for t in teams}, team["id"]),
         "table": league_summary(standings, teams, matches, team["id"], week, team.get("goal")),
-        "free_slots": free, "sales": sold,
+        "free_slots": free, "sales": sold, "stale": stale, "rest": rest,
         "prep": {"pct": prep.get("completionPercentage"), "steps": steps, "why": reasons, "boosts": boosts},
         "injured": _people(injured, doctor, timer_minutes(client, team["leagueId"], "DoctorTreatmentTimer")),
         "suspended": _people(suspended, lawyer, timer_minutes(client, team["leagueId"], "LawyerCaseTimer")),

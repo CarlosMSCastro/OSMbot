@@ -1,6 +1,8 @@
 """What the club card shows beyond the plain numbers (D-026): next match, cup, squad value, sales. Pure: no network."""
 from __future__ import annotations
 
+import re
+
 LEAGUE_MATCH, CUP_MATCH = 0, 1  # matchType in matches/filter (DISCOVERY.md section 3)
 DIRECT_RIVAL = 2  # places apart in the table that make a match a direct confrontation (THEORY.md section 1)
 CUP_NAMES = {"Preliminaries": "pré-eliminatória", "Round of 64": "32 avos-de-final", "Round of 32": "16 avos-de-final",
@@ -16,18 +18,27 @@ def _side(match: dict, team_id: int) -> tuple[int, str]:
 def next_match(matches: list[dict], teams: list[dict], team_id: int, week: int) -> dict | None:
     """The club's next official match after ``week`` (the last one played): opponent, its place, (H)ome/(A)way,
     whether it is a direct confrontation (1 or 2 places apart) and whether it is a cup match."""
+    ahead = next_matches(matches, teams, team_id, week, 1)
+    return ahead[0] if ahead else None
+
+
+def next_matches(matches: list[dict], teams: list[dict], team_id: int, week: int, count: int = 2) -> list[dict]:
+    """The club's next ``count`` official matches after ``week``, each as ``next_match`` gives it (THEORY.md 16:
+    the one after the next, to rest a starter before it)."""
     ahead = sorted((m for m in matches if team_id in (m["homeTeamId"], m["awayTeamId"])
                     and m["matchType"] in (LEAGUE_MATCH, CUP_MATCH) and m["weekNr"] > week), key=lambda m: m["weekNr"])
-    if not ahead:
-        return None
-    opponent, side = _side(ahead[0], team_id)
+    return [_upcoming(m, teams, team_id) for m in ahead[:count]]
+
+
+def _upcoming(match: dict, teams: list[dict], team_id: int) -> dict:
+    opponent, side = _side(match, team_id)
     places = {t["id"]: t for t in teams}
     mine, theirs = places.get(team_id, {}).get("ranking"), places.get(opponent, {})
     rank = theirs.get("ranking")
     danger = bool(mine and rank and abs(rank - mine) <= DIRECT_RIVAL)
     return {"opponent": theirs.get("name", "?"), "opponent_id": opponent, "rank": rank, "side": side, "danger": danger,
-            "cup": ahead[0]["matchType"] == CUP_MATCH, "referee_id": ahead[0].get("refereeId"),
-            "neutral": bool(ahead[0].get("isPlayedOnNeutralGround"))}
+            "cup": match["matchType"] == CUP_MATCH, "referee_id": match.get("refereeId"),
+            "neutral": bool(match.get("isPlayedOnNeutralGround"))}
 
 
 def cup_phase(rounds: list[dict], matches: list[dict], team_id: int, week: int) -> tuple[str, str]:
@@ -94,7 +105,10 @@ def track_sales(state: dict, listed: dict[int, dict], squad: set[int], now: floa
         new_sales = [{**item, "player": pid, "sold": now} for pid, item in before.items() if pid not in listed and pid not in squad]
         new_listings = [item for pid, item in listed.items() if pid not in before]
         sales = (sales + new_sales)[len(new_listings):]
-    return {"listed": listed, "sales": sales, "new_listings": new_listings, "new_sales": new_sales}
+    known = state.get("squad")  # the squad at the last read; None before the first one (owner, 2026-10-22: the buys)
+    new_members = sorted(squad - set(known)) if known is not None else []
+    return {"listed": listed, "sales": sales, "squad": sorted(squad), "new_listings": new_listings,
+            "new_sales": new_sales, "new_members": new_members}
 
 
 
@@ -113,6 +127,71 @@ def settle_sales(sales: list[dict], transfers: list[dict], team_id: int) -> None
         if last["price"] != sale["price"]:
             sale["since"] = None
         sale.update(price=last["price"], sold=last.get("timestamp") or sale["sold"], confirmada=True)
+    for sale in sales:  # what the club paid for him, for the profit (THEORY.md 7.5, owner 2026-10-22)
+        buy = _last_buy(transfers, sale.get("player"), team_id, sale.get("sold"))
+        if buy:
+            sale.update(bought=buy["price"], bought_at=buy.get("timestamp"))
+
+
+def _last_buy(transfers: list[dict], player: int | None, team_id: int, before: float | None = None) -> dict | None:
+    found = [t for t in transfers if (t.get("player") or {}).get("id") == player
+             and (t.get("destinationTeam") or {}).get("id") == team_id and t.get("price")
+             and (before is None or (t.get("timestamp") or 0) <= before)]
+    return max(found, key=lambda t: t.get("timestamp") or 0, default=None)
+
+
+def purchases(new_members: list[int], transfers: list[dict], team_id: int) -> list[dict]:
+    """The players new in the squad that the club bought (THEORY.md 7.5): name, price, value, seller. A player from a
+    pack or the youth has no purchase in the league's transfers and is left out."""
+    bought = []
+    for pid in new_members:
+        buy = _last_buy(transfers, pid, team_id)
+        if buy:
+            bought.append({"name": (buy.get("player") or {}).get("name", "?"), "price": buy["price"],
+                           "value": buy.get("value") or 0, "from": (buy.get("sourceTeam") or {}).get("name")})
+    return bought
+
+
+SALE_BANDS = (5e6, 15e6, 50e6, 100e6)  # the price bands of the "parado na lista" warning (THEORY.md 7.5)
+STALE_FACTOR = 2  # warned past twice the band's median time
+STALE_MIN_SALES = 3  # a band with fewer sales does not warn
+
+
+def _band(price: float) -> int:
+    return sum(1 for limit in SALE_BANDS if price >= limit)
+
+
+def stale_listings(listed: dict[int, dict], history: list[tuple[float, float]], now: float) -> list[dict]:
+    """The owner's players on the list for more than twice the usual time at their price (owner, 2026-10-22).
+    ``listed``: {player id: {"name", "price", "since"}}; ``history``: (price, seconds it took) of the sales logged.
+    Returns [{"name", "for", "normal"}] (seconds), longest first."""
+    times: dict[int, list[float]] = {}
+    for price, took in history:
+        times.setdefault(_band(price), []).append(took)
+    stale = []
+    for item in listed.values():
+        took = sorted(times.get(_band(item.get("price") or 0)) or [])
+        if len(took) < STALE_MIN_SALES or item.get("since") is None:
+            continue
+        half = len(took) // 2
+        normal = took[half] if len(took) % 2 else (took[half - 1] + took[half]) / 2
+        if now - item["since"] > STALE_FACTOR * normal:
+            stale.append({"name": item.get("name", "?"), "for": now - item["since"], "normal": normal})
+    return sorted(stale, key=lambda s: -s["for"])
+
+
+_SALE_LINE = re.compile(r"Venda: (.+?) \((.+?)\) vendido por ([\d,]+) (M|k)\b.*?, vendido (?:às|até) ([^,;]+)"
+                        r", demorou (?:(\d+) dias? e )?(\d+)h(\d+)")
+
+
+def sale_time(line: str) -> tuple[tuple[str, str, str], float, float] | None:
+    """A "Venda:" line of the log as (who, club, when sold), price, seconds it took; None without the time."""
+    found = _SALE_LINE.search(line)
+    if not found:
+        return None
+    name, club, amount, unit, sold, days, hours, minutes = found.groups()
+    price = float(amount.replace(",", ".")) * (1e6 if unit == "M" else 1e3)
+    return (name, club, sold), price, ((int(days or 0) * 24 + int(hours)) * 60 + int(minutes)) * 60
 
 ELEVEN = 11
 MAIN_STAT = {1: "statAtt", 2: "statOvr", 3: "statDef", 4: "statDef"}  # the number in bold for each position

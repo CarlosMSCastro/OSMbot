@@ -126,3 +126,46 @@ def test_value_table_shows_the_2_below_when_first_else_1_above_and_1_below():
     assert [r[0] for r in value_table(values, names, 3)] == [2, 3, 4]
     assert [r[0] for r in value_table(values, names, 4)] == [3, 4]
     assert value_table(values, names, 9) == []
+
+
+def test_someone_new_in_the_squad_is_a_purchase_only_when_the_league_has_it():
+    from osmbot.board.info import purchases
+    from osmbot.game.sales import describe
+
+    state = track_sales({}, {}, {1, 2}, now=1000.0)
+    assert state["new_members"] == []  # the first read only learns the squad
+    state = track_sales(state, {}, {1, 2, 3, 4}, now=2000.0)
+    assert state["new_members"] == [3, 4]
+    transfers = [{"player": {"id": 3, "name": "Fagioli"}, "destinationTeam": {"id": 9}, "sourceTeam": {"name": "Fiorentina"},
+                  "price": 8_860_000, "value": 6_490_000, "timestamp": 1900.0},
+                 {"player": {"id": 4, "name": "Outro"}, "destinationTeam": {"id": 2}, "price": 1, "timestamp": 1900.0}]
+    state["bought"] = purchases(state["new_members"], transfers, team_id=9)  # 4 came from a pack: no purchase
+    assert describe("Clube", state) == ["Compra: Fagioli (Clube) comprado por 8,86 M (1,37 × o valor), de Fiorentina"]
+
+
+def test_a_sale_says_the_profit_since_the_purchase():
+    from osmbot.board.info import settle_sales
+    from osmbot.game.sales import describe
+
+    state = track_sales(track_sales({}, {7: {"name": "A", "price": 20_000_000, "value": 8_000_000, "since": 1000.0}}, {7},
+                                    now=1000.0), {}, set(), now=1000.0 + 3600)
+    transfers = [{"player": {"id": 7}, "destinationTeam": {"id": 5}, "price": 12_000_000, "timestamp": 1000.0 - 86_400},
+                 {"player": {"id": 7}, "sourceTeam": {"id": 5}, "price": 20_000_000, "timestamp": 1000.0 + 3600}]
+    settle_sales(state["new_sales"], transfers, team_id=5)
+    assert describe("Clube", state)[0].endswith("demorou 1h00; lucro +8 M em 1 dia e 1h00")
+
+
+def test_a_player_on_the_list_twice_the_usual_time_for_his_price_is_warned():
+    from osmbot.board.info import sale_time, stale_listings
+
+    hour = 3600
+    history = [(3e6, 4 * hour), (4e6, 5 * hour), (2e6, 6 * hour), (70e6, 40 * hour), (80e6, 50 * hour)]
+    listed = {1: {"name": "Barato", "price": 3e6, "since": 0}, 2: {"name": "Novo", "price": 4e6, "since": 9 * hour},
+              3: {"name": "Caro", "price": 90e6, "since": 0}, 4: {"name": "Sem hora", "price": 1e6, "since": None}}
+    assert stale_listings(listed, history, now=11 * hour) == [{"name": "Barato", "for": 11 * hour, "normal": 5 * hour}]
+    # the 50-100 M band has only 2 sales: no warning there yet
+    line = "2026-10-17 19:24:06  Venda: Chalobah (FC Van) vendido por 91,26 M (75% do máximo ≈ 121,04 M); " \
+           "à venda desde 16/10 11:59, vendido às 17/10 19:23, demorou 1 dia e 7h24; lucro +30 M em 2 dias e 0h10"
+    assert sale_time(line) == (("Chalobah", "FC Van", "17/10 19:23"), 91.26e6, (31 * 60 + 24) * 60)
+    assert sale_time("Venda: X (C) vendido por 450 k; à venda desde 1/1 10:00, vendido às 1/1 12:00, demorou 2h00")[1:] == (450e3, 7200)
+    assert sale_time("Venda: Guirassy (FC Van) vendido por 54,65 M; à venda desde antes de o bot começar a seguir, vendido até 12/10 09:13") is None

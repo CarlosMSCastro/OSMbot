@@ -88,6 +88,23 @@ def empty_places(players: list[dict], tactic: dict | None) -> list[str]:
     return [f"Lugar {n} do 11 vazio" + (f" ({SPECIFIC[spots[n]]})" if n in spots else "") for n in ELEVEN if n not in taken]
 
 
+AGE_LINE, AGE_MIN = 26, 3  # at least 3 starters older and 3 younger than 26 (THEORY.md section 21)
+
+
+def age_warnings(players: list[dict]) -> list[str]:
+    """An eleven too young (or too old) for the game: fewer than 3 starters on one side of 26 (THEORY.md section 21)."""
+    ages = [p["age"] for p in players if p.get("lineup") in ELEVEN and p.get("age")]
+    if len(ages) < len(ELEVEN):
+        return []
+    warnings = []
+    for count, side, why in ((sum(1 for a in ages if a > AGE_LINE), "acima", "jovem"),
+                             (sum(1 for a in ages if a < AGE_LINE), "abaixo", "velho")):
+        if count < AGE_MIN:
+            warnings.append(f"Onze com só {count} jogador{'es' if count != 1 else ''} {side} de {AGE_LINE} anos "
+                            f"(o jogo dá bónus negativo a um onze demasiado {why})")
+    return warnings
+
+
 def position_warnings(players: list[dict], tactic: dict | None) -> list[str]:
     """Starters out of their specific position, as the game counts its step "Position your players" (the game:
     players do better in their specific position; THEORY.md section 21)."""

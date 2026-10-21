@@ -5,3 +5,8 @@
 {"t":1792043823,"evento":"levantar","tipo":"doctor","clube":"leagues/219033091/teams/10","semana":19,"caso":11743078,"jogador":957495731,"nome":"D. Muñoz","antes":{"fora":1,"lesao":18,"suspensao":0},"depois":{"fora":0,"lesao":0,"suspensao":0}}
 {"t":1792363088,"evento":"pôr","tipo":"doctor","clube":"leagues/248015013/teams/8","semana":2,"jogador":876990112,"nome":"Sučić","antes":{"fora":1,"lesao":18,"suspensao":0}}
 {"t":1792391928,"evento":"levantar","tipo":"doctor","clube":"leagues/248015013/teams/8","semana":2,"caso":11074581,"jogador":876990112,"nome":"Sučić","antes":{"fora":1,"lesao":18,"suspensao":0},"depois":{"fora":0,"lesao":0,"suspensao":0}}
+{"t":1792527154,"evento":"pôr","tipo":"lawyer","clube":"leagues/246031208/teams/1","semana":26,"jogador":953154435,"nome":"Semenyo","antes":{"fora":2,"lesao":0,"suspensao":53}}
+{"t":1792531312,"evento":"pôr","tipo":"lawyer","clube":"leagues/222034673/teams/3","semana":1,"jogador":970056711,"nome":"Malicsek","antes":{"fora":3,"lesao":0,"suspensao":25}}
+{"t":1792556024,"evento":"levantar","tipo":"lawyer","clube":"leagues/246031208/teams/1","semana":26,"caso":12746977,"jogador":953154435,"nome":"Semenyo","antes":{"fora":2,"lesao":0,"suspensao":53},"depois":{"fora":1,"lesao":0,"suspensao":53}}
+{"t":1792560158,"evento":"levantar","tipo":"lawyer","clube":"leagues/222034673/teams/3","semana":1,"caso":12747005,"jogador":970056711,"nome":"Malicsek","antes":{"fora":3,"lesao":0,"suspensao":25},"depois":{"fora":1,"lesao":0,"suspensao":25}}
+{"t":1792613981,"evento":"pôr","tipo":"lawyer","clube":"leagues/246031208/teams/1","semana":27,"jogador":953074922,"nome":"Gabriel","antes":{"fora":2,"lesao":0,"suspensao":61}}

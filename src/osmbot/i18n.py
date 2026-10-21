@@ -165,6 +165,10 @@ PATTERNS = [(re.compile(pattern), replace) for pattern, replace in (
     (r"(\d+) vagas? vazias? nos patrocinadores", lambda m: f"{m[1]} empty sponsor slot" + ("s" if m[1] != "1" else "")),
     (r"(\d+) vagas? livres? na lista de transferências",
      lambda m: f"{m[1]} free slot{'s' if m[1] != '1' else ''} on the transfer list"),
+    (r"(.+) (\d+)%: se jogar contra o (.+), chega a ~(\d+)% contra o (.+)",
+     lambda m: f"{m[1]} {m[2]}%: if he plays {m[3]}, he faces {m[5]} at ~{m[4]}%"),
+    (r"(.+) à venda há (.+) \(normal ~(.+) a este preço\)",
+     lambda m: f"{m[1]} on the list for {m[2]} (usually ~{m[3]} at this price)"),
     (r"(.+) vendido · (.+)", lambda m: f"{m[1]} sold · {m[2]}"),
     (r"(.+)/ronda", lambda m: f"{m[1]}/round"),
     (r"PRÉ-JOGO · (.+)", lambda m: f"PRE-MATCH · {m[1]}"),
@@ -186,6 +190,9 @@ PATTERNS = [(re.compile(pattern), replace) for pattern, replace in (
     (r"^((?:suplente|reforço|pechincha).*)$", lambda m: re.sub(r"lugar (\d+) vazio", r"place \1 empty", m[1].replace(" sem suplente", " with no backup")
      .replace("suplente", "backup").replace("reforço", "upgrade").replace("pechincha", "bargain"))),
     (r"^Lugar (\d+) do 11 vazio(.*)$", lambda m: f"Place {m[1]} of the eleven empty{m[2]}"),
+    (r"^Onze com só (\d+) jogador(?:es)? (acima|abaixo) de (\d+) anos \(o jogo dá bónus negativo a um onze demasiado (jovem|velho)\)$",
+     lambda m: f"Eleven with only {m[1]} player{'s' if m[1] != '1' else ''} {'over' if m[2] == 'acima' else 'under'} {m[3]} "
+               f"(the game gives a penalty to a team too {'young' if m[4] == 'jovem' else 'old'})"),
     (r"^\? = esta liga não vendeu ao máximo nos últimos 3 dias$",
      lambda m: "? = this league has not sold at the maximum in the last 3 days"),
     # top bar, coins
@@ -238,10 +245,13 @@ PATTERNS = [(re.compile(pattern), replace) for pattern, replace in (
     (r"(.+): nenhum clube disponível para amigável nesta jornada", lambda m: f"{m[1]}: no club available for a friendly this round"),
     (r"Lista de transferências: (.+) \((.+)\) à venda por (.+?)(?: \((\d+)% do máximo ≈ (.+)\))?$",
      lambda m: f"Transfer list: {m[1]} ({m[2]}) for sale at {m[3]}" + (f" ({m[4]}% of the maximum ≈ {m[5]})" if m[4] else "")),
-    (r"Venda: (.+) \((.+)\) vendido por (.+?)(?: \((\d+)% do máximo ≈ (.+)\))?; à venda desde (.+), vendido até ([^,]+)(?:, demorou (.+))?$",
+    (r"Venda: (.+) \((.+)\) vendido por (.+?)(?: \((\d+)% do máximo ≈ (.+)\))?; à venda desde (.+), vendido até ([^,;]+)(?:, demorou ([^;]+))?(?:; lucro (.+?)(?: em (.+))?)?$",
      lambda m: f"Sale: {m[1]} ({m[2]}) sold for {m[3]}" + (f" ({m[4]}% of the maximum ≈ {m[5]})" if m[4] else "")
      + f"; for sale since {m[6].replace('antes de o bot começar a seguir', 'before the bot started following')}, sold by {m[7]}"
-     + (f", took {m[8]}" if m[8] else "")),
+     + (f", took {m[8]}" if m[8] else "") + (f"; profit {m[9]}" + (f" in {m[10]}" if m[10] else "") if m[9] else "")),
+    (r"Compra: (.+) \((.+)\) comprado por (.+?)(?: \((.+) × o valor\))?(?:, de (.+))?$",
+     lambda m: f"Purchase: {m[1]} ({m[2]}) bought for {m[3]}" + (f" ({m[4]} × value)" if m[4] else "")
+     + (f", from {m[5]}" if m[5] else "")),
     (r"Motor de transferências \((.+)\): (passou|sem descida de preços) entre (\S+) e (\S+); vendidos (\d+) de (\d+) à venda \(teus: (\d+) de (\d+)\)",
      lambda m: f"Transfer engine ({m[1]}): {'went round' if m[2] == 'passou' else 'no price drop'} between {m[3]} and {m[4]}; "
                f"sold {m[5]} of {m[6]} for sale (yours: {m[7]} of {m[8]})"),

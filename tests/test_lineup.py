@@ -133,3 +133,38 @@ def test_a_player_in_a_bench_place_of_another_position_is_named_as_such():
     # FC Van, 2026-10-16: no forward to spare, the owner put a defender in the attack's place (15)
     players = ELEVEN + [p("Chalobah", 3, 13, 101), p("Akanni", 3, 15, 51), p("Anton", 3, 16, 100), p("Lau", 1, 18, 50)]
     assert bench_warnings(players) == ["Tens um defesa a suplente do ataque: Akanni 51"]  # not "Akanni before Anton"
+
+
+def test_an_eleven_needs_three_starters_over_and_three_under_26():
+    from osmbot.theory.lineup import age_warnings
+
+    eleven = lambda ages: [{"lineup": n, "age": a} for n, a in enumerate(ages, 1)] + [{"lineup": 12, "age": 18}]
+    assert age_warnings(eleven([21, 23, 23, 24, 26, 26, 27, 28, 29, 29, 32])) == []
+    assert age_warnings(eleven([19, 20, 21, 22, 22, 23, 24, 25, 26, 27, 30])) ==         ["Onze com só 2 jogadores acima de 26 anos (o jogo dá bónus negativo a um onze demasiado jovem)"]
+    assert age_warnings(eleven([25, 26, 27, 28, 29, 30, 30, 31, 32, 33, 34])) ==         ["Onze com só 1 jogador abaixo de 26 anos (o jogo dá bónus negativo a um onze demasiado velho)"]
+    assert age_warnings(eleven([19] * 10)) == []  # no full eleven read: nothing to say
+
+
+def test_a_green_starter_who_would_reach_the_important_match_yellow_is_warned():
+    from osmbot.theory.fitness import rest_warnings
+
+    players = [{"name": "Kane", "lineup": 9, "unavailable": 0, "fitness": 83},
+               {"name": "Fresco", "lineup": 2, "unavailable": 0, "fitness": 95},
+               {"name": "Cansado", "lineup": 3, "unavailable": 0, "fitness": 78},  # already in the tired line
+               {"name": "Banco", "lineup": 14, "unavailable": 0, "fitness": 81}]
+    weak, strong = {"opponent": "Elche", "important": False}, {"opponent": "Real Madrid", "important": True}
+    assert rest_warnings(players, weak, strong) == [
+        {"name": "Kane", "fitness": 83, "then": 79, "first": "Elche", "second": "Real Madrid"}]
+    assert rest_warnings(players, strong, strong) == []  # the next one is important too: he plays both
+    assert rest_warnings(players, weak, weak) == [] and rest_warnings(players, weak, None) == []
+
+
+def test_the_next_two_matches():
+    from osmbot.board.info import next_matches
+
+    teams = [{"id": 1, "name": "Nós", "ranking": 5}, {"id": 2, "name": "Fraco", "ranking": 18},
+             {"id": 3, "name": "Rival", "ranking": 6}]
+    matches = [{"weekNr": w, "homeTeamId": h, "awayTeamId": a, "matchType": 0} for w, h, a in ((3, 1, 2), (4, 3, 1), (5, 1, 3))]
+    first, second = next_matches(matches, teams, 1, 2)
+    assert (first["opponent"], first["side"], first["danger"]) == ("Fraco", "H", False)
+    assert (second["opponent"], second["side"], second["danger"]) == ("Rival", "A", True)

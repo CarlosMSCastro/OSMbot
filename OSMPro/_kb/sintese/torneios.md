@@ -22,7 +22,7 @@ Os torneios são **ligas curtas e diárias** (uma jornada por dia, muitas vezes 
 
 **Riscos para o bot (os mais importantes da categoria):**
 1. ⚠️⭐ **Titular à venda vendido pela simulação minutos antes do jogo** — 3 casos (um GR, um médio que acabou a jogar a lateral). O autor passou a **tirar os titulares da venda antes do jogo** e a deixar à venda só os não titulares durante a simulação. (j7hwXAVCK6g, dtgoa8JbB00, r0YeSOretI8; regra: dtgoa8JbB00, whsOLjnUOsY, 4rPXOUkU89I) 🔬
-2. ⚠️⭐ **Jogador em treino à hora da simulação não vai ao onze** — 3 casos (os melhores ficaram de fora; um avançado acabou a central). O autor só põe a treinar perto do jogo quem não vai jogar. O bot treina os titulares (§5): **verificar se o treino acaba antes da simulação.** (21-Sy8FZG-I, 9whlMzTBSis, dtgoa8JbB00; cuidados: fFkRfqiPfM4, IwrO4OcH6vM, r0YeSOretI8) 🔬
+2. ⚠️⭐ **Jogador em treino à hora da simulação não vai ao onze** — 3 casos (os melhores ficaram de fora; um avançado acabou a central). O autor só põe a treinar perto do jogo quem não vai jogar. O bot treina os titulares (§5): **verificar se o treino acaba antes da simulação.** (21-Sy8FZG-I, 9whlMzTBSis, dtgoa8JbB00; cuidados: fFkRfqiPfM4, IwrO4OcH6vM, r0YeSOretI8) 🔬 **Desatualizado (dono, 2026-10-21): hoje o treino já não tira o jogador do onze** (`DISCOVERY.md` §3).
 3. **Tática feita ≥ 30 min antes do jogo** ("depois pode não entrar"). (etd8lvj6iL8)
 
 **Descobertas fortes, novas para nós:**

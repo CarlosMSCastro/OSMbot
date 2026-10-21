@@ -1319,8 +1319,8 @@ class ClubCard(QFrame):
         self.header.setToolTip(tip_grid(club.get("table_tip"), self.colour))  # as the game's table (owner, 2026-10-15)
         self.cup.setText(tr(f"🏆 {club['cup_line']}"))
         self.match.show_match(club["match"])
-        self.alert.setVisible(bool(club["alert"]))
-        self.alert.setText(f"⚠ {tr(club['alert'])}")
+        self.alert.setVisible(bool(club["alerts"]))
+        self.alert.setText("\n".join(f"⚠ {tr(line)}" for line in club["alerts"]))
         squad = club["squad"]  # the place in colour, the total in white; players and average on hover
         gap = "&nbsp;&nbsp;&nbsp;" if squad["place"] else ""
         self.value.setText(rich([(squad["place"], squad["colour"])]) + gap + rich([(squad["total"], None if squad["place"] else GREY)]))
@@ -1349,8 +1349,9 @@ class ClubCard(QFrame):
         self.boosts.show_boosts(club["prep"].get("boosts") or [])
         self._show_trainings(club["trainings"])
         self.badge.show_value(club.get("value_badge"))
-        self.tired.setVisible(bool(club["tired"]))
-        self.tired.setText(tr(f"⚠ Cansados: {club['tired']}"))
+        self.tired.setVisible(bool(club["tired"] or club["rest"]))
+        self.tired.setText("\n".join(([tr(f"⚠ Cansados: {club['tired']}")] if club["tired"] else [])
+                                     + [f"⚠ {tr(line)}" for line in club["rest"]]))
         self.tired.setToolTip(tip_text("\n\n".join(tr(part) for part in (club.get("tired_tip") or "").split("\n\n"))))
         self.sale_picks.show_sale(club.get("sale"))
 

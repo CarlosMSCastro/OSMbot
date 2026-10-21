@@ -4,6 +4,21 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-PT/1.1.0/); 
 
 Este ficheiro é o **histórico de versões, para quem lê o repo**. O diário interno de cada sessão de trabalho está em [`docs/WORKLOG.md`](docs/WORKLOG.md).
 
+## [0.13.11] — 2026-10-22
+
+Primeiras regras tiradas dos vídeos do OSMPro (Dicas, secções 1 a 3), medidas nos registos antes de entrarem: compras e lucro no registo, e três avisos novos na janela.
+
+### Adicionado
+- **Compras no registo:** quando entra no plantel um jogador comprado, o registo do dia diz "Compra: Nome (clube) comprado por 8,86 M (1,37 × o valor), de Clube". Os do pacote ou da formação não têm compra e não aparecem.
+- **Lucro na venda:** a linha "Venda:" acaba com "; lucro +8 M em 1 dia e 1h00" (desde a compra) quando a compra está no histórico da liga (também no histórico guardado por todos os PCs).
+- **Jogador parado na lista:** no cartão, por baixo das vagas livres, um jogador por linha: "⚠ Guéhi à venda há 2 dias e 10h37 (normal ~20h47 a este preço)", quando está à venda há mais do dobro do normal para o preço dele. O normal sai das vendas registadas (todos os PCs) e afina sozinho; um escalão com menos de 3 vendas não avisa.
+- **Idade do onze:** o passo "Onze" fica amarelo quando o onze tem menos de 3 jogadores acima de 26 anos (ou abaixo), porque o jogo dá bónus negativo a um onze demasiado jovem.
+- **Poupar antes de um jogo importante:** na linha dos cansados, "Kane 83%: se jogar contra o Elche, chega a ~79% contra o Real Madrid", quando o próximo jogo não é importante e o seguinte é (adversário mais forte ou confronto direto). Queda de 4 por jogo, medida em 208 casos.
+
+### Documentação
+- `THEORY.md`: tempos de venda (126 vendas) e lucro por compra (117 compras, nenhuma revenda com prejuízo; o ótimo é comprar entre 5 e 50 M).
+- `DISCOVERY.md`: o treino já não tira o jogador do onze; passar dinheiro da poupança para as finanças é imediato.
+
 ## [0.13.10] — 2026-10-20
 
 O cartão de compras só sugere jogadores com "SALE" e mostra a posição específica de cada um.

@@ -55,3 +55,13 @@ def save_transfers(client_factory=None, log=print, today: str | None = None) -> 
         log(f"Transferências: {data['nome'] or league_id} +{new} (guardadas {len(data['transferencias'])})")
         total += new
     return total
+
+
+def saved_transfers(league_id: int) -> list[dict]:
+    """The league's transfers saved by every PC (``logs/*/transferencias``): older than the game's last 100, for the
+    purchase behind a sale (THEORY.md 7.5)."""
+    repo = repo_folder()
+    rows: dict = {}
+    for path in sorted((repo / "logs").glob(f"*/transferencias/{league_id}.json")) if repo else []:
+        rows.update({row["id"]: row for row in (_read(path) or {}).get("transferencias", [])})
+    return list(rows.values())

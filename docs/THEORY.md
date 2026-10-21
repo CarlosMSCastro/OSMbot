@@ -260,6 +260,13 @@ Observações:
 - **Os 75% são do preço máximo permitido** (não do valor de mercado). Exemplo do dono: o preço máximo do Jogador 1 é **111 M€** (o dono foi ver ao jogo), por isso pediria 75% disso ≈ **83,25 M€**.
 - **Motivo (experiência do dono):** acima de 100 M€ fica **muito mais difícil vender pelo preço máximo**.
 - **É probabilidade, não um limite (dono, 2026-10-12):** em dezenas de épocas, os jogadores caros **acabam sempre por se vender**; fora dos eventos só demoram mais (dados em `DISCOVERY.md` §3).
+- **Tempos medidos (126 vendas nos registos, 2026-10-21):** tudo o que foi posto a 100 % vendeu; demora mais quanto mais caro. Mediana: < 5 M **5 h**; 5–15 M **11 h**; 15–50 M **18 h**; 50–100 M **46 h**; > 100 M a 75 % **18 h** (só 2). Confirma a regra acima: baixar entre 50 e 100 M não compensa (a 75 % perde-se ~60 % do lucro para ganhar ~1 dia).
+- **Aviso "parado na lista" (dono, 2026-10-22):** no cartão do clube, por baixo do aviso das vagas livres, um jogador por linha: "⚠ Nome à venda há X (normal ~Y a este preço)", quando está à venda há **mais do dobro da mediana** das vendas do mesmo escalão de preço (< 5 M, 5–15, 15–50, 50–100, ≥ 100 M). A mediana sai das vendas registadas (linhas "Venda:" de todos os PCs) e afina sozinha; um escalão com **menos de 3 vendas** não avisa. Só aviso: o bot não mexe no preço.
+
+**Compras e lucro (medido, 2026-10-21; registo pedido pelo dono, 2026-10-22):**
+- As compras estão no histórico da liga (`logs/<PC>/transferencias/<liga>.json`): 117 compras, 64 já revendidas, **nenhuma com prejuízo**; compra a 1,44 × o valor e venda a 2,50 × (medianas).
+- **Lucro por dia no plantel:** compra < 5 M → 2,1 M/dia; **5–15 M → 15 M/dia; 15–50 M → 16 M/dia**; > 50 M → 8,7 M/dia (vendem devagar e os de máximo > 100 M vão a 75 %). O ponto ótimo para revenda é comprar entre 5 e 50 M, o que a faixa SALE já procura (§7.7).
+- O registo do dia passa a ter **"Compra: Nome (clube) comprado por P (r × o valor), de Clube"** quando entra no plantel um jogador comprado (os do pacote ou da formação não têm compra e não aparecem), e a linha **"Venda:"** junta **"; lucro +X em Y"** (desde a compra) quando a compra está no histórico da liga.
 - **Multiplicador confirmado (2026-09-27): ≈2,5×.** Pontos de dados (valor → preço máximo):
   - Jogador 1: 44,0 M€ → 111 M€ = **2,52×**
   - Jogador 18: 7,9 M€ → 20,0 M€ = **2,53×**
@@ -511,7 +518,10 @@ Há **3 componentes** a melhorar, cada um com **níveis 0, 1, 2 e 3**:
 - Só contam os titulares (`lineup` 1 a 11) e não lesionados; o banco não interessa. O limiar do vermelho está por apurar.
 - **Sem suplente** (dono, 2026-10-13): quando um titular cansado não tem quem o substitua na posição, o dono compra outro para o descansar (§19, compras). A linha dos cansados diz `(sem suplente DEF)` e, ao passar o rato, mostra até 3 jogadores do **SALE** dessa posição que caibam no dinheiro do clube. **Só sugestão:** comprar é uma escrita nova (regra 5).
   - **[S]** Suplente = um jogador da mesma posição (ATA/MED/DEF/GR) que não está no onze e não está lesionado nem castigado, seja qual for a condição.
-  - **[S]** Dinheiro do clube = o mesmo total do cartão (conta + poupança). Opções do SALE = os jogadores do jogo com a fita "SALE" na lista de transferências da liga (§7.6), da posição em falta, preço ≤ dinheiro, os de melhor rating primeiro.
+  - **[S]** Dinheiro do clube = o mesmo total do cartão (conta + poupança).
+- **Poupar antes de um jogo importante** (dono, 2026-10-22; ideia a partir do OSMPro, Dicas: Wb43-ZjbXw8, GvYVpCHb-SA): um titular ainda verde que, se jogar o **próximo** jogo, chegaria ao **seguinte** abaixo de 80 avisa na linha dos cansados: "Kane 83%: se jogar contra o Elche, chega a ~79% contra o Real Madrid". Só quando o próximo **não** é importante e o seguinte **é**; só olha um jogo à frente (dono).
+  - **Jogo importante** (dono): (a) adversário **mais forte** (a força do onze de cada um, com a vantagem de casa, a conta do §1) **ou** (b) **confronto direto** (≤ 2 lugares na tabela, §1). Porquê os dois: contra um mais forte precisa-se do onze inteiro para ter hipóteses; contra um rival direto os pontos contam a dobrar (os que ganhamos e os que ele perde).
+  - **Queda por jogo: 4 pontos** (medido, 2026-10-22: 208 casos de titulares que jogaram dois jogos seguidos, ~24 h entre eles; mediana −4, entre 0 e −6; 100 → 95–96, 90 → 86). **[S]** Vale para jogos diários; com 2 dias entre jogos recupera mais. **[S]** Os bónus do jogo (estágio, logins) não entram na força do jogo seguinte, porque ainda não se sabem. **[S]** O onze dos outros só se vê depois da análise: a força do adversário é a dos **11 melhores dele num 4-3-3**. Opções do SALE = os jogadores do jogo com a fita "SALE" na lista de transferências da liga (§7.6), da posição em falta, preço ≤ dinheiro, os de melhor rating primeiro.
 
 ## 17. Recompensas diárias: início de sessão, missões e vídeos acumulados
 
@@ -616,6 +626,7 @@ Na checklist do cartão, o passo fica **amarelo** quando o jogo o dá como feito
 
 **Onze (tática):**
 - **Desarme vs árbitro do próximo jogo**, pela tabela do §3 com o que o dono aceita.
+- **Idade do onze** (dono, 2026-10-22; OSMPro, Dicas: EfHyzY6C5AI, 7da7tn75LAI): pelo menos **3 titulares com mais de 26 anos e 3 com menos de 26**; um onze demasiado jovem tem bónus negativo e o jogo avisa. Fora disso, amarelo: "Onze com só 2 jogadores acima de 26 anos (o jogo dá bónus negativo a um onze demasiado jovem)". **[S]** O lado contrário (onze demasiado velho) avisa igual, com "abaixo de 26"; o autor só fala do jovem. Os 4 onzes do dono cumpriam no dia (5/4, 6/5, 4/5, 5/6).
 - **Formação** (§1): antes da análise só aceita **4-3-3 A**; depois da análise, com o adversário mais forte (qualquer margem, com bónus e casa, §1) pede **5 defesas** e aceita qualquer uma (5-3-2, 5-2-3, 5-4-1; D-049). O 4-3-3 B fica amarelo (o dono pode experimentá-lo na mesma).
 
 **Posições** (dono, 2026-10-14): o jogo conta quantos titulares estão no lugar da sua posição específica (9/11 = 2 fora). O hover diz **quem**: "Messi (ED) a jogar a PL". O mapa de cada lugar de cada formação vem do código do próprio jogo (`theory/lineup.places`). Nomes: GR, DE, DC, DD, MDC, MC, MO, ME, MD, EE, PL, ED.
