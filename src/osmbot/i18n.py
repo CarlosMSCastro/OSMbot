@@ -81,7 +81,7 @@ WORDS = {
     # board titles and labels
     "DIÁRIAS": "DAILY", "BOSS COINS": "BOSS COINS", "A SEGUIR": "UP NEXT", "TREINOS": "TRAINING", "ESTÁDIO": "STADIUM",
     "AGORA": "NOW", "PRÉ-JOGO": "PRE-MATCH", "Valor plantel": "Squad value", "Dinheiro": "Money",
-    "Fora da regra": "Out of your rule", "Aceite": "Accepted", "Vendas": "Sales", "Valor do plantel": "Squad value", "Clube": "Club", "J": "P", "DG": "GD", "Valor": "Value", "× valor": "× value",
+    "Fora da regra": "Out of your rule", "Aceite": "Accepted", "Vendas": "Sales", "Normal a este preço": "Usual at this price", "Valor do plantel": "Squad value", "Clube": "Club", "J": "P", "DG": "GD", "Valor": "Value", "× valor": "× value",
     "Jogadores": "Players", "Média": "Avg", "Pos": "Pos", "Força": "Strength", "Jogador": "Player", "Idade": "Age",
     "Preço": "Price", "Lucro": "Profit",
     "Campeões": "Champions", "Patrocinadores": "Sponsors", "Cansados": "Tired", "CASA": "HOME", "FORA": "AWAY", "em": "in",
@@ -135,6 +135,11 @@ def _an(word: str) -> str:
 _SPECIFIC = {"MO": "CAM", "MC": "CM", "DC": "CB", "PL": "ST", "MDC": "CDM", "GR": "GK", "ME": "LM", "EE": "LW",
              "DE": "LB", "MD": "RM", "ED": "RW", "DD": "RB"}
 WORDS.update({code: name for code, name in _SPECIFIC.items() if code not in WORDS})  # the SALE hover's "Pos" column
+def _days(span: str) -> str:
+    """A time over a day in English: "2 dias e 3h00" → "2 days and 3h00" (game/dashboard.span)."""
+    return re.sub(r"(\d+) (dias?) e ", lambda m: f"{m[1]} day{'s' if m[2] == 'dias' else ''} and ", span)
+
+
 _ROLE = {"Capitão": "Captain", "Penáltis": "Penalties", "Livres": "Free kicks", "Cantos": "Corners"}
 PATTERNS = [(re.compile(pattern), replace) for pattern, replace in (
     # pre-match warnings (THEORY.md section 21)
@@ -168,7 +173,9 @@ PATTERNS = [(re.compile(pattern), replace) for pattern, replace in (
     (r"(.+) (\d+)%: se jogar contra o (.+), chega a ~(\d+)% contra o (.+)",
      lambda m: f"{m[1]} {m[2]}%: if he plays {m[3]}, he faces {m[5]} at ~{m[4]}%"),
     (r"(.+) à venda há (.+) \(normal ~(.+) a este preço\)",
-     lambda m: f"{m[1]} on the list for {m[2]} (usually ~{m[3]} at this price)"),
+     lambda m: f"{m[1]} on the list for {_days(m[2])} (usually ~{_days(m[3])} at this price)"),
+    (r"(.+) à venda há (.+)", lambda m: f"{m[1]} on the list for {_days(m[2])}"),
+    (r"^(.+): ~((?:\d+ dias? e )?\d+h\d\d)$", lambda m: f"{m[1]}: ~{_days(m[2])}"),  # the stale hover
     (r"(.+) vendido · (.+)", lambda m: f"{m[1]} sold · {m[2]}"),
     (r"(.+)/ronda", lambda m: f"{m[1]}/round"),
     (r"PRÉ-JOGO · (.+)", lambda m: f"PRE-MATCH · {m[1]}"),

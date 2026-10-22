@@ -58,3 +58,7 @@ def test_the_purchase_profit_and_stale_lines_in_english(english):
     assert tr("Venda: A (C) vendido por 20 M (100% do máximo ≈ 20 M); à venda desde 1/1 10:00, vendido até 1/1 11:00, "
               "demorou 1h00; lucro +8 M em 25h00").endswith("took 1h00; profit +8 M in 25h00")
     assert tr("K à venda há 95h00 (normal ~46h00 a este preço)") == "K on the list for 95h00 (usually ~46h00 at this price)"
+    assert tr("K à venda há 95h00") == "K on the list for 95h00"
+    assert tr("K à venda há 2 dias e 3h00") == "K on the list for 2 days and 3h00"
+    assert tr("K: ~1 dia e 22h00") == "K: ~1 day and 22h00"
+    assert tr("Normal a este preço") == "Usual at this price"

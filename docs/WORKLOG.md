@@ -2,6 +2,14 @@
 
 Entradas mais recentes primeiro. Cada sessão: o que se fez · o que ficou por fazer · próximo passo.
 
+## 2026-10-22 — `dist/windows` 0.13.11 refeito; 0.13.12 (PT-LA-02-0095-N)
+
+- **Pull 0.13.11 e `dist` (pedido do dono):** 436 testes; os da 0.13.10 apagados (só a última); `build_portable.py --zip --installer` → `dist/windows/` 0.13.11 (553 / 206 / 148 MB), versão confirmada no portátil. O dono corre o instalador ou substitui a pasta.
+- **Erro corrigido (visto pelo dono no cartão):** os avisos (vagas livres, "parado na lista") saíam colados num só parágrafo: a etiqueta é texto rico e o `"\n"` virava espaço. Agora `<br>` entre avisos e nomes com `escape_text` (`gui/window.py`). 436 testes.
+- **Erro meu na 1.ª build da 0.13.12 (visto pelo dono):** usei `escape`, que em `window.py` só existe importado dentro de funções → `NameError` e o cartão do 2.º clube ficava a meio (sem valor, estádio, patrocinadores; "A seguir" e boss coins vazios). Trocado por `escape_text`; `pyflakes` em `gui/` sem nomes indefinidos; `dist` 0.13.12 refeito. Os testes não apanham isto (só cobrem `view.py`): correr `pyflakes` depois de mexer em `window.py`.
+- **"Parado na lista" mais curto (pedido do dono):** no cartão só "Nome à venda há X"; o "normal ~Y a este preço" passa para o hover do aviso (`view.alerts_tip`, título "Normal a este preço", um jogador por linha). `THEORY.md` §7.5 atualizado. Em inglês, os tempos com dias ("2 dias e 3h00") ficavam em português: `i18n._days`. 436 testes; `dist` 0.13.12 refeito.
+- **Versão 0.13.12 (pedido do dono: refazer o `dist` e atualizar a doc):** `pyproject.toml`, `__init__`, `CHANGELOG.md`, `README.md` (estado), `dist/release-notes-v0.13.12.md`; `build_portable.py --zip --installer` → `dist/windows/` 0.13.12, os da 0.13.11 apagados (só a última). O dono instala.
+
 ## 2026-10-22 — Jogos analisados, OSMPro → teoria (Dicas §1), compras e aviso "parado na lista"
 
 - **Análise de jogos (pedido do dono, só leitura):** SV Ried 1-1 Wolfsberger (adversário em 4-5-1 a fechar, defesa 652 contra o nosso ataque 478, vermelho aos 63') e 1-2 Grazer AK (meio-campo deles muito superior, Johnson falhou 5 ocasiões). KV Mechelen contra o Club Brugge: o Firmino do pacote estava fora do onze; compras sugeridas pela posição específica.

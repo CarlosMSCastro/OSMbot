@@ -1320,7 +1320,8 @@ class ClubCard(QFrame):
         self.cup.setText(tr(f"🏆 {club['cup_line']}"))
         self.match.show_match(club["match"])
         self.alert.setVisible(bool(club["alerts"]))
-        self.alert.setText("\n".join(f"⚠ {tr(line)}" for line in club["alerts"]))
+        self.alert.setText("<br>".join(f"⚠ {escape_text(tr(line))}" for line in club["alerts"]))  # rich text: "\n" would be a space
+        self.alert.setToolTip(tip_text("\n".join(tr(line) for line in club["alerts_tip"].split("\n"))) if club["alerts_tip"] else "")
         squad = club["squad"]  # the place in colour, the total in white; players and average on hover
         gap = "&nbsp;&nbsp;&nbsp;" if squad["place"] else ""
         self.value.setText(rich([(squad["place"], squad["colour"])]) + gap + rich([(squad["total"], None if squad["place"] else GREY)]))

@@ -4,6 +4,17 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-PT/1.1.0/); 
 
 Este ficheiro é o **histórico de versões, para quem lê o repo**. O diário interno de cada sessão de trabalho está em [`docs/WORKLOG.md`](docs/WORKLOG.md).
 
+## [0.13.12] — 2026-10-22
+
+Os avisos do cartão voltam a aparecer um por linha, mais curtos.
+
+### Alterado
+- **Jogador parado na lista:** o aviso fica só "⚠ Guéhi à venda há 2 dias e 10h37"; o tempo normal a este preço passa para o hover.
+
+### Corrigido
+- **Avisos colados:** as vagas livres na lista de transferências e cada jogador parado na lista saíam todos seguidos no mesmo parágrafo. Agora cada aviso fica na sua linha.
+- **Inglês:** os tempos acima de um dia nesse aviso apareciam em português ("2 dias e 3h00").
+
 ## [0.13.11] — 2026-10-22
 
 Primeiras regras tiradas dos vídeos do OSMPro (Dicas, secções 1 a 3), medidas nos registos antes de entrarem: compras e lucro no registo, e três avisos novos na janela.
