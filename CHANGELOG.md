@@ -9,7 +9,7 @@ Este ficheiro é o **histórico de versões, para quem lê o repo**. O diário i
 Os avisos do cartão voltam a aparecer um por linha, mais curtos.
 
 ### Alterado
-- **Jogador parado na lista:** o aviso fica só "⚠ Guéhi à venda há 2 dias e 10h37"; o tempo normal a este preço passa para o hover.
+- **Jogador parado na lista:** o aviso fica só "⚠ Guéhi à venda há 2 dias e 10h37"; o tempo normal a este preço passa para o hover dessa linha (um hover por jogador).
 
 ### Corrigido
 - **Avisos colados:** as vagas livres na lista de transferências e cada jogador parado na lista saíam todos seguidos no mesmo parágrafo. Agora cada aviso fica na sua linha.

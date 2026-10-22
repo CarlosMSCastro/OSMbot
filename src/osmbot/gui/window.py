@@ -1218,9 +1218,10 @@ class ClubCard(QFrame):
         club.addLayout(self.facts)
         self.value = self._row(0, "Valor plantel")
         self.sponsors = self._row(1, "Patrocinadores")
-        self.alert = text_label(10, True, YELLOW)  # a free transfer-list slot, under the sponsors (owner, 2026-10-10)
-        self.alert.setWordWrap(True)
-        self.facts.addWidget(self.alert, 2, 0, 1, 4)
+        self.alerts = QVBoxLayout()  # a free transfer-list slot, under the sponsors (owner, 2026-10-10), then one label
+        self.alerts.setSpacing(2)  # per stale player, each with its own hover (owner, 2026-10-22)
+        self.alerts.setContentsMargins(0, 0, 0, 0)
+        self.facts.addLayout(self.alerts, 2, 0, 1, 4)
         club.addSpacing(6)
         club.addWidget(column_title("ESTÁDIO"))
         stadium = QHBoxLayout()  # three small rings: the part going up fills, the others stand still (owner, 2026-10-09)
@@ -1319,9 +1320,16 @@ class ClubCard(QFrame):
         self.header.setToolTip(tip_grid(club.get("table_tip"), self.colour))  # as the game's table (owner, 2026-10-15)
         self.cup.setText(tr(f"🏆 {club['cup_line']}"))
         self.match.show_match(club["match"])
-        self.alert.setVisible(bool(club["alerts"]))
-        self.alert.setText("<br>".join(f"⚠ {escape_text(tr(line))}" for line in club["alerts"]))  # rich text: "\n" would be a space
-        self.alert.setToolTip(tip_text("\n".join(tr(line) for line in club["alerts_tip"].split("\n"))) if club["alerts_tip"] else "")
+        while self.alerts.count() > len(club["alerts"]):
+            self.alerts.takeAt(self.alerts.count() - 1).widget().deleteLater()
+        while self.alerts.count() < len(club["alerts"]):
+            label = text_label(10, True, YELLOW)
+            label.setWordWrap(True)
+            self.alerts.addWidget(label)
+        for index, (line, tip) in enumerate(zip(club["alerts"], club["alerts_tips"])):
+            label = self.alerts.itemAt(index).widget()
+            label.setText(f"⚠ {escape_text(tr(line))}")
+            label.setToolTip(tip_text(tr(tip)) if tip else "")
         squad = club["squad"]  # the place in colour, the total in white; players and average on hover
         gap = "&nbsp;&nbsp;&nbsp;" if squad["place"] else ""
         self.value.setText(rich([(squad["place"], squad["colour"])]) + gap + rich([(squad["total"], None if squad["place"] else GREY)]))

@@ -297,8 +297,8 @@ def club_view(club: dict, now: float, shortened: dict | None = None) -> dict:
     alert = f"{free} vaga{'s' if free > 1 else ''} livre{'s' if free > 1 else ''} na lista de transferências" if free else ""
     alerts = ([alert] if alert else []) + [  # under it, one per line: on the list too long (THEORY.md 7.5)
         f"{s['name']} à venda há {span(s['for'])}" for s in club.get("stale") or []]
-    alerts_tip = "\n".join(["Normal a este preço", *(f"{s['name']}: ~{span(s['normal'])}" for s in club.get("stale") or [])]) \
-        if club.get("stale") else ""  # the usual time only on hover, not to crowd the card (owner, 2026-10-22)
+    alerts_tips = ([""] if alert else []) + [  # the usual time only on its line's hover, not to crowd the card (owner, 2026-10-22)
+        f"Normal a este preço: ~{span(s['normal'])}" for s in club.get("stale") or []]
     funds, savings = club.get("money") or (None, None)
     total = None if funds is None else funds + (savings or 0)
     sales = [f"✓ {s['name']} vendido · +{money(s['price'])}" for s in club.get("sales") or []]
@@ -360,7 +360,7 @@ def club_view(club: dict, now: float, shortened: dict | None = None) -> dict:
     tired_text, tired_tip = tired_view(club)
 
     return {"name": club["name"], "logo": club.get("logo"), "logo_key": club.get("logo_key") or club["name"],
-            "subtitle": subtitle, "facts": facts, "alert": alert, "alerts": alerts, "alerts_tip": alerts_tip, "header": header, "cup_line": cup_line, "match": match, "prep_title": prep_title,
+            "subtitle": subtitle, "facts": facts, "alert": alert, "alerts": alerts, "alerts_tips": alerts_tips, "header": header, "cup_line": cup_line, "match": match, "prep_title": prep_title,
             "money": _money(total), "sales": sales, "sponsors": sponsor_row, "squad": squad_view(club.get("value"), club.get("value_table")),
             "stadium": {"still": still, "moving": moving},
             "prep": {"steps": steps, "boosts": boosts},

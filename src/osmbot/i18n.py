@@ -81,7 +81,7 @@ WORDS = {
     # board titles and labels
     "DIÁRIAS": "DAILY", "BOSS COINS": "BOSS COINS", "A SEGUIR": "UP NEXT", "TREINOS": "TRAINING", "ESTÁDIO": "STADIUM",
     "AGORA": "NOW", "PRÉ-JOGO": "PRE-MATCH", "Valor plantel": "Squad value", "Dinheiro": "Money",
-    "Fora da regra": "Out of your rule", "Aceite": "Accepted", "Vendas": "Sales", "Normal a este preço": "Usual at this price", "Valor do plantel": "Squad value", "Clube": "Club", "J": "P", "DG": "GD", "Valor": "Value", "× valor": "× value",
+    "Fora da regra": "Out of your rule", "Aceite": "Accepted", "Vendas": "Sales", "Valor do plantel": "Squad value", "Clube": "Club", "J": "P", "DG": "GD", "Valor": "Value", "× valor": "× value",
     "Jogadores": "Players", "Média": "Avg", "Pos": "Pos", "Força": "Strength", "Jogador": "Player", "Idade": "Age",
     "Preço": "Price", "Lucro": "Profit",
     "Campeões": "Champions", "Patrocinadores": "Sponsors", "Cansados": "Tired", "CASA": "HOME", "FORA": "AWAY", "em": "in",
@@ -175,7 +175,7 @@ PATTERNS = [(re.compile(pattern), replace) for pattern, replace in (
     (r"(.+) à venda há (.+) \(normal ~(.+) a este preço\)",
      lambda m: f"{m[1]} on the list for {_days(m[2])} (usually ~{_days(m[3])} at this price)"),
     (r"(.+) à venda há (.+)", lambda m: f"{m[1]} on the list for {_days(m[2])}"),
-    (r"^(.+): ~((?:\d+ dias? e )?\d+h\d\d)$", lambda m: f"{m[1]}: ~{_days(m[2])}"),  # the stale hover
+    (r"Normal a este preço: ~(.+)", lambda m: f"Usual at this price: ~{_days(m[1])}"),  # the stale line's hover
     (r"(.+) vendido · (.+)", lambda m: f"{m[1]} sold · {m[2]}"),
     (r"(.+)/ronda", lambda m: f"{m[1]}/round"),
     (r"PRÉ-JOGO · (.+)", lambda m: f"PRE-MATCH · {m[1]}"),

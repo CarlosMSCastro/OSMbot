@@ -51,8 +51,7 @@ def test_league_cup_and_squad_value_and_one_money_line_with_the_sales():
     assert club_view(club(free_slots=0), NOW)["alert"] == ""
     stale_view = club_view(club(stale=[{"name": "Kovacic", "for": 95 * 3600, "normal": 46 * 3600}]), NOW)
     stale = stale_view["alerts"]
-    assert stale_view["alerts_tip"] == "Normal a este preço\nKovacic: ~1 dia e 22h00"  # on hover (owner, 2026-10-22)
-    assert club_view(club(), NOW)["alerts_tip"] == ""
+    assert stale_view["alerts_tips"] == ["", "Normal a este preço: ~1 dia e 22h00"]  # each line's hover (owner, 2026-10-22)
     rest = club_view(club(rest=[{"name": "Kane", "fitness": 83, "then": 79, "first": "Elche", "second": "Real Madrid"}]), NOW)
     assert rest["rest"] == ["Kane 83%: se jogar contra o Elche, chega a ~79% contra o Real Madrid"]
     assert stale == ["1 vaga livre na lista de transferências",  # one under the other (owner, 2026-10-22)
