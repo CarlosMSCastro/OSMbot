@@ -11,3 +11,4 @@
 {"t":1792560158,"evento":"levantar","tipo":"lawyer","clube":"leagues/222034673/teams/3","semana":1,"caso":12747005,"jogador":970056711,"nome":"Malicsek","antes":{"fora":3,"lesao":0,"suspensao":25},"depois":{"fora":1,"lesao":0,"suspensao":25}}
 {"t":1792613981,"evento":"pôr","tipo":"lawyer","clube":"leagues/246031208/teams/1","semana":27,"jogador":953074922,"nome":"Gabriel","antes":{"fora":2,"lesao":0,"suspensao":61}}
 {"t":1792642824,"evento":"levantar","tipo":"lawyer","clube":"leagues/246031208/teams/1","semana":27,"caso":12747369,"jogador":953074922,"nome":"Gabriel","antes":{"fora":2,"lesao":0,"suspensao":61},"depois":{"fora":1,"lesao":0,"suspensao":61}}
+{"t":1792703391,"evento":"pôr","tipo":"lawyer","clube":"leagues/222034673/teams/3","semana":3,"jogador":973406220,"nome":"Mabrouk","antes":{"fora":4,"lesao":0,"suspensao":64}}

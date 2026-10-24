@@ -217,6 +217,17 @@ def team_rating(players: list[dict], formation: int | None = None) -> int | None
     return round(sum(best) / len(best)) if best else None
 
 
+def opponent_rating(players: list[dict], guess: int) -> int | None:
+    """Another club's strength for the formation rule: None before the analysis (no eleven to see); his eleven's
+    once analysed; and with a hole in it (fewer than 11 starters: a player sold, injured or not yet put back), his best
+    in the ``guess`` formation, since he may fill it before the match (owner, 2026-10-24: the hole read as "not
+    analysed" and the card asked for the 4-3-3 A against a much stronger club)."""
+    starters = sum(1 for p in players if 1 <= (p.get("lineup") or 0) <= ELEVEN)
+    if not starters:
+        return None
+    return team_rating(players) if starters >= ELEVEN else team_rating(players, guess)
+
+
 def league_summary(standings: list[dict], teams: list[dict], matches: list[dict], team_id: int, week: int,
                    goal: int | None) -> dict | None:
     """The hover on the club's place (owner, 2026-10-13; THEORY.md section 19): the top 3 with their points (the top 2

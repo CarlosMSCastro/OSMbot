@@ -9,7 +9,8 @@ from __future__ import annotations
 
 import time
 
-from osmbot.board.info import cup_phase, league_summary, next_match, next_matches, squad_value, stale_listings, team_rating, value_table
+from osmbot.board.info import (cup_phase, league_summary, next_match, next_matches, opponent_rating, squad_value,
+                               stale_listings, team_rating, value_table)
 from osmbot.game import market as market_watch, sales
 from osmbot.game.transfers import saved_transfers
 from osmbot.game.specialists import check
@@ -216,7 +217,8 @@ def club_extra(client, team: dict, base: str, players: list[dict], slot, market:
         rival = upcoming["opponent_id"]
         upcoming["value"] = squad_value(values, rival)
         upcoming["strength"] = _cached(("strength", league, rival, week), FIXTURES_FOR,
-                                       lambda: team_rating(_list(client, f"{league}/teams/{rival}/players")))
+                                       lambda: opponent_rating(_list(client, f"{league}/teams/{rival}/players"),
+                                                               GUESS_FORMATION))
     referees = _cached(("referees", league), FIXTURES_FOR, lambda: _list(client, f"{league}/referees"))
     strictness = next((r.get("strictness") for r in referees if upcoming and r["id"] == upcoming.get("referee_id")), None)
     mine, theirs = _match_strengths(client, team, league, teams, week, upcoming, strength, done)

@@ -4,6 +4,18 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-PT/1.1.0/); 
 
 Este ficheiro é o **histórico de versões, para quem lê o repo**. O diário interno de cada sessão de trabalho está em [`docs/WORKLOG.md`](docs/WORKLOG.md).
 
+## [0.13.13] — 2026-10-24
+
+A formação certa contra um adversário com um lugar vazio no onze, e a linha dos cansados uma frase por linha.
+
+### Corrigido
+- **Formação contra um adversário com o onze incompleto:** depois da análise, um adversário com menos de 11 titulares (um jogador vendido, lesionado ou um lugar por preencher) era tratado como "ainda não analisado" e o passo da tática pedia o 4-3-3 A, mesmo contra um clube muito mais forte. Agora conta a força dos melhores dele num 4-3-3 (pode preencher o lugar antes do jogo) e pede as 5 defesas quando ele é mais forte. Vale para todos os clubes e ligas.
+- **Linha dos cansados:** "⚠ Cansados: …" e os avisos de "poupar antes de um jogo importante" saíam seguidos no mesmo parágrafo, partidos onde calhava. Agora cada aviso fica na sua linha.
+
+### Documentação
+- `THEORY.md` §1: a regra do onze incompleto, e uma dúvida em aberto sobre quanto vale o estágio: ajuda (8 vitórias, 3 empates e 1 derrota nos 12 jogos com estágio só de um lado), mas a força do jogo não o inclui e não se prova que valha 25 %. A regra dos 25 % fica até haver mais jogos.
+- `DISCOVERY.md` §3: a medição do estágio.
+
 ## [0.13.12] — 2026-10-22
 
 Os avisos do cartão voltam a aparecer um por linha, mais curtos.
