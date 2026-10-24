@@ -18,6 +18,12 @@ def running_until(parts: list[dict], now: float) -> float | None:
     return max(ends) if ends else None
 
 
+def to_claim(parts: list[dict], now: float) -> list[dict]:
+    """Finished upgrades still to collect: they only count once collected (DISCOVERY.md section 3, 2026-10-24)."""
+    return [p for p in parts if p.get("countdownTimer") and p["countdownTimer"]["finishedTimestamp"] <= now
+            and not p["countdownTimer"].get("isClaimed")]
+
+
 def next_part(parts: list[dict], now: float) -> int | None:
     """The part type to start upgrading now, or None (one is already running, or everything is at the top)."""
     if running_until(parts, now) is not None:

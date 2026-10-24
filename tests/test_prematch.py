@@ -243,7 +243,8 @@ def test_in_the_pre_season_the_day_ends_at_the_hour_of_the_first_match():
     first = NOW + 2 * DAY + 11 * 3600  # 59 h away, weekNr -2 (seen 2026-10-15)
     assert day_end(first, NOW, -2) == NOW + 11 * 3600
     assert day_end(first, NOW, 0) == NOW + 11 * 3600 and day_end(NOW + 3600, NOW, 0) == NOW + 3600
-    assert day_end(first, NOW, 14) == first  # in the season the day is the match
+    assert day_end(first, NOW, 14) == NOW + 11 * 3600  # a round the club does not play: the same (D-067, test)
+    assert day_end(NOW + 11 * 3600, NOW, 14) == NOW + 11 * 3600  # a match today: the day is the match
     assert day_end(None, NOW, -2) is None
 
 

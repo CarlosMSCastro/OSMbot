@@ -9,7 +9,7 @@ from __future__ import annotations
 import time
 
 from osmbot.game import refusals
-from osmbot.game.prematch import _day_time
+from osmbot.game.prematch import _day_time, _match_time
 from osmbot.savings.policy import deposit_due, wake_at
 
 PAUSE_BETWEEN_WRITES = 1.5  # seconds
@@ -20,6 +20,22 @@ def _millions(amount: int) -> str:
     return f"{amount / 1e6:.1f} M".replace(".", ",")
 
 
+def _note_money(base: str, day: float, match_day: bool, money: dict) -> None:
+    """Once a day, the club's money just before the day ends, in ``logs/poupanca/``: from one day to the next the
+    savings show the interest, also on a day without a match (owner's guess, D-067: a test). Read only."""
+    from osmbot import logs
+
+    key = (base, int(day))
+    if key in _NOTED:
+        return
+    _NOTED.add(key)
+    logs.record("poupanca", {"clube": base, "fim_do_dia": int(day), "jogo": match_day,
+                             "fundos": money.get("balance"), "poupanca": money.get("savings")})
+
+
+_NOTED: set = set()
+
+
 def deposit_club(client, team: dict, base: str, confirm: bool, now: float, log=print) -> tuple[int, float | None]:
     """One club: deposit if its match is 15 minutes away or less (in the pre-season, the hour it would be at, owner
     2026-10-15). Returns (failures, time to wake at)."""
@@ -28,6 +44,8 @@ def deposit_club(client, team: dict, base: str, confirm: bool, now: float, log=p
         return 0, wake_at(match, now)
     _, money = client.get(f"{base}/finances/balanceandsavings")
     balance = money["balance"]
+    if confirm:
+        _note_money(base, match, _match_time(client, base) == match, money)
     if balance <= 0:
         return 0, None
     key = f"poupança:{base}"

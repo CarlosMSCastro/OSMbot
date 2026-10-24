@@ -1,6 +1,7 @@
 """Stadium upgrades (writes, owner's rules in THEORY.md section 15; requests observed 2026-10-07).
 
-Starting an upgrade is one POST; when it ends the next one is just started (nothing to collect).
+Starting an upgrade is one POST; a finished one only counts once collected (an empty PUT on the part),
+so finished ones are collected before the next one starts (starting it first loses the previous one).
 There is no price to read: the bot tries and the game accepts or refuses. Savings are
 all-or-nothing and the same empty PUT moves everything the other way, so when the club's
 funds are not enough everything is brought to the funds (at most two PUTs, each checked in the
@@ -12,7 +13,7 @@ import time
 
 from osmbot.game import refusals
 
-from osmbot.stadium.policy import PART_NAMES, next_part, running_until
+from osmbot.stadium.policy import PART_NAMES, next_part, running_until, to_claim
 
 SETTING_NAME = "StadiumUpgrade"  # gamesettings entry with the upgrade duration (id 30 on 2026-10-07)
 PAUSE_BETWEEN_WRITES = 1.5  # seconds
@@ -43,6 +44,38 @@ def _bring_to_funds(client, base: str, log) -> bool:
     return False
 
 
+def _claim_finished(client, team: dict, base: str, parts: list[dict], now: float, confirm: bool, log) -> tuple[list[dict], int]:
+    """Collect every finished upgrade. Returns (the stadium parts read again if something was collected, failures)."""
+    done = to_claim(parts, now)
+    if not done:
+        return parts, 0
+    failures = 0
+    for part in done:
+        name = PART_NAMES.get(part["stadiumPartType"], part["stadiumPartType"])
+        if not confirm:
+            log(f"{team['name']}: {name}: recolheria a melhoria acabada")
+            continue
+        key, day = f"estádio-recolher:{base}:{part['id']}", refusals.game_day()
+        if refusals.blocked(key, day=day):
+            failures += 1
+            continue  # refused today: try again on the next game day, not every round
+        status, _ = client.put(f"{base}/stadiumparts/{part['id']}/claim")
+        time.sleep(PAUSE_BETWEEN_WRITES)
+        if status == 200:
+            refusals.forget(key)
+            log(f"{team['name']}: {name}: melhoria recolhida")
+            continue
+        failures += 1
+        if refusals.is_refusal(status):
+            refusals.refuse(key, log, f"{team['name']}: {name}: o jogo recusou recolher a melhoria ({status}); volto a tentar amanhã", day=day)
+        else:
+            log(f"{team['name']}: {name}: recolher a melhoria falhou ({status})")
+    if not confirm:
+        return parts, 0
+    _, stadium = client.get(f"{base}/stadium")
+    return stadium["stadiumParts"], failures
+
+
 def _try_upgrade(client, base: str, part_type: int, setting: int, log) -> tuple[str, float | None]:
     """("ok", end time) / ("refused", None) / ("failed", None)."""
     status, body = client.post(f"{base}/stadiumparts", {"stadiumPartType": part_type, "timerGameSettingId": setting})
@@ -58,7 +91,9 @@ def upgrade_club(client, team: dict, base: str, confirm: bool, log=print, now: f
     """One club: start the next upgrade if the club is free. Returns (failures, times to wake at)."""
     now = time.time() if now is None else now
     _, stadium = client.get(f"{base}/stadium")
-    parts = stadium["stadiumParts"]
+    parts, failures = _claim_finished(client, team, base, stadium["stadiumParts"], now, confirm, log)
+    if failures or (confirm and to_claim(parts, now)):
+        return failures or 1, []  # never start the next one over an uncollected one: it would be lost
     busy = running_until(parts, now)
     if busy is not None:
         if not confirm:
@@ -100,7 +135,8 @@ def upgrade_club(client, team: dict, base: str, confirm: bool, log=print, now: f
     if outcome == "ok":
         COUNTS["upgrades"] += 1
         refusals.forget(f"estádio:{base}")
-        log(f"{label}: melhoria iniciada")
+        paid = total - sum(_money(client, base))  # the price is not in the reply: measured on the money
+        log(f"{label}: melhoria iniciada · custou {paid}")
         return 0, [ends] if ends else []
     if outcome == "refused":
         refusals.refuse(f"estádio:{base}", log, f"{label}: sem dinheiro para melhorar; volto a tentar quando houver mais", money=total)

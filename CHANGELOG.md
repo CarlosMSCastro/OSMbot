@@ -4,6 +4,16 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-PT/1.1.0/); 
 
 Este ficheiro é o **histórico de versões, para quem lê o repo**. O diário interno de cada sessão de trabalho está em [`docs/WORKLOG.md`](docs/WORKLOG.md).
 
+## [0.13.14] — 2026-10-24
+
+O estádio passa a recolher as obras acabadas, e os dias sem jogo contam como dias de amigáveis (teste).
+
+### Corrigido
+- **Estádio:** uma melhoria acabada só conta depois de ser recolhida, e o bot nunca recolhia: punha a seguinte por cima e a anterior perdia-se. Agora recolhe as acabadas e só depois põe a seguinte; se não conseguir recolher, não põe nada. A linha "melhoria iniciada" no registo diz quanto custou.
+
+### Alterado
+- **Dias sem jogo (teste):** num dia em que o clube não joga, os amigáveis e o depósito na poupança fazem-se nesse dia, até à hora do jogo seguinte, como na pré-época. O bot regista uma vez por dia o dinheiro do clube (`logs/<PC>/poupanca/`), para ver se o juro é pago sem jogo.
+
 ## [0.13.13] — 2026-10-24
 
 A formação certa contra um adversário com um lugar vazio no onze, e a linha dos cansados uma frase por linha.

@@ -1,7 +1,7 @@
 import pytest
 
 from osmbot.game import stadium
-from osmbot.stadium.policy import next_part, running_until
+from osmbot.stadium.policy import next_part, running_until, to_claim
 
 NOW = 1000.0
 BASE = "leagues/1/teams/2"
@@ -36,6 +36,7 @@ class FakeClient:
         self.balance, self.savings, self.price = balance, savings, price
         self.parts = parts or [part(0, 0), part(1, 0), part(2, 0)]
         self.calls = []
+        self.claim_status = 200
 
     def get(self, path):
         if path.endswith("/stadium"):
@@ -45,6 +46,14 @@ class FakeClient:
         return 200, [{"id": 30, "name": "StadiumUpgrade"}]
 
     def put(self, path):
+        if path.endswith("/claim"):
+            part_id = int(path.split("/")[-2])
+            self.calls.append(("claim", part_id))
+            if self.claim_status == 200:
+                done = next(p for p in self.parts if p.get("id") == part_id)
+                done.pop("countdownTimer")
+                done["level"] += 1
+            return self.claim_status, {}
         self.calls.append("put")
         if self.balance == 0:
             self.balance, self.savings = self.savings, 0
@@ -116,3 +125,46 @@ def test_running_upgrade_only_gives_the_wake_time():
     client = FakeClient(1000, 1000, 1, parts=[part(0, 0), part(1, 0, ends=NOW + 99), part(2, 3)])
     assert run(client) == (0, [NOW + 99])
     assert client.calls == []
+
+
+def finished(kind, level, part_id):
+    p = part(kind, level, ends=NOW - 60)
+    p["id"] = part_id
+    return p
+
+
+def test_a_finished_upgrade_is_to_collect_until_claimed():
+    done = finished(2, 0, 7)
+    assert to_claim([done, part(1, 0)], NOW) == [done]
+    done["countdownTimer"]["isClaimed"] = True
+    assert to_claim([done], NOW) == []
+    assert to_claim([part(2, 0, ends=NOW + 5)], NOW) == []  # still running
+
+
+def test_collects_the_finished_one_before_starting_the_next():
+    client = FakeClient(balance=500, savings=0, price=300, parts=[part(0, 0), part(1, 0), finished(2, 0, 7)])
+    assert run(client) == (0, [NOW + 64800])
+    assert client.calls == [("claim", 7), ("post", 2)]  # same part again: it went 0 -> 1, the next level is still to do
+
+
+def test_never_starts_over_an_uncollected_one():
+    client = FakeClient(balance=500, savings=0, price=300, parts=[part(0, 0), part(1, 0), finished(2, 0, 7)])
+    client.claim_status = 400
+    assert run(client) == (1, [])
+    assert client.calls == [("claim", 7)]
+    assert run(client) == (1, [])
+    assert client.calls == [("claim", 7)]  # refused today: not asked again every round
+
+
+def test_dry_run_only_says_it_would_collect():
+    client = FakeClient(balance=500, savings=0, price=300, parts=[part(0, 0), part(1, 0), finished(2, 0, 7)])
+    said = []
+    stadium.upgrade_club(client, TEAM, BASE, False, log=said.append, now=NOW)
+    assert client.calls == [] and any("recolheria" in line for line in said)
+
+
+def test_logs_what_the_upgrade_cost():
+    said = []
+    client = FakeClient(balance=0, savings=1000, price=300)
+    stadium.upgrade_club(client, TEAM, BASE, True, log=said.append, now=NOW)
+    assert said[-1].endswith("melhoria iniciada · custou 300")

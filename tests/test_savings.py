@@ -75,3 +75,16 @@ def test_in_the_pre_season_it_deposits_before_each_day_ends():
     client = PreSeason(1_000_000, 0)
     client.get = lambda path, get=client.get: (200, [{"type": 14, "finishedTimestamp": FIRST}]) if path.endswith("/timers") else get(path)
     assert savings.deposit_club(client, TEAM, BASE, True, MATCH - 7200) == (0, MATCH - LEAD)
+
+
+def test_notes_the_money_once_a_day_before_the_day_ends(monkeypatch):
+    from osmbot import logs
+
+    noted = []
+    monkeypatch.setattr(logs, "record", lambda kind, data, **_: noted.append((kind, data)))
+    monkeypatch.setattr(savings, "_NOTED", set())
+    savings.deposit_club(FakeClient(0, 500), TEAM, BASE, True, MATCH - 300, lambda m: None)
+    savings.deposit_club(FakeClient(0, 500), TEAM, BASE, True, MATCH - 200, lambda m: None)
+    assert noted == [("poupanca", {"clube": BASE, "fim_do_dia": int(MATCH), "jogo": True, "fundos": 0, "poupanca": 500})]
+    savings.deposit_club(FakeClient(0, 500), TEAM, BASE, False, MATCH - 100, lambda m: None)
+    assert len(noted) == 1  # a dry run notes nothing

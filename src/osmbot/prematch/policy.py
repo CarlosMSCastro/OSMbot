@@ -19,9 +19,11 @@ def preseason(week: int | None) -> bool:
 
 
 def day_end(match_time: float | None, now: float, week: int | None) -> float | None:
-    """When the game's day ends: the match; in the pre-season, with no match that day, the same hour as the first
-    league match (one match a day), where the savings' interest is paid too (owner, 2026-10-15; THEORY.md section 13) [S]."""
-    if match_time is None or not preseason(week) or now >= match_time:
+    """When the game's day ends: the match; on a day with no match (the pre-season, or a round the club does not play),
+    the same hour as the next match (one match a day), where the savings' interest is paid too (owner, 2026-10-15
+    for the pre-season; 2026-10-24, rest days, a test: D-067; THEORY.md sections 6 and 13) [S]. ``week`` is not
+    needed any more: kept for the callers."""
+    if match_time is None or now >= match_time:
         return match_time
     return match_time - DAY * int((match_time - now) // DAY)
 
