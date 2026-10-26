@@ -165,11 +165,16 @@ Categoria "Dicas" do canal André Santana (OSM PRO), lida **do mais antigo ao ma
 
 ## Contradições e dúvidas abertas
 
-- **Casa:** ~20 % (autor, vitórias) contra ~5 % (dono, força). Por medir.
-- **Amigáveis:** 2–3 por dia (autor) contra 4 por jornada (dono). Os registos dizem quanto rende cada um.
-- **Estádio:** a ordem do autor mudou ao longo dos anos; a do dono é fixa.
-- **Cantos:** nota média (autor) contra ataque (dono).
-- **Vender acima do "limiar":** o autor deixou de ter limiar fixo (2025); o dono usa 100 M e 75 %.
-- **Prémio do domínio mundial por continente:** 500 ou 1 000?
-- **Quem treina pode jogar?** Em 2020–21 não; em 2021 "gerir a hora do treino com a do jogo". Verificar hoje.
-- **SALE < 1,5×:** confirmar com os anúncios registados.
+*Revistas com o dono a 2026-10-26 (D-065).*
+
+- ~~**Casa:** ~20 % (autor, vitórias) contra ~5 % (dono, força).~~ Medido: casa vale ~5 % de força e dá 1,4× mais vitórias (Dicas §7–§9).
+- ~~**Amigáveis:** 2–3 por dia (autor) contra 4 por jornada (dono).~~ Medido (§5); o dono mantém 4.
+- ~~**Estádio:** a ordem do autor mudou ao longo dos anos.~~ Nova ordem do dono (§12, `THEORY.md` §8).
+- ~~**Cantos:** nota média (autor) contra ataque (dono).~~ Dono: fica o ataque (`THEORY.md` §4); diferença com o autor, decidida.
+- **Vender acima do "limiar":** o autor deixou de ter limiar fixo (2025); o dono usa 100 M e 75 %. Em revisão (2026-10-26, `DISCOVERY.md` §3).
+- ~~**Prémio do domínio mundial por continente:** 500 ou 1 000?~~ Código do site: Europa 1 000, Ásia 500, América 500, África 250, Mundo 2 000.
+- ~~**Quem treina pode jogar?**~~ Sim (dono, 2026-10-21, `DISCOVERY.md` §3).
+- ~~**SALE < 1,5×:**~~ Confirmado no código do site (`SaleTransferLabelRatio` = 150, 2026-10-12).
+- ~~**1 boss coin grátis a cada 8 h** (autor, 2020):~~ não existe no código da web (`osm.js` v32583); deve ser da app ou já não existir. Nada a fazer.
+
+O que se decidiu em §10, §13 e §14 (confirmado pelo dono a 2026-10-26): §10 sem mudanças nas regras; a ideia "o relatório do jogo dá pistas" deu os relatórios (D-068). §13 deu as previsões dos jogos reais e o prémio de fim de época (D-069). §14 nada (o dono não joga grupos).

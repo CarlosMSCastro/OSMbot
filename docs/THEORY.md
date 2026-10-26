@@ -185,7 +185,7 @@ Implementado em `plan_training` / `pick_trainee`:
 
 **Resumo (síntese nossa; o detalhe e as palavras do dono estão em 7.1–7.7):**
 1. Plantel de 18: 11 titulares + banco fixo de 7 (2 ATT, 2 MID, 2 DEF, 1 GK), mais **1 jogador fraco por posição** que permite rodar os suplentes.
-2. **Vende** os suplentes (sem ordem), pedindo o **preço máximo**; se o máximo passar de **100 M€**, pede **75% do máximo**. Os bots compram sempre.
+2. **Vende** os suplentes (sem ordem), pedindo o **preço máximo**; se o máximo passar de **150 M€** (dono, 2026-10-26; antes 100 M€), pede **75% do máximo**. Os bots compram sempre.
 3. **Compra** só jogadores do **jogo**, de preferência com a etiqueta **"SALE"**; **nunca** de utilizadores. Sem "SALE" compra só se a posição for urgente; olheiro só em emergência.
 4. Muitas vezes compra vários "SALE" para suplentes e **lista-os logo ao preço máximo**. O objetivo é **ir rodando** o plantel.
 5. Limites do jogo: **4 slots** de venda (6 em eventos) e um **mínimo por posição** (por confirmar).
@@ -266,11 +266,12 @@ Observações:
 
 - **Que jogadores:** os **suplentes**, **sem ordem particular** ("meio indiferente").
 - **Preço pedido** (palavras do dono):
-  - Se o **preço máximo** do jogador for **acima de 100 M€**, pede só **75% do preço máximo**.
-  - Se for **abaixo de 100 M€**, pede **SEMPRE o máximo**, por cada jogador.
+  - Se o **preço máximo** do jogador for **acima de 150 M€**, pede só **75% do preço máximo**.
+  - Se for **até 150 M€**, pede **SEMPRE o máximo** (2,5 × o valor), por cada jogador.
+  - **Limiar subido de 100 para 150 M€ (dono, 2026-10-26; OSMPro Dicas, dúvida do limiar):** nos registos, outros utilizadores venderam a 100 % acima de 100 M (9 vendas, até 167 M), e entre 100 e 150 M a 100 % demorou o mesmo que os 75 % do dono (~37 h contra 31–50 h), perdendo estes ~30 M por jogador; acima de 150 M a 100 % ficou parado dias (`DISCOVERY.md` §3). **[S]** Amostras pequenas (13 anúncios a 100 % entre 100 e 150 M); voltar a medir. *Antes:* 75 % acima de 100 M€.
 - **O jogo acaba por vender os jogadores a bots, independentemente do preço** (afirmação do dono). Por isso pedir o máximo não atrasa a venda.
-- **Os 75% são do preço máximo permitido** (não do valor de mercado). Exemplo do dono: o preço máximo do Jogador 1 é **111 M€** (o dono foi ver ao jogo), por isso pediria 75% disso ≈ **83,25 M€**.
-- **Motivo (experiência do dono):** acima de 100 M€ fica **muito mais difícil vender pelo preço máximo**.
+- **Os 75% são do preço máximo permitido** (não do valor de mercado). Exemplo do dono: o preço máximo do Jogador 1 é **111 M€** (o dono foi ver ao jogo), por isso pediria 75% disso ≈ **83,25 M€** (com o limiar de 100 M€; com o de 150 M€ pede os 111 M€).
+- **Motivo (experiência do dono):** acima de 100 M€ (agora 150 M€, medido) fica **muito mais difícil vender pelo preço máximo**.
 - **É probabilidade, não um limite (dono, 2026-10-12):** em dezenas de épocas, os jogadores caros **acabam sempre por se vender**; fora dos eventos só demoram mais (dados em `DISCOVERY.md` §3).
 - **Tempos medidos (126 vendas nos registos, 2026-10-21):** tudo o que foi posto a 100 % vendeu; demora mais quanto mais caro. Mediana: < 5 M **5 h**; 5–15 M **11 h**; 15–50 M **18 h**; 50–100 M **46 h**; > 100 M a 75 % **18 h** (só 2). Confirma a regra acima: baixar entre 50 e 100 M não compensa (a 75 % perde-se ~60 % do lucro para ganhar ~1 dia).
 - **Aviso "parado na lista" (dono, 2026-10-22):** no cartão do clube, por baixo do aviso das vagas livres, um jogador por linha: "⚠ Nome à venda há X" (o normal ~Y a este preço só ao passar o rato por essa linha, dono, 2026-10-22), quando está à venda há **mais do dobro da mediana** das vendas do mesmo escalão de preço (< 5 M, 5–15, 15–50, 50–100, ≥ 100 M). A mediana sai das vendas registadas (linhas "Venda:" de todos os PCs) e afina sozinha; um escalão com **menos de 3 vendas** não avisa. Só aviso: o bot não mexe no preço.
@@ -285,7 +286,7 @@ Observações:
   - Jogador 5: 12,0 M€ → 30,2 M€ = **2,52×**
   - Jogador 2: 19,2 M€ → 48,1 M€ = **2,51×**
   - 4 exemplos, todos entre 2,51× e 2,53× — coerente com o prior art (`PRIOR_ART.md`, que reporta ~2,5× noutra liga). Multiplicador = **2,5×** para efeitos práticos.
-  - Consequência: o limiar de 100 M€ de preço máximo (§7.5, regra dos 75%) corresponde a valor de mercado ≈ **40 M€**.
+  - Consequência: o limiar de 150 M€ de preço máximo (§7.5, regra dos 75%; antes 100 M€ ≈ 40 M€) corresponde a valor de mercado ≈ **60 M€**.
 - O preço máximo é um valor que o jogo mostra ao listar o jogador; onde se lê na API é desconhecido.
 
 ### 7.6 Comprar: só jogadores "SALE"
@@ -340,11 +341,11 @@ Pelo mesmo preço, o do jogo tem **+6 de rating** que o de utilizador (PL) e o "
   - **Estratégia de compra (dono, 2026-10-15, substitui os critérios de 14/10: vaga livre e ordem pelo lucro):** o dono tem **sempre as vagas cheias** ("toda a estratégia é ter sempre jogadores à venda"), por isso a pergunta é com que jogador encher a próxima vaga que vagar. Proposta do Claude a partir dos registos (`DISCOVERY.md` §3), aceite pelo dono:
     1. Vagas de venda sempre cheias.
     2. **Revenda:** jogadores do jogo, **com ou sem SALE**, de **valor 10–40 M** (revendem entre 25 e 100 M e vendem em menos de ~1,5 dias), que cabem em **conta + poupança**; os **mais baratos face ao valor** primeiro (o que uma vaga rende por dia anda com isso; com o mesmo preço/valor, o de maior lucro). Põe-se logo à venda ao máximo.
-    3. Para revender, nada acima de 40 M de valor (prende a vaga 3 dias ou mais); os do dono acima de 100 M continuam a 75 %.
+    3. Para revender, nada acima de 40 M de valor (prende a vaga 3 dias ou mais); os do dono acima de 150 M continuam a 75 % (2026-10-26; antes 100 M).
     4. **Reforço:** rating maior do que o titular mais baixo da **mesma posição geral** (ATA/MED/DEF/GR), de qualquer valor, se couber no dinheiro; sem pressa, esperar 3–4 dias (o preço desce ~4 %/dia); de preferência jovens.
   - **Só SALE (dono, 2026-10-20, substitui o "com ou sem SALE" do ponto 2):** o cartão só sugere jogadores com a etiqueta "SALE" (≤ 1,5 × valor), e mostra a **posição específica** (EE, MC, DC…) em vez da geral (ATA/MED/DEF), a mesma pela qual o reforço compara (§7.9). O suplente continua a ser escolhido pela posição geral, mas também mostra a específica, incluindo no hover dos cansados (§16), para não ter de abrir a lista de transferências no jogo.
   - **No cartão (dono, 2026-10-15):** a faixa mostra **a melhor hipótese** (a 1.ª pela ordem acima, revenda ou reforço) e o hover **as 3 melhores**. A etiqueta "SALE" só aparece se a melhor a tiver (≤ 1,5×).
-  - **Lucro estimado** = preço máximo de revenda − preço; máximo ≈ **2,5 × valor** (**[H]**: as vendas de 14/10 saíram a 2,48–2,49×), **75 %** disso acima de 100 M (§7 ponto 2).
+  - **Lucro estimado** = preço máximo de revenda − preço; máximo ≈ **2,5 × valor** (**[H]**: as vendas de 14/10 saíram a 2,48–2,49×), **75 %** disso acima de 150 M (§7 ponto 2; antes 100 M).
   - **Pechincha:** preço ≤ **1,25 × valor**, marcado à parte (dono, 2026-10-15; era 1,1×, que nunca aparecia: o jogo vende a partir de ~1,19× e baixa os preços dia a dia, `DISCOVERY.md` §3).
   - **Registo (dono, 2026-10-15):** além dos SALE, o bot guarda todos os anúncios do jogo (`logs/<PC>/transferencias/jogo/`): quando aparecem e saem, com o primeiro e o último preço.
   - **"?" no lucro** quando a liga **não vende ao máximo**: nenhuma venda de um clube da liga a ≥ 2,4× o valor nas transferências dos últimos 3 dias (Espanha, 12–13/10, `DISCOVERY.md`).
@@ -671,4 +672,5 @@ Na checklist do cartão, o passo fica **amarelo** quando o jogo o dá como feito
 - **O que se guarda:** de cada jogo dos clubes do dono (liga, taça e amigáveis), todos os comentários do apresentador e do comentador, em `logs/<PC>/relatorios/`. O veredito do comentador no fim (o destaque e a dica, como o jogo os mostra) vai também para o registo do dia ("Relatório: …"). Só leitura.
 - **Porque tem de ser logo:** o jogo só dá o relatório enquanto o jogo está na jornada à mostra; na jornada seguinte já não responde. O bot lê-os em cada passagem.
 - **Análise de tempos a tempos (pedido do dono):** juntar as dicas e ver o que repetem: desarme por árbitro (o comentador pede muitas vezes mais duro), estilo contra adversários mais fracos ("Why the defensive Style?"), especialistas elogiados ou criticados, finalização. Daí podem sair afinações à teoria, só com OK do dono. O bot não muda nada sozinho por causa das dicas.
+- **Julgar pelos remates, não só pelo resultado (dono, 2026-10-26; OSMPro Táticas §1):** o OSM tem muita sorte, por isso cada dica e cada tática julgam-se também pela estatística do jogo: **remates** (e posse) de cada lado, cruzando o relatório com `logs/<PC>/jogos/` (`estatisticas`). Medido: quem remata mais ganha 77 %, mais do que o mais forte (67 %; `DISCOVERY.md` §3). Uma derrota a rematar mais conta como azar, não como tática errada; uma vitória a rematar menos, como sorte. **[S]** Só nos jogos de liga e taça: os amigáveis não guardam remates.
 

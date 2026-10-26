@@ -51,6 +51,8 @@ Categoria "Táticas" do canal André Santana (OSM PRO), lida **do mais antigo ao
 - ⭐ **Julgar pela estatística (remates, posse); o OSM tem muita sorte** (o mesmo jogo 10 vezes = 10 resultados). As táticas de contra-ataque muitas vezes são dominadas e ganham na mesma: não desistir por isso. → 8vhJyMewm68, yHoiWQphPJ8, vgU-ZveUwGE, uZB2vdebcnw
 - 📏 **Para golear não subir as barras** (desequilibra). → uZB2vdebcnw
 
+*Revisto com o dono a 2026-10-26 (D-065):* princípios sem mudanças; "julgar pela estatística" medido e passado à teoria (`THEORY.md` §23: julgar pelos remates); "contra-ataque dominado ganha na mesma" não se confirma nos registos (`DISCOVERY.md` §3).
+
 ## 2. Quando usar cada formação
 
 | Situação | Autor | Dono (§1) |
@@ -65,7 +67,9 @@ Categoria "Táticas" do canal André Santana (OSM PRO), lida **do mais antigo ao
 - ⭐ **Perigos do 4-3-3: os contra-ataques** (5-3-2, 5-3-1-1, 5-2-3); a arma é o **4-3-3 de passe**. → j7Ix-3rAzRk, TgU8yJveuIw
 - **Contra-ataque contra contra-ataque anula-se** (poucos remates, 0-0). → 8vhJyMewm68, km3SwT_vy7Y, sk7yBBJbNPk
 - 💡 **Rodar formações para descansar setores** (3-5-2 descansa laterais; 4-2-3-1/5-4-1 descansam avançados; 4-3-3 em casa deixa rodar os médios do 4-5-1). → XGcIrS97x7c, km3SwT_vy7Y, -jIuOHsaiZs, vgU-ZveUwGE *O dono descansa pela condição (§16).*
+  *Revisto com o dono a 2026-10-26:* a formação troca-se para tirar do onze as posições cansadas (ex.: EE e ED cansados → um 4-4-2 com 2 PL, e os extremos descansam). "Não é bem aplicável no nosso caso" (dono): nada a fazer. Cansaço por setor medido em `DISCOVERY.md` §3.
 - **Tier list (2025):** S 4-3-3, 4-5-1 · A 5-2-3, 4-2-3-1, 5-4-1 · B 6-3-1, 5-3-2, 5-3-1-1, 4-4-2 · C 3-5-2, 3-4-3, 3-3-2-2, 4-2-4 · D 3-3-4, 3-2-5, 3-2-3-2. → U57pT4mBqJ4
+  *Revisto com o dono a 2026-10-26:* medido face ao esperado pela força (`DISCOVERY.md` §3): bate no 4-3-3 (topo) e no 3-3-4 (fundo); o 4-5-1 fica abaixo do esperado. Nada a mudar.
 
 ## 3. Por formação (o meta do autor)
 

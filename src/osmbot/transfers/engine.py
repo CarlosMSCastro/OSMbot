@@ -84,14 +84,14 @@ def sale_options(market: list[dict], position: str, budget: int, count: int = 3)
 
 
 BARGAIN = 1.25  # a "SALE" at no more than this × value is a bargain (owner, 2026-10-15: the game sells from ~1.19×)
-BIG_SALE, BIG_SALE_SHARE = 100e6, 0.75  # above 100 M the owner asks 75 % of the maximum (THEORY.md 7)
+BIG_SALE, BIG_SALE_SHARE = 150e6, 0.75  # above 150 M the owner asks 75 % of the maximum (THEORY.md 7.5, 2026-10-26)
 FLIP_VALUE = (10e6, 40e6)  # bought to sell again at once: up to a 100 M maximum, sold within ~1.5 days (2026-10-15)
 SELLS_AT_MAX = 2.4  # a league sale at this × value or more: the league buys at the maximum (THEORY.md 7.7)
 
 
 def resale(value: float) -> float:
     """What the owner would ask for a player when listing it: the maximum (≈ 2.5 × value, a hypothesis from the
-    sales of 2026-10-14), or 75 % of it above 100 M."""
+    sales of 2026-10-14), or 75 % of it above 150 M."""
     top = MAX_PRICE * value
     return BIG_SALE_SHARE * top if top > BIG_SALE else top
 

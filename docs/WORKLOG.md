@@ -2,6 +2,14 @@
 
 Entradas mais recentes primeiro. Cada sessão: o que se fez · o que ficou por fazer · próximo passo.
 
+## 2026-10-26 (cont.) — OSMPro Dicas: dúvidas soltas
+
+- **Dúvidas do fim de `sintese/dicas.md` revistas (D-065, pedido do dono):** fechadas com o que já se sabia: casa (~5 % de força), amigáveis (4), estádio (nova ordem), quem treina joga (sim), SALE ≤ 1,5× (código do site), prémio por continente (Europa 1 000, Ásia 500, América 500, África 250, Mundo 2 000). **1 boss coin grátis a cada 8 h:** não está no código da web (`osm.js` v32583); nada a fazer. **Cantos (dono):** fica o médio com mais ataque.
+- **§10, §13 e §14 (sem registo no dia; confirmado pelo dono):** §10 sem mudanças, deu os relatórios (D-068); §13 deu as previsões e o prémio de fim de época (D-069); §14 nada.
+- **Limiar de venda (dono: "rever o limiar"):** medido nos registos (`DISCOVERY.md` §3): acima de 100 M outros utilizadores vendem a 100 % (9 vendas até 167 M); entre 100 e 150 M a 100 % demora o mesmo que a 75 % (~37 h contra 31–50 h); acima de 150 M a 100 % fica parado. **Dono: sobe para 150 M** (D-071): até 150 M de máximo pede sempre o máximo. `THEORY.md` §7.5 (e §7, §7.7), `transfers/engine.BIG_SALE` = 150 M (lucro estimado das revendas no cartão), teste atualizado. 453 testes. Escalões do aviso "parado na lista" iguais (≥ 100 M continua um só).
+- **OSMPro Táticas, ponto 1 (§1 Princípios; tabela de 25 pontos mostrada ao dono):** medido em 516 jogos (`DISCOVERY.md` §3): quem remata mais ganha 77 %, o mais forte 67 %; dominado (posse ≤ 40 %) perde 85–90 % em todas as formações. Dono: passar a julgar pelos remates na análise dos relatórios (`THEORY.md` §23). Nada construído. Ponto 2 (golear sem subir as barras): nada. Ponto 3 (4-3-3 fora contra iguais): já resolvido; o autor não usa "sempre" uma das 3, a alternativa mudou com os anos (4-5-1 → 4-2-3-1 → 5-2-3); medido fora contra iguais por formação (`DISCOVERY.md` §3: 4-3-3 B 2,33, 4-5-1 A 0,58). Ponto 4 (rodar formações para descansar): dono, troca-se a formação para tirar as posições cansadas (EE/ED cansados → 4-4-2 com 2 PL); "não é bem aplicável no nosso caso"; cansaço por setor medido (~−4 em todos). Ponto 5 (tier list de 2025): medido face ao esperado pela força (`DISCOVERY.md` §3: 4-3-3 B +0,35, A +0,23; 4-5-1 A −0,27, B −0,40; 3-3-4 −0,51); nada a mudar.
+- **Próximo passo:** Táticas, ponto 6 (barras e instruções do autor por formação contra as do dono, §2), depois 7–25 pela tabela.
+
 ## 2026-10-26 — Formação: 4-3-3 B em casa aceite; só 5-2-3 contra um claramente mais forte (D-070)
 
 - **Pedido do dono (Qarabag em 4-3-3 B):** em casa o 4-3-3 B deixa de ficar amarelo; o passo "Onze" fica verde com a nota "4-3-3 B aceite: em casa a regra é o 4-3-3 A" (`theory/lineup._home_b`, `tactic_warnings`, `tactic_notes`, `i18n`). Contra um adversário mais forte continuam as 5 defesas.

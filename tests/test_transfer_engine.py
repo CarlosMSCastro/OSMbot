@@ -115,7 +115,7 @@ def _starter(pid, pos, rating, lineup=1):
 def test_sale_picks_are_the_affordable_sale_players_by_resale_profit_with_reinforcements_and_bargains():
     from osmbot.transfers.engine import resale, sale_picks
 
-    assert resale(10e6) == 25e6 and resale(50e6) == 0.75 * 125e6  # the maximum, 75 % of it above 100 M (THEORY.md 7)
+    assert resale(10e6) == 25e6 and resale(50e6) == 125e6 and resale(70e6) == 0.75 * 175e6  # 75 % above 150 M (THEORY.md 7.5)
     players = [_starter(1, 3, 79), _starter(2, 3, 90, lineup=2), _starter(3, 3, 95, lineup=14)]  # the bench does not count
     market = [_sale(1, 3, 85, 14.3e6, 11e6),  # beats the weakest DEF (79), at 1.3×
               _sale(2, 1, 70, 12e6, 10e6),  # to sell again, at 1.2×: a bargain, the best bet
