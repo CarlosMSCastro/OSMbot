@@ -30,7 +30,7 @@ def test_what_is_on_now_and_this_week():
     names = [e["nome"] for e in upcoming([calendar], now)]
     assert names == ["Transfer Madness", "Super Staff"]  # going on, and within 7 days
     start, end = span_of(calendar["eventos"][2])
-    assert start == datetime(2026, 10, 14).timestamp() and end == datetime(2026, 10, 15).timestamp()
+    assert start == datetime(2026, 10, 14).timestamp() and end == datetime(2026, 10, 14, 23).timestamp()
 
 
 def test_what_an_event_changed_in_the_settings():

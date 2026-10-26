@@ -4,6 +4,19 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-PT/1.1.0/); 
 
 Este ficheiro é o **histórico de versões, para quem lê o repo**. O diário interno de cada sessão de trabalho está em [`docs/WORKLOG.md`](docs/WORKLOG.md).
 
+## [0.14.2] — 2026-10-26
+
+Venda a 100 % do máximo até 150 M, e os amigáveis do Intense Friendlies feitos dentro do evento.
+
+### Alterado
+- **Preço de venda:** o bot pede o máximo que o jogo deixa até 150 M (antes, só até 100 M); acima disso continua a pedir 75 % do máximo. Nos registos, entre 100 e 150 M vender a 100 % demorou o mesmo que a 75 %.
+
+### Corrigido
+- **Fim dos eventos:** o calendário do bot dava os eventos a acabar às 24:00, mas o jogo acaba-os às 23:00 de Portugal (00:00 na Holanda). No último dia do Intense Friendlies o bot fazia os amigáveis em falta às 23:00, já fora do evento e sem o bónus; agora faz até às 22:00. Nos eventos de treinos, o fecho com boss coins continua às 22:30 do último dia.
+
+### Documentação
+- `THEORY.md` §6 e §7.5, `DISCOVERY.md` §3 e §6c, `DECISIONS.md` D-071.
+
 ## [0.14.1] — 2026-10-26
 
 Duas afinações da regra da formação.

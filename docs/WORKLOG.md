@@ -2,6 +2,14 @@
 
 Entradas mais recentes primeiro. Cada sessão: o que se fez · o que ficou por fazer · próximo passo.
 
+## 2026-10-26 (cont.) — Amigáveis depois do fim do Intense Friendlies
+
+- **Pergunta do dono:** porque fez 8 amigáveis em cada clube (relatórios de hoje). Registo do `DESKTOP-KAM70RR`: a jornada nova começou com os jogos de 25/10 (20:31–22:28); com o Intense Friendlies a acabar, os 8 da jornada ficaram todos para 1 h antes do fim, que o bot punha às 24:00 → 32 amigáveis às 23:00–23:05. O jogo dá o fim às 22:59:59 (`eventnotifications`): feitos já fora do evento, provavelmente sem bónus.
+- **Correção:** `events/calendar.span_of` passa a acabar às 23:00 do último dia (já apurado em `DISCOVERY.md` §6c); `claim_bonus_end` lê o último dia de `end - 1`. Amigáveis do evento até às 22:00. Dono: "em dias de evento, 8; sem ser evento, 4" (`THEORY.md` §6). 453 testes.
+- **Versão 0.14.2 (pedido do dono):** com o D-071 (venda a 100 % até 150 M, já no commit `fa1a848`) e esta correção. `pyproject.toml`, `__init__`, `CHANGELOG.md`, `README.md` (estado), `dist/release-notes-v0.14.2.md`; `build_portable.py --zip --installer` → `dist/windows/` 0.14.2 (553 / 206 / 148 MB); os da 0.14.1 apagados. Commit e `gh release create v0.14.2` entregues ao dono (só Windows; Mac com `gh release upload` no Mac).
+- **Falta:** o dono instala a 0.14.2 neste PC e no `DESKTOP-KAM70RR` (e refaz o dist no Mac).
+- **Próximo passo:** o mesmo que a entrada anterior.
+
 ## 2026-10-26 (cont.) — OSMPro Dicas: dúvidas soltas
 
 - **Dúvidas do fim de `sintese/dicas.md` revistas (D-065, pedido do dono):** fechadas com o que já se sabia: casa (~5 % de força), amigáveis (4), estádio (nova ordem), quem treina joga (sim), SALE ≤ 1,5× (código do site), prémio por continente (Europa 1 000, Ásia 500, América 500, África 250, Mundo 2 000). **1 boss coin grátis a cada 8 h:** não está no código da web (`osm.js` v32583); nada a fazer. **Cantos (dono):** fica o médio com mais ataque.

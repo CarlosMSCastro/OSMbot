@@ -114,10 +114,14 @@ def parse_schedule(content: str) -> dict | None:
     return {"mes": f"{year:04d}-{month:02d}", "eventos": events} if events else None
 
 
+END_BOOST = (22 * 60 + 30, 23 * 60)  # local: an event ends at ~23:00 in Portugal (DISCOVERY.md 6c); act from 22:30
+
+
 def span_of(event: dict) -> tuple[float, float]:
-    """Start and end of an event as timestamps: from 00:00 of the first day to 24:00 of the last [S: local time]."""
+    """Start and end of an event as timestamps: from 00:00 of the first day [S: local time] to 23:00 of the last
+    (00:00 in the Netherlands; the game's endTimestamp, DISCOVERY.md 6c)."""
     start = datetime.fromisoformat(event["inicio"])
-    end = datetime.fromisoformat(event["fim"]) + timedelta(days=1)
+    end = datetime.fromisoformat(event["fim"]) + timedelta(minutes=END_BOOST[1])
     return start.timestamp(), end.timestamp()
 
 
@@ -151,9 +155,6 @@ def old_players_event(events: list[dict], now: float) -> bool:
                for e in events)
 
 
-END_BOOST = (22 * 60 + 30, 23 * 60)  # local: an event ends at ~23:00 in Portugal (DISCOVERY.md 6c); act from 22:30
-
-
 def claims_bonus(event: dict) -> bool:
     """Whether an event gives more training progression to a training collected while it lasts (Training Camp Mania,
     Stadium Blitz, Golden Oldies, Extreme Training; not Intense Friendlies, which is only for friendlies)."""
@@ -168,7 +169,7 @@ def claim_bonus_end(events: list[dict], now: float) -> tuple[float, float] | Non
     for event in events:
         if not claims_bonus(event):
             continue
-        day = (datetime.fromtimestamp(event["end"]) - timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0)
+        day = datetime.fromtimestamp(event["end"] - 1).replace(hour=0, minute=0, second=0, microsecond=0)
         opens, closes = ((day + timedelta(minutes=m)).timestamp() for m in END_BOOST)
         if closes > now:
             windows.append((opens, closes))
