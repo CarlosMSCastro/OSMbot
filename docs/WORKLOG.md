@@ -2,6 +2,12 @@
 
 Entradas mais recentes primeiro. Cada sessão: o que se fez · o que ficou por fazer · próximo passo.
 
+## 2026-10-26 — Formação: 4-3-3 B em casa aceite; só 5-2-3 contra um claramente mais forte (D-070)
+
+- **Pedido do dono (Qarabag em 4-3-3 B):** em casa o 4-3-3 B deixa de ficar amarelo; o passo "Onze" fica verde com a nota "4-3-3 B aceite: em casa a regra é o 4-3-3 A" (`theory/lineup._home_b`, `tactic_warnings`, `tactic_notes`, `i18n`). Contra um adversário mais forte continuam as 5 defesas.
+- **Pedido do dono:** com o adversário claramente mais forte (> 5 %, [S]) só o 5-2-3 serve, em casa ou fora; o resto fica amarelo ("devia ser 5-2-3 (adversário claramente mais forte)"). Até 5 % continua qualquer formação de 5 defesas. `THEORY.md` §1 e secção do cartão, D-070. 453 testes; pyflakes limpo nos ficheiros mexidos (o aviso do `i18n` linha 194 já lá estava).
+- **Versão 0.14.1 (pedido do dono):** `pyproject.toml`, `__init__`, `CHANGELOG.md`, `README.md` (estado), `dist/release-notes-v0.14.1.md`; `build_portable.py --zip --installer` → `dist/windows/` 0.14.1 (553 / 206 / 148 MB), versão confirmada no portátil; os da 0.14.0 apagados. O bot deste PC corre de `Documents\osmbot-portable` (0.14.0): o dono substitui a pasta ou corre o instalador. Falta: Mac.
+
 ## 2026-10-25 — Formação antes da análise: força do adversário estimada
 
 - **Pergunta do dono:** porque o passo "Onze" do SV Ried avisava "Formação 5-2-3: devia ser 4-3-3 A". Só GETs: próximo jogo fora contra o LASK Linz, sem análise → sem força do adversário → 4-3-3 A por omissão. Os melhores do LASK num 4-3-3 dão 92 (96,6 em casa) contra 88 nossos: o 5-2-3 estava certo.

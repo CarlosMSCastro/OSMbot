@@ -4,6 +4,17 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-PT/1.1.0/); 
 
 Este ficheiro é o **histórico de versões, para quem lê o repo**. O diário interno de cada sessão de trabalho está em [`docs/WORKLOG.md`](docs/WORKLOG.md).
 
+## [0.14.1] — 2026-10-26
+
+Duas afinações da regra da formação.
+
+### Alterado
+- **4-3-3 B em casa:** deixa de ficar amarelo. Em casa a regra continua a ser o 4-3-3 A, mas o B também serve: o passo "Onze" fica verde, com uma nota ao passar o rato.
+- **Adversário claramente mais forte (mais de 5 %):** só o 5-2-3 fica verde, em casa ou fora; qualquer 4-3-3 ou outra formação de 5 defesas fica amarela ("devia ser 5-2-3"). Mais forte por 5 % ou menos: qualquer formação de 5 defesas, como antes.
+
+### Documentação
+- `THEORY.md` §1 e `DECISIONS.md` D-070.
+
 ## [0.14.0] — 2026-10-26
 
 Relatórios de todos os jogos, previsões automáticas, prémio de fim de época, aviso das missões por fazer à mão, e regras novas de formação e de estádio.

@@ -1,1 +1,7 @@
 {"t":1791973176,"evento":"levantar","tipo":"doctor","clube":"leagues/219033091/teams/10","semana":18,"caso":11740713,"jogador":966432789,"nome":"Dalot","antes":{"fora":1,"lesao":29,"suspensao":0},"depois":{"fora":0,"lesao":0,"suspensao":0}}
+{"t":1792743740,"evento":"pôr","tipo":"doctor","clube":"leagues/248015013/teams/8","semana":6,"jogador":877230515,"nome":"Gabriel","antes":{"fora":3,"lesao":5,"suspensao":0}}
+{"t":1792743742,"evento":"pôr","tipo":"lawyer","clube":"leagues/248015013/teams/8","semana":6,"jogador":877706761,"nome":"Pedri","antes":{"fora":3,"lesao":0,"suspensao":46}}
+{"t":1792743744,"evento":"levantar","tipo":"lawyer","clube":"leagues/222034673/teams/3","semana":3,"caso":12747869,"jogador":973406220,"nome":"Mabrouk","antes":{"fora":4,"lesao":0,"suspensao":64},"depois":{"fora":3,"lesao":0,"suspensao":64}}
+{"t":1792772586,"evento":"levantar","tipo":"doctor","clube":"leagues/248015013/teams/8","semana":6,"caso":11077152,"jogador":877230515,"nome":"Gabriel","antes":{"fora":3,"lesao":5,"suspensao":0},"depois":{"fora":2,"lesao":5,"suspensao":0}}
+{"t":1792772588,"evento":"pôr","tipo":"doctor","clube":"leagues/248015013/teams/8","semana":6,"jogador":877230515,"nome":"Gabriel","antes":{"fora":3,"lesao":5,"suspensao":0}}
+{"t":1792772590,"evento":"levantar","tipo":"lawyer","clube":"leagues/248015013/teams/8","semana":6,"caso":12587705,"jogador":877706761,"nome":"Pedri","antes":{"fora":3,"lesao":0,"suspensao":46},"depois":{"fora":1,"lesao":0,"suspensao":46}}

@@ -153,11 +153,14 @@ PATTERNS = [(re.compile(pattern), replace) for pattern, replace in (
                + " or ".join(_TACKLE.get(w, w) for w in m[3].split(" ou "))),
     (r"^Formação (.+?): devia ser de 5 defesas \(adversário mais forte\)$",
      lambda m: f"Formation {m[1]}: should have 5 defenders (stronger opponent)"),
+    (r"^Formação (.+?): devia ser 5-2-3 \(adversário claramente mais forte\)$",
+     lambda m: f"Formation {m[1]}: should be 5-2-3 (clearly stronger opponent)"),
     (r"^Formação (.+?): devia ser (.+) \(fora de casa\)$",
      lambda m: f"Formation {m[1]}: should be {m[2].replace(' ou ', ' or ')} (away from home)"),
     (r"^Formação (.+?): devia ser (.+)$", lambda m: f"Formation {m[1]}: should be {m[2]}"),
     (r"^4-3-3 A aceite: fora, mas claramente mais forte \((.+)\)$",
      lambda m: f"4-3-3 A accepted: away, but clearly stronger ({m[1]})"),
+    (r"^4-3-3 B aceite: em casa a regra é o 4-3-3 A$", lambda m: "4-3-3 B accepted: at home the rule is the 4-3-3 A"),
     (r"^4-4-2 B aceite: (.+)$", lambda m: "4-4-2 B accepted: " + re.sub(
         r"sem (\w+) (em forma|no plantel)", lambda w: f"no {'fit ' if w[2] == 'em forma' else ''}"
         f"{_SPECIFIC.get(w[1], w[1])}{' in the squad' if w[2] == 'no plantel' else ''}", m[1]).replace(" fora", " out")),

@@ -164,14 +164,21 @@ def _wanted(mine: float | None, opponent: float | None, away: bool) -> list[str]
     return [Formation.F433_B.value]
 
 
+def _home_b(tactic: dict, away: bool) -> bool:
+    """The 4-3-3 B at home: not the rule (the A is), but right too (owner, 2026-10-26)."""
+    return not away and formation_name(tactic) == Formation.F433_B.value
+
+
 def tactic_notes(tactic: dict | None, players: list[dict] | None, mine: float | None, opponent: float | None,
                  away: bool = False) -> list[str]:
     """What the tactics do differently from the rule, on purpose and within it (the step stays green): the 4-4-2 B
-    for want of wingers, the 4-3-3 A away when clearly stronger (THEORY.md section 1)."""
+    for want of wingers, the 4-3-3 A away when clearly stronger, the 4-3-3 B at home (THEORY.md section 1)."""
     if not tactic or (mine and opponent and choose_formation(mine, opponent) == Formation.F532):
         return []
     if away and formation_name(tactic) == Formation.F433_A.value and _clearly_stronger(mine, opponent):
         return [f"4-3-3 A aceite: fora, mas claramente mais forte (+{mine / opponent - 1:.0%})"]
+    if _home_b(tactic, away):
+        return ["4-3-3 B aceite: em casa a regra é o 4-3-3 A"]
     why = _wingerless(tactic, players)
     return [f"4-4-2 B aceite: {why}"] if why else []
 
@@ -179,8 +186,8 @@ def tactic_notes(tactic: dict | None, players: list[dict] | None, mine: float | 
 def tactic_warnings(tactic: dict | None, strictness: int | None, mine: float | None, opponent: float | None,
                     players: list[dict] | None = None, away: bool = False) -> list[str]:
     """What is out of the rule in the tactics: the tackling for the next match's referee, and the formation
-    (``_wanted``: 4-3-3 A at home, B away, or the 4-4-2 B when a side has no fit winger; 5 defenders, any of them,
-    against a stronger opponent). ``opponent``: before the analysis an estimate (THEORY.md section 1); None when unknown."""
+    (``_wanted``: 4-3-3 A at home (the B too), B away, or the 4-4-2 B when a side has no fit winger; 5 defenders, any of them,
+    against a stronger opponent, only the 5-2-3 against a clearly stronger one). ``opponent``: before the analysis an estimate (THEORY.md section 1); None when unknown."""
     if not tactic:
         return []
     warnings = []
@@ -191,8 +198,12 @@ def tactic_warnings(tactic: dict | None, strictness: int | None, mine: float | N
     wanted_formation = choose_formation(mine, opponent) if mine and opponent else Formation.F433_A
     current = formation_name(tactic)
     if wanted_formation == Formation.F532:  # any formation with 5 defenders: the owner picks the one that fits the players
-        if current and not current.startswith("5-"):
+        if current and _clearly_stronger(opponent, mine):  # clearly weaker: only the 5-2-3 (owner, 2026-10-26)
+            if current != "5-2-3":
+                warnings.append(f"Formação {current}: devia ser 5-2-3 (adversário claramente mais forte)")
+        elif current and not current.startswith("5-"):
             warnings.append(f"Formação {current}: devia ser de 5 defesas (adversário mais forte)")
-    elif current and current not in (wanted := _wanted(mine, opponent, away)) and not _wingerless(tactic, players):
+    elif (current and current not in (wanted := _wanted(mine, opponent, away)) and not _home_b(tactic, away)
+          and not _wingerless(tactic, players)):
         warnings.append(f"Formação {current}: devia ser {' ou '.join(wanted)}" + (" (fora de casa)" if away else ""))
     return warnings

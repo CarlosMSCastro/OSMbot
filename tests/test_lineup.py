@@ -66,7 +66,10 @@ def test_the_tackling_must_match_the_next_referee():
 
 def test_the_formation_is_4_3_3_a_and_5_defenders_only_against_a_stronger_analysed_opponent():
     b = {"formation": 433, "formationDetail": "B", "style": 2}
-    assert tactic_warnings(b, 3, 108, None) == ["Formação 4-3-3 B: devia ser 4-3-3 A"]
+    # at home the A is the rule, but the B is right too, with a note (owner, 2026-10-26)
+    assert tactic_warnings(b, 3, 108, None) == [] and tactic_warnings(b, 3, 108, 100) == []
+    assert tactic_notes(b, [], 108, 100) == ["4-3-3 B aceite: em casa a regra é o 4-3-3 A"]
+    assert tactic_notes(b, [], 100, 108) == []  # against a stronger one: 5 defenders, no note
     # away (owner, 2026-10-25): the B is the rule; the A too when clearly stronger (> 5 %) or with nothing to compare
     a = {**b, "formationDetail": "A"}
     assert tactic_warnings(b, 3, 104, 100, away=True) == [] and tactic_notes(b, [], 104, 100, away=True) == []
@@ -76,7 +79,7 @@ def test_the_formation_is_4_3_3_a_and_5_defenders_only_against_a_stronger_analys
     assert tactic_warnings(b, 3, 108, 100, away=True) == []
     assert tactic_warnings(b, 3, 108, None, away=True) == []  # a reading that failed: the usual one away
     assert tactic_warnings(a, 3, 108, None, away=True) == ["Formação 4-3-3 A: devia ser 4-3-3 B (fora de casa)"]
-    assert tactic_warnings(b, 3, 100, 108, away=True) == ["Formação 4-3-3 B: devia ser de 5 defesas (adversário mais forte)"]
+    assert tactic_warnings(b, 3, 100, 103, away=True) == ["Formação 4-3-3 B: devia ser de 5 defesas (adversário mais forte)"]
     assert tactic_notes(a, [], 100, 108, away=True) == []
     assert tactic_warnings({"formation": 523, "formationDetail": "A", "style": 2}, 3, 104, 100, away=True) == [
         "Formação 5-2-3: devia ser 4-3-3 B (fora de casa)"]
@@ -88,6 +91,13 @@ def test_the_formation_is_4_3_3_a_and_5_defenders_only_against_a_stronger_analys
     assert tactic_warnings({**five, "formation": 523}, 3, 109, 107) == ["Formação 5-2-3: devia ser 4-3-3 A"]
     assert tactic_warnings({**five, "formation": 433}, 3, 100, 101) == [
         "Formação 4-3-3 A: devia ser de 5 defesas (adversário mais forte)"]
+    # clearly weaker (> 5 %): only the 5-2-3, home or away (owner, 2026-10-26)
+    assert tactic_warnings({**five, "formation": 523}, 3, 100, 108) == []
+    assert tactic_warnings({**five, "formation": 523}, 3, 100, 108, away=True) == []
+    assert tactic_warnings(five, 3, 100, 108) == ["Formação 5-3-2: devia ser 5-2-3 (adversário claramente mais forte)"]
+    assert tactic_warnings({**five, "formation": 433, "formationDetail": "B"}, 3, 100, 108, away=True) == [
+        "Formação 4-3-3 B: devia ser 5-2-3 (adversário claramente mais forte)"]
+    assert tactic_notes({**five, "formation": 433, "formationDetail": "B"}, [], 100, 108) == []
 
 
 def winger(name, side, fitness=90, out=0):
@@ -116,7 +126,7 @@ def test_only_the_4_4_2_b_and_only_when_the_rule_says_4_3_3_a():
     a442 = {"formation": 442, "formationDetail": "A", "style": 2}
     assert tactic_warnings(a442, 3, 108, 100, tired) == ["Formação 4-4-2: devia ser 4-3-3 A"]  # the owner: only the B
     b442 = {**a442, "formationDetail": "B"}
-    assert tactic_warnings(b442, 3, 100, 108, tired) == ["Formação 4-4-2: devia ser de 5 defesas (adversário mais forte)"]
+    assert tactic_warnings(b442, 3, 100, 103, tired) == ["Formação 4-4-2: devia ser de 5 defesas (adversário mais forte)"]
     assert tactic_notes(b442, tired, 100, 108) == []
 
 
@@ -137,6 +147,9 @@ def test_the_warnings_are_translated():
         assert tr("Messi (ED) a jogar a PL") == "Messi (RW) playing as ST"
         assert tr("Formação 4-3-3 A: devia ser de 5 defesas (adversário mais forte)") == \
             "Formation 4-3-3 A: should have 5 defenders (stronger opponent)"
+        assert tr("Formação 5-3-2: devia ser 5-2-3 (adversário claramente mais forte)") == \
+            "Formation 5-3-2: should be 5-2-3 (clearly stronger opponent)"
+        assert tr("4-3-3 B aceite: em casa a regra é o 4-3-3 A") == "4-3-3 B accepted: at home the rule is the 4-3-3 A"
         assert tr("Formação 5-2-3: devia ser 4-3-3 A") == "Formation 5-2-3: should be 4-3-3 A"
     finally:
         set_language("pt", save=False)

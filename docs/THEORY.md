@@ -11,8 +11,8 @@
 | Formação | Meio-campo | Quando |
 |---|---|---|
 | **4-3-3 A** | Leva **MCO** (médio centro ofensivo) | **Sempre**, exceto contra um adversário claramente mais forte. Com os melhores planteis da liga, é quase sempre |
-| **5 defesas** (5-3-2, 5-2-3, 5-4-1) | O dono escolhe a que serve aos jogadores | Adversário **mais forte**, por qualquer margem (dono, 2026-10-14; antes: mais de 5 %) |
-| 4-3-3 B | Leva **MCD** (médio centro defensivo) | **Fora de casa é a regra** em vez do A (dono, 2026-10-25); o A também serve fora quando o dono é **claramente mais forte**. Em casa não é a regra |
+| **5 defesas** (5-3-2, 5-2-3, 5-4-1) | O dono escolhe a que serve aos jogadores | Adversário **mais forte**, por qualquer margem (dono, 2026-10-14; antes: mais de 5 %). **Claramente mais forte** (> 5 %, [S] o mesmo corte): **só o 5-2-3**, em casa ou fora; nenhum 4-3-3 (dono, 2026-10-26, D-070) |
+| 4-3-3 B | Leva **MCD** (médio centro defensivo) | **Fora de casa é a regra** em vez do A (dono, 2026-10-25); o A também serve fora quando o dono é **claramente mais forte**. Em casa não é a regra, mas **também serve** (verde, com nota; dono, 2026-10-26) |
 
 **Porquê (os números, `WORKLOG.md` 2026-10-13):** pontos por jogo com a mesma diferença de força e o mesmo local: o 4-3-3 A foi o melhor em casa e fora, sendo mais forte (2,78 casa / 2,25 fora) ou parecido (2,41 / 1,33). O 4-3-3 B fora sendo mais forte deu 2,75, mas em 12 jogos quase todos de um clube do dono muito mais forte: não chega para concluir. O 5-3-2 sendo mais fraco: 3 vitórias em 3 jogos, só jogos do dono (os outros clubes quase não o usam). A força pesa muito mais do que a formação; e o banco também (um suplente fraco a entrar por lesão custou um empate).
 
@@ -647,7 +647,7 @@ Na checklist do cartão, o passo fica **amarelo** quando o jogo o dá como feito
 **Onze (tática):**
 - **Desarme vs árbitro do próximo jogo**, pela tabela do §3 com o que o dono aceita.
 - **Idade do onze** (dono, 2026-10-22; OSMPro, Dicas: EfHyzY6C5AI, 7da7tn75LAI): pelo menos **3 titulares com mais de 26 anos e 3 com menos de 26**; um onze demasiado jovem tem bónus negativo e o jogo avisa. Fora disso, amarelo: "Onze com só 2 jogadores acima de 26 anos (o jogo dá bónus negativo a um onze demasiado jovem)". **[S]** O lado contrário (onze demasiado velho) avisa igual, com "abaixo de 26"; o autor só fala do jovem. Os 4 onzes do dono cumpriam no dia (5/4, 6/5, 4/5, 5/6).
-- **Formação** (§1): com o adversário mais forte (antes da análise pela estimativa, depois pelo onze real dele; dono, 2026-10-25) (qualquer margem, com bónus e casa, §1) pede **5 defesas** e aceita qualquer uma (5-3-2, 5-2-3, 5-4-1; D-049). Em casa o 4-3-3 B fica amarelo; fora é o B que se pede e o A fica amarelo, exceto sendo claramente mais forte (dono, 2026-10-25).
+- **Formação** (§1): com o adversário mais forte (antes da análise pela estimativa, depois pelo onze real dele; dono, 2026-10-25) (qualquer margem, com bónus e casa, §1) pede **5 defesas** e aceita qualquer uma (5-3-2, 5-2-3, 5-4-1; D-049); com o adversário claramente mais forte (> 5 %) só o **5-2-3** ("devia ser 5-2-3 (adversário claramente mais forte)"; D-070). Em casa o 4-3-3 B também serve (verde, nota "4-3-3 B aceite: em casa a regra é o 4-3-3 A"; dono, 2026-10-26; antes ficava amarelo); fora é o B que se pede e o A fica amarelo, exceto sendo claramente mais forte (dono, 2026-10-25).
 
 **Posições** (dono, 2026-10-14): o jogo conta quantos titulares estão no lugar da sua posição específica (9/11 = 2 fora). O hover diz **quem**: "Messi (ED) a jogar a PL". O mapa de cada lugar de cada formação vem do código do próprio jogo (`theory/lineup.places`). Nomes: GR, DE, DC, DD, MDC, MC, MO, ME, MD, EE, PL, ED.
 
