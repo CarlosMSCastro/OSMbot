@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import time
 
-from osmbot.board.info import (cup_phase, league_summary, next_match, next_matches, opponent_rating, squad_value,
+from osmbot.board.info import (cup_phase, eleven_seen, league_summary, next_match, next_matches, opponent_rating, squad_value,
                                stale_listings, team_rating, value_table)
 from osmbot.game import market as market_watch, sales
 from osmbot.game.transfers import saved_transfers
@@ -20,7 +20,7 @@ from osmbot.prematch.policy import friendlies_played
 from osmbot.theory.fitness import rest_warnings
 from osmbot.theory.tactics import match_strength
 
-GUESS_FORMATION = 433  # [S] another club's eleven is unknown before the analysis: his best 4-3-3 (THEORY.md 16)
+GUESS_FORMATION = 433  # [S] another club's eleven is unknown before the analysis: his best 4-3-3 (THEORY.md 1, 16)
 
 FIXTURES_FOR = 10 * 60.0
 SPECIALISTS_STEP = 4  # matchpreparation step "Select specialists"
@@ -213,12 +213,16 @@ def club_extra(client, team: dict, base: str, players: list[dict], slot, market:
     tactic = tactic if status == 200 and isinstance(tactic, dict) else None
     strength = team_rating(players, (tactic or {}).get("formation"))
     upcoming = next_match(matches, teams, team["id"], week)
-    if upcoming:  # the opponent's strength in a circle (only once analysed), its squad value on hover (owner, 2026-10-13)
-        rival = upcoming["opponent_id"]
+    if upcoming:  # the opponent's strength in a circle, its squad value on hover (owner, 2026-10-13); before the
+        rival = upcoming["opponent_id"]  # analysis an estimate, read again as soon as it is done (owner, 2026-10-25)
         upcoming["value"] = squad_value(values, rival)
-        upcoming["strength"] = _cached(("strength", league, rival, week), FIXTURES_FOR,
-                                       lambda: opponent_rating(_list(client, f"{league}/teams/{rival}/players"),
-                                                               GUESS_FORMATION))
+
+        def rival_strength() -> tuple[int | None, bool]:
+            squad_of = _list(client, f"{league}/teams/{rival}/players")
+            return opponent_rating(squad_of, GUESS_FORMATION), not eleven_seen(squad_of)
+
+        upcoming["strength"], upcoming["estimate"] = _cached(
+            ("strength", league, rival, week, bool(done.get(ANALYSIS_STEP))), FIXTURES_FOR, rival_strength)
     referees = _cached(("referees", league), FIXTURES_FOR, lambda: _list(client, f"{league}/referees"))
     strictness = next((r.get("strictness") for r in referees if upcoming and r["id"] == upcoming.get("referee_id")), None)
     mine, theirs = _match_strengths(client, team, league, teams, week, upcoming, strength, done)
@@ -234,16 +238,17 @@ def club_extra(client, team: dict, base: str, players: list[dict], slot, market:
 
     pair = [important(m) for m in next_matches(matches, teams, team["id"], week)]
     rest = rest_warnings(players, *(pair + [None, None])[:2])
+    away = bool(upcoming) and upcoming.get("side") == "A" and not upcoming.get("neutral")  # the 4-3-3 B away (THEORY.md 1)
     status, current = got[6]  # the game ticks any 4 specialists; yellow when they are not the owner's rule (D-042)
     why = {SPECIALISTS_STEP: check(players, current if status == 200 and isinstance(current, dict) else None),
            BENCH_STEP: bench_warnings(players),  # THEORY.md section 21: yellow with the reason on hover
            ELEVEN_STEP: empty_places(players, tactic) + age_warnings(players)
-           + tactic_warnings(tactic, strictness, mine, theirs, players),
+           + tactic_warnings(tactic, strictness, mine, theirs, players, away),
            POSITIONS_STEP: position_warnings(players, tactic)}  # who is out of position, on the hover
     steps = [(name, False, RULE) if why.get(kind) and done_ else (name, done_, extra)
              for (kind, _), (name, done_, extra) in zip(CHECKLIST, steps)]
     reasons = {name: why[kind] for (kind, _), (name, _, _) in zip(CHECKLIST, steps) if why.get(kind)}
-    notes = {ELEVEN_STEP: tactic_notes(tactic, players, mine, theirs)}  # within the rule: the step keeps its colour
+    notes = {ELEVEN_STEP: tactic_notes(tactic, players, mine, theirs, away)}  # within the rule: the step keeps its colour
     for (kind, _), (name, _, _) in zip(CHECKLIST, steps):
         if notes.get(kind):  # after any warning of the same step (the tackling may still be out of the rule)
             reasons[name] = reasons.get(name, []) + notes[kind]

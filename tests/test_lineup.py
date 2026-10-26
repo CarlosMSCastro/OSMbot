@@ -67,6 +67,19 @@ def test_the_tackling_must_match_the_next_referee():
 def test_the_formation_is_4_3_3_a_and_5_defenders_only_against_a_stronger_analysed_opponent():
     b = {"formation": 433, "formationDetail": "B", "style": 2}
     assert tactic_warnings(b, 3, 108, None) == ["Formação 4-3-3 B: devia ser 4-3-3 A"]
+    # away (owner, 2026-10-25): the B is the rule; the A too when clearly stronger (> 5 %) or with nothing to compare
+    a = {**b, "formationDetail": "A"}
+    assert tactic_warnings(b, 3, 104, 100, away=True) == [] and tactic_notes(b, [], 104, 100, away=True) == []
+    assert tactic_warnings(a, 3, 104, 100, away=True) == ["Formação 4-3-3 A: devia ser 4-3-3 B (fora de casa)"]
+    assert tactic_warnings(a, 3, 108, 100, away=True) == [] and tactic_notes(a, [], 108, 100, away=True) == [
+        "4-3-3 A aceite: fora, mas claramente mais forte (+8%)"]
+    assert tactic_warnings(b, 3, 108, 100, away=True) == []
+    assert tactic_warnings(b, 3, 108, None, away=True) == []  # a reading that failed: the usual one away
+    assert tactic_warnings(a, 3, 108, None, away=True) == ["Formação 4-3-3 A: devia ser 4-3-3 B (fora de casa)"]
+    assert tactic_warnings(b, 3, 100, 108, away=True) == ["Formação 4-3-3 B: devia ser de 5 defesas (adversário mais forte)"]
+    assert tactic_notes(a, [], 100, 108, away=True) == []
+    assert tactic_warnings({"formation": 523, "formationDetail": "A", "style": 2}, 3, 104, 100, away=True) == [
+        "Formação 5-2-3: devia ser 4-3-3 B (fora de casa)"]
     five = {"formation": 532, "formationDetail": "A", "style": 2}
     assert tactic_warnings(five, 3, 100, None) == ["Formação 5-3-2: devia ser 4-3-3 A"]  # before the analysis
     assert tactic_warnings(five, 3, 100, 101) == []

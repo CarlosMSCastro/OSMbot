@@ -100,7 +100,7 @@ def test_the_teams_strength_is_the_best_player_for_each_place_of_the_current_for
 
 
 def test_an_opponent_with_a_hole_in_his_eleven_counts_his_best_4_3_3_not_as_unanalysed():
-    from osmbot.board.info import opponent_rating, team_rating
+    from osmbot.board.info import eleven_seen, opponent_rating, team_rating
 
     def player(pos, rating, lineup=0):
         return {"position": pos, "statAtt": rating, "statOvr": rating, "statDef": rating, "lineup": lineup}
@@ -108,7 +108,9 @@ def test_an_opponent_with_a_hole_in_his_eleven_counts_his_best_4_3_3_not_as_unan
     eleven = [player(4, 80, 1)] + [player(3, 80, 2 + i) for i in range(4)] + [player(2, 80, 6 + i) for i in range(3)] \
         + [player(1, 80, 9 + i) for i in range(3)]
     squad = eleven + [player(4, 102), player(2, 91), player(1, 102)]  # his best sit out
-    assert opponent_rating([dict(p, lineup=0) for p in squad], 433) is None  # before the analysis: still unknown
+    # before the analysis (no eleven to see): his best 4-3-3, GR 102, DEF 80×4, MED 91 80 80, ATA 102 80 80 -> 85
+    assert opponent_rating([dict(p, lineup=0) for p in squad], 433) == 85
+    assert not eleven_seen([dict(p, lineup=0) for p in squad]) and eleven_seen(squad)
     back5 = [dict(p, position=3, statDef=50) if p["lineup"] == 9 else p for p in squad]  # a full 5-3-2 eleven
     assert opponent_rating(back5, 433) == team_rating(back5) == 82  # his own shape, not the guess (85)
     holed = [p for p in squad if p["lineup"] != 7]  # 10 starters: the case of 2026-10-24

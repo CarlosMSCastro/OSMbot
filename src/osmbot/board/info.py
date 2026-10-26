@@ -217,15 +217,16 @@ def team_rating(players: list[dict], formation: int | None = None) -> int | None
     return round(sum(best) / len(best)) if best else None
 
 
+def eleven_seen(players: list[dict]) -> bool:
+    """Whether another club's whole eleven is to be seen (after the analysis, with no hole in it)."""
+    return sum(1 for p in players if 1 <= (p.get("lineup") or 0) <= ELEVEN) >= ELEVEN
+
+
 def opponent_rating(players: list[dict], guess: int) -> int | None:
-    """Another club's strength for the formation rule: None before the analysis (no eleven to see); his eleven's
-    once analysed; and with a hole in it (fewer than 11 starters: a player sold, injured or not yet put back), his best
-    in the ``guess`` formation, since he may fill it before the match (owner, 2026-10-24: the hole read as "not
-    analysed" and the card asked for the 4-3-3 A against a much stronger club)."""
-    starters = sum(1 for p in players if 1 <= (p.get("lineup") or 0) <= ELEVEN)
-    if not starters:
-        return None
-    return team_rating(players) if starters >= ELEVEN else team_rating(players, guess)
+    """Another club's strength for the formation rule: his eleven's once analysed; before the analysis (no eleven to
+    see, owner 2026-10-25: his squad already says he is stronger) or with a hole in it (a player sold, injured or not
+    yet put back, owner 2026-10-24), an estimate: his best in the ``guess`` formation (THEORY.md section 1)."""
+    return team_rating(players) if eleven_seen(players) else team_rating(players, guess)
 
 
 def league_summary(standings: list[dict], teams: list[dict], matches: list[dict], team_id: int, week: int,

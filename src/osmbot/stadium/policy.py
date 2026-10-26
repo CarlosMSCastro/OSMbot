@@ -2,8 +2,9 @@
 from __future__ import annotations
 
 # stadiumPartType values (DISCOVERY.md section 3): 0 Capacity, 1 Pitch, 2 Training.
-# Owner's order: training ground, then pitch, then capacity.
-PART_ORDER = (2, 1, 0)
+# Owner's order (2026-10-25): training ground to level 1, pitch to level 1 (one 18 h cycle each), then training ground
+# to the top, pitch to the top, capacity. None: the part's top level.
+STEPS = ((2, 1), (1, 1), (2, None), (1, None), (0, None))
 PART_NAMES = {0: "capacidade", 1: "campo", 2: "campo de treinos"}
 
 
@@ -29,8 +30,8 @@ def next_part(parts: list[dict], now: float) -> int | None:
     if running_until(parts, now) is not None:
         return None
     by_type = {p["stadiumPartType"]: p for p in parts}
-    for part_type in PART_ORDER:
+    for part_type, level in STEPS:
         part = by_type.get(part_type)
-        if part is not None and part["level"] < max_level(part):
+        if part is not None and part["level"] < min(level or max_level(part), max_level(part)):
             return part_type
     return None

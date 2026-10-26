@@ -91,6 +91,7 @@ WORDS = {
     "ATA": "FWD", "MED": "MID", "DEF": "DEF", "GR": "GK", "—": "—",
     "Amigável": "Friendly", "Amigáveis": "Friendlies", "Análise": "Analysis", "Onze": "Line-up", "Posições": "Positions", "Em forma": "Fit",
     "Banco": "Bench", "Especialistas": "Specialists", "4 treinos": "4 trainings",
+    "Estimativa antes da análise: os melhores dele num 4-3-3": "Estimate before the analysis: his best in a 4-3-3",
     "pré-eliminatória": "preliminary round", "32 avos-de-final": "round of 64", "16 avos-de-final": "round of 32",
     "oitavos-de-final": "round of 16", "quartos-de-final": "quarter-finals", "meias-finais": "semi-finals",
     "final": "final", "vencedor": "winner", "Pré-eliminatória": "Preliminary round", "32 avos-de-final ": "Round of 64",
@@ -152,7 +153,11 @@ PATTERNS = [(re.compile(pattern), replace) for pattern, replace in (
                + " or ".join(_TACKLE.get(w, w) for w in m[3].split(" ou "))),
     (r"^Formação (.+?): devia ser de 5 defesas \(adversário mais forte\)$",
      lambda m: f"Formation {m[1]}: should have 5 defenders (stronger opponent)"),
+    (r"^Formação (.+?): devia ser (.+) \(fora de casa\)$",
+     lambda m: f"Formation {m[1]}: should be {m[2].replace(' ou ', ' or ')} (away from home)"),
     (r"^Formação (.+?): devia ser (.+)$", lambda m: f"Formation {m[1]}: should be {m[2]}"),
+    (r"^4-3-3 A aceite: fora, mas claramente mais forte \((.+)\)$",
+     lambda m: f"4-3-3 A accepted: away, but clearly stronger ({m[1]})"),
     (r"^4-4-2 B aceite: (.+)$", lambda m: "4-4-2 B accepted: " + re.sub(
         r"sem (\w+) (em forma|no plantel)", lambda w: f"no {'fit ' if w[2] == 'em forma' else ''}"
         f"{_SPECIFIC.get(w[1], w[1])}{' in the squad' if w[2] == 'no plantel' else ''}", m[1]).replace(" fora", " out")),

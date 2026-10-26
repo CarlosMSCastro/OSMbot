@@ -4,6 +4,25 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-PT/1.1.0/); 
 
 Este ficheiro é o **histórico de versões, para quem lê o repo**. O diário interno de cada sessão de trabalho está em [`docs/WORKLOG.md`](docs/WORKLOG.md).
 
+## [0.14.0] — 2026-10-26
+
+Relatórios de todos os jogos, previsões automáticas, prémio de fim de época, aviso das missões por fazer à mão, e regras novas de formação e de estádio.
+
+### Adicionado
+- **Relatórios dos jogos:** o bot guarda o que o comentador do jogo diz de cada jogo dos teus clubes (liga, taça e amigáveis), em `logs/<PC>/relatorios/`, e põe o veredito dele no registo do dia ("Relatório: …"). O jogo só os dá durante a jornada, por isso o bot lê-os em cada passagem.
+- **Previsões de jogos reais:** sempre que há um jogo real aberto para prever, o bot prevê 1-1 (o prémio só vem com o resultado exato, e é o mais comum). Depois do resultado fecha a previsão, para a seguinte abrir; se acertar, o prémio entra.
+- **Prémio de fim de época:** reclamado sozinho quando uma época acaba, se ainda não o reclamaste.
+- **Missões por fazer à mão:** no topo da janela, "Por fazer: …" das missões do dia que só tu fazes (comprar, vender, olheiro, pôr na lista), e nas últimas 3 horas do dia de qualquer missão por fazer. Sem as 3 missões não há prémio do dia.
+
+### Alterado
+- **Força do adversário antes da análise:** passa a ser estimada pelos melhores dele num 4-3-3 e aparece logo no círculo (ao passar o rato diz que é estimativa); depois da análise é atualizada com o onze real. A regra da formação usa-a: contra um adversário mais forte pede 5 defesas sem ser preciso analisar.
+- **Formação fora de casa:** a regra passa a ser o 4-3-3 B (rendeu mais fora, nos registos de 516 jogos); o 4-3-3 A também serve quando és claramente mais forte (mais de 5 %), com uma nota ao passar o rato. Em casa continua o 4-3-3 A.
+- **Ordem do estádio:** campo de treinos até ao nível 1, campo até ao nível 1, depois campo de treinos até ao máximo, campo até ao máximo e por fim a capacidade.
+
+### Documentação
+- `THEORY.md`: §1 (força antes da análise, 4-3-3 B fora), §8 e §15 (ordem e custo do estádio), §17 (previsões, fim de época, missões à mão), §19 (como o dono escolhe liga e clube), §23 (relatórios dos jogos).
+- `DISCOVERY.md` §3: XP por resultado, casa em vitórias, formação fora pela força, relatório do jogo, vídeos da Loja e do Clube (o mesmo limite), funções do site ainda por usar, prémios do domínio mundial.
+
 ## [0.13.14] — 2026-10-24
 
 O estádio passa a recolher as obras acabadas, e os dias sem jogo contam como dias de amigáveis (teste).

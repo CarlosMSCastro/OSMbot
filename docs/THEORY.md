@@ -12,18 +12,21 @@
 |---|---|---|
 | **4-3-3 A** | Leva **MCO** (médio centro ofensivo) | **Sempre**, exceto contra um adversário claramente mais forte. Com os melhores planteis da liga, é quase sempre |
 | **5 defesas** (5-3-2, 5-2-3, 5-4-1) | O dono escolhe a que serve aos jogadores | Adversário **mais forte**, por qualquer margem (dono, 2026-10-14; antes: mais de 5 %) |
-| 4-3-3 B | Leva **MCD** (médio centro defensivo) | Já não é a regra para jogos parecidos. O dono pode experimentá-lo (por ex. fora de casa); o registo dos jogos diz depois se compensa |
+| 4-3-3 B | Leva **MCD** (médio centro defensivo) | **Fora de casa é a regra** em vez do A (dono, 2026-10-25); o A também serve fora quando o dono é **claramente mais forte**. Em casa não é a regra |
 
 **Porquê (os números, `WORKLOG.md` 2026-10-13):** pontos por jogo com a mesma diferença de força e o mesmo local: o 4-3-3 A foi o melhor em casa e fora, sendo mais forte (2,78 casa / 2,25 fora) ou parecido (2,41 / 1,33). O 4-3-3 B fora sendo mais forte deu 2,75, mas em 12 jogos quase todos de um clube do dono muito mais forte: não chega para concluir. O 5-3-2 sendo mais fraco: 3 vitórias em 3 jogos, só jogos do dono (os outros clubes quase não o usam). A força pesa muito mais do que a formação; e o banco também (um suplente fraco a entrar por lesão custou um empate).
 
 Implementado em `choose_formation(my_rating, opp_rating, *, stronger_pct=0)`: adversário mais forte → 5 defesas; igual ou mais fraco → 4-3-3 A. O aviso do pré-jogo aceita qualquer formação de 5 defesas.
 
+**4-3-3 B fora de casa (dono, 2026-10-25; OSMPro Dicas §9):** fora de casa (não em campo neutro), quando o adversário não é mais forte, a regra é o **4-3-3 B**. O 4-3-3 A fica amarelo ("devia ser 4-3-3 B (fora de casa)"), exceto quando o dono é **claramente mais forte**: aí os dois estão certos, e o A mostra uma nota ao passar o rato ("4-3-3 A aceite: fora, mas claramente mais forte (+N %)"). Se a leitura da força falhar (raro: desde 2026-10-25 há sempre a estimativa), pede o B, como em casa pede o A. Contra um adversário mais forte continuam as 5 defesas; sem extremos em forma continua o 4-4-2 B. **[S] "Claramente mais forte" = mais de 5 %** de força (com bónus e casa, `match_strength`), o mesmo corte da medição. **Porquê** (`DISCOVERY.md` §3, 516 jogos de todos os clubes): fora, o 4-3-3 B deu 2,33 pontos por jogo contra 1,08 do A com forças parecidas (9 jogos) e 2,88 contra 2,46 sendo mais forte (24 jogos). **[S]** É pouca amostra nas forças parecidas; voltar a medir com mais jogos.
+
 **Sem extremos em forma → 4-4-2 B (dono, 2026-10-14):** o 4-3-3 A precisa de **1 EE e 1 ED** (posição específica) em forma: condição ≥ 80 % (§16), sem lesão nem castigo, no plantel todo (titulares ou banco). Se faltar um dos lados, o **4-4-2 B** (2 PL, sem extremos) conta como certo em vez do 4-3-3 A; outra formação continua a dar aviso. Na janela o passo "Onze" fica **verde** com uma nota ao passar o rato ("4-4-2 B aceite: sem ED em forma (…)"). Só quando a regra da força diz 4-3-3 A; contra um mais forte continuam as 5 defesas.
 
 **"Mais forte" conta os bónus do jogo e a casa (dono, 2026-10-14; `match_strength`):** força = rating da equipa × (1 + bónus %) × 1,05 para quem joga em casa.
 - **Bónus:** os de cada lado somam-se, como o jogo os mostra no círculo ao lado do emblema ("+3 %"). Do dono: sequência de logins (`matchBoost`) + estágio (`CampBoostPercentage`, 25 %) e treino secreto (`SecretBoostPercentage`, 2 %) quando marcados. Do adversário: só os logins, depois da análise e só com treinador humano (como o site); o estágio e o treino secreto dele não se veem.
-- **[?] Dúvida em aberto: quanto vale o estágio (dono, 2026-10-24).** O dono estranhou que o estágio desse 4-3-3 A fora contra o 1.º com o plantel muito mais forte. Os registos (`DISCOVERY.md` §3, 12 jogos) mostram que o estágio ajuda (8 V, 3 E, 1 D), mas não chegam para dizer quanto: não provam os 25 % e a força do jogo não o inclui. A regra fica como está (o código soma os 25 %) até haver mais jogos com estágio só de um lado; o dono decide a formação nesses jogos.
-- **Onze do adversário com um buraco (dono, 2026-10-24):** depois da análise, se o adversário tem **menos de 11 titulares** (um lugar vazio), a força dele é a dos **seus melhores num 4-3-3**, como antes da análise no §16 (pode preencher o lugar antes do jogo). Antes, o buraco fazia o bot tratá-lo como "sem análise" e pedir o 4-3-3 A contra um clube muito mais forte. Antes da análise (nenhum titular visível) continua sem força (`board/info.opponent_rating`).
+- **Quanto vale o estágio (dono, 2026-10-24; fechada a 2026-10-25: "não muda nada a nossa teoria").** O dono estranhou que o estágio desse 4-3-3 A fora contra o 1.º com o plantel muito mais forte. Os registos (`DISCOVERY.md` §3, 12 jogos) mostram que o estágio ajuda (8 V, 3 E, 1 D), mas não chegam para dizer quanto: não provam os 25 % e a força do jogo não o inclui. A regra fica como está (o código soma os 25 %) até haver mais jogos com estágio só de um lado; o dono decide a formação nesses jogos.
+- **Onze do adversário com um buraco (dono, 2026-10-24):** depois da análise, se o adversário tem **menos de 11 titulares** (um lugar vazio), a força dele é a dos **seus melhores num 4-3-3**, como antes da análise no §16 (pode preencher o lugar antes do jogo). Antes, o buraco fazia o bot tratá-lo como "sem análise" e pedir o 4-3-3 A contra um clube muito mais forte.
+- **Antes da análise (dono, 2026-10-25; substitui "antes da análise, só 4-3-3 A"):** a força do adversário é **estimada** pelos **seus melhores num 4-3-3** (a mesma conta do §16), sem os bónus de login dele (só se veem depois da análise). A regra da formação usa-a logo: contra um adversário mais forte pede 5 defesas sem ser preciso analisar. **A análise não é obrigatória;** quando é feita, a força passa a ser a do onze real dele, com os bónus que se veem, e o bot relê-a logo. Motivo: o dono pôs o 5-2-3 fora contra um clube claramente mais forte (melhores 92 contra 88) e o cartão pedia o 4-3-3 A só por faltar a análise. **[S]** O palpite do 4-3-3 erra se o adversário não jogar com os melhores (`board/info.opponent_rating`).
 - **Casa:** +5 % para quem joga em casa; nada em campo neutro.
 - **[S] Os 5 % de casa** são a média medida nos 272 jogos (2026-10-13), com o campo de cada estádio lá dentro sem o separar. O campo dá "+X % home advantage" por nível (0/2/4/6 %; FC Van nível 2 = +4 %), mas o estádio dos outros não se lê (403). **Nota para mais tarde:** voltar a medir a vantagem de casa pelos registos dos jogos (`logs/*/jogos`), e ver se bate com os 5 % ou se depende do nível do campo (pelo menos nos jogos do dono, cujo campo se conhece).
 
@@ -320,7 +323,7 @@ Pelo mesmo preço, o do jogo tem **+6 de rating** que o de utilizador (PL) e o "
 - **Com necessidade e sem "SALE" (confirmado):** compra um jogador **da posição, do jogo, sem etiqueta "SALE"**. **Nunca** de utilizador.
 - **Jogadores Legend** (na lista de transferências, linhas douradas): o dono **evita sempre comprar**. Cada compra custa o **dinheiro do jogador + cerca de 50 boss coins** por ser Legend.
 - **Inform players:** custam o **dinheiro + cerca de 5 boss coins**; o dono acha **mais aceitável** (compra-os se fizer sentido, sem regra fixa dita).
-- **Olheiro (scout):** permite escolher **nacionalidade, idade e posição**. O dono **só o usa em emergência**: **custa boss coins** e **o olheiro demora muito tempo** a chegar; **"não são bons negócios"**.
+- **Olheiro (scout):** permite escolher **nacionalidade, idade e posição**. O dono **só o usa em emergência**: **custa boss coins** e **o olheiro demora muito tempo** a chegar; **"não são bons negócios"**. Já o usou várias vezes em emergências (dono, 2026-10-25). *Para o futuro, sem decisão:* numa versão muito mais automatizada (o bot a mexer no onze e nas transferências, que o dono não sabe se alguma vez quer), o olheiro também se podia automatizar; por agora nada (OSMPro Dicas §11).
 
 ### 7.7 Mercado: jogadores novos desaparecem depressa
 
@@ -397,8 +400,8 @@ Há **3 componentes** a melhorar, cada um com **níveis 0, 1, 2 e 3**:
 | **Campo** | **+% de melhoria geral da equipa antes do jogo** |
 | **Capacidade** | **Aumenta a receita** |
 
-- **Ordem do dono:** melhora **sempre primeiro os Treinos**, até ao máximo (nível 3); **depois o Campo**; **por fim a Capacidade**.
-- **Custo:** cada melhoramento custa cerca de **200k** em **dinheiro do clube** (confirmado; não são boss coins).
+- **Ordem do dono (atualizada 2026-10-25, OSMPro Dicas §12):** **Treinos até ao nível 1**, **Campo até ao nível 1** (do 0 para o 1 é um só ciclo de 18 h em cada um), depois **Treinos até ao máximo**, **Campo até ao máximo** e **por fim a Capacidade**. **Porquê:** com um clube médio há mais jogos equilibrados, e o Campo no nível 1 dá logo +2 % em casa por só mais 18 h; a seguir os Treinos têm prioridade, porque contam todos os dias em todos os jogadores. *Antes:* Treinos até ao máximo, depois Campo, depois Capacidade.
+- **Custo:** em **dinheiro do clube** (não são boss coins). **Varia por liga e por nível** (dono, 2026-10-25): no início falava-se de "cerca de 200k"; medido pelo bot: **481 249** (campo de treinos, nível 1 → 2, 2026-10-25, `DISCOVERY.md` §3).
 - **Melhoramentos por nível (fechado, 2026-09-27, número exato não é necessário):** do nível 0 para o 1 é **só 1 melhoramento**. Do 1 para 2 e do 2 para 3 são mais, e o número **varia por clube/liga** (Clube A 2→3: 11; clube pequeno na outra liga 2→3: 7), provavelmente pelo nível da liga — mas o dono considera **irrelevante para a automação**: a regra que importa é a **ordem de prioridade** (Treinos ao máximo → depois Campo → depois Capacidade, ver acima), que já não depende de saber quantos melhoramentos cada passo leva.
 - **Duração total:** normalmente leva **quase uma época** a levar os 3 componentes ao máximo.
 - Liga-se à automação de treinos (§5): o nível de Treinos aumenta o ganho de cada sessão.
@@ -505,7 +508,7 @@ Há **3 componentes** a melhorar, cada um com **níveis 0, 1, 2 e 3**:
 
 **Estádio**
 - ~~Não há "recolher": uma melhoria acaba e a seguinte **põe-se a correr**, nada mais.~~ **Errado (medido em 2026-10-24, `DISCOVERY.md` §3):** uma melhoria acabada só conta depois de **recolhida**; pôr a seguinte antes perde-a. O bot recolhe as acabadas e só depois põe a seguinte (D-066). Acelerar com boss coins até ao fim conta logo, sem recolher.
-- **Ordem das partes:** campo de treinos → campo → capacidade.
+- **Ordem das partes:** campo de treinos até ao 1 → campo até ao 1 → campo de treinos até ao máximo → campo até ao máximo → capacidade (§8, 2026-10-25). **[H]** Ao trocar de parte a meio de um nível, os ciclos já feitos da outra parte parecem ficar guardados (`cycleProgress` é de cada parte); por confirmar quando acontecer.
 - **Duração de uma melhoria (dono, 2026-10-09):** **18 h** normalmente; nos **eventos** do estádio, **4 h**. Há eventos destes para outras coisas também (p. ex. treinos). Visto nos registos: campo, 3 melhorias seguidas de 18h00. **[S]** As outras partes (treinos, capacidade) duram o mesmo. O jogo só dá a hora em que a melhoria acaba; o quadro calcula o início como "fim − 18 h" (ou "fim − 4 h" se a viu começar num evento) e, quando não dá para saber, mostra só o tempo.
 - **Em todas as equipas**, sempre que houver dinheiro.
 - Se não houver dinheiro nos fundos, ver a **poupança**: se tiver, tirar tudo (§13: é tudo ou nada), pagar a melhoria e **voltar a depositar o que sobra** o mais depressa possível.
@@ -536,6 +539,12 @@ Há **3 componentes** a melhorar, cada um com **níveis 0, 1, 2 e 3**:
 ## 17. Recompensas diárias: início de sessão, missões e vídeos acumulados
 
 *Fonte: o dono, 2026-10-07. Pedidos observados com `inspect-writes` (`DISCOVERY.md` §3).*
+
+**Missões por fazer à mão (dono, 2026-10-25):** no topo da janela, ao lado de "Missões N/3", o bot avisa "Por fazer: …" das missões do dia que só o dono faz (comprar, vender, olheiro, pôr na lista: `progressType` ≥ 1000), e nas **últimas 3 h** do dia de qualquer missão por fazer. Sem as 3 missões não há prémio do dia (perdido a 17, 22 e 24/10). Trocar a missão com um vídeo foi visto e posto de lado: troca por outra, não a dá como feita.
+
+**Previsão de um jogo real (dono, 2026-10-25: "melhor que perder as coins sempre"):** sempre que há um jogo aberto para prever e não há previsão feita, o bot prevê **1-1** **[S]** (o resultado exato mais comum no futebol; o prémio só vem com o resultado exato). Depois do jogo, com o resultado, fecha a previsão como o site (certa: os prémios entram; errada: só limpa), para a seguinte abrir. Prémios vistos: 3, 5 e 10 boss coins, 1 M de fundos, itens de posição.
+
+**Prémio de fim de época (dono, 2026-10-25: "se eu me esquecer o bot levanta"):** reclamar o de cada época acabada ainda por reclamar (boss coins).
 
 **Início de sessão** (uma vez por dia, quando `user/dailylogin` diz `isClaimable`)
 - Reclamar. O site gasta a recompensa logo na carteira certa; o bot faz o mesmo: **energia** → carteira de energia; **boss coins** → carteira de boss coins (o dono: "vão para a carteira, não há nada a ver").
@@ -570,7 +579,8 @@ Há **3 componentes** a melhorar, cada um com **níveis 0, 1, 2 e 3**:
 
 *Fonte: o dono, 2026-10-12 (conversa sobre ganhar mais jogos e campeonatos; a conta das boss coins está em `WORKLOG.md`, 2026-10-12).*
 
-- **Criar a liga** em vez de entrar numa já a decorrer. Cada criação custa **~350 boss coins** em média.
+- **Como o dono escolhe agora (dono, 2026-10-25; na prática substitui "criar a liga"):** não tem criado ligas ("não tem feito sentido"). Entra numa **liga cheia de treinadores humanos**, num **clube médio** que ainda tenha **pelo menos 2 dias de pré-época**, com um **plantel com muitos jogadores**. Prefere trabalhar a equipa desde a pré-época. *Alternativa vista no OSMPro (Dicas §6), não usada:* pegar num clube a meio da época perto do objetivo para fechar um país; o dono acha que em meia época subia facilmente até ao objetivo (p. ex. 13.º), mas não muda a estratégia nem o bot.
+- **Criar a liga** (o plano de 2026-10-12, hoje pouco usado). Cada criação custa entre **~200 e ~350 boss coins**, conforme a liga (dono, 2026-10-25: há ligas de 200).
 - **Começar logo com o clube de maior valor do plantel** da liga (ao criar a liga, o jogo deixa escolher o clube). Como as automações tornam tudo mais eficiente (treinos, amigáveis, vídeos, poupança), quanto mais cedo o plantel for o melhor, **mais depressa ganha distância** para os outros.
 - **Estágios: até 3 por época** (10 + 20 + 50 = 80 coins). Os 3 seguintes (100, 200, 500) são exponencialmente mais caros; com a distância ganha cedo, deixam de ser precisos.
 - Conta do dono: com ~190 boss coins por dia, a liga (~350), os 3 estágios (80) e os amigáveis (≈28 coins por dia por equipa) dá para **4 equipas**.
@@ -601,7 +611,7 @@ Há **3 componentes** a melhorar, cada um com **níveis 0, 1, 2 e 3**:
 - **Taça:** a preparação é a mesma do campeonato, mas um jogo a eliminar justifica um estágio mais facilmente. Se o jogo da taça for contra um bot muito fraco e houver a seguir um jogo difícil do campeonato contra um adversário direto, pode poupar titulares na taça.
 - **Várias equipas:** o jogo dá **4 lugares** por conta. A partir de agora, ligas criadas pelo dono, um país de cada vez pela ordem alfabética; às vezes também um torneio de campeões.
 - **Na janela (dono, 2026-10-13):**
-  - *Força da equipa* num círculo (o número do jogo, `DISCOVERY.md`): a do clube do dono sempre; a do adversário **só depois da análise**, como no jogo (antes, o jogo não mostra o onze dos outros; sem estimativas). **[S]** Cores: a do clube do dono azul (neutra); a do adversário comparada com a nossa: verde se for 2 ou mais abaixo, vermelho se for 2 ou mais acima, amarelo se estiverem a menos de 2.
+  - *Força da equipa* num círculo (o número do jogo, `DISCOVERY.md`): a do clube do dono sempre; a do adversário **também antes da análise**, estimada (os melhores dele num 4-3-3, §1; dito ao passar o rato), e **atualizada** com o onze real dele depois da análise (dono, 2026-10-25; antes só aparecia depois da análise). **[S]** Cores: a do clube do dono azul (neutra); a do adversário comparada com a nossa: verde se for 2 ou mais abaixo, vermelho se for 2 ou mais acima, amarelo se estiverem a menos de 2.
   - *Hover no lugar do campeonato:* os 3 primeiros com os pontos (se o clube estiver abaixo do 3.º: os 2 primeiros e o clube) e o objetivo da época ("Objetivo: 4.º ou acima"). Com o título **matematicamente garantido**, o cabeçalho diz "Campeões" em vez de "1.º Campeonato". **[S]** Garantido = em 1.º e o 2.º não consegue chegar aos nossos pontos nem ganhando todos os jogos de campeonato que lhe faltam (o empate não conta como garantido: o critério de desempate do jogo não é conhecido).
   - *Hover no valor do plantel (dono, 2026-10-15):* a tabela do jogo por valor do plantel (clube, valor, jogadores, valor médio por jogador) à volta do clube: em **1.º, os 2 de baixo**; senão **1 acima e 1 abaixo** (em último, só o de cima). Sem o nome do treinador (o bot não o lê).
   - *Formato dos dois hovers (dono, 2026-10-15):* tabelas como as do jogo, com os nomes das colunas por cima e o nosso clube destacado. Campeonato: **# · Clube · J · DG · Pts** e o objetivo por baixo; valor do plantel: **# · Clube · Valor · Jogadores · Média**.
@@ -637,7 +647,7 @@ Na checklist do cartão, o passo fica **amarelo** quando o jogo o dá como feito
 **Onze (tática):**
 - **Desarme vs árbitro do próximo jogo**, pela tabela do §3 com o que o dono aceita.
 - **Idade do onze** (dono, 2026-10-22; OSMPro, Dicas: EfHyzY6C5AI, 7da7tn75LAI): pelo menos **3 titulares com mais de 26 anos e 3 com menos de 26**; um onze demasiado jovem tem bónus negativo e o jogo avisa. Fora disso, amarelo: "Onze com só 2 jogadores acima de 26 anos (o jogo dá bónus negativo a um onze demasiado jovem)". **[S]** O lado contrário (onze demasiado velho) avisa igual, com "abaixo de 26"; o autor só fala do jovem. Os 4 onzes do dono cumpriam no dia (5/4, 6/5, 4/5, 5/6).
-- **Formação** (§1): antes da análise só aceita **4-3-3 A**; depois da análise, com o adversário mais forte (qualquer margem, com bónus e casa, §1) pede **5 defesas** e aceita qualquer uma (5-3-2, 5-2-3, 5-4-1; D-049). O 4-3-3 B fica amarelo (o dono pode experimentá-lo na mesma).
+- **Formação** (§1): com o adversário mais forte (antes da análise pela estimativa, depois pelo onze real dele; dono, 2026-10-25) (qualquer margem, com bónus e casa, §1) pede **5 defesas** e aceita qualquer uma (5-3-2, 5-2-3, 5-4-1; D-049). Em casa o 4-3-3 B fica amarelo; fora é o B que se pede e o A fica amarelo, exceto sendo claramente mais forte (dono, 2026-10-25).
 
 **Posições** (dono, 2026-10-14): o jogo conta quantos titulares estão no lugar da sua posição específica (9/11 = 2 fora). O hover diz **quem**: "Messi (ED) a jogar a PL". O mapa de cada lugar de cada formação vem do código do próprio jogo (`theory/lineup.places`). Nomes: GR, DE, DC, DD, MDC, MC, MO, ME, MD, EE, PL, ED.
 
@@ -653,4 +663,12 @@ Na checklist do cartão, o passo fica **amarelo** quando o jogo o dá como feito
 - **[S]** A variação de um jogo é a do saldo **dessa liga** (o total mistura as ligas). Só conta para as médias quando a leitura anterior foi a jornada anterior (`jornadas` 1).
 - **[S]** Os amigáveis não contam para o rating (não se registam).
 - **[?]** Como o jogo calcula o rating (quanto dá uma vitória, quanto tira uma derrota, se depende do rating do adversário): sem fonte pública; o registo é para o descobrir.
+
+## 23. Relatórios dos jogos (o que diz o comentador)
+
+*Fonte: o dono, 2026-10-25 ("é super útil ler o relatório do jogo"; "guardar TODOS os relatórios relativos a todos os jogos que fazemos"; "temos que analisar ocasionalmente para apurar conclusões"). Factos em `DISCOVERY.md` §3; decisão D-068.*
+
+- **O que se guarda:** de cada jogo dos clubes do dono (liga, taça e amigáveis), todos os comentários do apresentador e do comentador, em `logs/<PC>/relatorios/`. O veredito do comentador no fim (o destaque e a dica, como o jogo os mostra) vai também para o registo do dia ("Relatório: …"). Só leitura.
+- **Porque tem de ser logo:** o jogo só dá o relatório enquanto o jogo está na jornada à mostra; na jornada seguinte já não responde. O bot lê-os em cada passagem.
+- **Análise de tempos a tempos (pedido do dono):** juntar as dicas e ver o que repetem: desarme por árbitro (o comentador pede muitas vezes mais duro), estilo contra adversários mais fracos ("Why the defensive Style?"), especialistas elogiados ou criticados, finalização. Daí podem sair afinações à teoria, só com OK do dono. O bot não muda nada sozinho por causa das dicas.
 

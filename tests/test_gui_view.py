@@ -229,7 +229,7 @@ def test_doctor_and_lawyer_rings():
 def test_daily_hover_texts():
     from osmbot.gui.view import daily_tips
 
-    daily = {"login": {"claimable": False, "day": 21, "renews": NOW + 3600, "today": {"type": 1, "value": 5}},
+    daily = {"login": {"claimable": False, "day": 21, "renews": NOW + 10 * 3600, "today": {"type": 1, "value": 5}},
              "missions": {"total": 3, "claimed": 1, "day_pending": False, "today": 2,
                           "dailies": [{"text": "Train any player", "progress": 2, "goal": 2, "claimed": True},
                                       {"text": "Spend Club Funds", "progress": 10, "goal": 5_000_000, "claimed": False}],
@@ -297,7 +297,8 @@ def test_the_circle_shows_the_strength_ours_blue_the_opponents_compared_with_our
 
     assert rating_badge(109) == {"text": "109", "colour": BLUE, "tip": ""}  # no hover (owner, 2026-10-15)
     assert [rating_badge(theirs, ours=108)["colour"] for theirs in (73, 107, 109, 110)] == [GREEN, YELLOW, YELLOW, RED]
-    assert rating_badge(None, ours=108) is None  # not analysed yet: no circle
+    assert rating_badge(None, ours=108) is None  # unknown: no circle
+    assert rating_badge(110, ours=108, estimate=True)["tip"].startswith("Estimativa antes da análise")  # owner, 2026-10-25
 
 
 def test_the_place_says_champions_once_won_and_the_hover_has_the_top_3_and_the_goal():
@@ -360,3 +361,18 @@ def test_squad_hover_is_the_table_by_value():
     assert squad_view((1, 10, 1, 10, 20))["table_tip"] is None  # no table: the players and average only
     from osmbot.gui.view import rating_badge
 
+
+
+def test_the_top_says_the_missions_to_do_by_hand_and_late_in_the_day_any_not_done():
+    from osmbot.gui.view import _daily_parts
+
+    buy = {"text": "Buy any player rated 90+", "progress": 1, "goal": 2, "claimed": False, "manual": True}
+    train = {"text": "Train any player", "progress": 0, "goal": 2, "claimed": False, "manual": False}
+    done = {**buy, "progress": 2}
+    daily = {"missions": {"claimed": 1, "total": 3, "day_pending": False, "dailies": [buy, train, done]},
+             "login": {"claimable": False, "day": 4, "renews": NOW + 10 * 3600}}
+    todo = [p[2] for p in _daily_parts(daily, NOW) if p[2].startswith("Por fazer")]
+    assert todo == ["Por fazer: Comprar um jogador com rating 90+ (1/2)"]  # the bot trains: not said yet (owner, 2026-10-25)
+    late = {**daily, "login": {**daily["login"], "renews": NOW + 3600}}
+    assert [p[2] for p in _daily_parts(late, NOW, "en") if p[2].startswith("To do")] == [
+        "To do: Buy any player rated 90+ (1/2)", "To do: Train any player (0/2)"]

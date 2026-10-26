@@ -33,6 +33,9 @@ def _no_repo_logs(monkeypatch, tmp_path):
     from osmbot.game import xplog
 
     monkeypatch.setattr(xplog, "FILE", tmp_path / "xp.json")  # nor the XP log's state
+    from osmbot.game import reports
+
+    monkeypatch.setattr(reports, "FILE", tmp_path / "relatorios.json")  # nor the match reports' state
 
 
 @pytest.fixture

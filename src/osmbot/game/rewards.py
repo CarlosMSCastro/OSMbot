@@ -323,11 +323,12 @@ def run_rewards(confirm: bool) -> tuple[int, list[float]]:
     """All three, each independent of the others. Returns (failures, times to wake at).
     Without ``confirm`` only shows what it would do."""
     from osmbot.game.client import NeedsBrowserLogin, OsmClient
+    from osmbot.game.predictions import claim_seasons, run_prediction
 
     failures, wake = 0, []
     try:
         client = OsmClient()
-        for step in (claim_login, claim_missions, claim_video_reward, claim_money):
+        for step in (claim_login, claim_missions, claim_video_reward, run_prediction, claim_seasons, claim_money):
             try:
                 failures += step(client, confirm)
             except (NeedsBrowserLogin, OSError):

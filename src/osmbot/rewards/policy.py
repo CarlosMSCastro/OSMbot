@@ -11,6 +11,7 @@ LOGIN_WALLETS = {
 
 
 COINS, CLUB_FUNDS = 1, 8  # reward types: boss coins, club money
+MANUAL_FROM = 1000  # mission progressType from here on: buy, sell, scout, list a player; the owner's to do (2026-10-25)
 
 
 def money_items(inventory: list[dict]) -> list[dict]:
@@ -139,7 +140,8 @@ def mission_details(user_missions: list[dict], catalogue: list[dict], prizes: di
     week's day rewards from today on (day, prize, claimed); today's is the first when it is in the list."""
     goals = {m["id"]: m for m in catalogue}
     dailies = [{"text": goals.get(m["missionId"], {}).get("progressTypeTranslation") or "", "progress": m["progress"],
-                "goal": goals.get(m["missionId"], {}).get("threshold") or 0, "claimed": m["isClaimed"]}
+                "goal": goals.get(m["missionId"], {}).get("threshold") or 0, "claimed": m["isClaimed"],
+                "manual": (goals.get(m["missionId"], {}).get("progressType") or 0) >= MANUAL_FROM}
                for m in sorted((m for m in user_missions if is_daily(m)), key=lambda m: m["order"])]
     today = today_index(user_missions, now)
     week = []

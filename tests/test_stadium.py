@@ -15,9 +15,14 @@ def part(kind, level, top=3, ends=None):
     return p
 
 
-def test_order_is_training_then_pitch_then_capacity():
+def test_order_is_training_and_pitch_to_1_then_training_pitch_and_capacity_to_the_top():
     assert next_part([part(0, 0), part(1, 0), part(2, 0)], NOW) == 2
+    assert next_part([part(0, 0), part(1, 0), part(2, 1)], NOW) == 1  # the pitch to 1 (owner, 2026-10-25)
+    assert next_part([part(0, 0), part(1, 0), part(2, 2)], NOW) == 1  # a club already past it: the pitch to 1 too
+    assert next_part([part(0, 0), part(1, 1), part(2, 1)], NOW) == 2  # then back to the training ground
+    assert next_part([part(0, 0), part(1, 1), part(2, 3)], NOW) == 1
     assert next_part([part(0, 0), part(1, 0), part(2, 3)], NOW) == 1
+    assert next_part([part(0, 0), part(1, 0, top=0), part(2, 1)], NOW) == 2  # a pitch with no levels: skipped
     assert next_part([part(0, 0), part(1, 3), part(2, 3)], NOW) == 0
     assert next_part([part(0, 3), part(1, 3), part(2, 3)], NOW) is None
 
@@ -142,9 +147,12 @@ def test_a_finished_upgrade_is_to_collect_until_claimed():
 
 
 def test_collects_the_finished_one_before_starting_the_next():
-    client = FakeClient(balance=500, savings=0, price=300, parts=[part(0, 0), part(1, 0), finished(2, 0, 7)])
+    client = FakeClient(balance=500, savings=0, price=300, parts=[part(0, 0), part(1, 1), finished(2, 0, 7)])
     assert run(client) == (0, [NOW + 64800])
     assert client.calls == [("claim", 7), ("post", 2)]  # same part again: it went 0 -> 1, the next level is still to do
+    client = FakeClient(balance=500, savings=0, price=300, parts=[part(0, 0), part(1, 0), finished(2, 0, 7)])
+    assert run(client) == (0, [NOW + 64800])
+    assert client.calls == [("claim", 7), ("post", 1)]  # the pitch to 1 next (owner, 2026-10-25)
 
 
 def test_never_starts_over_an_uncollected_one():

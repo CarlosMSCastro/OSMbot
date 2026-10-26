@@ -175,16 +175,20 @@ def opponent_tip(name: str, value: tuple | None) -> dict | None:
                                      ("Média", money(round(average)))]}
 
 
-def rating_badge(strength: int | None, ours: int | None = None) -> dict | None:
+ESTIMATE_TIP = "Estimativa antes da análise: os melhores dele num 4-3-3"
+
+
+def rating_badge(strength: int | None, ours: int | None = None, estimate: bool = False) -> dict | None:
     """The team's strength in a circle, the number the game shows (owner, 2026-10-13). The club's own is blue; the
-    opponent's (``ours`` given) is green when weaker, red when stronger, yellow when close. None when unknown: the
-    opponent's only once analysed, as in the game. No hover on either (owner, 2026-10-15: redundant)."""
+    opponent's (``ours`` given) is green when weaker, red when stronger, yellow when close. Before the analysis the
+    opponent's is an estimate, said on hover (owner, 2026-10-25); otherwise no hover (owner, 2026-10-15: redundant).
+    None when unknown."""
     if not strength:
         return None
     colour = BLUE
     if ours:
         colour = GREEN if strength <= ours - CLOSE_STRENGTH else RED if strength >= ours + CLOSE_STRENGTH else YELLOW
-    return {"text": str(strength), "colour": colour, "tip": ""}
+    return {"text": str(strength), "colour": colour, "tip": ESTIMATE_TIP if estimate else ""}
 
 
 def table_view(club: dict) -> tuple[str, dict | None]:
@@ -350,7 +354,7 @@ def club_view(club: dict, now: float, shortened: dict | None = None) -> dict:
 
     match = None  # the stripe of the next match (D-030), in the club's colour
     if nxt:
-        match = {"text": f"vs {nxt['opponent']}{rank}", "value": rating_badge(nxt.get("strength"), club.get("strength")),
+        match = {"text": f"vs {nxt['opponent']}{rank}", "value": rating_badge(nxt.get("strength"), club.get("strength"), nxt.get("estimate", False)),
                  "tip": opponent_tip(nxt["opponent"], nxt.get("value")),
                  "tag": ("CASA" if nxt["side"] == "H" else "FORA") + (" · TAÇA" if nxt["cup"] else ""), "danger": nxt["danger"], "left": span(club["match"] - now) if club.get("match") else ""}
     header, table_tip = table_view(club)  # and the cup on a line of its own (owner, 2026-10-09)
@@ -376,7 +380,20 @@ def club_view(club: dict, now: float, shortened: dict | None = None) -> dict:
             "universal": universal_ring(club.get("universal"), now)}
 
 
-def _daily_parts(daily: dict, now: float) -> list[tuple[str, str, str, str]]:
+LATE_MISSIONS = 3 * 3600  # this close to the new day, every mission not done is said at the top, not only the owner's
+
+
+def _missions_to_do(daily: dict, now: float, lang: str) -> list[str]:
+    """The daily missions the owner should do himself (owner, 2026-10-25: "avisar lá em cima que falta fazer
+    alguma"): those the bot never does (buy, sell, scout, list), and in the last hours of the day any not done."""
+    missions, renews = daily.get("missions") or {}, (daily.get("login") or {}).get("renews")
+    late = bool(renews) and 0 < renews - now <= LATE_MISSIONS
+    return [_say(lang, "Por fazer: ", "To do: ") + f"{mission_text(m['text'], lang)} ({amount(m['progress'], m['goal'])})"
+            for m in missions.get("dailies") or []
+            if not m["claimed"] and m["progress"] < m["goal"] and (m.get("manual") or late)]
+
+
+def _daily_parts(daily: dict, now: float, lang: str = "pt") -> list[tuple[str, str, str, str]]:
     """(which, kind, text, colour) per piece; "which" says what its hover is about."""
     parts: list[tuple[str, str, str, str]] = []
     login = daily.get("login")
@@ -388,6 +405,7 @@ def _daily_parts(daily: dict, now: float) -> list[tuple[str, str, str, str]]:
         finished = missions["claimed"] >= missions["total"]
         parts.append(("missions", "done", f"Missões {missions['claimed']}/{missions['total']}", GREEN) if finished
                      else ("missions", "progress", f"Missões {missions['claimed']}/{missions['total']}", YELLOW))
+        parts += [("missions", "progress", text, YELLOW) for text in _missions_to_do(daily, now, lang)]
         if missions["day_pending"]:
             parts.append(("day", "collect", "Prémio diário por reclamar", YELLOW))
         else:
@@ -624,7 +642,7 @@ def board_view(snapshot: dict | None, stats: dict | None, now: float, doing: dic
     shortened = (stats or {}).get("shortened") or {}
     tips = daily_tips(snapshot.get("daily"), lang)
     daily = [(kind, text, colour, tips.get(which, []))
-             for which, kind, text, colour in _daily_parts(snapshot.get("daily") or {}, now)]
+             for which, kind, text, colour in _daily_parts(snapshot.get("daily") or {}, now, lang)]
     return {"clubs": [club_view(c, now, shortened) for c in snapshot["clubs"]],
             "account": account_view(snapshot, stats, now), "next": next_check(snapshot, now),
             "doing": doing_view(snapshot, doing, now),
