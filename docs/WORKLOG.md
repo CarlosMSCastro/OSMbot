@@ -2,6 +2,17 @@
 
 Entradas mais recentes primeiro. Cada sessão: o que se fez · o que ficou por fazer · próximo passo.
 
+## 2026-10-27 (cont.) — Sem laterais ou extremos em forma: 3 defesas ou 2 PL (D-072)
+
+- **Dono:** jogo importante amanhã, DE e DD a poupar hoje contra um bem mais fraco → 3-4-3. Pedido: o bot perceber e sugerir isto, e as táticas de 2 PL com os extremos cansados. Respostas: cansado = amarelo ou a poupar; 3 defesas sempre que a regra pede um 4-3-3; 3-4-3 e 3-5-2; 2 PL = 4-4-2 B, 5-3-2, 3-5-2.
+- **Feito:** `theory/lineup` (`_missing`, `_instead`, `_suggest`; substituem `_no_wingers`/`_wingerless`), `game/clubinfo` passa `spare` (próximo não importante, seguinte importante), `i18n`. `THEORY.md` §1, D-072. 456 testes (3 novos); pyflakes sem avisos novos.
+- **Versão 0.14.3 (pedido do dono):** com isto e o hover do banco em tabela. `pyproject.toml`, `__init__`, `CHANGELOG.md`, `README.md` (estado), `dist/release-notes-v0.14.3.md`; `build_portable.py --zip --installer` → `dist/windows/` 0.14.3 (553 / 206 / 148 MB), versão confirmada no portátil; os da 0.14.2 apagados. Commit e `gh release create v0.14.3` entregues ao dono.
+- **Falta:** o dono instalar a 0.14.3 e ver na janela (e refazer o dist no Mac).
+
+## 2026-10-27 — Janela: hover do passo "Banco" em tabela
+
+- **Dono ("que salganhada que está esse popup"):** o hover "Fora da regra" do banco passa de frases soltas a uma tabela (`gui/window.tip_swaps`): secção "No banco › A jogar" e secção "Entra primeiro › Melhor, atrás", nome e força em colunas, o melhor a verde e o pior a amarelo; outros avisos (posição do banco) ficam por baixo, em texto. As frases do `theory/lineup` e do registo não mudam. `i18n` com os 4 títulos. 453 testes; pyflakes sem avisos novos.
+
 ## 2026-10-26 (cont.) — Amigáveis depois do fim do Intense Friendlies
 
 - **Pergunta do dono:** porque fez 8 amigáveis em cada clube (relatórios de hoje). Registo do `DESKTOP-KAM70RR`: a jornada nova começou com os jogos de 25/10 (20:31–22:28); com o Intense Friendlies a acabar, os 8 da jornada ficaram todos para 1 h antes do fim, que o bot punha às 24:00 → 32 amigáveis às 23:00–23:05. O jogo dá o fim às 22:59:59 (`eventnotifications`): feitos já fora do evento, provavelmente sem bónus.

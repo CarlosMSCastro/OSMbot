@@ -4,6 +4,21 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-PT/1.1.0/); 
 
 Este ficheiro é o **histórico de versões, para quem lê o repo**. O diário interno de cada sessão de trabalho está em [`docs/WORKLOG.md`](docs/WORKLOG.md).
 
+## [0.14.3] — 2026-10-27
+
+Formações sem laterais ou extremos em forma, e o aviso do banco mais legível.
+
+### Adicionado
+- **Sem laterais em forma:** quando a regra pede um 4-3-3 e um lado não tem nenhum DE ou DD em forma no plantel, o 3-4-3 e o 3-5-2 ficam verdes, com uma nota ao passar o rato. Com o 4-3-3, o passo "Onze" fica amarelo e sugere-os ("Formação 4-3-3 A sem DD em forma (…): serve 3-4-3 ou 3-5-2").
+- **Sem extremos em forma:** além do 4-4-2 B, servem também o 5-3-2 e o 3-5-2, com a mesma sugestão no 4-3-3. Sem laterais nem extremos, só o 3-5-2.
+- **A poupar:** quando o próximo jogo não é importante e o seguinte é, um jogador com menos de 84 % conta como cansado (chegaria amarelo ao jogo importante).
+
+### Alterado
+- **Aviso do banco:** o hover "Fora da regra" passa de frases soltas a uma tabela (no banco › a jogar; entra primeiro › melhor, atrás), com as forças alinhadas, o melhor a verde e o pior a amarelo.
+
+### Documentação
+- `THEORY.md` §1 e `DECISIONS.md` D-072.
+
 ## [0.14.2] — 2026-10-26
 
 Venda a 100 % do máximo até 150 M, e os amigáveis do Intense Friendlies feitos dentro do evento.

@@ -130,6 +130,46 @@ def test_only_the_4_4_2_b_and_only_when_the_rule_says_4_3_3_a():
     assert tactic_notes(b442, tired, 100, 108) == []
 
 
+def fullback(name, side, fitness=90, out=0):
+    return {"name": name, "specificPosition": 9 if side == "DE" else 12, "fitness": fitness, "unavailable": out}
+
+
+def test_without_fit_full_backs_3_defenders_serve_and_the_4_3_3_is_told_so():
+    squad = [winger("Doku", "EE"), winger("Saka", "ED"), fullback("Cucurella", "DE", 76), fullback("James", "DD")]
+    a433 = {"formation": 433, "formationDetail": "A", "style": 2}
+    assert tactic_warnings(a433, 3, 108, 100, squad) == [
+        "Formação 4-3-3 A sem DE em forma (Cucurella 76 %): serve 3-4-3 ou 3-5-2"]
+    t343 = {"formation": 343, "formationDetail": "A", "style": 2}
+    assert tactic_warnings(t343, 3, 108, 100, squad) == []
+    assert tactic_notes(t343, squad, 108, 100) == ["3-4-3 aceite: sem DE em forma (Cucurella 76 %)"]
+    assert tactic_warnings({**t343, "formation": 352}, 3, 108, 100, squad) == []
+    assert tactic_warnings({"formation": 442, "formationDetail": "B", "style": 2}, 3, 108, 100, squad) == [
+        "Formação 4-4-2: devia ser 4-3-3 A"]  # it needs the full-backs too
+    assert tactic_warnings(t343, 3, 100, 103, squad) == [  # against a stronger one: still 5 defenders
+        "Formação 3-4-3: devia ser de 5 defesas (adversário mais forte)"]
+
+
+def test_resting_for_the_important_match_counts_as_tired():
+    squad = [winger("Doku", "EE"), winger("Saka", "ED"), fullback("Cucurella", "DE", 82), fullback("James", "DD", 83)]
+    t343 = {"formation": 343, "formationDetail": "A", "style": 2}
+    assert tactic_warnings(t343, 3, 108, 100, squad) == ["Formação 3-4-3: devia ser 4-3-3 A"]  # not resting: the rule
+    assert tactic_warnings(t343, 3, 108, 100, squad, spare=True) == []
+    assert tactic_notes(t343, squad, 108, 100, spare=True) == [
+        "3-4-3 aceite: sem DE em forma (Cucurella 82 % a poupar); sem DD em forma (James 83 % a poupar)"]
+
+
+def test_no_wingers_take_two_strikers_and_with_no_full_backs_either_only_the_3_5_2():
+    tired = [winger("Doku", "EE", 70), winger("Saka", "ED", 70), fullback("Cucurella", "DE"), fullback("James", "DD")]
+    for formation in (532, 352):
+        assert tactic_warnings({"formation": formation, "formationDetail": "A", "style": 2}, 3, 108, 100, tired) == []
+    assert tactic_warnings({"formation": 433, "formationDetail": "A", "style": 2}, 3, 108, 100, tired) == [
+        "Formação 4-3-3 A sem EE em forma (Doku 70 %); sem ED em forma (Saka 70 %): serve 4-4-2 B ou 5-3-2 ou 3-5-2"]
+    both = tired[:2] + [fullback("Cucurella", "DE", 70), fullback("James", "DD")]
+    assert tactic_warnings({"formation": 433, "formationDetail": "A", "style": 2}, 3, 108, 100, both)[0].endswith(": serve 3-5-2")
+    assert tactic_warnings({"formation": 343, "formationDetail": "A", "style": 2}, 3, 108, 100, both) == [
+        "Formação 3-4-3: devia ser 4-3-3 A"]
+
+
 def test_the_warnings_are_translated():
     from osmbot.i18n import set_language, tr
 

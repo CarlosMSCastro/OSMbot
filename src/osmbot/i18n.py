@@ -81,7 +81,7 @@ WORDS = {
     # board titles and labels
     "DIÁRIAS": "DAILY", "BOSS COINS": "BOSS COINS", "A SEGUIR": "UP NEXT", "TREINOS": "TRAINING", "ESTÁDIO": "STADIUM",
     "AGORA": "NOW", "PRÉ-JOGO": "PRE-MATCH", "Valor plantel": "Squad value", "Dinheiro": "Money",
-    "Fora da regra": "Out of your rule", "Aceite": "Accepted", "Vendas": "Sales", "Valor do plantel": "Squad value", "Clube": "Club", "J": "P", "DG": "GD", "Valor": "Value", "× valor": "× value",
+    "Fora da regra": "Out of your rule", "No banco": "On the bench", "A jogar": "Playing", "Entra primeiro": "Comes on first", "Melhor, atrás": "Better, behind", "Aceite": "Accepted", "Vendas": "Sales", "Valor do plantel": "Squad value", "Clube": "Club", "J": "P", "DG": "GD", "Valor": "Value", "× valor": "× value",
     "Jogadores": "Players", "Média": "Avg", "Pos": "Pos", "Força": "Strength", "Jogador": "Player", "Idade": "Age",
     "Preço": "Price", "Lucro": "Profit",
     "Campeões": "Champions", "Patrocinadores": "Sponsors", "Cansados": "Tired", "CASA": "HOME", "FORA": "AWAY", "em": "in",
@@ -141,6 +141,13 @@ def _days(span: str) -> str:
     return re.sub(r"(\d+) (dias?) e ", lambda m: f"{m[1]} day{'s' if m[2] == 'dias' else ''} and ", span)
 
 
+def _missing(text: str) -> str:
+    """'sem ED em forma (Saka 72 %, Bowen 82 % a poupar)' -> 'no fit RW (Saka 72 %, Bowen 82 % resting)'."""
+    return re.sub(r"sem (\w+) (em forma|no plantel)", lambda w: f"no {'fit ' if w[2] == 'em forma' else ''}"
+                  f"{_SPECIFIC.get(w[1], w[1])}{' in the squad' if w[2] == 'no plantel' else ''}",
+                  text).replace(" fora", " out").replace(" a poupar", " resting")
+
+
 _ROLE = {"Capitão": "Captain", "Penáltis": "Penalties", "Livres": "Free kicks", "Cantos": "Corners"}
 PATTERNS = [(re.compile(pattern), replace) for pattern, replace in (
     # pre-match warnings (THEORY.md section 21)
@@ -161,9 +168,9 @@ PATTERNS = [(re.compile(pattern), replace) for pattern, replace in (
     (r"^4-3-3 A aceite: fora, mas claramente mais forte \((.+)\)$",
      lambda m: f"4-3-3 A accepted: away, but clearly stronger ({m[1]})"),
     (r"^4-3-3 B aceite: em casa a regra é o 4-3-3 A$", lambda m: "4-3-3 B accepted: at home the rule is the 4-3-3 A"),
-    (r"^4-4-2 B aceite: (.+)$", lambda m: "4-4-2 B accepted: " + re.sub(
-        r"sem (\w+) (em forma|no plantel)", lambda w: f"no {'fit ' if w[2] == 'em forma' else ''}"
-        f"{_SPECIFIC.get(w[1], w[1])}{' in the squad' if w[2] == 'no plantel' else ''}", m[1]).replace(" fora", " out")),
+    (r"^(\d-\d-\d(?: B)?) aceite: (sem .+)$", lambda m: f"{m[1]} accepted: " + _missing(m[2])),
+    (r"^Formação (.+?) (sem .+): serve (.+)$",
+     lambda m: f"Formation {m[1]} {_missing(m[2])}: {m[3].replace(' ou ', ' or ')} will do"),
     (r"^(Capitão|Penáltis|Livres|Cantos): (.+), pela regra (.+)$",
      lambda m: f"{_ROLE[m[1]]}: {m[2]}, your rule says {m[3]}"),
     # card

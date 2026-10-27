@@ -2,7 +2,7 @@
 warns, the eleven, the bench and the tactics are the owner's."""
 from __future__ import annotations
 
-from osmbot.theory.fitness import YELLOW_BELOW
+from osmbot.theory.fitness import MATCH_DROP, YELLOW_BELOW
 from osmbot.theory.tactics import Formation, choose_formation
 
 MAIN_STAT = {1: "statAtt", 2: "statOvr", 3: "statDef", 4: "statDef"}  # the rating that counts for each position
@@ -122,28 +122,66 @@ def formation_name(tactic: dict) -> str:
 
 
 WINGERS = {8: "EE", 11: "ED"}  # specificPosition of the wingers the 4-3-3 needs, one on each side
+FULLBACKS = {9: "DE", 12: "DD"}  # and of the full-backs of any 4 defenders
+# What serves instead of the 4-3-3 when a side has nobody fit (owner, 2026-10-27; THEORY.md section 1): only the ones
+# that do not need the missing positions count (no full-backs and no wingers: the 3-5-2)
+INSTEAD = (("4-4-2 B", 442, "B", WINGERS), ("5-3-2", 532, None, WINGERS), ("3-4-3", 343, None, FULLBACKS),
+           ("3-5-2", 352, None, WINGERS), ("3-5-2", 352, None, FULLBACKS))
 
 
-def _no_wingers(players: list[dict]) -> str | None:
-    """Why the 4-3-3 cannot be played (owner, 2026-10-14): a side with no winger fit to play (fitness >= 80, not
-    injured or suspended), in the whole squad. None when both sides have one."""
-    missing = []
-    for code, side in WINGERS.items():
-        mine = [p for p in players if p.get("specificPosition") == code]
-        if any(not p.get("unavailable") and (p.get("fitness") or 0) >= YELLOW_BELOW for p in mine):
+def _missing(players: list[dict] | None, spare: bool = False) -> dict[int, str]:
+    """Specific position -> why nobody can play it (owner, 2026-10-14 and 2026-10-27): no player of it fit (fitness
+    >= 80, not injured or suspended) in the whole squad; with ``spare`` (the next match is not important and the one
+    after is, THEORY.md 16) also not one who would reach that match yellow. A full-back side with nobody in the
+    squad does not count (the owner covers it with a centre-back); a winger side does, as before."""
+    floor = YELLOW_BELOW + (MATCH_DROP if spare else 0)
+    missing = {}
+    for code, side in {**WINGERS, **FULLBACKS}.items():
+        mine = [p for p in players or [] if p.get("specificPosition") == code]
+        if any(not p.get("unavailable") and (p.get("fitness") or 0) >= floor for p in mine):
             continue
-        who = ", ".join(f"{p['name']} {'fora' if p.get('unavailable') else str(p.get('fitness') or 0) + ' %'}"
-                        for p in mine)
-        missing.append(f"sem {side} em forma ({who})" if who else f"sem {side} no plantel")
-    return "; ".join(missing) or None
+        if not mine and code in FULLBACKS:
+            continue
+
+        def state(p: dict) -> str:
+            if p.get("unavailable"):
+                return "fora"
+            fitness = p.get("fitness") or 0
+            return f"{fitness} %" + (" a poupar" if fitness >= YELLOW_BELOW else "")
+
+        who = ", ".join(f"{p['name']} {state(p)}" for p in mine)
+        missing[code] = f"sem {side} em forma ({who})" if who else f"sem {side} no plantel"
+    return missing
 
 
-def _wingerless(tactic: dict, players: list[dict] | None) -> str | None:
-    """The 4-4-2 B (2 strikers, no wingers) taken in place of the 4-3-3 A when a side has no fit winger: the reason,
-    or None when it does not apply."""
-    if tactic.get("formation") != 442 or (tactic.get("formationDetail") or "") != "B" or players is None:
+def _instead(tactic: dict, players: list[dict] | None, spare: bool = False) -> str | None:
+    """The tactics taken in place of the 4-3-3 for want of fit wingers or full-backs (``INSTEAD``): the reason, or
+    None when it does not apply."""
+    if players is None:
         return None
-    return _no_wingers(players)
+    missing = _missing(players, spare)
+    used = set(places(tactic).values())
+    for _, formation, detail, group in INSTEAD:
+        if (tactic.get("formation") == formation and detail in (None, tactic.get("formationDetail") or "A")
+                and missing.keys() & group and not used & missing.keys()):
+            return "; ".join(why for code, why in missing.items() if code in group)
+    return None
+
+
+def _suggest(tactic: dict, players: list[dict] | None, spare: bool = False) -> str | None:
+    """The tactics need a position nobody can play (a 4-3-3 with no fit right winger): what serves instead."""
+    if players is None:
+        return None
+    missing = _missing(players, spare)
+    short = set(places(tactic).values()) & missing.keys()
+    if not short:
+        return None
+    options = [name for name, formation, detail, group in INSTEAD if missing.keys() & group
+               and not set(places({"formation": formation, "formationDetail": detail or "A"}).values()) & missing.keys()]
+    if not options:
+        return None
+    return (f"Formação {formation_name(tactic)} {'; '.join(missing[code] for code in sorted(short))}: serve "
+            + " ou ".join(dict.fromkeys(options)))
 
 
 CLEARLY_STRONGER = 0.05  # [S] away, more than 5 % stronger (match strength): the 4-3-3 A is right too (owner, 2026-10-25)
@@ -170,21 +208,21 @@ def _home_b(tactic: dict, away: bool) -> bool:
 
 
 def tactic_notes(tactic: dict | None, players: list[dict] | None, mine: float | None, opponent: float | None,
-                 away: bool = False) -> list[str]:
+                 away: bool = False, spare: bool = False) -> list[str]:
     """What the tactics do differently from the rule, on purpose and within it (the step stays green): the 4-4-2 B
-    for want of wingers, the 4-3-3 A away when clearly stronger, the 4-3-3 B at home (THEORY.md section 1)."""
+    (or 5-3-2, 3-5-2) for want of wingers, the 3-4-3 (or 3-5-2) for want of full-backs, the 4-3-3 A away when clearly stronger, the 4-3-3 B at home (THEORY.md section 1)."""
     if not tactic or (mine and opponent and choose_formation(mine, opponent) == Formation.F532):
         return []
     if away and formation_name(tactic) == Formation.F433_A.value and _clearly_stronger(mine, opponent):
         return [f"4-3-3 A aceite: fora, mas claramente mais forte (+{mine / opponent - 1:.0%})"]
     if _home_b(tactic, away):
         return ["4-3-3 B aceite: em casa a regra é o 4-3-3 A"]
-    why = _wingerless(tactic, players)
-    return [f"4-4-2 B aceite: {why}"] if why else []
+    why = _instead(tactic, players, spare)
+    return [f"{formation_name(tactic)}{' B' if tactic.get('formation') == 442 else ''} aceite: {why}"] if why else []
 
 
 def tactic_warnings(tactic: dict | None, strictness: int | None, mine: float | None, opponent: float | None,
-                    players: list[dict] | None = None, away: bool = False) -> list[str]:
+                    players: list[dict] | None = None, away: bool = False, spare: bool = False) -> list[str]:
     """What is out of the rule in the tactics: the tackling for the next match's referee, and the formation
     (``_wanted``: 4-3-3 A at home (the B too), B away, or the 4-4-2 B when a side has no fit winger; 5 defenders, any of them,
     against a stronger opponent, only the 5-2-3 against a clearly stronger one). ``opponent``: before the analysis an estimate (THEORY.md section 1); None when unknown."""
@@ -204,6 +242,8 @@ def tactic_warnings(tactic: dict | None, strictness: int | None, mine: float | N
         elif current and not current.startswith("5-"):
             warnings.append(f"Formação {current}: devia ser de 5 defesas (adversário mais forte)")
     elif (current and current not in (wanted := _wanted(mine, opponent, away)) and not _home_b(tactic, away)
-          and not _wingerless(tactic, players)):
+          and not _instead(tactic, players, spare)):
         warnings.append(f"Formação {current}: devia ser {' ou '.join(wanted)}" + (" (fora de casa)" if away else ""))
+    elif current and (instead := _suggest(tactic, players, spare)):  # the rule's 4-3-3, but nobody fit for a side
+        warnings.append(instead)
     return warnings

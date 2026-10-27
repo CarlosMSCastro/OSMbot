@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import ctypes
 import os
+import re
 import subprocess
 import sys
 import threading
@@ -594,7 +595,8 @@ class StepList(QWidget):
                 mark.update()
                 text.setText(rich([(words, colour)]))
                 title = steps[index][4] if len(steps[index]) > 4 else None
-                row.setToolTip(tip_html(steps[index][3], title) if len(steps[index]) > 3 else "")
+                tip = steps[index][3] if len(steps[index]) > 3 else None
+                row.setToolTip(tip if isinstance(tip, str) else tip_html(tip, title) if tip else "")  # str: already a hover
 
 
 class BoostIcon(QWidget):
@@ -712,6 +714,39 @@ def tip_html(rows: list[tuple[str | None, str, str | None]], title: str | None =
         lines.append(f"<tr><td style='padding:2px 0'>{image}<span style='color:{COLOURS.get(colour, COLOURS[None])}'>{escape(text)}</span></td></tr>")
     head = TIP_TITLE.format(escape(title)) if title else ""
     return head + "<table cellspacing='0' cellpadding='0'>" + "".join(lines) + "</table>"
+
+
+SWAPS = ((re.compile(r"^(.+) (\d+) no banco, (.+) (\d+) a jogar$"), ("No banco", "A jogar"), (GREEN, YELLOW)),
+         (re.compile(r"^(.+) (\d+) entra antes de (.+) (\d+)$"), ("Entra primeiro", "Melhor, atrás"), (YELLOW, GREEN)))
+
+
+def tip_swaps(lines: list[str], title: str, colour: str) -> str:
+    """The bench's warnings (theory/lineup.bench_warnings) as a table, not loose sentences (owner, 2026-10-27:
+    "salganhada"): per kind a muted header, then each pair as name and rating, the better one in green; any other
+    line under it as text."""
+    from html import escape
+
+    line = "1px solid rgba(139, 140, 248, 90)"
+
+    def cell(text: str, style: str, right: bool = False) -> str:
+        return (f"<td align='{'right' if right else 'left'}' style='padding:2px 6px; white-space:nowrap; {style}'>"
+                f"{escape(text).replace(' ', '&nbsp;')}</td>")
+
+    body, rest = [], []
+    for pattern, (left, right), (first, second) in SWAPS:
+        pairs = [m for m in map(pattern.match, lines) if m]
+        if not pairs:
+            continue
+        head = f"color:{MUTED}; font-weight:600; border-bottom:{line}" + ("; padding-top:8px" if body else "")
+        body.append("<tr>" + cell(tr(left), head) + cell("", head) + cell("", head) + cell(tr(right), head) + cell("", head) + "</tr>")
+        for m in pairs:
+            body.append("<tr>" + cell(m[1], "color:#c9ccef") + cell(m[2], f"color:{COLOURS[first]}; font-weight:600", True)
+                        + cell("›", f"color:{MUTED}") + cell(m[3], "color:#c9ccef")
+                        + cell(m[4], f"color:{COLOURS[second]}; font-weight:600", True) + "</tr>")
+    rest = [text for text in lines if not any(pattern.match(text) for pattern, _, _ in SWAPS)]
+    extra = "".join(f"<tr><td colspan='5' style='padding:4px 6px 0 6px; color:{COLOURS[colour]}'>{escape(tr(text))}</td></tr>"
+                    for text in rest)
+    return TIP_TITLE.format(escape(title)) + f"<table cellspacing='0' cellpadding='0'>{''.join(body)}{extra}</table>"
 
 
 def tip_grid(grid: dict | None, colour: str | None = None) -> str:
@@ -1368,9 +1403,14 @@ class ClubCard(QFrame):
     def _show_prep(self, steps: list) -> None:
         """A step out of the owner's rule says why on hover (THEORY.md section 21); a green one may carry a note (a
         choice within the rule, e.g. the 4-4-2 B for want of wingers)."""
+        def tip(kind: str, why: list[str]):
+            title = tr("Aceite") if kind == "done" else tr("Fora da regra")
+            if any(pattern.match(line) for pattern, _, _ in SWAPS for line in why):  # the bench: a table
+                return tip_swaps(why, title, GREEN if kind == "done" else YELLOW)
+            return [(None, tr(line), GREEN if kind == "done" else YELLOW) for line in why]
+
         self.prep.show_steps([(kind, tr(name) + (f" {tr(extra)}" if extra else ""), StepIcon.COLOURS[kind],
-                               [(None, tr(line), GREEN if kind == "done" else YELLOW) for line in why],
-                               (tr("Aceite") if kind == "done" else tr("Fora da regra")) if why else None)
+                               tip(kind, why), (tr("Aceite") if kind == "done" else tr("Fora da regra")) if why else None)
                               for kind, name, extra, why in steps])
 
     def _show_trainings(self, rows: list) -> None:
