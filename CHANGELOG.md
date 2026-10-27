@@ -4,6 +4,19 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-PT/1.1.0/); 
 
 Este ficheiro é o **histórico de versões, para quem lê o repo**. O diário interno de cada sessão de trabalho está em [`docs/WORKLOG.md`](docs/WORKLOG.md).
 
+## [0.14.4] — 2026-10-27
+
+Banco sem falsos avisos ao poupar para um jogo importante, e hovers do pré-jogo mais limpos.
+
+### Alterado
+- **Banco a poupar:** quando o próximo jogo não é importante e o seguinte é, um suplente melhor do que o titular mas com 80–83 % (chegaria amarelo ao jogo importante) já não deixa o passo "Banco" amarelo; fica verde com a nota "Cubarsí a poupar para o Real Madrid (82 % → 78 %)". Com 84 % ou mais continua a avisar.
+- **Idade do onze:** um onze com menos de 3 jogadores acima (ou abaixo) de 26 anos passa de aviso a nota (verde, com ⓘ), sem o texto entre parênteses.
+- **Especialistas:** o hover passa a tabela, como o do banco (papel, quem está › quem a regra pede).
+- **Hovers amarelos do pré-jogo** sem o título "Fora da regra".
+
+### Documentação
+- `THEORY.md` §21.
+
 ## [0.14.3] — 2026-10-27
 
 Formações sem laterais ou extremos em forma, e o aviso do banco mais legível.

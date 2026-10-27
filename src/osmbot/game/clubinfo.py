@@ -14,7 +14,7 @@ from osmbot.board.info import (cup_phase, eleven_seen, league_summary, next_matc
 from osmbot.game import market as market_watch, sales
 from osmbot.game.transfers import saved_transfers
 from osmbot.game.specialists import check
-from osmbot.theory.lineup import age_warnings, bench_warnings, empty_places, places, position_warnings, tactic_notes, tactic_warnings
+from osmbot.theory.lineup import age_warnings, bench_notes, bench_warnings, empty_places, places, position_warnings, tactic_notes, tactic_warnings
 from osmbot.medical.policy import open_cases
 from osmbot.prematch.policy import friendlies_played
 from osmbot.theory.fitness import rest_warnings
@@ -242,14 +242,14 @@ def club_extra(client, team: dict, base: str, players: list[dict], slot, market:
     away = bool(upcoming) and upcoming.get("side") == "A" and not upcoming.get("neutral")  # the 4-3-3 B away (THEORY.md 1)
     status, current = got[6]  # the game ticks any 4 specialists; yellow when they are not the owner's rule (D-042)
     why = {SPECIALISTS_STEP: check(players, current if status == 200 and isinstance(current, dict) else None),
-           BENCH_STEP: bench_warnings(players),  # THEORY.md section 21: yellow with the reason on hover
-           ELEVEN_STEP: empty_places(players, tactic) + age_warnings(players)
-           + tactic_warnings(tactic, strictness, mine, theirs, players, away, spare),
+           BENCH_STEP: bench_warnings(players, spare),  # THEORY.md section 21: yellow with the reason on hover
+           ELEVEN_STEP: empty_places(players, tactic) + tactic_warnings(tactic, strictness, mine, theirs, players, away, spare),
            POSITIONS_STEP: position_warnings(players, tactic)}  # who is out of position, on the hover
     steps = [(name, False, RULE) if why.get(kind) and done_ else (name, done_, extra)
              for (kind, _), (name, done_, extra) in zip(CHECKLIST, steps)]
     reasons = {name: why[kind] for (kind, _), (name, _, _) in zip(CHECKLIST, steps) if why.get(kind)}
-    notes = {ELEVEN_STEP: tactic_notes(tactic, players, mine, theirs, away, spare)}  # within the rule: the step keeps its colour
+    notes = {ELEVEN_STEP: age_warnings(players) + tactic_notes(tactic, players, mine, theirs, away, spare),  # within the
+             BENCH_STEP: bench_notes(players, pair[1]["opponent"] if spare else None)}  # rule: the step keeps its colour
     for (kind, _), (name, _, _) in zip(CHECKLIST, steps):
         if notes.get(kind):  # after any warning of the same step (the tackling may still be out of the rule)
             reasons[name] = reasons.get(name, []) + notes[kind]

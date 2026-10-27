@@ -81,7 +81,8 @@ WORDS = {
     # board titles and labels
     "DIÁRIAS": "DAILY", "BOSS COINS": "BOSS COINS", "A SEGUIR": "UP NEXT", "TREINOS": "TRAINING", "ESTÁDIO": "STADIUM",
     "AGORA": "NOW", "PRÉ-JOGO": "PRE-MATCH", "Valor plantel": "Squad value", "Dinheiro": "Money",
-    "Fora da regra": "Out of your rule", "No banco": "On the bench", "A jogar": "Playing", "Entra primeiro": "Comes on first", "Melhor, atrás": "Better, behind", "Aceite": "Accepted", "Vendas": "Sales", "Valor do plantel": "Squad value", "Clube": "Club", "J": "P", "DG": "GD", "Valor": "Value", "× valor": "× value",
+    "No banco": "On the bench", "A jogar": "Playing", "Entra primeiro": "Comes on first", "Melhor, atrás": "Better, behind",
+    "Capitão": "Captain", "Penáltis": "Penalties", "Livres": "Free kicks", "Cantos": "Corners", "Aceite": "Accepted", "Vendas": "Sales", "Valor do plantel": "Squad value", "Clube": "Club", "J": "P", "DG": "GD", "Valor": "Value", "× valor": "× value",
     "Jogadores": "Players", "Média": "Avg", "Pos": "Pos", "Força": "Strength", "Jogador": "Player", "Idade": "Age",
     "Preço": "Price", "Lucro": "Profit",
     "Campeões": "Champions", "Patrocinadores": "Sponsors", "Cansados": "Tired", "CASA": "HOME", "FORA": "AWAY", "em": "in",
@@ -212,9 +213,9 @@ PATTERNS = [(re.compile(pattern), replace) for pattern, replace in (
     (r"^((?:suplente|reforço|pechincha).*)$", lambda m: re.sub(r"lugar (\d+) vazio", r"place \1 empty", m[1].replace(" sem suplente", " with no backup")
      .replace("suplente", "backup").replace("reforço", "upgrade").replace("pechincha", "bargain"))),
     (r"^Lugar (\d+) do 11 vazio(.*)$", lambda m: f"Place {m[1]} of the eleven empty{m[2]}"),
-    (r"^Onze com só (\d+) jogador(?:es)? (acima|abaixo) de (\d+) anos \(o jogo dá bónus negativo a um onze demasiado (jovem|velho)\)$",
-     lambda m: f"Eleven with only {m[1]} player{'s' if m[1] != '1' else ''} {'over' if m[2] == 'acima' else 'under'} {m[3]} "
-               f"(the game gives a penalty to a team too {'young' if m[4] == 'jovem' else 'old'})"),
+    (r"^Onze com só (\d+) jogador(?:es)? (acima|abaixo) de (\d+) anos$",
+     lambda m: f"Eleven with only {m[1]} player{'s' if m[1] != '1' else ''} {'over' if m[2] == 'acima' else 'under'} {m[3]}"),
+    (r"^(.+) a poupar para o (.+) \((\d+) % → (\d+) %\)$", lambda m: f"{m[1]} resting for {m[2]} ({m[3]} % → {m[4]} %)"),
     (r"^\? = esta liga não vendeu ao máximo nos últimos 3 dias$",
      lambda m: "? = this league has not sold at the maximum in the last 3 days"),
     # top bar, coins

@@ -2,6 +2,16 @@
 
 Entradas mais recentes primeiro. Cada sessão: o que se fez · o que ficou por fazer · próximo passo.
 
+## 2026-10-27 (cont. 2) — Banco a poupar e idade do onze como nota
+
+- **Dono (Real Betis):** Cubarsí 122 (82 %) no banco para não chegar amarelo ao jogo importante, e o passo "Banco" amarelo com "Cubarsí 122 no banco, Konsa 98 a jogar": a regra do banco não sabia do modo poupar (só a da formação). Debatido antes de mexer. Decisão: em modo poupar, um suplente com 80–83 % não avisa e fica a nota "Cubarsí a poupar para o X (82 % → 78 %)"; com 84 % ou mais avisa como antes.
+- **Idade do onze (dono):** deixa de ser aviso e passa a nota (verde com ⓘ), sem o parêntese do bónus negativo.
+- **Feito:** `theory/lineup` (`bench_warnings(spare)`, `bench_notes`, `_better_on_bench`; `age_warnings` sem parêntese), `game/clubinfo` (idade e banco nas notas), `i18n`. `THEORY.md` §21. 457 testes (1 novo); pyflakes sem avisos novos.
+- **Hover dos especialistas em tabela (dono):** como o do banco (`gui/window.tip_roles`): papel, quem está a amarelo › quem a regra pede a verde, sem títulos. As frases de `theory/specialists` não mudam; `i18n` com os papéis.
+- **Sem o título "Fora da regra" (dono):** os hovers amarelos do pré-jogo (banco, onze, posições, especialistas) já não têm título; o verde mantém "Aceite".
+- **Versão 0.14.4 (pedido do dono):** `pyproject.toml`, `__init__`, `CHANGELOG.md`, `README.md` (estado), `dist/release-notes-v0.14.4.md`; `build_portable.py --zip --installer` → `dist/windows/` 0.14.4 (553 / 206 / 148 MB), versão confirmada no portátil; os da 0.14.3 apagados. Commit e `gh release create v0.14.4` entregues ao dono.
+- **Falta:** o dono instalar a 0.14.4 e ver na janela (e refazer o dist no Mac).
+
 ## 2026-10-27 (cont.) — Sem laterais ou extremos em forma: 3 defesas ou 2 PL (D-072)
 
 - **Dono:** jogo importante amanhã, DE e DD a poupar hoje contra um bem mais fraco → 3-4-3. Pedido: o bot perceber e sugerir isto, e as táticas de 2 PL com os extremos cansados. Respostas: cansado = amarelo ou a poupar; 3 defesas sempre que a regra pede um 4-3-3; 3-4-3 e 3-5-2; 2 PL = 4-4-2 B, 5-3-2, 3-5-2.

@@ -720,7 +720,7 @@ SWAPS = ((re.compile(r"^(.+) (\d+) no banco, (.+) (\d+) a jogar$"), ("No banco",
          (re.compile(r"^(.+) (\d+) entra antes de (.+) (\d+)$"), ("Entra primeiro", "Melhor, atrás"), (YELLOW, GREEN)))
 
 
-def tip_swaps(lines: list[str], title: str, colour: str) -> str:
+def tip_swaps(lines: list[str], title: str | None, colour: str) -> str:
     """The bench's warnings (theory/lineup.bench_warnings) as a table, not loose sentences (owner, 2026-10-27:
     "salganhada"): per kind a muted header, then each pair as name and rating, the better one in green; any other
     line under it as text."""
@@ -746,7 +746,27 @@ def tip_swaps(lines: list[str], title: str, colour: str) -> str:
     rest = [text for text in lines if not any(pattern.match(text) for pattern, _, _ in SWAPS)]
     extra = "".join(f"<tr><td colspan='5' style='padding:4px 6px 0 6px; color:{COLOURS[colour]}'>{escape(tr(text))}</td></tr>"
                     for text in rest)
-    return TIP_TITLE.format(escape(title)) + f"<table cellspacing='0' cellpadding='0'>{''.join(body)}{extra}</table>"
+    return (TIP_TITLE.format(escape(title)) if title else "") + f"<table cellspacing='0' cellpadding='0'>{''.join(body)}{extra}</table>"
+
+
+ROLES = re.compile(r"^(Capitão|Penáltis|Livres|Cantos): (.+), pela regra (.+)$")  # theory/specialists.check
+
+
+def tip_roles(lines: list[str], title: str | None, colour: str) -> str:
+    """The specialists' warnings as a table, as the bench's but with no headers (owner, 2026-10-27): role, who has it
+    now in yellow and who the rule wants in green; any other line under it as text."""
+    from html import escape
+
+    def cell(text: str, style: str) -> str:
+        return f"<td style='padding:2px 6px; white-space:nowrap; {style}'>{escape(text).replace(' ', '&nbsp;')}</td>"
+
+    body = []
+    for m in filter(None, map(ROLES.match, lines)):
+        body.append("<tr>" + cell(tr(m[1]), "color:#c9ccef") + cell(m[2], f"color:{COLOURS[YELLOW]}; font-weight:600")
+                    + cell("›", f"color:{MUTED}") + cell(m[3], f"color:{COLOURS[GREEN]}; font-weight:600") + "</tr>")
+    extra = "".join(f"<tr><td colspan='4' style='padding:4px 6px 0 6px; color:{COLOURS[colour]}'>{escape(tr(text))}</td></tr>"
+                    for text in lines if not ROLES.match(text))
+    return (TIP_TITLE.format(escape(title)) if title else "") + f"<table cellspacing='0' cellpadding='0'>{''.join(body)}{extra}</table>"
 
 
 def tip_grid(grid: dict | None, colour: str | None = None) -> str:
@@ -1404,13 +1424,15 @@ class ClubCard(QFrame):
         """A step out of the owner's rule says why on hover (THEORY.md section 21); a green one may carry a note (a
         choice within the rule, e.g. the 4-4-2 B for want of wingers)."""
         def tip(kind: str, why: list[str]):
-            title = tr("Aceite") if kind == "done" else tr("Fora da regra")
+            title = tr("Aceite") if kind == "done" else None  # out of the rule: no title, the yellow says it (owner, 2026-10-27)
             if any(pattern.match(line) for pattern, _, _ in SWAPS for line in why):  # the bench: a table
                 return tip_swaps(why, title, GREEN if kind == "done" else YELLOW)
+            if any(ROLES.match(line) for line in why):  # the specialists: a table too
+                return tip_roles(why, title, GREEN if kind == "done" else YELLOW)
             return [(None, tr(line), GREEN if kind == "done" else YELLOW) for line in why]
 
         self.prep.show_steps([(kind, tr(name) + (f" {tr(extra)}" if extra else ""), StepIcon.COLOURS[kind],
-                               tip(kind, why), (tr("Aceite") if kind == "done" else tr("Fora da regra")) if why else None)
+                               tip(kind, why), tr("Aceite") if kind == "done" and why else None)
                               for kind, name, extra, why in steps])
 
     def _show_trainings(self, rows: list) -> None:

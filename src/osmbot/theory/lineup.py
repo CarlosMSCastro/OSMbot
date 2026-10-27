@@ -36,14 +36,38 @@ def rating(player: dict) -> int:
     return player.get(MAIN_STAT.get(player.get("position"), "statOvr")) or 0
 
 
-def bench_warnings(players: list[dict]) -> list[str]:
+def _split(players: list[dict]) -> tuple[list[dict], list[dict]]:
+    """The available starters and the available bench, in the bench's order."""
+    available = [p for p in players if not p.get("unavailable")]
+    starters = [p for p in available if p.get("lineup") in ELEVEN]
+    return starters, sorted((p for p in available if (p.get("lineup") or 0) > 11), key=lambda p: p["lineup"])
+
+
+def _better_on_bench(starters: list[dict], subs: list[dict], floor: int) -> list[tuple[dict, dict]]:
+    """(substitute, starter) where a substitute with fitness >= ``floor`` is better than the weakest starter of his
+    specific position."""
+    fit = [p for p in subs if (p.get("fitness") or 0) >= floor]
+    pairs = []
+    for specific in dict.fromkeys(p.get("specificPosition") for p in fit):  # a winger only against wingers
+        best = max((p for p in fit if p.get("specificPosition") == specific), key=rating)
+        weakest = min((p for p in starters if p.get("position") == best.get("position")
+                       and p.get("specificPosition") == specific), key=rating, default=None)
+        if weakest and rating(best) > rating(weakest):
+            pairs.append((best, weakest))
+    return pairs
+
+
+def _subs(bench: list[dict], position: int) -> list[dict]:
+    return [p for p in bench if p.get("position") == position and BENCH_PLACES.get(p["lineup"], position) == position]
+
+
+def bench_warnings(players: list[dict], spare: bool = False) -> list[str]:
     """What is out of the rule on the bench: a player in a place of another position (the bench has places per
     position, ``BENCH_PLACES``), a worse substitute ahead of a better one in the places of the same position (always:
     on an injury the first one comes on), and a fit substitute better than a starter of his specific position (the game:
-    players do better in their specific position, so a striker is not compared with a winger)."""
-    available = [p for p in players if not p.get("unavailable")]
-    starters = [p for p in available if p.get("lineup") in ELEVEN]
-    bench = sorted((p for p in available if (p.get("lineup") or 0) > 11), key=lambda p: p["lineup"])
+    players do better in their specific position, so a striker is not compared with a winger). With ``spare`` (the next
+    match is not important and the one after is, THEORY.md 16) fit means one who would not reach that match yellow."""
+    starters, bench = _split(players)
     warnings = []
     for p in bench:  # the owner may cover a place on purpose (2026-10-16: a defender as the attack's substitute)
         place = BENCH_PLACES.get(p["lineup"])
@@ -51,20 +75,26 @@ def bench_warnings(players: list[dict]) -> list[str]:
             warnings.append(f"Tens {POSITION_WORDS[p['position']][0]} a suplente {POSITION_WORDS[place][1]}: "
                             f"{p['name']} {rating(p)}")
     for position in MAIN_STAT:
-        subs = [p for p in bench if p.get("position") == position and BENCH_PLACES.get(p["lineup"], position) == position]
+        subs = _subs(bench, position)
         for i, ahead in enumerate(subs):
             better = max(subs[i + 1:], key=rating, default=None)
             if better and rating(better) > rating(ahead):
                 warnings.append(f"{ahead['name']} {rating(ahead)} entra antes de {better['name']} {rating(better)}")
                 break
-        fit = [p for p in subs if (p.get("fitness") or 0) >= YELLOW_BELOW]
-        for specific in dict.fromkeys(p.get("specificPosition") for p in fit):  # a winger only against wingers
-            best = max((p for p in fit if p.get("specificPosition") == specific), key=rating)
-            weakest = min((p for p in starters if p.get("position") == position
-                           and p.get("specificPosition") == specific), key=rating, default=None)
-            if weakest and rating(best) > rating(weakest):
-                warnings.append(f"{best['name']} {rating(best)} no banco, {weakest['name']} {rating(weakest)} a jogar")
+        for best, weakest in _better_on_bench(starters, subs, YELLOW_BELOW + (MATCH_DROP if spare else 0)):
+            warnings.append(f"{best['name']} {rating(best)} no banco, {weakest['name']} {rating(weakest)} a jogar")
     return warnings
+
+
+def bench_notes(players: list[dict], important: str | None) -> list[str]:
+    """Substitutes better than a starter but kept out on purpose: green, but they would reach the important match
+    (``important``: its opponent, when the next match is not important and that one is; THEORY.md 16, 21) yellow."""
+    if not important:
+        return []
+    starters, bench = _split(players)
+    return [f"{p['name']} a poupar para o {important} ({p['fitness']} % → {p['fitness'] - MATCH_DROP} %)"
+            for position in MAIN_STAT for p, _ in _better_on_bench(starters, _subs(bench, position), YELLOW_BELOW)
+            if p["fitness"] < YELLOW_BELOW + MATCH_DROP]
 
 
 def places(tactic: dict | None) -> dict[int, int]:
@@ -92,16 +122,15 @@ AGE_LINE, AGE_MIN = 26, 3  # at least 3 starters older and 3 younger than 26 (TH
 
 
 def age_warnings(players: list[dict]) -> list[str]:
-    """An eleven too young (or too old) for the game: fewer than 3 starters on one side of 26 (THEORY.md section 21)."""
+    """An eleven too young (or too old) for the game: fewer than 3 starters on one side of 26 (THEORY.md section 21).
+    A note, not a warning (owner, 2026-10-27)."""
     ages = [p["age"] for p in players if p.get("lineup") in ELEVEN and p.get("age")]
     if len(ages) < len(ELEVEN):
         return []
     warnings = []
-    for count, side, why in ((sum(1 for a in ages if a > AGE_LINE), "acima", "jovem"),
-                             (sum(1 for a in ages if a < AGE_LINE), "abaixo", "velho")):
+    for count, side in ((sum(1 for a in ages if a > AGE_LINE), "acima"), (sum(1 for a in ages if a < AGE_LINE), "abaixo")):
         if count < AGE_MIN:
-            warnings.append(f"Onze com só {count} jogador{'es' if count != 1 else ''} {side} de {AGE_LINE} anos "
-                            f"(o jogo dá bónus negativo a um onze demasiado {why})")
+            warnings.append(f"Onze com só {count} jogador{'es' if count != 1 else ''} {side} de {AGE_LINE} anos")
     return warnings
 
 

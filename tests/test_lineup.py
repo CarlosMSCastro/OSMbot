@@ -1,4 +1,4 @@
-from osmbot.theory.lineup import bench_warnings, formation_name, places, position_warnings, tactic_notes, tactic_warnings
+from osmbot.theory.lineup import bench_notes, bench_warnings, formation_name, places, position_warnings, tactic_notes, tactic_warnings
 
 
 def p(name, position, lineup, stat, fitness=100, unavailable=0):
@@ -18,6 +18,16 @@ def test_a_worse_substitute_ahead_of_a_better_one_is_warned_even_when_the_better
 def test_a_fit_substitute_better_than_a_starter_is_warned_but_not_a_tired_one():
     assert bench_warnings(ELEVEN + [p("Marmoush", 1, 15, 110)]) == ["Marmoush 110 no banco, Diomande 102 a jogar"]
     assert bench_warnings(ELEVEN + [p("Marmoush", 1, 15, 110, fitness=79)]) == []
+
+
+def test_before_an_important_match_a_substitute_who_would_reach_it_yellow_is_a_note_not_a_warning():
+    for fitness, warned, noted in ((82, [], ["Marmoush a poupar para o Rival (82 % → 78 %)"]),
+                                   (90, ["Marmoush 110 no banco, Diomande 102 a jogar"], [])):
+        players = ELEVEN + [p("Marmoush", 1, 15, 110, fitness=fitness)]
+        assert bench_warnings(players, spare=True) == warned
+        assert bench_notes(players, "Rival") == noted
+    assert bench_warnings(ELEVEN + [p("Marmoush", 1, 15, 110, fitness=82)]) == ["Marmoush 110 no banco, Diomande 102 a jogar"]
+    assert bench_notes(ELEVEN + [p("Marmoush", 1, 15, 110, fitness=82)], None) == []
 
 
 def test_a_substitute_is_only_compared_with_starters_of_his_specific_position():
@@ -206,8 +216,8 @@ def test_an_eleven_needs_three_starters_over_and_three_under_26():
 
     eleven = lambda ages: [{"lineup": n, "age": a} for n, a in enumerate(ages, 1)] + [{"lineup": 12, "age": 18}]
     assert age_warnings(eleven([21, 23, 23, 24, 26, 26, 27, 28, 29, 29, 32])) == []
-    assert age_warnings(eleven([19, 20, 21, 22, 22, 23, 24, 25, 26, 27, 30])) ==         ["Onze com só 2 jogadores acima de 26 anos (o jogo dá bónus negativo a um onze demasiado jovem)"]
-    assert age_warnings(eleven([25, 26, 27, 28, 29, 30, 30, 31, 32, 33, 34])) ==         ["Onze com só 1 jogador abaixo de 26 anos (o jogo dá bónus negativo a um onze demasiado velho)"]
+    assert age_warnings(eleven([19, 20, 21, 22, 22, 23, 24, 25, 26, 27, 30])) ==         ["Onze com só 2 jogadores acima de 26 anos"]
+    assert age_warnings(eleven([25, 26, 27, 28, 29, 30, 30, 31, 32, 33, 34])) ==         ["Onze com só 1 jogador abaixo de 26 anos"]
     assert age_warnings(eleven([19] * 10)) == []  # no full eleven read: nothing to say
 
 
