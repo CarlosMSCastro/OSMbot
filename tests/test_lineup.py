@@ -303,3 +303,24 @@ def test_the_next_two_matches():
     first, second = next_matches(matches, teams, 1, 2)
     assert (first["opponent"], first["side"], first["danger"]) == ("Fraco", "H", False)
     assert (second["opponent"], second["side"], second["danger"]) == ("Rival", "A", True)
+
+
+def _defender(pid, lineup, deff, position=3):
+    return {"id": pid, "name": f"D{pid}", "lineup": lineup, "position": position, "statDef": deff}
+
+
+def test_centre_backs_best_in_the_middle_and_the_2nd_by_the_weaker_full_back():
+    from osmbot.theory.lineup import centre_notes
+
+    five = {"formation": 532, "formationDetail": "A"}  # places 2 DE, 3-5 DC, 6 DD
+    players = [_defender(1, 2, 80), _defender(2, 3, 110), _defender(3, 4, 100), _defender(4, 5, 90), _defender(5, 6, 95)]
+    assert centre_notes(players, five) == ["D2 110 devia ser o central do meio",
+                                           "D3 100 devia jogar do lado do DE (lateral mais fraco)"]
+    right = [_defender(1, 2, 80), _defender(2, 3, 100), _defender(3, 4, 110), _defender(4, 5, 90), _defender(5, 6, 95)]
+    assert centre_notes(right, five) == []
+    four = {"formation": 433, "formationDetail": "A"}  # places 2 DE, 3-4 DC, 5 DD
+    assert centre_notes([_defender(1, 2, 90), _defender(2, 3, 110), _defender(3, 4, 100), _defender(4, 5, 80)], four) == [
+        "D2 110 devia jogar do lado do DD (lateral mais fraco)"]
+    assert centre_notes([_defender(1, 2, 90), _defender(2, 3, 100), _defender(3, 4, 110), _defender(4, 5, 80)], four) == []
+    assert centre_notes([_defender(1, 2, 90), _defender(2, 3, 100), _defender(3, 4, 110), _defender(4, 5, 90)], four) == []
+    assert centre_notes(players, None) == []

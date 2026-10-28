@@ -12,6 +12,7 @@ from osmbot.models import Player
 from osmbot.theory.specialists import ROLE_NAMES, wanted_slots, wrong_roles
 
 COUNTS = {"set": 0}
+CAPTAIN_AGE = 30  # below it, no captain's bonus (the OSMPro author; THEORY.md section 21)
 
 
 def check(players: list[dict], current: dict | None) -> list[str]:
@@ -23,6 +24,12 @@ def check(players: list[dict], current: dict | None) -> list[str]:
     names = {p["lineup"]: p.get("name") for p in players if 1 <= (p.get("lineup") or 0) <= 11}
     return [f"{ROLE_NAMES[r].capitalize()}: {names.get(current.get(r), '—')}, pela regra {names.get(wanted[r], '—')}"
             for r in wrong_roles(current, wanted)]
+
+
+def captain_note(players: list[dict], current: dict | None) -> list[str]:
+    """The captain in the game under 30, as a note (owner, 2026-10-28; OSMPro Táticas point 16). Pure."""
+    captain = next((p for p in players if current and p.get("lineup") == current.get("captain")), None)
+    return [f"Capitão {captain.get('name')} com menos de {CAPTAIN_AGE} anos"] if captain and (captain.get("age") or 0) < CAPTAIN_AGE else []
 
 
 def fix_specialists(client, team: dict, base: str, confirm: bool, log) -> int:

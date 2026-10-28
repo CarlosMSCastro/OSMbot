@@ -162,11 +162,11 @@ A tabela de 25 pontos de 2026-10-26 não ficou guardada; refeita a 2026-10-28 a 
 | 13 | Desarme pela pressão | Fechado 2026-10-28 (dono): sem mudanças; o "?" do jogo ajusta o desarme só ao árbitro, como o §3 |
 | 14 | Margem de +4–5 pontos para jogar fora de posição | Fechado 2026-10-28 (dono): sempre a posição certa, sem margem (já é o que a bola "Posições" faz); sem sugestão de substituto (`THEORY.md` §21) |
 | 15 | Laterais ≥ 35–40 de ataque, centrais ≥ 15–20 | Fechado 2026-10-28 (dono): nada; já tem o cuidado à mão; critério possível se um dia se automatizarem as transferências (`THEORY.md` §7.8) |
-| 16 | Capitão ≥ 30 anos | **Por medir:** nos 4 clubes, se o "mais velho" fica abaixo de 30 (mexe no D-042) |
-| 17 | Ninguém com as 3 bolas paradas | **Por medir:** nos 4 clubes, se a regra do §4 dá as 3 ao mesmo |
-| 18 | Penáltis num médio só com +8–10 pontos | Por decidir: afinação do §4 |
-| 19 | Centrais: o melhor no meio, o 2.º do lado do lateral mais fraco | Por decidir: só aviso; o onze é do dono |
-| 20 | Atacar pelo lado fraco do adversário | Por decidir: o relatório lê-se em v1.1 (2026-10-28) e traz os jogadores do adversário com o onze |
+| 16 | Capitão ≥ 30 anos | Fechado 2026-10-28 (dono, opção a): a regra do §4 fica; nota "Capitão X com menos de 30 anos" no "Especialistas" (`THEORY.md` §21) |
+| 17 | Ninguém com as 3 bolas paradas | Fechado 2026-10-28 (dono): as 3 nunca calham no mesmo (penáltis = avançado, cantos = médio); **cantos ≠ livres**: quando colidem, cantos para o médio de maior nota média (≥ 3 jogos; ≤ 0,2 → o mais defensivo) (`THEORY.md` §4) |
+| 18 | Penáltis num médio só com +8–10 pontos | Fechado 2026-10-28 (dono, opção a): penáltis para o médio com 10 ou mais de ataque acima do melhor avançado (`THEORY.md` §4) |
+| 19 | Centrais: o melhor no meio, o 2.º do lado do lateral mais fraco | Fechado 2026-10-28 (dono, opção a): nota no "Onze"; com 2 centrais, o melhor do lado do lateral mais fraco [S] (`THEORY.md` §21) |
+| 20 | Atacar pelo lado fraco do adversário | Fechado 2026-10-28 (dono, opção b): nada no bot; fica como dica (o relatório do analista em v1.1 permitiria uma nota) |
 
 Ordem proposta ao dono: 12 → 16 e 17 → 14 e 15 → fechar os restantes de uma vez.
 

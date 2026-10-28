@@ -4,6 +4,22 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-PT/1.1.0/); 
 
 Este ficheiro é o **histórico de versões, para quem lê o repo**. O diário interno de cada sessão de trabalho está em [`docs/WORKLOG.md`](docs/WORKLOG.md).
 
+## [0.14.7] — 2026-10-28
+
+Especialistas mais finos (cantos, penáltis, capitão), notas sobre os centrais e o estádio acelerado com boss coins nos eventos.
+
+### Adicionado
+- **Estádio nos eventos de 4 h** (Top Facilities, Stadium Blitz): o bot acaba as obras com boss coins (~4 por ciclo, em vez de ~18 num dia normal), recolhe e põe a seguinte, um clube de cada vez, até **40 boss coins por evento**. Fora destes eventos nunca acelera.
+- **Centrais (nota no "Onze"):** com 3 centrais, o melhor no meio e o 2.º do lado do lateral mais fraco; com 2, o melhor do lado do lateral mais fraco. Só avisa.
+- **Capitão com menos de 30 anos (nota no "Especialistas"):** "Capitão X com menos de 30 anos". O capitão continua a ser o mais velho do onze.
+
+### Alterado
+- **Cantos diferentes dos livres:** quando o médio com mais ataque também marca os livres, os cantos passam para o médio com a melhor nota média da época (com pelo menos 3 jogos; com médias a 0,2 ou menos, o mais defensivo).
+- **Penáltis num médio** quando ele tem 10 ou mais de ataque acima do melhor avançado.
+
+### Documentação
+- `THEORY.md` §4, §8 e §21; D-075; `DISCOVERY.md` §3 (nota média dos jogadores); `docs/VERIFICACAO.md` (verificação semanal da teoria nos registos, `tools/verificar_teoria.py`).
+
 ## [0.14.6] — 2026-10-28
 
 Calendário da época ao lado da posição na liga, ciclos do estádio no hover, e o relatório do analista guardado no registo dos jogos.

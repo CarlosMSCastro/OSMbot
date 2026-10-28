@@ -143,6 +143,35 @@ def position_warnings(players: list[dict], tactic: dict | None) -> list[str]:
             if p.get("lineup") in spots and p.get("specificPosition") and p["specificPosition"] != spots[p["lineup"]]]
 
 
+def centre_notes(players: list[dict], tactic: dict | None) -> list[str]:
+    """Where the centre-backs play (owner, 2026-10-28; OSMPro Táticas point 19; THEORY.md section 21), as notes: with
+    3, the best in the middle and the 2nd on the side of the weaker full-back; with 2 [S], the better on that side.
+    [S] The defence's places go from left to right (DE first, DD last, as in the game's lineup page)."""
+    spots = places(tactic)
+    at = {p.get("lineup"): p for p in players if not p.get("unavailable")}
+    centres = [n for n in sorted(spots) if spots[n] == 3 and n in at]
+    if sum(1 for code in spots.values() if code == 3) != len(centres) or len(centres) not in (2, 3):
+        return []
+    sides = {code: at.get(n) for n, code in spots.items() if code in FULLBACKS}
+    left, right = sides.get(9), sides.get(12)
+    weak = None if not left or not right or rating(left) == rating(right) else (9 if rating(left) < rating(right) else 12)
+    notes, rest = [], [at[n] for n in centres]
+    if len(centres) == 3:
+        best = max(rest, key=rating)
+        if rating(best) > rating(at[centres[1]]):
+            notes.append(f"{best['name']} {rating(best)} devia ser o central do meio")
+        rest = [p for p in rest if p is not best]
+        flanks = [at[centres[0]], at[centres[2]]]
+    else:
+        flanks = rest
+    if weak:
+        second = max(rest, key=rating)
+        there = flanks[0] if weak == 9 else flanks[-1]
+        if there is not second and rating(there) != rating(second):  # also the best there, when he belongs in the middle
+            notes.append(f"{second['name']} {rating(second)} devia jogar do lado do {FULLBACKS[weak]} (lateral mais fraco)")
+    return notes
+
+
 def formation_name(tactic: dict) -> str:
     """The tactics' formation as THEORY.md writes it: 433 + "A" -> "4-3-3 A", 532 -> "5-3-2"."""
     digits = "-".join(str(tactic.get("formation") or ""))

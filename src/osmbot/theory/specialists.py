@@ -14,6 +14,10 @@ from typing import Iterable, Optional
 
 from osmbot.models import Player, Position
 
+MIN_MATCHES = 3  # [S] an average grade counts from 3 matches (owner, 2026-10-28)
+CLOSE_GRADES = 0.2  # [S] averages this close: the more defensive midfielder (owner, 2026-10-28)
+PENALTY_MID_MARGIN = 10  # a midfielder this much more attack than the best forward takes the penalties (owner, 2026-10-28)
+
 
 def _best(players: Iterable[Player], key) -> Optional[Player]:
     return max(players, key=key, default=None)
@@ -30,9 +34,14 @@ def _attack(p: Player) -> tuple:
 
 
 def pick_penalty_taker(starters: Iterable[Player]) -> Optional[Player]:
-    """Forward with the highest attack stat."""
-    forwards = (p for p in starters if p.position is Position.ATT)
-    return _best(forwards, _attack)
+    """Forward with the highest attack stat; a midfielder instead when he has ``PENALTY_MID_MARGIN`` or more attack
+    than him (OSMPro Táticas point 18, owner 2026-10-28)."""
+    squad = list(starters)
+    forward = _best((p for p in squad if p.position is Position.ATT), _attack)
+    mid = _best((p for p in squad if p.position is Position.MID), _attack)
+    if forward and mid and mid.stat_att >= forward.stat_att + PENALTY_MID_MARGIN:
+        return mid
+    return forward
 
 
 def pick_free_kick_taker(starters: Iterable[Player]) -> Optional[Player]:
@@ -40,10 +49,22 @@ def pick_free_kick_taker(starters: Iterable[Player]) -> Optional[Player]:
     return _best(starters, _attack)
 
 
-def pick_corner_taker(starters: Iterable[Player]) -> Optional[Player]:
-    """Midfielder with the highest attack stat."""
-    mids = (p for p in starters if p.position is Position.MID)
-    return _best(mids, _attack)
+def pick_corner_taker(starters: Iterable[Player], free_kick: Optional[Player] = None) -> Optional[Player]:
+    """Midfielder with the highest attack stat. When he also takes the free kicks (``free_kick``), another midfielder
+    (OSMPro Táticas point 17, owner 2026-10-28): the best average grade among those with ``MIN_MATCHES``, and of
+    averages within ``CLOSE_GRADES`` of it the more defensive; with none of them, the next by attack; with no other
+    midfielder, the same one."""
+    mids = [p for p in starters if p.position is Position.MID]
+    first = _best(mids, _attack)
+    others = [p for p in mids if free_kick is None or p.id != free_kick.id]
+    if first is None or free_kick is None or first.id != free_kick.id or not others:
+        return first
+    graded = [p for p in others if p.matches >= MIN_MATCHES]
+    if not graded:
+        return _best(others, _attack)
+    top = max(p.average_grade for p in graded)
+    return _best((p for p in graded if p.average_grade >= top - CLOSE_GRADES - 1e-9),
+                 lambda p: (p.stat_def, p.average_grade, _attack(p)))
 
 
 @dataclass(frozen=True)
@@ -56,11 +77,12 @@ class Specialists:
 
 def pick_specialists(starters: Iterable[Player]) -> Specialists:
     squad = list(starters)
+    free_kick = pick_free_kick_taker(squad)
     return Specialists(
         captain=pick_captain(squad),
         penalty_taker=pick_penalty_taker(squad),
-        free_kick_taker=pick_free_kick_taker(squad),
-        corner_taker=pick_corner_taker(squad),
+        free_kick_taker=free_kick,
+        corner_taker=pick_corner_taker(squad, free_kick),
     )
 
 

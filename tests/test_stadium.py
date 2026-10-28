@@ -176,3 +176,44 @@ def test_logs_what_the_upgrade_cost():
     client = FakeClient(balance=0, savings=1000, price=300)
     stadium.upgrade_club(client, TEAM, BASE, True, log=said.append, now=NOW)
     assert said[-1].endswith("melhoria iniciada · custou 300")
+
+
+def test_a_stadium_event_is_an_upgrade_shorter_than_18_h_and_its_spending_is_kept_per_event():
+    from osmbot.stadium.policy import event_key, stadium_event
+    from osmbot.training.policy import boost_product
+
+    assert stadium_event(240) and not stadium_event(1080) and not stadium_event(None)
+    events = [{"nome": "Super Staff", "inicio": "2026-10-27", "tags": ["treinos"]},
+              {"nome": "Top Facilities", "inicio": "2026-10-28", "tags": ["treinos", "estadio"]}]
+    assert event_key(events, "2026-10-28") == "Top Facilities 2026-10-28"
+    assert event_key(events[:1], "2026-10-28") == "2026-10-28"
+    products = [{"id": 551, "name": "StadiumBoostCost", "increment": 4, "value": 4},
+                {"id": 548, "name": "StadiumBoostCost", "increment": 1, "value": 1},
+                {"id": 9, "name": "TrainingBoostCost", "increment": 4, "value": 8}]
+    assert boost_product(products, 3.5 * 3600, "StadiumBoostCost")["value"] == 4
+    assert boost_product(products, 20 * 60, "StadiumBoostCost")["value"] == 1
+
+
+def test_the_running_upgrade_is_boosted_only_within_the_budget(monkeypatch):
+    import time
+    from osmbot.game import stadium
+
+    monkeypatch.setattr(stadium, "PAUSE_BETWEEN_WRITES", 0)
+    part = {"id": 7, "stadiumPartType": 2, "countdownTimer": {"finishedTimestamp": time.time() + 3.5 * 3600}}
+
+    class Game:
+        writes = []
+
+        def get(self, path):
+            return 200, {"leagues/1/teams/2/stadium": {"stadiumParts": [part]}, "user/bosscoinwallet": {"amount": 100}}[path]
+
+        def request(self, method, path, form):
+            self.writes.append((method, path, form))
+            return 200, {}
+
+    products = [{"id": 551, "name": "StadiumBoostCost", "increment": 4, "value": 4}]
+    game, said = Game(), []
+    assert stadium._boost_running(game, {"name": "C"}, "leagues/1/teams/2", products, 3, said.append) == 0
+    assert stadium._boost_running(game, {"name": "C"}, "leagues/1/teams/2", products, 4, said.append) == 4
+    assert game.writes == [("PUT", "leagues/1/teams/2/stadiumparts/7/boost", {"productId": 551})]
+    assert "acelerada com 4 boss coins" in said[0]

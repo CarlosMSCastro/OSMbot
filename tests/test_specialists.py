@@ -23,7 +23,7 @@ def test_captain_tiebreak_on_age_is_higher_rating(make_player):
 def test_penalty_taker_is_forward_with_most_attack(make_player):
     striker_low = make_player(Position.ATT, att=70)
     striker_high = make_player(Position.ATT, att=85)
-    midfielder_higher = make_player(Position.MID, att=99)
+    midfielder_higher = make_player(Position.MID, att=94)  # 9 more: not enough for a midfielder (point 18)
     assert pick_penalty_taker([striker_low, striker_high, midfielder_higher]) is striker_high
 
 
@@ -70,3 +70,44 @@ def test_pick_specialists_accepts_a_generator(make_player):
     result = pick_specialists(p for p in squad)
     assert result.captain is squad[0]
     assert result.corner_taker is squad[1]
+
+
+def _graded(player, grade, matches):
+    from dataclasses import replace
+
+    return replace(player, average_grade=grade, matches=matches)
+
+
+def test_corners_leave_the_free_kick_taker_for_the_midfielder_with_the_best_average(make_player):
+    star = _graded(make_player(Position.MID, att=99), 8.9, 20)  # free kicks and the most attack among midfielders
+    attacking = _graded(make_player(Position.MID, att=90), 8.1, 20)
+    steady = _graded(make_player(Position.MID, att=60), 8.6, 20)
+    new = _graded(make_player(Position.MID, att=70), 9.5, 2)  # too few matches
+    chosen = pick_specialists([star, attacking, steady, new, make_player(Position.ATT, att=80)])
+    assert chosen.free_kick_taker is star and chosen.corner_taker is steady
+
+
+def test_close_averages_go_to_the_more_defensive_midfielder(make_player):
+    star = _graded(make_player(Position.MID, att=99), 8.0, 20)
+    a = _graded(make_player(Position.MID, att=80, deff=40), 8.5, 10)
+    b = _graded(make_player(Position.MID, att=70, deff=75), 8.3, 10)
+    assert pick_corner_taker([star, a, b], star) is b
+
+
+def test_corners_stay_when_they_do_not_collide_or_nobody_else_can_take_them(make_player):
+    mid = _graded(make_player(Position.MID, att=80), 8.0, 20)
+    other = _graded(make_player(Position.MID, att=70), 9.0, 20)
+    forward = make_player(Position.ATT, att=95)
+    assert pick_specialists([mid, other, forward]).corner_taker is mid  # the forward takes the free kicks
+    assert pick_corner_taker([mid], mid) is mid
+    fresh = _graded(make_player(Position.MID, att=60), 0, 1)
+    second = _graded(make_player(Position.MID, att=75), 0, 2)
+    assert pick_corner_taker([mid, fresh, second], mid) is second  # nobody with 3 matches: the next by attack
+
+
+def test_a_midfielder_takes_the_penalties_with_10_more_attack_than_the_best_forward(make_player):
+    forward = make_player(Position.ATT, att=100)
+    assert pick_penalty_taker([forward, make_player(Position.MID, att=109)]) is forward
+    mid = make_player(Position.MID, att=110)
+    assert pick_penalty_taker([forward, mid]) is mid
+    assert pick_penalty_taker([mid]) is None  # no forward: as before

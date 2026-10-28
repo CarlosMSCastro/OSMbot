@@ -191,6 +191,10 @@ PATTERNS = [(re.compile(pattern), replace) for pattern, replace in (
     (r"^(.+) \(árbitro (.+)\)$",  # the tackling the referee wants
      lambda m: " or ".join(_TACKLE.get(w, w) for w in m[1].split(" ou ")) + f" ({_REFEREE.get(m[2], m[2])} referee)"),
     (r"^Se mudares para (.+):$", lambda m: f"If you switch to {m[1]}:"),
+    (r"^(.+) (\d+) devia ser o central do meio$", lambda m: f"{m[1]} {m[2]} should be the middle centre-back"),
+    (r"^(.+) (\d+) devia jogar do lado do (DE|DD) \(lateral mais fraco\)$",
+     lambda m: f"{m[1]} {m[2]} should play on the {_SPECIFIC[m[3]]} side (weaker full-back)"),
+    (r"^Capitão (.+) com menos de (\d+) anos$", lambda m: f"Captain {m[1]} under {m[2]}"),
     (r"^Sem regra para o (.+)$", lambda m: f"No rule for the {m[1]}"),
     # card
     (r"(\d+)\.º Campeonato", lambda m: f"{ordinal(m[1])} in the league"),

@@ -116,11 +116,12 @@ UNIVERSAL_TRAINER = 5
 BOOST_PRODUCT = "TrainingBoostCost"  # bosscoinproducts: one per whole hour left, 2 boss coins each (DISCOVERY.md 3)
 
 
-def boost_product(products: Sequence[Mapping], left: float) -> Optional[Mapping]:
-    """The product the game charges to finish a training with ``left`` seconds to go, as the site picks it: the
-    biggest ``increment`` (hours) not above the hours left rounded up (20 min = 1 h). None: no product fits."""
+def boost_product(products: Sequence[Mapping], left: float, name: str = BOOST_PRODUCT) -> Optional[Mapping]:
+    """The product the game charges to finish a training (or, by ``name``, a stadium upgrade) with ``left`` seconds
+    to go, as the site picks it: the biggest ``increment`` (hours) not above the hours left rounded up (20 min =
+    1 h). None: no product fits."""
     hours = math.ceil(left / 3600)
-    fits = [p for p in products if p.get("name") == BOOST_PRODUCT and 0 < (p.get("increment") or 0) <= hours]
+    fits = [p for p in products if p.get("name") == name and 0 < (p.get("increment") or 0) <= hours]
     return max(fits, key=lambda p: p["increment"], default=None)
 
 

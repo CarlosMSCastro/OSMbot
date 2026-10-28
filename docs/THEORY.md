@@ -109,15 +109,16 @@ Desarme: *Cuidadoso · Normal · Agressivo · Extremo*.
 | Papel | Regra |
 |---|---|
 | **Capitão** | O mais **velho**, independentemente do rating. Empate de idade → maior rating |
-| **Penáltis** | **Avançado** com mais ataque |
+| **Penáltis** | **Avançado** com mais ataque; um **médio** se tiver **10 ou mais** de ataque acima dele (dono, 2026-10-28; OSMPro Táticas ponto 18: o autor diz 8–12) |
 | **Livres** | Qualquer titular com mais ataque |
-| **Cantos** | **Médio** com mais ataque |
+| **Cantos** | **Médio** com mais ataque; se for o mesmo dos livres, outro médio (abaixo) |
 
 - "Ataque" = estatística de ataque do jogador (`statAtt` no API; confirmado: é o número de ataque do ecrã do jogo, `DISCOVERY.md`).
 - "Rating" (no capitão e nos desempates) = *stat principal da posição*: avançado→ataque, médio→overall, defesa e guarda-redes→defesa. **Confirmado** (2026-10-14): é o `statMain` que o próprio jogo usa na força da equipa, e a força calculada assim bate com a do jogo em 3 clubes.
 - **Ataque igual (penáltis, livres, cantos; dono, 2026-10-14):** ganha quem tiver **o resto das stats melhor** (overall + defesa). Ex.: Marmoush e Trossard com 111 de ataque; Trossard 73 + 36 contra 65 + 19 → Trossard.
 - **[S]** Empates que ainda sobram resolvem-se por maior rating e depois menor id de jogador, para o resultado ser sempre o mesmo.
 - Sem titular elegível (ex.: sem avançado) → o código devolve `None` e o chamador decide.
+- **Cantos ≠ livres** (dono, 2026-10-28; OSMPro Táticas ponto 17: o jogo não gosta do mesmo jogador nos livres e nos cantos, "não sabia para onde se virar"). Só quando o médio com mais ataque é também o dos livres, os cantos vão para outro médio: o de **maior nota média** (`averagePlayerGrade` do jogo, `DISCOVERY.md` §3) entre os que têm **pelo menos 3 jogos**; com médias a **0,2 ou menos** da melhor, o de **mais defesa** (o autor: o ofensivo pode marcar de canto). Nenhum com 3 jogos → o médio seguinte com mais ataque; nenhum outro médio → fica o mesmo. **[S]** Os 3 jogos e os 0,2 são do Claude, aceites pelo dono. Penáltis e livres no mesmo jogador continuam a poder (o autor também). Ninguém fica com as 3 bolas paradas: os cantos nunca vão para o dos livres, e o médio dos penáltis, quando os tem, é o médio com mais ataque.
 - **O mesmo jogador pode ter mais de um papel** (dono, 2026-10-12).
 - **Automático (dono, 2026-10-12, D-042):** nas **últimas 4 h antes de cada jogo**, em cada passagem, o bot põe certos só os papéis que estão fora da regra (segue as mudanças do onze). Um lesionado ou suspenso sai do onze e por isso dos especialistas (dono). Na checklist do quadro, "Especialistas" fica **amarelo** quando não seguem a regra, mesmo que o jogo os dê como feitos.
 
@@ -426,6 +427,7 @@ Há **3 componentes** a melhorar, cada um com **níveis 0, 1, 2 e 3**:
 - **Melhoramentos por nível (fechado, 2026-09-27, número exato não é necessário):** do nível 0 para o 1 é **só 1 melhoramento**. Do 1 para 2 e do 2 para 3 são mais, e o número **varia por clube/liga** (Clube A 2→3: 11; clube pequeno na outra liga 2→3: 7), provavelmente pelo nível da liga — mas o dono considera **irrelevante para a automação**: a regra que importa é a **ordem de prioridade** (Treinos ao máximo → depois Campo → depois Capacidade, ver acima), que já não depende de saber quantos melhoramentos cada passo leva.
 - **Duração total:** normalmente leva **quase uma época** a levar os 3 componentes ao máximo.
 - Liga-se à automação de treinos (§5): o nível de Treinos aumenta o ganho de cada sessão.
+- **Eventos de estádio a 4 h: acelerar com boss coins** (dono, 2026-10-28, D-075; "nestas fases talvez compense usar boss coins mais à larga, dentro do aceitável"). Nos eventos em que a obra do estádio leva 4 h (Top Facilities, Stadium Blitz), acelerar custa ~4 boss coins por ciclo (1 por hora que falta, `DISCOVERY.md` §3), contra ~18 num dia normal. O bot acelera, recolhe e põe a seguinte, pela ordem acima, até **40 boss coins por evento** (o dono: "talvez 40"). O dinheiro do clube não trava (saldo e poupança são o mesmo dinheiro, §13). **[S]** Repartido pelos clubes à vez (um ciclo em cada, depois o seguinte), logo que o evento começa; só obras postas já com a duração do evento; fora destes eventos, nunca.
 
 ## 9. Patrocinadores
 
@@ -673,7 +675,9 @@ Na checklist do cartão, o passo fica **amarelo** quando o jogo o dá como feito
 
 **Posições** (dono, 2026-10-14): o jogo conta quantos titulares estão no lugar da sua posição específica (9/11 = 2 fora). O hover diz **quem**: "Messi (ED) a jogar a PL". **Sempre a posição específica certa, sem margem** (dono, 2026-10-28; OSMPro Táticas ponto 14): a margem de +4–5 pontos do autor para jogar fora de posição não entra; o dono nunca põe ninguém fora da posição, por isso o hover não sugere substituto. O mapa de cada lugar de cada formação vem do código do próprio jogo (`theory/lineup.places`). Nomes: GR, DE, DC, DD, MDC, MC, MO, ME, MD, EE, PL, ED.
 
-**Especialistas:** como já estava (D-042), amarelo fora da regra (§4); o hover passa a dizer que papel está errado e quem a regra pede.
+**Centrais** (dono, 2026-10-28; OSMPro Táticas ponto 19, o autor em 3 vídeos de 5 defesas): com **3 centrais**, o melhor no meio e o 2.º do lado do lateral mais fraco (menos defesa); com **2 centrais** **[S]** (extensão do Claude, aceite pelo dono), o melhor do lado do lateral mais fraco. Laterais iguais: nada sobre o lado. Só **nota** no "Onze" (verde com ⓘ): "Gabriel 103 devia ser o central do meio", "… devia jogar do lado do DD (lateral mais fraco)". O onze é do dono; o bot não mexe. **[S]** Os lugares da defesa vão da esquerda para a direita (DE primeiro, DD no fim, como na página do onze do jogo). Código: `theory/lineup.centre_notes`.
+
+**Especialistas:** como já estava (D-042), amarelo fora da regra (§4); o hover passa a dizer que papel está errado e quem a regra pede. **Capitão com menos de 30 anos** (dono, 2026-10-28; OSMPro Táticas ponto 16, o autor: "abaixo de 30 não há bónus de capitão"): **nota** (verde com ⓘ), só "Capitão X com menos de 30 anos". A regra do §4 não muda (continua o mais velho do onze). **[S]** O bónus a partir dos 30 é do autor; o jogo não o mostra.
 
 **Tática** (dono, 2026-10-28, D-073): uma bola nova a seguir ao "Onze", que não vem da checklist do jogo. Lê a tática do jogo (`teamtactics`, só leitura) e julga-a pelo §2 **para a formação que está posta**; se o "Onze" estiver amarelo, o hover junta as barras e instruções da formação sugerida ("se mudares para 3-4-3: …"). Verde: plano de jogo, defesa, médios, avançados, marcação, fora de jogo e desarme certos e as 3 barras dentro da banda. Amarela: hover em tabela, uma linha por campo, "Campo · Está · Devia ser" (ex. "Pressão · 45 · 60–80 (~75)"). O **desarme passa do "Onze" para aqui**. Formação sem regra no §2: bola cinzenta, "sem regra para o X". Amigáveis: não (dono). Nunca escreve na tática. Código: `theory/tactics.instructions` (§2), `theory/lineup.tactic_check`, `gui/window.tip_tactic`. Os números de cada opção estão em `DISCOVERY.md` §3 (verificados com o dono, 2026-10-28); o hover usa os nomes do jogo ("Jogo de passe", "Atacar apenas"…).
 

@@ -52,3 +52,9 @@ def test_the_checklist_says_which_roles_are_out_of_the_rule():
     assert specialists.check(PLAYERS, {"captain": 11, "penalty": 10, "freekick": 10, "corners": 7}) == ["Livres: P2, pela regra P3"]
     assert specialists.check(PLAYERS, {"captain": 11, "penalty": 10, "freekick": 7, "corners": 7}) == []
     assert specialists.check(PLAYERS, None) == []
+
+
+def test_a_captain_under_30_is_a_note():
+    assert specialists.captain_note(PLAYERS, {"captain": 10}) == ["Capitão P2 com menos de 30 anos"]
+    assert specialists.captain_note(PLAYERS, {"captain": 11}) == []
+    assert specialists.captain_note(PLAYERS, None) == []

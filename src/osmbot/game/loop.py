@@ -46,7 +46,7 @@ from osmbot.game.prematch import run_prematch
 from osmbot.game.rewards import run_rewards
 from osmbot.game.sponsors import run_sponsors
 from osmbot.game.savings import run_savings
-from osmbot.game.stadium import run_stadium
+from osmbot.game.stadium import run_event_stadium_boost, run_stadium
 from osmbot.game.trainings import COUNTS, pending_finish_times, run_claim, run_event_boost, run_event_end_boost, run_train
 
 LOG_FILE = Path.home() / ".osmbot" / "bot.log"
@@ -368,7 +368,8 @@ def run_active(dry_run: bool = False, *, claim=run_claim, train=run_train, finis
                transfers=lambda: save_transfers(log=_log), savings=lambda confirm: run_savings(confirm),
                events=lambda: events_module.refresh(log=_log), inventory=lambda confirm: run_inventory(confirm, log=_log),
                matches=lambda: log_rounds(log=_log), xp=lambda: log_xp(log=_log),
-               reports=lambda: save_reports(log=_log), boost=lambda confirm: run_event_boost(confirm) + run_event_end_boost(confirm),
+               reports=lambda: save_reports(log=_log), boost=lambda confirm: run_event_boost(confirm) + run_event_end_boost(confirm)
+               + run_event_stadium_boost(confirm, log=_log),
                event_wake=lambda now: events_module.training_wake(now),
                snapshot=None, use_screen: bool | None = None,
                sleep=time.sleep, clock=time.time, rng=random, board=None) -> None:

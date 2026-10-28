@@ -6,6 +6,9 @@ from __future__ import annotations
 # to the top, pitch to the top, capacity. None: the part's top level.
 STEPS = ((2, 1), (1, 1), (2, None), (1, None), (0, None))
 PART_NAMES = {0: "capacidade", 1: "campo", 2: "campo de treinos"}
+NORMAL_MINUTES = 1080  # an upgrade on a normal day (gamesettings StadiumUpgrade)
+BOOST_PRODUCT = "StadiumBoostCost"  # bosscoinproducts: 1 boss coin per hour left (DISCOVERY.md section 3)
+EVENT_BUDGET = 40  # boss coins per stadium event (owner, 2026-10-28, D-075)
 
 
 def max_level(part: dict) -> int:
@@ -23,6 +26,19 @@ def to_claim(parts: list[dict], now: float) -> list[dict]:
     """Finished upgrades still to collect: they only count once collected (DISCOVERY.md section 3, 2026-10-24)."""
     return [p for p in parts if p.get("countdownTimer") and p["countdownTimer"]["finishedTimestamp"] <= now
             and not p["countdownTimer"].get("isClaimed")]
+
+
+def stadium_event(minutes: int | None) -> bool:
+    """A stadium event in the league: the upgrade shorter than on a normal day (Top Facilities, Stadium Blitz: 4 h;
+    D-075)."""
+    return bool(minutes) and minutes < NORMAL_MINUTES
+
+
+def event_key(events: list[dict], day: str) -> str:
+    """Which event the boss coins spent belong to: the stadium event going on in the calendar ("Top Facilities
+    2026-10-28"), else the game's day."""
+    found = next((e for e in events if "estadio" in (e.get("tags") or [])), None)
+    return f"{found['nome']} {found['inicio']}" if found else day
 
 
 def next_part(parts: list[dict], now: float) -> int | None:

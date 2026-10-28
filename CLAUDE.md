@@ -33,6 +33,7 @@ Regra: **cada regra do código tem de estar em `THEORY.md`**. Se o código preci
 | `docs/RISKS_AND_COMPLIANCE.md` | ToS do OSM, risco de ban, gestão de segredos |
 | `docs/GLOSSARY.md` | Termos do jogo e desambiguação |
 | `docs/WORKLOG.md` | Diário por sessão: o que foi feito, o que falta, próximo passo |
+| `docs/VERIFICACAO.md` | Rotina semanal: regras do `THEORY.md` medidas nos registos (`tools/verificar_teoria.py`) |
 | `logs/<PC>/` | Registo do bot por máquina e por dia (D-022); o dono faz commit/push |
 
 ## Regras para o Claude neste repo

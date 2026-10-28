@@ -9,15 +9,19 @@ reply), the upgrade is tried again and what is left goes straight back to saving
 """
 from __future__ import annotations
 
+import json
 import time
+from pathlib import Path
 
 from osmbot.game import refusals
 
-from osmbot.stadium.policy import PART_NAMES, next_part, running_until, to_claim
+from osmbot.stadium.policy import (BOOST_PRODUCT, EVENT_BUDGET, PART_NAMES, event_key, next_part, running_until,
+                                   stadium_event, to_claim)
 
 SETTING_NAME = "StadiumUpgrade"  # gamesettings entry with the upgrade duration (id 30 on 2026-10-07)
 PAUSE_BETWEEN_WRITES = 1.5  # seconds
-COUNTS = {"upgrades": 0}
+COUNTS = {"upgrades": 0, "boosted": 0}
+EVENT_FILE = Path.home() / ".osmbot" / "estadio_evento.json"  # boss coins spent per stadium event (D-075)
 
 
 def _money(client, base: str) -> tuple[int, int]:
@@ -159,3 +163,82 @@ def run_stadium(confirm: bool) -> tuple[int, list[float]]:
     except NeedsBrowserLogin as error:
         raise SystemExit(str(error))
     return failures, wake
+
+
+def _spent() -> dict:
+    try:
+        return json.loads(EVENT_FILE.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return {}
+
+
+def _boost_running(client, team: dict, base: str, products: list[dict], room: int, log) -> int:
+    """Finish the club's running upgrade with boss coins when it costs no more than ``room``; it counts at once, with
+    nothing to collect (DISCOVERY.md section 3, 2026-10-19/24). Returns the boss coins spent (0: not done)."""
+    from osmbot.training.policy import boost_product
+
+    _, stadium = client.get(f"{base}/stadium")
+    now = time.time()
+    part = next((p for p in stadium["stadiumParts"]
+                 if p.get("countdownTimer") and p["countdownTimer"]["finishedTimestamp"] > now), None)
+    if part is None:
+        return 0
+    left = part["countdownTimer"]["finishedTimestamp"] - now
+    product = boost_product(products, left, BOOST_PRODUCT)
+    if product is None or product["value"] > room:
+        return 0
+    _, wallet = client.get("user/bosscoinwallet")
+    if (wallet or {}).get("amount", 0) < product["value"]:
+        return 0
+    status, _ = client.request("PUT", f"{base}/stadiumparts/{part['id']}/boost", {"productId": product["id"]})
+    time.sleep(PAUSE_BETWEEN_WRITES)
+    label = f"{team['name']}: {PART_NAMES.get(part['stadiumPartType'], '?')}"
+    if status != 200:
+        log(f"{label}: acelerar falhou ({status})")
+        return 0
+    COUNTS["boosted"] += 1
+    log(f"{label}: melhoria acelerada com {product['value']} boss coins (faltavam {int(left // 3600)}h{int(left % 3600 // 60):02d})")
+    return product["value"]
+
+
+def run_event_stadium_boost(confirm: bool, log=print) -> int:
+    """In a stadium event (the upgrade at 4 h), finish upgrades with boss coins and start the next, a club at a time,
+    up to ``EVENT_BUDGET`` boss coins per event (owner, 2026-10-28, D-075; THEORY.md section 8). Without ``confirm``
+    only shows. Returns the failures."""
+    from osmbot.game.client import NeedsBrowserLogin, OsmClient
+    from osmbot.game.clubinfo import timer_minutes
+    from osmbot.game.events import calendar_events
+    from osmbot.game.trainings import _products, _teams
+
+    try:
+        client = OsmClient()
+        clubs = [(team, base) for _, team, base in _teams(client)
+                 if stadium_event(timer_minutes(client, team["leagueId"], "StadiumUpgrade"))]
+        if not clubs:
+            return 0
+        key = event_key(calendar_events(days=0), refusals.game_day())
+        used = _spent().get(key, 0)
+        if used >= EVENT_BUDGET:
+            return 0
+        if not confirm:
+            log(f"Evento de estádio: aceleraria até {EVENT_BUDGET - used} boss coins em {len(clubs)} clube(s)")
+            return 0
+        products, failures, moved = _products(client), 0, True
+        while moved and used < EVENT_BUDGET:
+            moved = False
+            for team, base in clubs:
+                failures += upgrade_club(client, team, base, confirm, log)[0]  # collect, then start the next if free
+                cost = _boost_running(client, team, base, products, EVENT_BUDGET - used, log)
+                if cost:
+                    used, moved = used + cost, True
+                    EVENT_FILE.parent.mkdir(parents=True, exist_ok=True)
+                    EVENT_FILE.write_text(json.dumps({key: used}), encoding="utf-8")
+                if used >= EVENT_BUDGET:
+                    break
+        for team, base in clubs:  # the next one at the event's length, as on any pass
+            failures += upgrade_club(client, team, base, confirm, log)[0]
+        if moved or used >= EVENT_BUDGET:
+            log(f"Evento de estádio: {used} de {EVENT_BUDGET} boss coins gastas a acelerar")
+        return failures
+    except NeedsBrowserLogin as error:
+        raise SystemExit(str(error))
