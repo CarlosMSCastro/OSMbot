@@ -397,6 +397,8 @@ Razões plausíveis:
 **Opinião nossa:** faz sentido mantê-lo. Sem ele a rotação **poderia** funcionar em ATT e DEF (no limite), mas em MID e GK depende de os mínimos serem os palpitados, e sem margem nenhuma para lesões.
 - **Confirmado (2026-09-27):** os mínimos reais batem certo com os palpitados (ATT 3, MID 4, DEF 4, GK 2 — ver §7.2), e o jogo **bloqueia mesmo listar para venda** quando isso deixaria a posição abaixo do mínimo (testado em ATT/MID/DEF). A análise acima confirma-se: sem o jogador fraco, MID e GK ficariam exatamente no mínimo, sem margem para lesões/suspensões.
 
+- **Ataque dos defesas** (OSMPro Táticas ponto 15; dono, 2026-10-28): o autor pede laterais com ≥ 35–40 de ataque e centrais com ≥ 15–20. O dono já tem esse cuidado à mão; o bot não avisa nem compara por isso. *Para o futuro, sem decisão:* se as transferências forem automatizadas, **pode** ser um critério a ter em conta.
+
 ### 7.9 Trocas no 11: a posição específica conta *(dono, 2026-10-16)*
 
 - Só se troca um titular por outro da **mesma posição específica** (p. ex. MC por MC). Um MCO não substitui diretamente um MC; para isso é preciso gastar uma **troca de posição universal** (item do inventário).
@@ -669,7 +671,7 @@ Na checklist do cartão, o passo fica **amarelo** quando o jogo o dá como feito
 - **Idade do onze** (dono, 2026-10-22; OSMPro, Dicas: EfHyzY6C5AI, 7da7tn75LAI): pelo menos **3 titulares com mais de 26 anos e 3 com menos de 26**; um onze demasiado jovem tem bónus negativo e o jogo avisa. Fora disso, **nota** (passo verde com ⓘ; dono, 2026-10-27, antes amarelo): "Onze com só 2 jogadores acima de 26 anos" (o jogo dá bónus negativo a um onze demasiado jovem). **[S]** O lado contrário (onze demasiado velho) avisa igual, com "abaixo de 26"; o autor só fala do jovem. Os 4 onzes do dono cumpriam no dia (5/4, 6/5, 4/5, 5/6).
 - **Formação** (§1): com o adversário mais forte (antes da análise pela estimativa, depois pelo onze real dele; dono, 2026-10-25) (qualquer margem, com bónus e casa, §1) pede **5 defesas** e aceita qualquer uma (5-3-2, 5-2-3, 5-4-1; D-049); com o adversário claramente mais forte (> 12 %, D-074) só o **5-2-3** ("devia ser 5-2-3 (adversário claramente mais forte)"; D-070). Em casa o 4-3-3 B também serve (verde, nota "4-3-3 B aceite: em casa a regra é o 4-3-3 A"; dono, 2026-10-26; antes ficava amarelo); fora é o B que se pede e o A fica amarelo, exceto sendo claramente mais forte (dono, 2026-10-25).
 
-**Posições** (dono, 2026-10-14): o jogo conta quantos titulares estão no lugar da sua posição específica (9/11 = 2 fora). O hover diz **quem**: "Messi (ED) a jogar a PL". O mapa de cada lugar de cada formação vem do código do próprio jogo (`theory/lineup.places`). Nomes: GR, DE, DC, DD, MDC, MC, MO, ME, MD, EE, PL, ED.
+**Posições** (dono, 2026-10-14): o jogo conta quantos titulares estão no lugar da sua posição específica (9/11 = 2 fora). O hover diz **quem**: "Messi (ED) a jogar a PL". **Sempre a posição específica certa, sem margem** (dono, 2026-10-28; OSMPro Táticas ponto 14): a margem de +4–5 pontos do autor para jogar fora de posição não entra; o dono nunca põe ninguém fora da posição, por isso o hover não sugere substituto. O mapa de cada lugar de cada formação vem do código do próprio jogo (`theory/lineup.places`). Nomes: GR, DE, DC, DD, MDC, MC, MO, ME, MD, EE, PL, ED.
 
 **Especialistas:** como já estava (D-042), amarelo fora da regra (§4); o hover passa a dizer que papel está errado e quem a regra pede.
 

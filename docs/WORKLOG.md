@@ -2,6 +2,15 @@
 
 Entradas mais recentes primeiro. Cada sessão: o que se fez · o que ficou por fazer · próximo passo.
 
+## 2026-10-28 (cont.) — Táticas ponto 7: relatório do analista lido (v1.1)
+
+- **Ponto 7 (contra-ataque):** os registos não chegavam: o nosso estilo de jogo só em 50 jogos (6 em contra-ataque), o do adversário nunca (`analise` vazia nos 50).
+- **Causa (dono: "tenta dnv"):** o `spyresults` só existe em **v1.1** (como o levantar do analista); o registo pedia v1 → 404. Lido agora nos 3 clubes com analista: estilo de jogo, desarme, formação, marcação, fora de jogo, estágio, campo e jogadores com o onze; sem barras nem instruções (`DISCOVERY.md` §3).
+- **Corrigido:** `game/matchlog.note_prematch` lê o `spyresults` em v1.1. 468 testes; pyflakes limpo. Não está no `dist`: entra na próxima versão (o bot instalado continua a não guardar o relatório).
+- Tabela das Táticas: o 7 passa a "por medir" (amostra a juntar a partir de hoje); o 20 deixa de ser "não dá". 8, 9 e 11 explicados (já fechados); **10 fechado** (dono: nada a fazer).
+- **Ponto 12:** o dono copiou os 8 textos de ajuda da tática (`DISCOVERY.md` §3; "vale o que vale"): 7 batem com o `THEORY.md` §2 (o do desarme é a regra do árbitro, §3). **Temporização** (choca com 60–80 nas 5 defesas contra mais forte): dono, opção c) **manter e medir em todos os jogos oficiais daqui para a frente** (`jogos/`: a nossa `tempo`, a força dos dois lados, o resultado). **13 fechado** sem mudanças (dono): o "?" do desarme dá razão ao §3 (só o árbitro). **14 fechado** (dono): sempre a posição específica certa, sem a margem do autor; a bola "Posições" já avisa; sugestão de substituto no hover recusada ("nunca ponho posições erradas"); `THEORY.md` §21. **15 fechado** (dono, opção d): nada no bot; nota "para o futuro" no `THEORY.md` §7.8 (critério possível se as transferências forem automatizadas). Próximo: 16 e 17.
+- **Medições pendentes (amostra a juntar):** ponto 7 (estilo de jogo do adversário, `spyresults`) e ponto 12 (temporização contra mais forte). Ambas só nos jogos oficiais (amigáveis sem tática gravada nem analista); o relatório do adversário só com a próxima versão instalada.
+
 ## 2026-10-28 — Táticas ponto 6: instruções e barras como o autor; bola "Tática" (D-073)
 
 - **Dono:** amigáveis ficam como estão (desarme e estilo do árbitro/adversário do amigável: não). Automatizar a tática: não. Em vez disso, uma bola "Tática" verde/amarela no cartão, com sugestão de barras e instruções; o onze fica como está.

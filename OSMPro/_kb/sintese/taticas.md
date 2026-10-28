@@ -153,20 +153,20 @@ A tabela de 25 pontos de 2026-10-26 não ficou guardada; refeita a 2026-10-28 a 
 | 4 | Rodar formações para descansar | Fechado: "não é bem aplicável" |
 | 5 | Tier list 2025 | Fechado: medido, nada a mudar |
 | 6 | Barras e instruções por formação (§3–§5) | Fechado 2026-10-28: D-073 (§2 "como o autor"), bola "Tática"; D-074 (claramente mais forte = 12 %) |
-| 7 | 4-3-3 contra contra-ataques; contra-ataque contra contra-ataque = 0-0 | Por fechar: só informação (dá para medir) |
+| 7 | 4-3-3 contra contra-ataques; contra-ataque contra contra-ataque = 0-0 | Por medir: o estilo do adversário só se lê desde 2026-10-28 (`spyresults` v1.1); amostra a juntar |
 | 8 | Não treinar quem acaba depois do jogo | Fechado: o treino já não tira do onze (dono) |
 | 9 | Item de troca de posição | Fechado: já no `THEORY.md` §7.9 |
-| 10 | §9 Outros (eventos-desafio, ligas com limite, história) | Por fechar: nada a fazer |
+| 10 | §9 Outros (eventos-desafio, ligas com limite, história) | Fechado 2026-10-28: nada a fazer (dono) |
 | 11 | Pressão do 4-3-3 a 81 | Fechado: D-073 (banda 60–80) |
-| 12 | Textos de ajuda do jogo ("?" da tática) | **Por fazer:** print do dono; "não ritmo acelerado contra melhor" choca com a temporização 60–80 das 5 defesas |
-| 13 | Desarme pela pressão | Por fechar: fora no D-073 (choca com §3); proposta: sem mudanças |
-| 14 | Margem de +4–5 pontos para jogar fora de posição | Por decidir: aviso das "Posições" (§21) |
-| 15 | Laterais ≥ 35–40 de ataque, centrais ≥ 15–20 | Por decidir: nota no "Onze" ou critério de compra |
+| 12 | Textos de ajuda do jogo ("?" da tática) | Textos confirmados 2026-10-28 (dono, `DISCOVERY.md` §3): 7 de 8 batem com o §2. **Por medir (dono, opção c):** a temporização ("não ritmo acelerado contra melhor" contra 60–80 nas 5 defesas); fica 60–80 até lá. Medir em todos os jogos oficiais daqui para a frente (`jogos/`: a nossa `tempo` + força dos dois lados + resultado) |
+| 13 | Desarme pela pressão | Fechado 2026-10-28 (dono): sem mudanças; o "?" do jogo ajusta o desarme só ao árbitro, como o §3 |
+| 14 | Margem de +4–5 pontos para jogar fora de posição | Fechado 2026-10-28 (dono): sempre a posição certa, sem margem (já é o que a bola "Posições" faz); sem sugestão de substituto (`THEORY.md` §21) |
+| 15 | Laterais ≥ 35–40 de ataque, centrais ≥ 15–20 | Fechado 2026-10-28 (dono): nada; já tem o cuidado à mão; critério possível se um dia se automatizarem as transferências (`THEORY.md` §7.8) |
 | 16 | Capitão ≥ 30 anos | **Por medir:** nos 4 clubes, se o "mais velho" fica abaixo de 30 (mexe no D-042) |
 | 17 | Ninguém com as 3 bolas paradas | **Por medir:** nos 4 clubes, se a regra do §4 dá as 3 ao mesmo |
 | 18 | Penáltis num médio só com +8–10 pontos | Por decidir: afinação do §4 |
 | 19 | Centrais: o melhor no meio, o 2.º do lado do lateral mais fraco | Por decidir: só aviso; o onze é do dono |
-| 20 | Atacar pelo lado fraco do adversário | Não dá: o relatório do analista dá 404 pela API |
+| 20 | Atacar pelo lado fraco do adversário | Por decidir: o relatório lê-se em v1.1 (2026-10-28) e traz os jogadores do adversário com o onze |
 
 Ordem proposta ao dono: 12 → 16 e 17 → 14 e 15 → fechar os restantes de uma vez.
 

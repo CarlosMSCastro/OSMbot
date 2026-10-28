@@ -5,7 +5,7 @@ referee and his strictness, both clubs' places, squad value and best-eleven rati
 goals in that match (``lastPlayerGrade``, ``goalsLastMatch``). The owner's matches carry more: his tactics as they
 were just before the match and, when the analyst's report could be read, the opponent's (other clubs' tactics are
 refused by the game, 403). Reads: ``matches/filter``, ``teams``, ``referees``, each club's ``players``,
-``teamtactics`` and ``spyresults`` (DISCOVERY.md section 3). State in ``~/.osmbot/jogos.json``.
+``teamtactics`` and ``spyresults`` (v1.1; DISCOVERY.md section 3). State in ``~/.osmbot/jogos.json``.
 
 The match itself (D-044, as the game's Results page shows it): the game's strength of each side in that match,
 formations and statistics (``matchData`` of ``matches/filter``), who played with his grade (``playergrades``) and
@@ -22,6 +22,7 @@ from pathlib import Path
 from osmbot import logs
 
 FILE = Path.home() / ".osmbot" / "jogos.json"
+API_V11 = "https://web-api.onlinesoccermanager.com/api/v1.1"  # the analyst's report is v1.1 only (v1 gives 404)
 LEAGUE_MATCH, CUP_MATCH, FRIENDLY_MATCH = 0, 1, 2  # matchType (1 = cup: hypothesis; 3 seen too, meaning unknown)
 TYPES = {LEAGUE_MATCH: "liga", CUP_MATCH: "taça"}
 ELEVEN = 11
@@ -60,7 +61,7 @@ def note_prematch(client, base: str, week: int, now: float | None = None) -> Non
     on every pass of the last hours, so the last read is the one the match was played with."""
     data = _load()
     entry = {"semana": week, "lido": now or time.time(), "tatica": _body(client, f"{base}/teamtactics")}
-    report = _body(client, f"{base}/spyresults")
+    report = _body(client, f"{API_V11}/{base}/spyresults")
     if report:
         entry["analise"] = report
     elif (data.get("antes", {}).get(base) or {}).get("semana") == week:
