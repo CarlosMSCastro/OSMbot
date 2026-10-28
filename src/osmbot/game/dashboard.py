@@ -143,7 +143,10 @@ def collect(client) -> dict:
                         "lengths": {STADIUM_NAMES.get(p["stadiumPartType"], "?"): upgrade_length(
                             p["countdownTimer"]["id"], p["countdownTimer"]["finishedTimestamp"] - time.time(), upgrade_now)
                             for p in stadium["stadiumParts"]
-                            if p.get("countdownTimer") and p["countdownTimer"]["finishedTimestamp"] > time.time()}},
+                            if p.get("countdownTimer") and p["countdownTimer"]["finishedTimestamp"] > time.time()},
+                        "cycles": {STADIUM_NAMES.get(p["stadiumPartType"], "?"): (c.get("currentCycle", 0), c["cycleCount"])
+                                   for p in stadium["stadiumParts"]  # the 18 h cycles of the level (DISCOVERY.md section 3)
+                                   for c in [p.get("cycleProgress") or {}] if c.get("cycleCount")}},
             "sponsors": {"slots": len(live), "revenue": sum(c["sponsorRevenueForTeam"] for c in live)}, "slots": (slot.listed, slot.maximum) if slot else None,
             "trainings": [
                 {"id": s["id"], "name": s["player"]["name"], "pos": POSITIONS.get(s["player"]["position"], "?"),

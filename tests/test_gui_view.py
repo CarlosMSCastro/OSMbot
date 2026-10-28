@@ -376,3 +376,23 @@ def test_the_top_says_the_missions_to_do_by_hand_and_late_in_the_day_any_not_don
     late = {**daily, "login": {**daily["login"], "renews": NOW + 3600}}
     assert [p[2] for p in _daily_parts(late, NOW, "en") if p[2].startswith("To do")] == [
         "To do: Buy any player rated 90+ (1/2)", "To do: Train any player (0/2)"]
+
+
+def test_stadium_rings_carry_the_cycles_of_the_level_but_not_at_the_top():
+    rings = stadium_rings({"parts": [("Treinos", 3, 3, None), ("Campo", 1, 3, NOW + 9 * 3600)],
+                           "cycles": {"Campo": (3, 6)}}, NOW)
+    assert [r["cycles"] for r in rings] == [None, (3, 6)]
+
+
+def test_the_season_s_calendar_has_a_box_per_round():
+    from osmbot.gui.view import fixtures_view
+
+    view = fixtures_view([{"week": 1, "round": 1, "kind": "liga", "cup": "", "next": False, "played": True, "opponent": "B",
+                           "side": "H", "neutral": False, "score": "2-1", "result": "W"},
+                          {"week": 2, "round": None, "kind": "taça", "cup": "oitavos-de-final", "next": True, "played": False,
+                           "opponent": "C", "side": "A", "neutral": True},
+                          {"week": 3, "round": None, "kind": "folga", "cup": "", "next": False, "played": False}], "J1/2")
+    assert view["title"] == "Época · J1/2"
+    assert [(c["top"], c["score"], c["colour"]) for c in view["cells"]] == [
+        ("J1 · CASA", "2-1", GREEN), ("Taça oitavos · NEUTRO", "", None), ("folga", "", None)]
+    assert fixtures_view([], "") is None

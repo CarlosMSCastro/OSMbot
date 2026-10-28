@@ -9,8 +9,8 @@ from __future__ import annotations
 
 import time
 
-from osmbot.board.info import (cup_phase, eleven_seen, league_summary, next_match, next_matches, opponent_rating, squad_value,
-                               stale_listings, team_rating, value_table)
+from osmbot.board.info import (cup_phase, eleven_seen, league_round, league_summary, next_match, next_matches,
+                               opponent_rating, season_fixtures, squad_value, stale_listings, team_rating, value_table)
 from osmbot.game import market as market_watch, sales
 from osmbot.game.transfers import saved_transfers
 from osmbot.game.specialists import check
@@ -275,7 +275,8 @@ def club_extra(client, team: dict, base: str, players: list[dict], slot, market:
     return {
         "team_id": team["id"], "week": week, "logo": logo, "logo_key": team.get("baseId") or str(team["id"]),
         "next": upcoming, "places": places(tactic),  # the formation's places, for the buying card
-        "cup": cup_phase(rounds, matches, team["id"], week),
+        "cup": cup_phase(rounds, matches, team["id"], week), "round": league_round(matches, team["id"], week),
+        "fixtures": season_fixtures(matches, teams, rounds, team["id"], week),
         "value": squad_value(values, team["id"]), "strength": strength,
         "value_table": value_table(values, {t["id"]: t["name"] for t in teams}, team["id"]),
         "table": league_summary(standings, teams, matches, team["id"], week, team.get("goal")),

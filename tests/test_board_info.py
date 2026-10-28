@@ -189,3 +189,32 @@ def test_a_player_on_the_list_twice_the_usual_time_for_his_price_is_warned():
     assert sale_time(line) == (("Chalobah", "FC Van", "17/10 19:23"), 91.26e6, (31 * 60 + 24) * 60)
     assert sale_time("Venda: X (C) vendido por 450 k; à venda desde 1/1 10:00, vendido às 1/1 12:00, demorou 2h00")[1:] == (450e3, 7200)
     assert sale_time("Venda: Guirassy (FC Van) vendido por 54,65 M; à venda desde antes de o bot começar a seguir, vendido até 12/10 09:13") is None
+
+
+def test_league_round_counts_the_club_s_league_matches_not_the_cup_days():
+    from osmbot.board.info import league_round
+
+    matches = [{"matchType": 0, "homeTeamId": 1, "awayTeamId": 2, "weekNr": 1},
+               {"matchType": 1, "homeTeamId": 1, "awayTeamId": 3, "weekNr": 2},  # cup day
+               {"matchType": 0, "homeTeamId": 3, "awayTeamId": 1, "weekNr": 3},
+               {"matchType": 0, "homeTeamId": 2, "awayTeamId": 3, "weekNr": 4},  # the club rests
+               {"matchType": 0, "homeTeamId": 1, "awayTeamId": 3, "weekNr": 5}]
+    assert league_round(matches, 1, 3) == (2, 3)
+    assert league_round(matches, 9, 3) is None
+
+
+def test_season_fixtures_go_by_round_with_the_cup_the_rests_and_the_scores():
+    from osmbot.board.info import season_fixtures
+
+    teams = [{"id": 1, "name": "Nós"}, {"id": 2, "name": "B", "baseId": "b",
+                                        "assets": [{"type": 3, "path": "s"}, {"type": 4, "path": "n"}]}, {"id": 3, "name": "C"}]
+    matches = [{"matchType": 0, "homeTeamId": 1, "awayTeamId": 2, "weekNr": 1, "homeGoals": 2, "awayGoals": 1, "winnerTeamId": 1},
+               {"matchType": 1, "homeTeamId": 3, "awayTeamId": 1, "weekNr": 2, "homeGoals": 1, "awayGoals": 1, "winnerTeamId": 3},
+               {"matchType": 0, "homeTeamId": 2, "awayTeamId": 3, "weekNr": 3},
+               {"matchType": 2, "homeTeamId": 1, "awayTeamId": 3, "weekNr": 3},  # a friendly: not in it
+               {"matchType": 0, "homeTeamId": 3, "awayTeamId": 1, "weekNr": 4}]
+    season = season_fixtures(matches, teams, [{"weekNr": 2, "name": "Final"}], 1, 2)
+    assert [(f["week"], f["kind"], f["round"]) for f in season] == [(1, "liga", 1), (2, "taça", None), (3, "folga", None), (4, "liga", 2)]
+    assert (season[0]["score"], season[0]["result"], season[0]["logo"], season[0]["key"]) == ("2-1", "W", "n", "b")
+    assert (season[1]["score"], season[1]["result"], season[1]["cup"], season[1]["side"]) == ("1-1", "L", "final", "A")
+    assert season[3]["next"] and "score" not in season[3]

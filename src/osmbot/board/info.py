@@ -41,6 +41,49 @@ def _upcoming(match: dict, teams: list[dict], team_id: int) -> dict:
             "neutral": bool(match.get("isPlayedOnNeutralGround"))}
 
 
+def league_round(matches: list[dict], team_id: int, week: int) -> tuple[int, int] | None:
+    """(league matches played, league matches in the season) of the club: "J15/38" by its place (owner, 2026-10-28).
+    Counted by its league matches, not by ``weekNr``, which counts the cup days too (DISCOVERY.md section 3)."""
+    mine = [m for m in matches if m["matchType"] == LEAGUE_MATCH and team_id in (m["homeTeamId"], m["awayTeamId"])]
+    return (sum(1 for m in mine if m["weekNr"] <= week), len(mine)) if mine else None
+
+
+def season_fixtures(matches: list[dict], teams: list[dict], rounds: list[dict], team_id: int, week: int) -> list[dict]:
+    """The club's season by round (owner, 2026-10-28: the hover of "J15/38", no dates): every week with a league or
+    cup match in the league, the club's match in it or a rest ("folga": a cup day once out, or the round it sits out).
+    Each: week, J (the league round, None in the cup), kind ("liga", "taça", "folga"), the cup round's name, the
+    opponent's name, logo and key, (H)ome/(A)way, and once played the score (the club's goals first) and W/D/L."""
+    official = [m for m in matches if m["matchType"] in (LEAGUE_MATCH, CUP_MATCH)]
+    mine = {m["weekNr"]: m for m in official if team_id in (m["homeTeamId"], m["awayTeamId"])}
+    by_id = {t["id"]: t for t in teams}
+    cup_names = {r["weekNr"]: CUP_NAMES.get(r["name"], r["name"]) for r in rounds}
+    following = min((w for w in mine if w > week), default=None)
+    season, league = [], 0
+    for number in sorted({m["weekNr"] for m in official}):
+        entry = {"week": number, "round": None, "kind": "folga", "cup": "", "next": number == following,
+                 "played": number <= week}
+        match = mine.get(number)
+        if match:
+            opponent, side = _side(match, team_id)
+            other = by_id.get(opponent, {})
+            cup = match["matchType"] == CUP_MATCH
+            if not cup:
+                league += 1
+            entry.update(round=None if cup else league, kind="taça" if cup else "liga", cup=cup_names.get(number, "") if cup else "",
+                         opponent=other.get("name", "?"), key=other.get("baseId") or str(opponent),
+                         logo=next((a.get("path") for a in other.get("assets") or [] if a.get("type") == 4), None),
+                         side=side, neutral=bool(match.get("isPlayedOnNeutralGround")))
+            if number <= week:
+                ours, theirs = ((match.get("homeGoals"), match.get("awayGoals")) if side == "H"
+                                else (match.get("awayGoals"), match.get("homeGoals")))
+                winner = match.get("winnerTeamId")
+                entry["score"] = f"{ours}-{theirs}"
+                entry["result"] = "W" if winner == team_id else "L" if winner and winner != team_id else (
+                    "W" if ours > theirs else "L" if ours < theirs else "D")
+        season.append(entry)
+    return season
+
+
 def cup_phase(rounds: list[dict], matches: list[dict], team_id: int, week: int) -> tuple[str, str]:
     """(text, state): the round the club plays next ("quartos-de-final"), "eliminado nos oitavos-de-final",
     "vencedor", or "—" when the club is not in the cup. state: "in", "out", "won" or "none"."""

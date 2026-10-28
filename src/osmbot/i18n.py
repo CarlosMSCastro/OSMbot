@@ -85,7 +85,7 @@ WORDS = {
     "Capitão": "Captain", "Penáltis": "Penalties", "Livres": "Free kicks", "Cantos": "Corners", "Aceite": "Accepted", "Vendas": "Sales", "Valor do plantel": "Squad value", "Clube": "Club", "J": "P", "DG": "GD", "Valor": "Value", "× valor": "× value",
     "Jogadores": "Players", "Média": "Avg", "Pos": "Pos", "Força": "Strength", "Jogador": "Player", "Idade": "Age",
     "Preço": "Price", "Lucro": "Profit",
-    "Campeões": "Champions", "Patrocinadores": "Sponsors", "Cansados": "Tired", "CASA": "HOME", "FORA": "AWAY", "em": "in",
+    "Campeões": "Champions", "Patrocinadores": "Sponsors", "Cansados": "Tired", "CASA": "HOME", "FORA": "AWAY", "folga": "rest", "em": "in",
     # club card
     "Treinos": "Training", "Campo": "Pitch", "Capacidade": "Capacity", "no máximo": "at max", "parado": "idle",
     "Médico": "Doctor", "Advogado": "Lawyer", "ninguém": "nobody", "pronto": "ready", "a levantar": "to collect",
@@ -164,6 +164,8 @@ def _options(text: str) -> str:
 
 _ALT = "|".join(map(re.escape, _TACTIC))
 _ROLE = {"Capitão": "Captain", "Penáltis": "Penalties", "Livres": "Free kicks", "Cantos": "Corners"}
+_SIDE = {"CASA": "HOME", "FORA": "AWAY", "NEUTRO": "NEUTRAL"}
+_CUP_SHORT = {"pré-elim.": "prelim.", "32 avos": "R64", "16 avos": "R32", "oitavos": "R16", "quartos": "QF", "meias": "SF"}
 PATTERNS = [(re.compile(pattern), replace) for pattern, replace in (
     # pre-match warnings (THEORY.md section 21)
     (r"^(.+) (\d+) entra antes de (.+) (\d+)$", lambda m: f"{m[1]} {m[2]} comes on before {m[3]} {m[4]}"),
@@ -192,6 +194,9 @@ PATTERNS = [(re.compile(pattern), replace) for pattern, replace in (
     (r"^Sem regra para o (.+)$", lambda m: f"No rule for the {m[1]}"),
     # card
     (r"(\d+)\.º Campeonato", lambda m: f"{ordinal(m[1])} in the league"),
+    (r"(.*)J(\d+)/(\d+)", lambda m: f"{m[1].replace('Época', 'Season')}MD{m[2]}/{m[3]}"),  # the season's calendar
+    (r"J(\d+) · (CASA|FORA|NEUTRO)", lambda m: f"MD{m[1]} · {_SIDE[m[2]]}"),
+    (r"Taça (.+) · (CASA|FORA|NEUTRO)", lambda m: f"Cup {_CUP_SHORT.get(m[1], m[1])} · {_SIDE[m[2]]}"),
     (r"ativo até (\d\d:\d\d)", lambda m: f"active until {m[1]}"),
     (r"🏆 (.+)", lambda m: f"🏆 {_w(m[1])}"),
     (r"[Ee]liminado nos (.+)", lambda m: f"Out in the {_w(m[1])}"),

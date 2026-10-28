@@ -35,6 +35,7 @@ COLOURS = {GREEN: "#5cd17a", BLUE: "#7cc4ff", YELLOW: "#f5c542", GREY: "#8f95b8"
            None: "#eef0ff"}
 BACKGROUND, CARD, LINE = "#0b0f2a", "rgba(16, 20, 50, 232)", "#2d3366"  # night-stadium blues (D-030)
 TEXT, MUTED, ACCENT, ACCENT_LIGHT, RING_TRACK = "#eef0ff", "#8f95b8", "#8b8cf8", "#b9baff", "#2a2f5a"
+STILL_ARC = "#4a5080"  # a stadium part standing still
 BACKGROUND_FILE = Path(__file__).resolve().parent / "assets" / "fundo.jpg"  # the board's background picture (D-030)
 FONT_FILE = Path(__file__).resolve().parent / "assets" / "Sora.ttf"  # the window's typeface (owner, 2026-10-10; OFL)
 FONT = "Segoe UI"  # until Sora is loaded (load_font)
@@ -351,12 +352,15 @@ def reach(pixmap: QPixmap) -> float:
 class Ring(QWidget):
     """A ring (D-030). Trainings: the arc is the time gone by (the part a video skipped in light blue), the time left
     in the middle, full and green when ready. ``show_ring`` paints any other ring: the arc's share, its colour and the
-    text colour (the stadium parts standing still and the doctor/lawyer with nobody are dimmed)."""
+    text colour (the stadium parts standing still and the doctor/lawyer with nobody are dimmed). ``outer`` leaves
+    room round the ring for ``ticks`` = (done, of), drawn on hover as a wider ring cut in that many dashes (the
+    stadium's cycles of the level, owner 2026-10-28)."""
 
-    def __init__(self, size: int = 78, width: int = 6, font: int = 11):
+    def __init__(self, size: int = 78, width: int = 6, font: int = 11, outer: int = 0):
         super().__init__()
-        self.setFixedSize(size, size)
-        self.pen, self.font_size = width, font
+        self.setFixedSize(size + 2 * outer, size + 2 * outer)
+        self.pen, self.font_size, self.outer = width, font, outer
+        self.ticks: tuple[int, int] | None = None
         self.text, self.colour, self.done, self.skipped = "", None, 0.0, 0.0
         self.arc, self.text_colour, self.emoji = ACCENT, TEXT, False
         self.hover: tuple[str, str] | None = None  # (text, colour) in the middle while the mouse is over the ring
@@ -385,15 +389,31 @@ class Ring(QWidget):
         self.skipped = min(skipped, done)
         self.update()
 
+    def _ticks(self, painter: QPainter, box: QRectF) -> None:
+        """The cycles of the level as dashes round the ring, from the top, clockwise: the done ones light, the one
+        being built in the ring's colour, the ones still to do as the track."""
+        done, count = self.ticks
+        width = max(2, self.pen - 2)
+        spread = self.outer - 1 + self.pen / 2 - width / 2
+        around = box.adjusted(-spread, -spread, spread, spread)
+        step = 360 / count
+        gap = min(10.0, step * 0.3) if count > 1 else 0.0
+        for index in range(count):
+            colour = ACCENT_LIGHT if index < done else self.arc if index == done and self.done < 1 and self.arc != STILL_ARC else RING_TRACK
+            painter.setPen(QPen(QColor(colour), width, Qt.SolidLine, Qt.FlatCap))
+            painter.drawArc(around, int((90 - index * step - gap / 2) * 16), -int((step - gap) * 16))
+
     def paintEvent(self, _event) -> None:
         painter = QPainter(self)
         painter.setRenderHint(QPainter.Antialiasing)
-        margin = self.pen / 2 + 2
+        margin = self.pen / 2 + 2 + self.outer
         box = QRectF(self.rect()).adjusted(margin, margin, -margin, -margin)
         painter.setPen(QPen(QColor(RING_TRACK), self.pen))
         painter.drawEllipse(box)
         own = self.done - self.skipped
         start = 90 * 16  # from the top, clockwise
+        if self.hovered and self.ticks:
+            self._ticks(painter, box)
         if own > 0:
             painter.setPen(QPen(QColor(self.arc), self.pen, Qt.SolidLine, Qt.RoundCap))
             painter.drawArc(box, start, -int(own * 360 * 16))
@@ -421,14 +441,14 @@ class Ring(QWidget):
 class RingCell(QWidget):
     """A ring with a few lines under it (name, detail...)."""
 
-    def __init__(self, size: int, width: int, font: int, lines: int = 2, cell_width: int = 0):
+    def __init__(self, size: int, width: int, font: int, lines: int = 2, cell_width: int = 0, outer: int = 0):
         super().__init__()
         if cell_width:
             self.setFixedWidth(cell_width)
         column = QVBoxLayout(self)
         column.setContentsMargins(0, 0, 0, 0)
         column.setSpacing(1)
-        self.ring = Ring(size, width, font)
+        self.ring = Ring(size, width, font, outer)
         column.addWidget(self.ring, 0, Qt.AlignHCenter)
         self.lines = [text_label(10 if index == 0 else 8) for index in range(lines)]
         for label in self.lines:
@@ -1009,11 +1029,137 @@ class EventLabel(QLabel):
             self.popup.hide()
 
 
+_fixture_logos: dict[str, QPixmap | None] = {}  # club key -> its logo, small, for the season's calendar
+_fetching: set[str] = set()
+
+
+def fixture_logo(key: str | None, url: str | None, done) -> QPixmap | None:
+    """A club's logo for the season's calendar, from ~/.osmbot/logos; fetched in the background the first time,
+    then ``done()`` (the calendar repaints)."""
+    if not key:
+        return None
+    if key in _fixture_logos:
+        return _fixture_logos[key]
+    target = LOGOS / f"{key}.png"
+    if target.exists():
+        _fixture_logos[key] = QPixmap(str(target)).scaled(44, 44, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+        return _fixture_logos[key]
+    if url and key not in _fetching:
+        _fetching.add(key)
+
+        def work() -> None:
+            fetch_logo(key, url)
+            _fetching.discard(key)
+            done()
+
+        threading.Thread(target=work, name="osmbot-logo", daemon=True).start()
+    return None
+
+
+class FixtureGrid(QWidget):
+    """The club's season (owner, 2026-10-28), as the events' calendar but a box per round, no dates: on top
+    "J15 · CASA" (or the cup round), the opponent's logo and name, the score once played; the cup in orange, the
+    rests grey, the rounds gone by faded, the next match with a white edge."""
+    WIDTH, HEIGHT, GAP, TITLE, COLUMNS, LOGO = 112, 66, 4, 26, 8, 22
+    repaint_later = Signal()
+
+    def __init__(self):
+        super().__init__()
+        self.view: dict = {"title": "", "cells": []}
+        self.repaint_later.connect(self.update)
+
+    def show_view(self, view: dict) -> None:
+        self.view = view
+        rows = -(-len(view["cells"]) // self.COLUMNS)
+        self.setFixedSize(self.COLUMNS * (self.WIDTH + self.GAP) - self.GAP, self.TITLE + rows * (self.HEIGHT + self.GAP) - self.GAP)
+        self.update()
+
+    def paintEvent(self, _event) -> None:
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.Antialiasing)
+        title = QFont(FONT, 11)
+        title.setBold(True)
+        painter.setFont(title)
+        painter.setPen(QColor(TEXT))
+        painter.drawText(QRectF(2, 0, self.width(), self.TITLE - 6), Qt.AlignLeft | Qt.AlignVCenter, tr(self.view["title"]))
+        small, bold = QFont(FONT, 8), QFont(FONT, 9)
+        bold.setBold(True)
+        for index, cell in enumerate(self.view["cells"]):
+            row, column = divmod(index, self.COLUMNS)
+            box = QRectF(column * (self.WIDTH + self.GAP), self.TITLE + row * (self.HEIGHT + self.GAP), self.WIDTH, self.HEIGHT)
+            faded = cell["past"]
+            fill = QColor(COLOURS[ORANGE] if cell["kind"] == "taça" else RING_TRACK)
+            fill.setAlpha((70 if faded else 150) if cell["kind"] == "taça" else 60 if cell["kind"] == "folga" else 110 if faded else 255)
+            painter.setPen(QPen(QColor(TEXT), 2) if cell["next"] else Qt.NoPen)
+            painter.setBrush(fill)
+            painter.drawRoundedRect(box.adjusted(1, 1, -1, -1), 6, 6)
+            ink = QColor(MUTED if faded or cell["kind"] == "folga" else TEXT)
+            painter.setFont(small)
+            painter.setPen(ink)
+            if cell["kind"] == "folga":
+                painter.drawText(box, Qt.AlignCenter, tr(cell["top"]))
+                continue
+            painter.drawText(box.adjusted(7, 4, -6, -4), Qt.AlignLeft | Qt.AlignTop, tr(cell["top"]))
+            logo = fixture_logo(cell["key"], cell["logo"], self.repaint_later.emit)
+            line = QRectF(box.left() + 6, box.top() + 22, box.width() - 12, self.LOGO)
+            if logo is not None and not logo.isNull():
+                if faded:
+                    painter.setOpacity(0.5)
+                painter.drawPixmap(QRectF(line.left(), line.top(), self.LOGO, self.LOGO).toRect(), logo)
+                painter.setOpacity(1.0)
+            name_box = line.adjusted(self.LOGO + 5, 0, 0, 0)
+            painter.setFont(bold)
+            painter.setPen(ink)
+            painter.drawText(name_box, Qt.AlignLeft | Qt.AlignVCenter,
+                             painter.fontMetrics().elidedText(cell["name"], Qt.ElideRight, int(name_box.width())))
+            if cell["score"]:
+                painter.setPen(QColor(COLOURS[cell["colour"]]))
+                painter.drawText(box.adjusted(6, 0, -7, -4), Qt.AlignRight | Qt.AlignBottom, cell["score"])
+
+
+class FixturesPopup(QFrame):
+    """What opens over "J15/38": the club's season (FixtureGrid)."""
+
+    def __init__(self):
+        super().__init__(None, Qt.ToolTip | Qt.FramelessWindowHint)
+        self.setObjectName("calendar")
+        self.setStyleSheet("QFrame#calendar { background: #161b40; border: 1px solid rgba(139, 140, 248, 110); border-radius: 10px; }")
+        row = QHBoxLayout(self)
+        row.setContentsMargins(16, 12, 16, 16)
+        self.grid = FixtureGrid()
+        row.addWidget(self.grid)
+
+    def show_view(self, view: dict) -> None:
+        self.grid.show_view(view)
+        self.adjustSize()
+
+    def leaveEvent(self, _event) -> None:
+        QTimer.singleShot(200, self.parent_label.maybe_hide)
+
+
+class FixturesLabel(EventLabel):
+    """ " · J15/38" by the club's place (owner, 2026-10-28); the season opens while the mouse is over it."""
+
+    def __init__(self):
+        super().__init__()
+        self.setFont(QFont(FONT, 9))
+        self.setStyleSheet(f"color:{MUTED};")
+        self.popup = FixturesPopup()
+        self.popup.parent_label = self
+
+    def show_round(self, text: str, view: dict | None) -> None:
+        self.view = view
+        self.setText(f" · {tr(text)}" if text else "")
+        self.setVisible(bool(text))
+        if view and self.popup.isVisible():
+            self.popup.show_view(view)
+
+
 def escape_text(text: str) -> str:
     from html import escape
 
     return escape(text)
-STADIUM_RING = {"still": ("#4a5080", MUTED)}  # "moving": the timer colour; "top": the club's colour
+STADIUM_RING = {"still": (STILL_ARC, MUTED)}  # "moving": the timer colour; "top": the club's colour
 
 
 def icon(path: Path, size: int) -> QLabel:
@@ -1288,10 +1434,16 @@ class ClubCard(QFrame):
         self.header = text_label(9)
         paint(self.header, None)
         self.header.setStyleSheet(f"color:{MUTED};")
+        self.round = FixturesLabel()  # "J15/38" by the place, the season on hover (owner, 2026-10-28)
         self.cup = text_label(9)
         self.cup.setStyleSheet(f"color:{MUTED};")
         titles.addLayout(name_row)
-        titles.addWidget(self.header)
+        place_row = QHBoxLayout()
+        place_row.setSpacing(0)
+        place_row.addWidget(self.header)
+        place_row.addWidget(self.round)
+        place_row.addStretch(1)
+        titles.addLayout(place_row)
         titles.addWidget(self.cup)
         head.addLayout(titles, 1)
         club.addLayout(head)
@@ -1314,7 +1466,7 @@ class ClubCard(QFrame):
         stadium = QHBoxLayout()  # three small rings: the part going up fills, the others stand still (owner, 2026-10-09)
         stadium.setSpacing(6)
         stadium.addStretch(1)
-        self.stadium_cells = [RingCell(54, 5, 9, lines=1, cell_width=92) for _ in range(3)]
+        self.stadium_cells = [RingCell(54, 5, 9, lines=1, cell_width=92, outer=7) for _ in range(3)]
         for cell in self.stadium_cells:
             stadium.addWidget(cell)
         stadium.addStretch(1)
@@ -1405,6 +1557,7 @@ class ClubCard(QFrame):
         self.name.setText(club["name"])
         self.header.setText(tr(club["header"]))
         self.header.setToolTip(tip_grid(club.get("table_tip"), self.colour))  # as the game's table (owner, 2026-10-15)
+        self.round.show_round(club.get("round") or "", club.get("fixtures"))
         self.cup.setText(tr(f"🏆 {club['cup_line']}"))
         self.match.show_match(club["match"])
         while self.alerts.count() > len(club["alerts"]):
@@ -1436,6 +1589,7 @@ class ClubCard(QFrame):
                 arc, text = (self.timer, TEXT) if moving else (top, top) if ring["state"] == "top" else STADIUM_RING["still"]
                 cell.ring.show_ring(ring["level"], ring["done"], arc, text)
                 cell.ring.hover = ((ring["left"], TEXT) if moving else ("MAX", top) if ring["state"] == "top" else None)
+                cell.ring.ticks = ring.get("cycles")  # on hover: the level's cycles round the ring (owner, 2026-10-28)
                 cell.say((ring["name"], TEXT if moving else MUTED))
         for cell, ring in zip(self.care_cells, club["care"]):
             cell.show_care(ring, self.timer, self.full)

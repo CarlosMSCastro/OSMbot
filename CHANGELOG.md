@@ -4,6 +4,20 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-PT/1.1.0/); 
 
 Este ficheiro é o **histórico de versões, para quem lê o repo**. O diário interno de cada sessão de trabalho está em [`docs/WORKLOG.md`](docs/WORKLOG.md).
 
+## [0.14.6] — 2026-10-28
+
+Calendário da época ao lado da posição na liga, ciclos do estádio no hover, e o relatório do analista guardado no registo dos jogos.
+
+### Adicionado
+- **Jornada e calendário da época:** ao lado de "2.º Campeonato" aparece "· J29/38" (jogos de liga feitos / da época, sem contar os dias da taça). Ao passar o rato abre a época inteira, uma casa por jornada (sem datas, que o jogo não dá): "J15 · CASA" ou "Taça oitavos · FORA", o emblema e o nome do adversário, e o resultado a verde, amarelo ou vermelho; a taça a laranja, as folgas a cinzento e o próximo jogo com contorno branco.
+- **Ciclos do estádio:** ao passar o rato por uma parte do estádio, um círculo à volta com um tracinho por cada ciclo de 18 h do nível: os feitos, o que está a construir e os que faltam para subir.
+
+### Corrigido
+- **Relatório do analista no registo dos jogos:** era pedido na versão errada da API (v1, que dá sempre 404); passa a v1.1, e cada jogo oficial guarda o estilo de jogo, o desarme e a formação do adversário.
+
+### Documentação
+- `DISCOVERY.md` §3 (relatório do analista em v1.1; emblemas dos clubes em `leagues/{L}/teams`; `matches/filter` sem datas).
+
 ## [0.14.5] — 2026-10-28
 
 Bola "Tática" no pré-jogo: as instruções e as barras de cada formação, como o autor do OSM PRO; e "claramente mais forte" medido nos registos.

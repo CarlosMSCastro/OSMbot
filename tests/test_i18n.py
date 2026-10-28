@@ -61,3 +61,14 @@ def test_the_purchase_profit_and_stale_lines_in_english(english):
     assert tr("K à venda há 95h00") == "K on the list for 95h00"
     assert tr("K à venda há 2 dias e 3h00") == "K on the list for 2 days and 3h00"
     assert tr("Normal a este preço: ~1 dia e 22h00") == "Usual at this price: ~1 day and 22h00"
+
+
+def test_the_season_s_calendar_in_english():
+    from osmbot import i18n
+
+    i18n.set_language("en")
+    try:
+        assert [i18n.tr(t) for t in ("J29/38", "Época · J29/38", "J15 · CASA", "Taça oitavos · NEUTRO", "Taça final · FORA", "folga")] == [
+            "MD29/38", "Season · MD29/38", "MD15 · HOME", "Cup R16 · NEUTRAL", "Cup final · AWAY", "rest"]
+    finally:
+        i18n.set_language("pt")

@@ -51,9 +51,11 @@ CASE_SECONDS = 8 * 3600  # doctor and lawyer: 480 min (DISCOVERY.md section 3); 
 
 def stadium_rings(stadium: dict | None, now: float) -> list[dict]:
     """The stadium as small rings (D-030, owner 2026-10-09): the part going up fills in the accent colour with the
-    time left; the others stand still in grey with their level (green when at the top)."""
+    time left; the others stand still in grey with their level (green when at the top). ``cycles`` = (done, of) the
+    18 h cycles of the level, drawn on hover as ticks round the ring (owner, 2026-10-28)."""
     rings = []
     lengths = (stadium or {}).get("lengths") or {}
+    cycles = (stadium or {}).get("cycles") or {}
     for name, level, top, ends in (stadium or {}).get("parts", []):
         if ends and ends > now:
             length = lengths.get(name)
@@ -62,6 +64,7 @@ def stadium_rings(stadium: dict | None, now: float) -> list[dict]:
         else:
             rings.append({"name": name, "level": f"{level}/{top}", "state": "top" if level >= top else "still",
                           "left": "no máximo" if level >= top else "parado", "done": level / top if top else 0.0})
+        rings[-1]["cycles"] = cycles.get(name) if level < top else None
     return rings
 
 
@@ -277,6 +280,30 @@ def sponsor_view(sponsors: dict | None) -> dict:
     return {"text": f"⚠ {text}", "colour": YELLOW, "tip": f"{empty} vaga{plural} vazia{plural} nos patrocinadores"}
 
 
+def fixtures_view(fixtures: list[dict], round_text: str) -> dict | None:
+    """The hover of "J15/38" (owner, 2026-10-28): the club's season as the events' calendar, a box per round (no
+    dates): "J15 · CASA" (or the cup round), the opponent with his logo, the score in green/yellow/red once played;
+    the cup in orange, the rests grey, the next match with a white edge."""
+    if not fixtures:
+        return None
+    sides = {"H": "CASA", "A": "FORA"}
+    cells = []
+    for f in fixtures:
+        cell = {"kind": f["kind"], "past": f["played"], "next": f["next"], "name": "", "key": None, "logo": None,
+                "score": "", "colour": None}
+        if f["kind"] == "folga":
+            cell["top"] = "folga"
+        else:
+            where = "NEUTRO" if f.get("neutral") else sides.get(f["side"], "")
+            cup = f["cup"].replace("-de-final", "").replace("meias-finais", "meias").replace("pré-eliminatória", "pré-elim.")
+            cell["top"] = " · ".join(part for part in (f"J{f['round']}" if f["round"] else f"Taça {cup}".strip(), where) if part)
+            cell.update(name=f["opponent"], key=f.get("key"), logo=f.get("logo"))
+            if f.get("score"):
+                cell.update(score=f["score"], colour={"W": GREEN, "D": YELLOW, "L": RED}[f["result"]])
+        cells.append(cell)
+    return {"title": f"Época · {round_text}" if round_text else "Época", "cells": cells}
+
+
 def club_view(club: dict, now: float, shortened: dict | None = None) -> dict:
     """One club's card (D-026): header, Liga · Taça · Valor do plantel, money and sales, sponsors, stadium,
     pre-match checklist, trainings, tired starters, injured and suspended players."""
@@ -358,13 +385,15 @@ def club_view(club: dict, now: float, shortened: dict | None = None) -> dict:
                  "tip": opponent_tip(nxt["opponent"], nxt.get("value")),
                  "tag": ("CASA" if nxt["side"] == "H" else "FORA") + (" · TAÇA" if nxt["cup"] else ""), "danger": nxt["danger"], "left": span(club["match"] - now) if club.get("match") else ""}
     header, table_tip = table_view(club)  # and the cup on a line of its own (owner, 2026-10-09)
+    played, season = club.get("round") or (None, None)
+    round_text = f"J{played}/{season}" if season else ""  # league matches played, by the place (owner, 2026-10-28)
     cup_line = cup[:1].upper() + cup[1:]
     done_steps = sum(1 for _, done, _ in prep.get("steps") or [] if done)
     prep_title = f"PRÉ-JOGO · {done_steps}/{len(prep.get('steps') or [])}" if prep.get("steps") else "PRÉ-JOGO"
     tired_text, tired_tip = tired_view(club)
 
     return {"name": club["name"], "logo": club.get("logo"), "logo_key": club.get("logo_key") or club["name"],
-            "subtitle": subtitle, "facts": facts, "alert": alert, "alerts": alerts, "alerts_tips": alerts_tips, "header": header, "cup_line": cup_line, "match": match, "prep_title": prep_title,
+            "subtitle": subtitle, "facts": facts, "alert": alert, "alerts": alerts, "alerts_tips": alerts_tips, "header": header, "round": round_text, "fixtures": fixtures_view(club.get("fixtures") or [], round_text), "cup_line": cup_line, "match": match, "prep_title": prep_title,
             "money": _money(total), "sales": sales, "sponsors": sponsor_row, "squad": squad_view(club.get("value"), club.get("value_table")),
             "stadium": {"still": still, "moving": moving},
             "prep": {"steps": steps, "boosts": boosts},

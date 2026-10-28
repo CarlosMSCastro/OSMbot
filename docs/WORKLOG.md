@@ -2,6 +2,16 @@
 
 Entradas mais recentes primeiro. Cada sessão: o que se fez · o que ficou por fazer · próximo passo.
 
+## 2026-10-28 (cont. 3) — Ciclos do estádio no hover; jornada e calendário da época
+
+- **Dist:** o `dist/windows` 0.14.5 não tem a correção do `spyresults` em v1.1 (feita depois do build). Dono: sem nova versão por agora.
+- **Estádio (dono):** no hover de cada parte, um círculo maior à volta com um tracinho por ciclo de 18 h do nível (`cycleProgress`): feitos em lilás claro, o que está a construir na cor do temporizador, os que faltam escuros; nada no máximo. `dashboard` lê `cycles`, `view.stadium_rings`, `Ring(outer=…)`.
+- **Jornada (dono):** "· J29/38" ao lado de "2.º Campeonato" (jogos de liga jogados / da época, `board/info.league_round`). Hover (dono: "como o calendário dos eventos, com taça e folgas, logos", **só por jornada, sem datas**): uma casa por semana com jogo na liga (`season_fixtures`, `view.fixtures_view`, `window.FixtureGrid`): "J15 · CASA" ou "Taça oitavos · FORA", emblema e nome do adversário, resultado a verde/amarelo/vermelho; taça a laranja, folgas a cinzento, a próxima com contorno branco. Emblemas dos adversários: `leagues/{L}/teams` (`DISCOVERY.md` §3), buscados uma vez para `~/.osmbot/logos`.
+- Ensaiado offscreen com os dados reais de um clube (só GETs): 43 casas (38 de liga, 4 de taça, 1 folga). 472 testes. Ainda não visto na janela a correr.
+- **Inglês:** "MD29/38", "MD15 · HOME", "Cup R16 · AWAY", "rest" (`i18n`).
+- **Versão 0.14.6 (pedido do dono):** com isto e o `spyresults` em v1.1 (commit `4c83d5b`). `pyproject.toml`, `__init__`, `CHANGELOG.md`, `README.md` (estado), `dist/release-notes-v0.14.6.md`; 473 testes; `build_portable.py --zip --installer` → `dist/windows/` 0.14.6 (553 / 206 / 148 MB), versão confirmada no portátil, `winldd` incluído; os da 0.14.5 apagados. Commit e `gh release create v0.14.6` entregues ao dono (só Windows; Mac com `gh release upload` no Mac).
+- **Próximo passo:** o dono instala a 0.14.6 e vê na janela; depois o registo da carteira (entrada anterior).
+
 ## 2026-10-28 (cont. 2) — Onde foram os boss coins da tarde (só leitura)
 
 - **Pergunta do dono:** em que se gastaram tantos boss coins esta tarde. **Registo do bot:** só **7 amigáveis × 4 BC = 28 BC** (12:20–17:46; 14 amigáveis no dia = 56 BC). Nenhum treino acabado com boss coins (a linha "acabado com N boss coins", `trainings.py:360`, não aparece). Obras do campo pagas com dinheiro do clube. Vídeos da loja deram boss coins.
