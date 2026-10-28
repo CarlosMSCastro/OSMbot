@@ -2,6 +2,13 @@
 
 Entradas mais recentes primeiro. Cada sessão: o que se fez · o que ficou por fazer · próximo passo.
 
+## 2026-10-28 (cont. 2) — Onde foram os boss coins da tarde (só leitura)
+
+- **Pergunta do dono:** em que se gastaram tantos boss coins esta tarde. **Registo do bot:** só **7 amigáveis × 4 BC = 28 BC** (12:20–17:46; 14 amigáveis no dia = 56 BC). Nenhum treino acabado com boss coins (a linha "acabado com N boss coins", `trainings.py:360`, não aparece). Obras do campo pagas com dinheiro do clube. Vídeos da loja deram boss coins.
+- **Por explicar:** relatório às 17:00 de **Real Betis 3-1 Barcelona (amigável)** sem linha "Amigável:" (não foi o bot; 5.º amigável do Betis na jornada). O bot não guarda o histórico da carteira, por isso gastos feitos à mão no jogo não se veem.
+- **Pedido do dono (a fazer em casa):** registar o **saldo de boss coins** a cada verificação, com a diferença desde a anterior, e **separar o que o bot gastou/ganhou** (amigáveis, treinos acabados, vídeos, recompensas) **do que foi manual** (a diferença que sobra = gasto ou ganho fora do bot), para uma queda sem explicação ficar à vista. **"Saldo manual" (dono):** registar também o que o dono fizer à mão no jogo (p. ex. o olheiro). O bot não vê cliques: só pode deduzir pelo que muda entre leituras (GETs): saldo da carteira e estado das coisas que já lê (treinos, campo, analista, amigáveis no calendário). Para o olheiro e outras, **é preciso ver primeiro que GET mostra o estado** (não observado, regra 7). Por decidir com o dono: lista do que vigiar e onde fica (registo do dia, ficheiro `carteira/` em `logs/`, janela).
+- **Próximo passo:** este registo da carteira; depois o que já estava (Táticas ponto 12, 16 e 17).
+
 ## 2026-10-28 (cont.) — Táticas ponto 7: relatório do analista lido (v1.1)
 
 - **Ponto 7 (contra-ataque):** os registos não chegavam: o nosso estilo de jogo só em 50 jogos (6 em contra-ataque), o do adversário nunca (`analise` vazia nos 50).
