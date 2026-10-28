@@ -209,3 +209,12 @@ def test_a_league_sells_at_the_maximum_when_one_of_its_clubs_sold_at_2_4_times_t
     assert not sells_at_max([sale(20, 10)], now)  # 2×: below the maximum
     assert not sells_at_max([sale(25, 10, foreign=True)], now)  # bought by the league from outside, not sold by it
     assert not sells_at_max([sale(25, 10, ago=4 * 86400)], now)  # too long ago
+
+
+def test_an_in_form_player_is_marked_in_the_market_records():
+    from osmbot.transfers.engine import sale_rows
+
+    item = {"id": 7, "price": 100, "timeStampForSale": 1, "team": {"isForeignTeam": True},
+            "player": {"id": 9, "name": "P", "position": 1, "statAtt": 90, "age": 25, "value": 100, "rarity": 2}}
+    assert sale_rows([item])["7"]["raridade"] == "in form"
+    assert sale_rows([{**item, "player": {**item["player"], "rarity": 0}}])["7"]["raridade"] is None

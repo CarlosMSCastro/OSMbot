@@ -135,6 +135,37 @@ def fatigue(matches: list[dict], rule: float = -4.0, margin: float = 1.0, minimu
                   AGREES if abs(drop - rule) <= margin else DISAGREES)
 
 
+def away_523(matches: list[dict], minimum: int = 15) -> Result:
+    """OSMPro OSMPROworld point 2, to measure (owner, 2026-10-28): away, the 5-2-3 rather than the 4-3-3? Every club
+    of the leagues (not only the owner's), away sides within 12 % of the home side's strength (not clearly
+    stronger or weaker, THEORY.md section 1)."""
+    groups: dict[str, list[tuple[dict, str]]] = {"433": [], "523": []}
+    for m in _league(matches):
+        form = (m["estatisticas"]["fora"].get("formacao") or "")[:3]
+        if form in groups and abs(_edge(m, "fora")) <= 12:
+            groups[form].append((m, "fora"))
+    a, b = groups["433"], groups["523"]
+    measured = f"fora, forças parecidas: 4-3-3 {_ppg(a):.2f} pts/jogo ({len(a)}), 5-2-3 {_ppg(b):.2f} ({len(b)})"
+    return Result("523fora", "Fora: 4-3-3 (a regra) ou 5-2-3 (o autor)?", measured, len(a) + len(b),
+                  READY if len(a) >= minimum and len(b) >= minimum else SHORT)
+
+
+def against_stronger(matches: list[dict], minimum: int = 15) -> Result:
+    """OSMPro OSMPROworld point 3, to measure (owner, 2026-10-28): against a stronger side, 5 defenders (the rule,
+    THEORY.md section 1) or the 4-5-1 / 4-2-3-1 (the author, 2024-26)? Every club of the leagues, home or away, the
+    side more than 3 % weaker."""
+    five, four = [], []
+    for m in _league(matches):
+        for side in ("casa", "fora"):
+            if _edge(m, side) >= -3:
+                continue
+            form = m["estatisticas"][side].get("formacao") or ""
+            (five if form.startswith("5") else four if form[:3] == "451" else []).append((m, side))
+    measured = f"contra mais forte: 5 defesas {_ppg(five):.2f} pts/jogo ({len(five)}), 4-5-1 {_ppg(four):.2f} ({len(four)})"
+    return Result("451", "Contra mais forte: 5 defesas (a regra) ou 4-5-1 (o autor)?", measured, len(five) + len(four),
+                  READY if len(five) >= minimum and len(four) >= minimum else SHORT)
+
+
 def tempo_against_stronger(matches: list[dict], minimum: int = 8) -> Result:
     """OSMPro Táticas point 12, to measure (owner, 2026-10-28): 5 defenders against a stronger side with the tempo at
     60–80 (the rule) or below 60 (the game's help text: "not fast against a better side")."""
@@ -208,15 +239,21 @@ def friendly_specialists(friendlies: list[dict], minimum: int = 30) -> Result:
 def manager_xp(lines: list[dict], minimum: int = 10) -> Result:
     """THEORY.md section 22, to keep measuring (owner, 2026-10-28; OSMPro series point 11): the change of the
     manager's rating in the league by result and opponent, from ``logs/*/xp`` (only matches read one round after the
-    last, as ``osmbot xp``). How many wins against the CPU a loss to a human wipes out."""
+    last, as ``osmbot xp``), without the end-of-season prizes that come with a match, humans split by whether their
+    rating is above the owner's. How many wins against the CPU a loss to a human wipes out."""
     groups: dict[tuple[str, str], list[int]] = {}
     for line in {line.get("jogo"): line for line in lines}.values():
         if line.get("liga_variacao") is not None and line.get("jornadas") == 1:
-            rival = "humano" if line.get("adversario_humano") else "CPU"
-            groups.setdefault((line.get("resultado"), rival), []).append(line["liga_variacao"])
+            rival = "CPU"
+            if line.get("adversario_humano"):  # the "not the favourite" bonus (OSMPro updates point 1): by his rating
+                stronger = (line.get("rating_adversario") or 0) > (line.get("rating") or 0)
+                rival = "humano mais forte" if stronger else "humano mais fraco"
+            season = sum(b.get("valor") or 0 for b in line.get("bonus") or [] if str(b.get("tipo", "")).startswith("fim de época"))
+            groups.setdefault((line.get("resultado"), rival), []).append(line["liga_variacao"] - season)  # the match only
     names = {"V": "vitória", "E": "empate", "D": "derrota"}
     measured = ", ".join(f"{names.get(res, res)} {rival} {mean(v):+.0f} ({len(v)})" for (res, rival), v in sorted(groups.items()))
-    losses, wins = groups.get(("D", "humano"), []), groups.get(("V", "CPU"), [])
+    losses = groups.get(("D", "humano mais forte"), []) + groups.get(("D", "humano mais fraco"), [])
+    wins = groups.get(("V", "CPU"), [])
     if losses and wins and mean(wins) > 0:
         measured += f"; uma derrota com um humano = ~{-mean(losses) / mean(wins):.0f} vitórias contra o CPU"
     return Result("xp", "XP: perder com humanos custa muito (§22, só estudo)", measured or "sem jogos", sum(map(len, groups.values())),
@@ -224,7 +261,7 @@ def manager_xp(lines: list[dict], minimum: int = 10) -> Result:
 
 
 CHECKS: list[Callable[[list[dict]], Result]] = [home_advantage, clearly_stronger, away_433, fatigue,
-                                                tempo_against_stronger, tempo_by_strength, counter_attack]
+                                                away_523, against_stronger, tempo_against_stronger, tempo_by_strength, counter_attack]
 
 
 def run(records: Iterable[dict], friendlies: Iterable[dict] = (), xp: Iterable[dict] = ()) -> list[Result]:

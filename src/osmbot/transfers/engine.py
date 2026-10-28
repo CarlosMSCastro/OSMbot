@@ -17,6 +17,9 @@ MAX_PRICE = 2.5  # the game's maximum asking price ≈ 2.5 × value (THEORY.md 7
 SALE_RATIO = 1.5  # the "SALE" ribbon: price <= 1.5 × value (gamesettings SaleTransferLabelRatio = 150, web code; 2026-10-12)
 MAIN_STAT = {1: "statAtt", 2: "statOvr", 3: "statDef", 4: "statDef"}  # the number in bold for each position
 POSITIONS = {1: "ATA", 2: "MED", 3: "DEF", 4: "GR"}
+# player.rarity (the site's PlayerRarity, DISCOVERY.md section 3): recorded to measure whether an "In Form" is a good
+# buy (owner, 2026-10-28; OSMPro updates point 2). 0 = a normal player: None
+RARITIES = {1: "lenda", 2: "in form", 3: "evolução"}
 
 
 def _row(item: dict, owner: int | None) -> dict:
@@ -27,7 +30,8 @@ def _row(item: dict, owner: int | None) -> dict:
             "utilizador": bool(team.get("userId")), "dono": bool(owner) and team.get("userId") == owner,
             "preco": price, "valor": value, "do_maximo": round(price / (MAX_PRICE * value), 3) if value else None,
             "idade": player.get("age"), "pos": player.get("position"), "ovr": player.get("statOvr"),
-            "att": player.get("statAtt"), "def": player.get("statDef"), "desde": item.get("timeStampForSale")}
+            "att": player.get("statAtt"), "def": player.get("statDef"), "desde": item.get("timeStampForSale"),
+            "raridade": RARITIES.get(player.get("rarity"))}
 
 
 def split(market: list[dict], owner: int | None = None) -> tuple[dict[str, int], dict[str, dict]]:
@@ -73,7 +77,7 @@ def sale_rows(market: list[dict], ratio: float = SALE_RATIO) -> dict[str, dict]:
                                  "rating": player.get(MAIN_STAT.get(position, "statOvr")),
                                  "idade": player.get("age"), "preco": price, "valor": value,
                                  "razao": round(price / value, 2), "fora_da_liga": bool(team.get("isForeignTeam")),
-                                 "desde": item.get("timeStampForSale")}
+                                 "desde": item.get("timeStampForSale"), "raridade": RARITIES.get(player.get("rarity"))}
     return rows
 
 

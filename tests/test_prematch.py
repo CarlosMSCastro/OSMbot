@@ -66,6 +66,9 @@ def test_friendly_opponents_exclude_the_next_official_opponent():
     assert friendly_choices(teams, [match(15, 5, 1), match(15, 1, 3, kind=1)], 1, 14) == [2, 3, 4, 5]  # unclear: none left out
 
 
+ANALYSED = [{"weekNr": 14, "instructionTeamId": 3}]  # the analyst already went to the opponent this round
+
+
 class FakeClient:
     def __init__(self, steps, match_in=3600, coins=100, sent=None, post_status=200, clubs=6, friendlies=1,
                  settings=({"id": 60, "name": "SpyInstructionTimer", "value": 60},), week=14):
@@ -149,7 +152,7 @@ def test_plays_the_missing_friendlies_and_sends_the_analyst_to_the_next_opponent
 
 
 def test_coins_for_only_some_of_the_friendlies():
-    client = FakeClient([step(7, 0), step(5, 1)], friendlies=0, coins=9)
+    client = FakeClient([step(7, 0), step(5, 1)], friendlies=0, coins=9, sent=ANALYSED)
     _, lines = prepare(client)
     assert [form["opponentId"] for _, form in client.posts] == [2, 4]
     assert "! Club: sem boss coins para o amigável (1); 2 de 4 ficam por fazer" in lines
@@ -184,7 +187,7 @@ def test_simulation_writes_nothing():
 
 
 def test_a_refused_friendly_tries_another_opponent_and_a_server_error_is_a_failure():
-    client = FakeClient([step(7, 0), step(5, 1)], post_status=400, clubs=7)
+    client = FakeClient([step(7, 0), step(5, 1)], post_status=400, clubs=7, sent=ANALYSED)
     assert prepare(client)[0] == (0, None)
     assert [form["opponentId"] for _, form in client.posts] == [4, 5, 6]  # 3 refusals: wait for the next pass
     prepare(client)  # the next pass: the refused clubs are not asked again this round (D-032)
@@ -192,7 +195,7 @@ def test_a_refused_friendly_tries_another_opponent_and_a_server_error_is_a_failu
     from osmbot.game import refusals
 
     refusals.FILE.unlink()
-    client = FakeClient([step(7, 0), step(5, 1)], post_status=500)
+    client = FakeClient([step(7, 0), step(5, 1)], post_status=500, sent=ANALYSED)
     assert prepare(client)[0] == (1, None)
 
 
@@ -272,3 +275,17 @@ def test_the_trainingcamp_terror_brings_8_friendlies_too():
     assert friendly_event([event], now) is event
     assert friendly_event([{**event, "nome": "Training Camp Terror"}], now) is not None
     assert friendly_event([{**event, "nome": "Training Camp Mania"}], now) is None
+
+
+def test_a_ticked_step_without_an_analyst_sent_to_this_opponent_still_sends_it():
+    # 2026-10-28: an analyst collected after the round changed ticked the next round's step
+    late = [{"weekNr": 13, "instructionTeamId": 9}]
+    client = FakeClient([step(7, 4), step(5, 1)], friendlies=4, sent=late)
+    prepare(client)
+    assert client.posts == [(f"{BASE}/spyinstructions", {"instructionTeamId": 3, "timerGameSettingId": 60})]
+
+
+def test_no_analyst_when_the_game_does_not_offer_it():
+    client = FakeClient([step(7, 4), step(5, 0, enabled=False)], friendlies=4)  # e.g. his secret training
+    prepare(client)
+    assert client.posts == []

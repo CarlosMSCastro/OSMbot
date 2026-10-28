@@ -88,10 +88,16 @@ def friendlies_missing(matches: list[dict], team_id: int, week: int, target: int
 
 
 def needs_analysis(steps: list[dict], sent: list[dict], week: int, opponent: int | None = None) -> bool:
-    """The checklist counts the analysis only once the analyst is collected: one already sent this week to the
-    ``opponent`` counts too (one sent to another club does not: the analyst also goes round the league, owner
-    2026-10-28)."""
-    if step_done(steps, ANALYSIS_STEP):
+    """Whether the analyst must still go to the ``opponent`` this round. Done = an analyst already sent this round to
+    him (by the bot or by hand; one sent to another club does not count: the analyst also goes round the league,
+    owner 2026-10-28). The checklist's tick is not trusted when the opponent is known: an analyst collected after
+    the round changed ticks the next round's step (Real Betis and KV Mechelen, 2026-10-28: collected at 00:38 and
+    00:39, no analysis of that day's opponents). Not when the game does not offer it (step disabled: e.g. the
+    opponent's secret training)."""
+    step = next((s for s in steps if s.get("type") == ANALYSIS_STEP), None)
+    if step is not None and not step.get("enabled", True):
+        return False
+    if opponent is None and step_done(steps, ANALYSIS_STEP):
         return False
     return not any(s.get("weekNr") == week and (opponent is None or s.get("instructionTeamId") in (None, opponent))
                    for s in sent)  # an entry with no club (older records) counts, as it did

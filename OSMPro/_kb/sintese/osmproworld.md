@@ -131,6 +131,20 @@ Vídeos do canal inglês do mesmo autor (OSM PRO, @OSMPROworld), set. 2023 → j
 - **Sorte:** o mesmo jogo 10 vezes dá 10 resultados; uma goleada precisa de algo estranho no adversário. (eLuydwIUqtU)
 - Mudar o nome de treinador: desde ago. 2024, de 90 em 90 dias. (5Gg2eztojkg)
 
+## Revisão com o dono (D-065): pontos
+
+Já decidido noutras categorias e não volta: capitão 30+, cantos, penáltis num médio, barras e instruções (D-073), textos de ajuda, laterais com ataque, idade do onze, preço de venda (D-071), ordem do estádio, nacionalidade, treino perto do jogo, boss coin de 8 em 8 h.
+
+| # | Ponto | Data | Estado |
+|---|---|---|---|
+| 1 | Especialistas: nunca o mesmo jogador em dois papéis | 2024 | Fechado 2026-10-28 (dono, opção a): fica o §4 (livres e penáltis podem coincidir); 157 relatórios do comentador sem queixas, 34 × "All Specialists were doing their job" |
+| 2 | 4-3-3 em casa e 5-2-3 fora, com o mesmo ataque | 2024–25 | Fechado 2026-10-28 (dono): fica o §1; medido na verificação semanal (`523fora`, liga toda) |
+| 3 | 4-5-1 / 4-2-3-1 contra mais fortes (remate à vista) | 2024–26 | Fechado 2026-10-28 (dono): fica o §1; medido na verificação semanal (`451`, liga toda) |
+| 4 | Contra-táticas pela formação do adversário | 2024 | Por rever |
+| 5 | 4-4-2 B de passe: estilo muito baixo, temporização muito alta | 2025 | Por rever |
+| 6 | O valor sobe muito mais depressa do que a nota | 2025 | Por rever |
+| 7 | Boss coins: o melhor uso é acelerar treinos | 2025 | Por rever |
+
 ## Contradições e dúvidas abertas
 
 - ❓ **Especialistas repetidos:** o adjunto avisa mesmo? Há perda? 🔬 Ver o texto dos avisos do pré-jogo e os jogos do dono com o mesmo jogador em 2 papéis.

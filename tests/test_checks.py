@@ -74,5 +74,24 @@ def test_manager_xp_says_how_many_cpu_wins_a_loss_to_a_human_wipes_out():
     lines += [{"jogo": f"l{i}", "resultado": "D", "adversario_humano": True, "liga_variacao": -750, "jornadas": 1} for i in range(2)]
     lines += [{"jogo": "late", "resultado": "D", "adversario_humano": True, "liga_variacao": -9000, "jornadas": 3}]  # read late: out
     result = theory.manager_xp(lines)
-    assert "derrota humano -750 (2)" in result.measured and "~30 vitórias contra o CPU" in result.measured
+    assert "derrota humano mais fraco -750 (2)" in result.measured and "~30 vitórias contra o CPU" in result.measured
     assert result.verdict == theory.SHORT
+    prize = {"jogo": "p", "resultado": "V", "adversario_humano": True, "rating_adversario": 500, "rating": 400, "liga_variacao": 3116,
+             "jornadas": 1, "bonus": [{"tipo": "jogo", "valor": 244}, {"tipo": "fim de época (liga)", "valor": 2220},
+                                      {"tipo": "fim de época (taça)", "valor": 652}]}
+    assert "vitória humano mais forte +244 (1)" in theory.manager_xp([prize]).measured  # the season's prizes are not the match
+
+
+def test_away_523_waits_until_both_formations_have_matches():
+    games = [match(i, 100, 100, "0-1", formation=("433A", "433A")) for i in range(15)]
+    assert theory.away_523(games).verdict == theory.SHORT
+    games += [match(100 + i, 100, 105, "1-1", formation=("433A", "523A")) for i in range(15)]
+    result = theory.away_523(games)
+    assert result.verdict == theory.READY and result.measured == "fora, forças parecidas: 4-3-3 3.00 pts/jogo (15), 5-2-3 1.00 (15)"
+
+
+def test_against_stronger_compares_five_defenders_with_the_451():
+    games = [match(i, 90, 100, "0-1", formation=("532A", "433A")) for i in range(15)]
+    games += [match(100 + i, 100, 90, "0-0", formation=("433A", "451A")) for i in range(15)]
+    result = theory.against_stronger(games)
+    assert result.verdict == theory.READY and result.measured == "contra mais forte: 5 defesas 0.00 pts/jogo (15), 4-5-1 1.00 (15)"

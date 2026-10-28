@@ -94,6 +94,20 @@ Serve sobretudo para **datar as mecânicas**: quando nasceram as posições espe
 - Campeonato nacional e Estrelas do Clube: equipas iguais, sem evolução; escolher pelas posições e pelo ataque. (-447Jo-PwVE, 9EdVssSJ__Q)
 - Antes de 2022 eram proibidas ligas organizadas de grupos (facilitar jogos); as Friendly Battles resolveram. (jK0EqYoD4UY)
 
+## Revisão com o dono (D-065): pontos
+
+O que já ficou decidido noutras categorias (posição específica, laterais com ataque, troca de lado do extremo) não volta; os preços de acelerar de 2021 já não valem (hoje treino 2 BC/h, obra 1 BC/h, `DISCOVERY.md` §3).
+
+| # | Ponto | Data | Estado |
+|---|---|---|---|
+| 1 | XP: níveis altos perdem muito; bónus de "não favorito" | 2020–21 | Fechado 2026-10-28 (dono: medir): confirmado nos registos (+239 contra humano mais fraco, +376 contra mais forte, derrota ~−700); `THEORY.md` §22 e verificação `xp` (sem os prémios de fim de época, humanos por rating) |
+| 2 | Jogadores "In Form" (+3–4 temporários) | 2020 | Fechado 2026-10-28 (dono, só o registo): In Form = `rarity` 2 (código do site); os registos do mercado marcam `raridade`; medir mais tarde se é bom negócio (o bónus é temporário?) |
+| 3 | Item "Troca de posição" a expirar (D-039) | 2023 | Fechado 2026-10-28 (dono): nada; o dono acha que não expira, e a mochila da janela já avisa qualquer item a expirar em 24 h |
+| 4 | Ligas sem itens: fechadas ao público, menos boss coins | 2023 | Fechado 2026-10-28 (dono, opção a): lembrete no `THEORY.md` §19 |
+| 5 | Escolher o clube também pela média do onze | 2021–22 | Fechado 2026-10-28 (dono, opção b): nada |
+| 6 | Atualização anual das ligas (notas e objetivos) | todos os anos | Fechado 2026-10-28 (dono, opção a): `THEORY.md` §19 e lembrete com data no `VERIFICACAO.md` (julho–agosto) |
+| 7 | Parâmetros por liga (torneios, ligas sem boss coins, sem evolução) | 2021 | Fechado 2026-10-28 (dono, opção a): nada; o bot lê as definições de cada liga e trata recusas |
+
 ## Contradições e dúvidas abertas
 
 - ❓ Quanto vale o bónus de posição? O jogo não diz; as Táticas estimam uma margem de 4–5 pontos.

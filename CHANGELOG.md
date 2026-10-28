@@ -4,6 +4,19 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-PT/1.1.0/); 
 
 Este ficheiro é o **histórico de versões, para quem lê o repo**. O diário interno de cada sessão de trabalho está em [`docs/WORKLOG.md`](docs/WORKLOG.md).
 
+## [0.14.9] — 2026-10-28
+
+A análise do adversário só conta quando foi mesmo ao adversário; os jogadores In Form ficam marcados nos registos do mercado.
+
+### Corrigido
+- **Análise do adversário:** o bot deixa de confiar só no visto do passo "Analisar o adversário" do jogo. Dá a análise por feita só se nesta jornada já foi um analista ao próximo adversário (pelo bot ou à mão); uma análise a outro clube não conta. Quando o jogo não deixa analisar (p. ex. treino secreto do adversário), não tenta.
+
+### Adicionado
+- **Jogadores In Form, Lendas e Evolução** marcados (`raridade`) nos registos do mercado (lista do jogo, SALE e motor), para medir com o tempo se um In Form é bom negócio.
+
+### Documentação
+- `THEORY.md` §6, §19 e §22; `DISCOVERY.md` §3 (o que é um In Form no jogo); `docs/VERIFICACAO.md` (novas medições `523fora`, `451`, `xp` sem prémios de fim de época, e lembretes com data); OSMPro: Atualizações do jogo fechada, OSMPROworld pontos 1–3.
+
 ## [0.14.8] — 2026-10-28
 
 O analista passa pela liga toda, registo dos boss coins, avisos de titular à venda e de moral baixa.
