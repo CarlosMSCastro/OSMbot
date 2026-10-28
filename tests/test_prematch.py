@@ -1,5 +1,14 @@
+import pytest
+
 from osmbot.game import prematch
 from osmbot.prematch.policy import LEAD, friendly_choices, friendlies_missing, in_window, needs_analysis, next_opponent
+
+
+@pytest.fixture(autouse=True)
+def _no_scouting(monkeypatch):
+    """These tests are about the friendlies and the opponent's analysis; the analyst going round the league has its
+    own tests (test_scouting.py)."""
+    monkeypatch.setattr(prematch, "_scout", lambda *args, **kwargs: (0, None))
 
 TEAM = {"id": 1, "name": "Club"}
 LEAGUE = "leagues/9"
@@ -73,6 +82,7 @@ class FakeClient:
             LEAGUE: {"weekNr": self.week},
             f"{LEAGUE}/gamesettings": self.settings,
             f"{BASE}/matchpreparation": {"steps": self.steps},
+            f"{BASE}/specialists": {"captain": 1, "penalty": 1, "freekick": 1, "corners": 1},
             "user/bosscoinwallet": {"amount": self.coins - 4 * sum(1 for p, _ in self.posts if p.endswith("/matches"))},
             f"{LEAGUE}/teams": teams,
             f"{LEAGUE}/matches/filter": [match(self.week, 1, 2 + i, kind=2) for i in range(self.friendlies)] + [match(15, 1, 3)],
@@ -252,3 +262,13 @@ def test_pre_season_friendlies_every_day_and_the_analysis_waits_for_the_match():
     client = FakeClient([step(7, 0), step(5, 0)], match_in=2 * 86400 + LEAD + 600, friendlies=0, week=-2)
     assert prepare(client)[0] == (0, NOW + 600)  # back at 4 h before the end of the day for the 4th
     assert [path for path, _ in client.posts] == [f"{BASE}/matches"] * 3
+
+
+def test_the_trainingcamp_terror_brings_8_friendlies_too():
+    from osmbot.prematch.policy import friendly_event
+
+    now = 1000.0
+    event = {"nome": "Trainingcamp Terror", "start": now - 10, "end": now + 10}
+    assert friendly_event([event], now) is event
+    assert friendly_event([{**event, "nome": "Training Camp Terror"}], now) is not None
+    assert friendly_event([{**event, "nome": "Training Camp Mania"}], now) is None

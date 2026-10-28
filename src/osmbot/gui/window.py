@@ -1599,9 +1599,10 @@ class ClubCard(QFrame):
         self.boosts.show_boosts(club["prep"].get("boosts") or [])
         self._show_trainings(club["trainings"])
         self.badge.show_value(club.get("value_badge"))
-        self.tired.setVisible(bool(club["tired"] or club["rest"]))
+        self.tired.setVisible(bool(club["tired"] or club.get("morale") or club["rest"]))
         self.tired.setText("<br>".join(escape_text(line) for line in  # rich text: a "\n" would read as a space
                                        ([tr(f"⚠ Cansados: {club['tired']}")] if club["tired"] else [])
+                                       + ([tr(f"⚠ Moral baixa: {club['morale']}")] if club.get("morale") else [])
                                        + [f"⚠ {tr(line)}" for line in club["rest"]]))
         self.tired.setToolTip(tip_text("\n\n".join(tr(part) for part in (club.get("tired_tip") or "").split("\n\n"))))
         self.sale_picks.show_sale(club.get("sale"))

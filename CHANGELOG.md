@@ -4,6 +4,24 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-PT/1.1.0/); 
 
 Este ficheiro é o **histórico de versões, para quem lê o repo**. O diário interno de cada sessão de trabalho está em [`docs/WORKLOG.md`](docs/WORKLOG.md).
 
+## [0.14.8] — 2026-10-28
+
+O analista passa pela liga toda, registo dos boss coins, avisos de titular à venda e de moral baixa.
+
+### Adicionado
+- **Analista pela liga toda:** quando não tem mais nada, o analista de cada clube passa pelos outros clubes da liga, um de cada vez e uma vez por jornada (primeiro os adversários das jornadas seguintes). Nunca atrapalha a análise do próximo adversário, que continua nas 4 h antes do jogo. Cada relatório fica em `logs/<PC>/analista/`.
+- **Registo dos boss coins:** cada mudança do saldo fica em `logs/<PC>/carteira/`, dividida pelo que o bot fez (vídeos da loja, recompensas, amigáveis, treinos acabados, estádio) e pelo que foi **fora do bot**; um resumo por dia no log.
+- **"X: Titular à venda"** no "Onze", nas 4 h antes do jogo: o motor de transferências pode vendê-lo minutos antes e deixar o lugar vazio.
+- **"⚠ Moral baixa"** na linha dos cansados, para titulares com moral abaixo de 80.
+- **Trainingcamp Terror:** se aparecer, 8 amigáveis (como no Intense Friendlies), registados para medir se rendem cada vez mais.
+- Em cada amigável fica registado quem era especialista (para medir se evoluem mais).
+
+### Corrigido
+- A análise do adversário só conta quando foi mesmo ao adversário, e o registo do jogo guarda só o relatório dele.
+
+### Documentação
+- `THEORY.md` §6, §7.6, §16, §17, §21 e §22; `DISCOVERY.md` §3 (analista a qualquer clube, um de cada vez; preços em boss coins); `docs/VERIFICACAO.md` (novas medições: temporização pela força, especialistas nos amigáveis, XP); OSMPro, Série "Não te esqueças da tática!" revista.
+
 ## [0.14.7] — 2026-10-28
 
 Especialistas mais finos (cantos, penáltis, capitão), notas sobre os centrais e o estádio acelerado com boss coins nos eventos.

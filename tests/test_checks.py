@@ -47,3 +47,32 @@ def test_the_owner_s_away_433_and_the_counter_attack_wait_for_matches():
     ready = [match(10 + i, 100, 100, "1-0", "casa", analise=report) for i in range(10)]
     result = theory.counter_attack(ready)
     assert result.sample == 10 and result.verdict == theory.READY
+
+
+def test_the_tempo_by_strength_waits_for_matches_in_each_band():
+    stronger = [match(i, 110, 100, "1-0", "casa", tatica={"tempo": 75}) for i in range(8)]
+    stronger += [match(20 + i, 110, 100, "2-0", "casa", tatica={"tempo": 90}) for i in range(8)]
+    weaker = [match(40 + i, 90, 100, "0-1", "casa", tatica={"tempo": 70}) for i in range(8)]
+    assert theory.tempo_by_strength(stronger + weaker).verdict == theory.SHORT  # weaker side: only the rule's band
+    weaker += [match(60 + i, 90, 100, "0-0", "casa", tatica={"tempo": 50}) for i in range(8)]
+    result = theory.tempo_by_strength(stronger + weaker)
+    assert result.verdict == theory.READY and ">80 3.00 (8)" in result.measured
+
+
+def test_friendly_specialists_compare_the_gain_of_specialists_with_the_rest():
+    def player(pid, before, after, att_before=100, att_after=100):
+        return {"id": pid, "pos": 1, "progresso_antes": before, "progresso_depois": after,
+                "att_antes": att_before, "att_depois": att_after}
+    friendlies = [{"especialistas": {"captain": 1}, "jogadores": [player(1, 90, 10, 100, 101), player(2, 10, 30)]}] * 30
+    result = theory.friendly_specialists(friendlies)
+    assert result.verdict == theory.READY and result.measured == "especialistas +20.0 (30), os outros +20.0 (30)"
+    assert theory.friendly_specialists([{"jogadores": [player(1, 0, 5)]}]).verdict == theory.SHORT  # older: no roles
+
+
+def test_manager_xp_says_how_many_cpu_wins_a_loss_to_a_human_wipes_out():
+    lines = [{"jogo": f"w{i}", "resultado": "V", "adversario_humano": False, "liga_variacao": 25, "jornadas": 1} for i in range(5)]
+    lines += [{"jogo": f"l{i}", "resultado": "D", "adversario_humano": True, "liga_variacao": -750, "jornadas": 1} for i in range(2)]
+    lines += [{"jogo": "late", "resultado": "D", "adversario_humano": True, "liga_variacao": -9000, "jornadas": 3}]  # read late: out
+    result = theory.manager_xp(lines)
+    assert "derrota humano -750 (2)" in result.measured and "~30 vitórias contra o CPU" in result.measured
+    assert result.verdict == theory.SHORT

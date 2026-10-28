@@ -14,6 +14,17 @@ def tired_starters(players: list[dict]) -> list[dict]:
     return sorted(tired, key=lambda p: p["fitness"])
 
 
+LOW_MORALE = 80  # [S] a starter's morale below this is a warning (owner, 2026-10-28; OSMPro series point 7)
+
+
+def low_morale(players: list[dict]) -> list[dict]:
+    """Starters (not injured) with low morale, lowest first: [{name, morale}] (owner, 2026-10-28: rare, the owner's
+    starters were below 80 in 6 of 1 445 readings; THEORY.md section 16)."""
+    low = [{"name": p["name"], "morale": p["morale"]} for p in players
+           if p.get("lineup") in STARTING_ELEVEN and not p.get("unavailable") and (p.get("morale") or 100) < LOW_MORALE]
+    return sorted(low, key=lambda p: p["morale"])
+
+
 def uncovered(players: list[dict], tired: list[dict]) -> list[str]:
     """The positions of tired starters with nobody to replace them: no other player of that position outside the
     eleven and available, whatever his condition (owner, 2026-10-13; THEORY.md section 16)."""

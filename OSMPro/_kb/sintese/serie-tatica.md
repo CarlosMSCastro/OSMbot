@@ -135,6 +135,25 @@ Resultado da liga: **2.º lugar** atrás do único treinador de topo. Os jogos c
 - ⭐ **XP / ranking individual:** vitória a um forte ~+4, derrota ~−1 000, empate ~+150 (subscritor); ranking cheio de multicontas e ligas fechadas; o ranking de grupos é o que conta. → H0CL_zTIxSw, bYE-rnkH8Z0 🔬 `logs/*/xp/`
 - **Domínio mundial:** começar por África (~500 BC), clubes de objetivo baixo. → EUEk_YI7yHY
 
+## Revisão com o dono (D-065): pontos
+
+Os choques do resumo (4-3-3 fora, médios do 4-3-3, suplente de outra posição, poupança) já ficaram resolvidos nas Táticas e no §13.
+
+| # | Ponto | Estado |
+|---|---|---|
+| 1 | Evento de amigáveis progressivos | Fechado 2026-10-28 (dono, opção a): no Trainingcamp Terror, se aparecer, 8 amigáveis (o dobro) e medir nos registos (`THEORY.md` §6) |
+| 2 | Não ter à venda quem vai jogar | Fechado 2026-10-28 (dono, opção a): aviso amarelo no "Onze" nas 4 h antes do jogo (`THEORY.md` §21) |
+| 3 | Contra-ataque só contra quem ataca (jogo de passe contra muito mais fraco) | Fechado 2026-10-28 (dono): sem mudanças; a regra já não usa contra-ataque contra mais fracos (4-3-3 em passe ou alas, §1–§2) |
+| 4 | Temporização pela diferença de força | Fechado 2026-10-28 (dono, opção a): junto ao ponto 12 das Táticas; medido na verificação semanal (`ritmo`, `docs/VERIFICACAO.md`); 60–80 até lá |
+| 5 | Ler o adversário pelos últimos jogos dele | Fechado 2026-10-28 (dono): nada no hover; em vez disso, o **analista passa pela liga toda** (testado: 1 de cada vez) e cada relatório fica em `logs/*/analista` (`THEORY.md` §6) |
+| 6 | Jovens como especialistas nos amigáveis | Fechado 2026-10-28 (dono, opção a): só registar quem é especialista em cada amigável e medir na verificação semanal (`especialistas`) |
+| 7 | Moral depois de uma derrota | Fechado 2026-10-28 (dono, opção b): "⚠ Moral baixa" na linha dos cansados, titulares abaixo de 80 (`THEORY.md` §16) |
+| 8 | Eventos de transferências (6 vagas, preços mais altos) | Fechado 2026-10-28 (dono, opção b): nada; o aviso de vagas já passa a 6 no evento e o calendário está na janela |
+| 9 | Ofertas especiais (+13–53 BC sim; 1 000–4 000 não) | Fechado 2026-10-28 (dono, opção a): dica no `THEORY.md` §7.6, nada no bot |
+| 10 | Cada compra na lista custa 1 boss coin? | Fechado 2026-10-28: o catálogo do jogo diz `TransferFee` = 1 BC (e venda instantânea 5, olheiro 15, treino secreto 3; `DISCOVERY.md` §3); cobrança por medir com o registo da carteira |
+| 11 | XP do treinador (+4 / −1 000) | Fechado 2026-10-28 (dono, opção a): medido (vitória CPU +23, derrota com humano −706 ≈ 30 vitórias); no `THEORY.md` §22 e na verificação semanal (`xp`) |
+| 12 | Rodar o onze contra fracos e na taça | Fechado 2026-10-28 (dono, opção a): nada; o aviso "poupar para o jogo importante" (§16) já cobre |
+
 ## Contradições e dúvidas abertas
 
 - **4-3-3 fora contra iguais:** o autor perdeu os 2 e não recomenda; o dono usa-o (§1).

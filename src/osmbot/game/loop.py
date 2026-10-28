@@ -46,6 +46,7 @@ from osmbot.game.prematch import run_prematch
 from osmbot.game.rewards import run_rewards
 from osmbot.game.sponsors import run_sponsors
 from osmbot.game.savings import run_savings
+from osmbot.game import wallet as ledger
 from osmbot.game.stadium import run_event_stadium_boost, run_stadium
 from osmbot.game.trainings import COUNTS, pending_finish_times, run_claim, run_event_boost, run_event_end_boost, run_train
 
@@ -270,6 +271,7 @@ def _shop_ads(dry_run: bool) -> int:
         _now(f"vídeo da loja {count}/{MAX_PER_BURST}", "shop", count=count)
         gained = watch_with_retry(lambda: watch_shop_video(client), lambda: is_claimable(client))
         _stats["shop_coins"] = _stats.get("shop_coins", 0) + gained  # the "+X" beside the boss coins (owner, 2026-10-09)
+        ledger.note("vídeos da loja", gained)
 
     return run_shop_ads(lambda: is_claimable(client), _counted("shop", watch, refresh_coins),
                         dry_run=dry_run, log=_log, sleep=_tick_sleep, training_ready=lambda: _training_ready(client))

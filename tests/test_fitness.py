@@ -72,3 +72,12 @@ def test_a_tired_starter_without_anyone_of_his_position_outside_the_eleven_has_n
     tired = tired_starters(players)
     assert uncovered(players, tired) == ["DEF"]  # the only other defender is injured; the tired midfielder has a sub
     assert uncovered(players, []) == []
+
+
+def test_low_morale_is_the_starters_below_80_lowest_first():
+    from osmbot.theory.fitness import low_morale
+
+    players = [{"name": "A", "lineup": 2, "morale": 78, "unavailable": 0}, {"name": "B", "lineup": 5, "morale": 70, "unavailable": 0},
+               {"name": "C", "lineup": 14, "morale": 50, "unavailable": 0}, {"name": "D", "lineup": 3, "morale": 80, "unavailable": 0},
+               {"name": "E", "lineup": 4, "morale": 60, "unavailable": 2}]
+    assert low_morale(players) == [{"name": "B", "morale": 70}, {"name": "A", "morale": 78}]

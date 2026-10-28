@@ -398,7 +398,8 @@ def club_view(club: dict, now: float, shortened: dict | None = None) -> dict:
             "stadium": {"still": still, "moving": moving},
             "prep": {"steps": steps, "boosts": boosts},
             "trainings": trainings,
-            "tired": tired_text, "tired_tip": tired_tip, "rest": [  # THEORY.md 16: rest him before the important one
+            "tired": tired_text, "tired_tip": tired_tip,
+            "morale": " · ".join(f"{p['name']} {p['morale']}" for p in club.get("low_morale") or []), "rest": [  # THEORY.md 16: rest him before the important one
                 f"{p['name']} {p['fitness']}%: se jogar contra o {p['first']}, chega a ~{p['then']}% contra o {p['second']}"
                 for p in club.get("rest") or []], "sale": sale_view(club), "value_badge": rating_badge(club.get("strength")), "table_tip": table_tip,
             "injured": _people(club.get("injured") or [], "no médico", now),

@@ -6,7 +6,10 @@ FRIENDLY_STEP = 7  # matchpreparation step "Play 1 Friendly"
 FRIENDLIES_PER_MATCH = 4  # owner, 2026-10-11: 4 friendlies before each match (THEORY.md section 6)
 FRIENDLY_TIMES = (16 * 3600, 12 * 3600, 8 * 3600, 4 * 3600)  # spread over the day (owner, 2026-10-12): the k-th is due this long before the match [S]
 EVENT_FRIENDLY_TIMES = tuple(h * 3600 for h in (16, 14, 12, 10, 8, 6, 4, 2))  # 8 in an Intense Friendlies [S]
-EVENT_NAME = "intense friendlies"  # the event that brings 8 friendlies (owner, 2026-10-12); recognised by name [S]
+# The events that bring 8 friendlies, recognised by name without spaces [S]: the Intense Friendlies (owner, 2026-10-12)
+# and the Trainingcamp Terror, where each friendly gives more than the one before (forum; OSMPro series point 1: owner,
+# 2026-10-28, "o dobro dos amigáveis, e claro medir": every friendly is recorded with its event in logs/*/amigaveis)
+EVENT_NAMES = ("intensefriendlies", "trainingcampterror")
 EVENT_MARGIN = 3600  # a friendly that would only fit after the event is played this long before it ends [S]
 ANALYSIS_STEP = 5  # matchpreparation step "Analyse your opponent"
 LEAGUE_MATCH, CUP_MATCH, FRIENDLY_MATCH = 0, 1, 2  # matchType in matches/filter (1 = cup: hypothesis)
@@ -34,8 +37,9 @@ def in_window(match_time: float | None, now: float) -> bool:
 
 
 def friendly_event(events: list[dict] | None, now: float) -> dict | None:
-    """The Intense Friendlies going on now (``events``: the forum's schedule with "start" and "end"), if any."""
-    return next((e for e in events or [] if EVENT_NAME in e.get("nome", "").lower() and e["start"] <= now < e["end"]), None)
+    """The friendlies' event going on now (``events``: the forum's schedule with "start" and "end"), if any."""
+    return next((e for e in events or [] if any(name in e.get("nome", "").lower().replace(" ", "") for name in EVENT_NAMES)
+                 and e["start"] <= now < e["end"]), None)
 
 
 def friendly_deadlines(match_time: float, now: float, events: list[dict] | None = None) -> list[float]:
@@ -83,11 +87,44 @@ def friendlies_missing(matches: list[dict], team_id: int, week: int, target: int
     return max(0, target - friendlies_played(matches, team_id, week))
 
 
-def needs_analysis(steps: list[dict], sent: list[dict], week: int) -> bool:
-    """The checklist counts the analysis only once the analyst is collected: one already sent this week counts too."""
+def needs_analysis(steps: list[dict], sent: list[dict], week: int, opponent: int | None = None) -> bool:
+    """The checklist counts the analysis only once the analyst is collected: one already sent this week to the
+    ``opponent`` counts too (one sent to another club does not: the analyst also goes round the league, owner
+    2026-10-28)."""
     if step_done(steps, ANALYSIS_STEP):
         return False
-    return not any(s.get("weekNr") == week for s in sent)
+    return not any(s.get("weekNr") == week and (opponent is None or s.get("instructionTeamId") in (None, opponent))
+                   for s in sent)  # an entry with no club (older records) counts, as it did
+
+
+SCOUT_MARGIN = 10 * 60  # an analysis of another club must end this long before the opponent's window opens
+
+
+def analyst_busy(sent: list[dict], now: float) -> bool:
+    """The analyst works on one club at a time (the game: "AlreadySpying", 2026-10-28): busy while a timer runs or
+    a finished one is not collected yet."""
+    return any((s.get("countdownTimer") or {}).get("isClaimed") is False for s in sent)
+
+
+def scout_target(teams: list[dict], matches: list[dict], team_id: int, week: int, sent: list[dict]) -> int | None:
+    """The next club for the analyst to go round the league (owner, 2026-10-28; OSMPro series point 5), once per
+    round: the opponents of the coming rounds first (not the next one: his analysis is in the 4 h before the match,
+    closest to it), then the rest by place in the table. None when every club is done this round."""
+    done = {s.get("instructionTeamId") for s in sent if s.get("weekNr") == week}
+    following = next_opponent(matches, team_id, week)
+    ahead = [_other(m, team_id) for m in sorted((m for m in matches if _involves(m, team_id) and m["weekNr"] > week
+                                                  and m["matchType"] in (LEAGUE_MATCH, CUP_MATCH)), key=lambda m: m["weekNr"])]
+    rest = [t["id"] for t in sorted(teams, key=lambda t: t.get("ranking") or 99)]
+    for club in ahead + rest:
+        if club not in done and club not in (team_id, following):
+            return club
+    return None
+
+
+def can_scout(match: float | None, now: float, seconds: float, opponent_done: bool) -> bool:
+    """Another club may be analysed now when it ends well before the next opponent's analysis is due (the last 4 h
+    before the match), or when that one is done already."""
+    return opponent_done or match is None or now + seconds + SCOUT_MARGIN <= match - LEAD
 
 
 def _involves(match: dict, team_id: int) -> bool:

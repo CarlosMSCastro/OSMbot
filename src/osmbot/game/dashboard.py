@@ -20,7 +20,7 @@ from datetime import datetime
 from osmbot.game.ads import SHOP_ACTION, TRAINING_ACTION, VIDEO_SAVES, money_state
 from osmbot.game.slots import SlotStatus, count_listed
 from osmbot.inventory.policy import UNIVERSAL_TRAINER, active_until
-from osmbot.theory.fitness import YELLOW_BELOW, tired_starters, uncovered
+from osmbot.theory.fitness import YELLOW_BELOW, low_morale, tired_starters, uncovered
 from osmbot.transfers.engine import sale_options, sale_picks
 
 POSITIONS = {1: "ATA", 2: "MED", 3: "DEF", 4: "GR"}
@@ -133,7 +133,7 @@ def collect(client) -> dict:
 
         club = {
             "name": team["name"], "ranking": team.get("ranking"), "league": leagues.get(team["name"], {}).get("name", "?"),
-            "tired": tired_starters(players), "match": match,
+            "tired": tired_starters(players), "low_morale": low_morale(players), "match": match,
             "money": (funds["balance"], funds["savings"]),
             "stadium": {"parts": [(STADIUM_NAMES.get(p["stadiumPartType"], "?"), p["level"],
                                    max((lv["level"] for lv in p["stadiumPartLevels"]), default=0),
@@ -172,7 +172,7 @@ def collect(client) -> dict:
         try:  # the card's extras (D-026): a problem here never hides the rest of the board
             from osmbot.game.clubinfo import club_extra
 
-            club.update(club_extra(client, team, base, players, slot, market))
+            club.update(club_extra(client, team, base, players, slot, market, club.get("match")))
         except OSError:
             raise
         except Exception as error:
@@ -218,6 +218,15 @@ def collect(client) -> dict:
         inventory = None
     from osmbot.game.events import calendar_events, calendar_months
 
+    try:  # the boss coins' ledger (owner, 2026-10-28): never in the way of the board
+        from osmbot import logs
+        from osmbot.game import wallet as ledger
+
+        ledger.check(wallet.get("amount"), log=lambda line: logs.write(datetime.now(), line))
+    except OSError:
+        raise
+    except Exception:
+        pass
     return {"coins": wallet.get("amount"), "clubs": clubs, "ads": ads, "daily": daily, "read_at": started,
             "events": calendar_events(started), "calendar": calendar_months(), "inventory": inventory}
 

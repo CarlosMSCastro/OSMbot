@@ -1,4 +1,5 @@
-"""Check the theory against the bot's records in logs/ (docs/VERIFICACAO.md). Read-only: never talks to the game.
+"""Check the theory against the bot's records in logs/ (matches, friendlies, the manager's XP; docs/VERIFICACAO.md). Read-only:
+never talks to the game.
 
     python tools/verificar_teoria.py
 
@@ -16,9 +17,9 @@ sys.path.insert(0, str(ROOT / "src"))
 from osmbot.checks.theory import run  # noqa: E402
 
 
-def records() -> list[dict]:
+def records(kind: str = "jogos") -> list[dict]:
     found = []
-    for path in sorted((ROOT / "logs").glob("*/jogos/*.jsonl")):
+    for path in sorted((ROOT / "logs").glob(f"*/{kind}/*.jsonl")):
         for line in path.read_text(encoding="utf-8").splitlines():
             try:
                 found.append(json.loads(line))
@@ -28,7 +29,7 @@ def records() -> list[dict]:
 
 
 def main() -> None:
-    results = run(records())
+    results = run(records(), records("amigaveis"), records("xp"))
     print("| Verificação | Regra | Registos | Jogos | Veredicto |")
     print("|---|---|---|---|---|")
     for r in results:

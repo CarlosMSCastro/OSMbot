@@ -56,12 +56,15 @@ def _body(client, path: str):
     return body if status == 200 else None
 
 
-def note_prematch(client, base: str, week: int, now: float | None = None) -> None:
-    """Keep the owner's tactics (and the analyst's report, if the game gives it) as they are before the match: read
-    on every pass of the last hours, so the last read is the one the match was played with."""
+def note_prematch(client, base: str, week: int, now: float | None = None, opponent: int | None = None) -> None:
+    """Keep the owner's tactics (and the analyst's report on the ``opponent``, if the game gives it) as they are
+    before the match: read on every pass of the last hours, so the last read is the one the match was played with.
+    The game gives a report per club analysed in the round (``teamId``; the analyst also goes round the league)."""
     data = _load()
     entry = {"semana": week, "lido": now or time.time(), "tatica": _body(client, f"{base}/teamtactics")}
     report = _body(client, f"{API_V11}/{base}/spyresults")
+    if isinstance(report, list) and opponent is not None:
+        report = [r for r in report if isinstance(r, dict) and r.get("teamId") == opponent]
     if report:
         entry["analise"] = report
     elif (data.get("antes", {}).get(base) or {}).get("semana") == week:

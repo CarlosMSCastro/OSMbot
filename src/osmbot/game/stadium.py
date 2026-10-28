@@ -197,6 +197,9 @@ def _boost_running(client, team: dict, base: str, products: list[dict], room: in
         log(f"{label}: acelerar falhou ({status})")
         return 0
     COUNTS["boosted"] += 1
+    from osmbot.game import wallet as ledger
+
+    ledger.note("estádio", -product["value"])
     log(f"{label}: melhoria acelerada com {product['value']} boss coins (faltavam {int(left // 3600)}h{int(left % 3600 // 60):02d})")
     return product["value"]
 

@@ -147,6 +147,23 @@ def tempo_against_stronger(matches: list[dict], minimum: int = 8) -> Result:
     return Result("tempo", "5 defesas contra mais forte: temporização 60–80", measured, len(pairs), verdict)
 
 
+def tempo_by_strength(matches: list[dict], minimum: int = 8) -> Result:
+    """OSMPro series point 4 with Táticas point 12 (owner, 2026-10-28): the tempo by the strength gap, in any
+    formation: points per match with it below 60, at 60–80 (the rule) and above 80, stronger and weaker apart.
+    "Pronto a decidir" once each side has ``minimum`` matches in the rule's band and in one other."""
+    bands = (("<60", lambda t: t < 60), ("60–80", lambda t: 60 <= t <= 80), (">80", lambda t: t > 80))
+    pairs = [(m, s) for m, s in _own(matches) if (m.get("tatica") or {}).get("tempo") is not None]
+    parts, ready = [], True
+    for label, stronger in (("mais forte", True), ("mais fraco", False)):
+        side = [(m, s) for m, s in pairs if (_edge(m, s) > 0) == stronger]
+        cells = {name: [(m, s) for m, s in side if test(m["tatica"]["tempo"])] for name, test in bands}
+        parts.append(f"{label}: " + ", ".join(f"{name} {_ppg(c):.2f} ({len(c)})" for name, c in cells.items()))
+        others = [len(c) for name, c in cells.items() if name != "60–80"]
+        ready = ready and len(cells["60–80"]) >= minimum and max(others) >= minimum
+    return Result("ritmo", "Temporização 60–80 qualquer que seja a força (§2)", "; ".join(parts), len(pairs),
+                  READY if ready else SHORT)
+
+
 def _report(match: dict) -> dict:
     """The analyst's report on the opponent (``spyresults`` gives a list with the round's report)."""
     report = match.get("analise") or {}
@@ -162,10 +179,56 @@ def counter_attack(matches: list[dict], minimum: int = 10) -> Result:
     return Result("contra", "4-3-3 contra contra-ataque (por medir)", measured, len(pairs), SHORT if len(pairs) < minimum else READY)
 
 
+MAIN = {1: "att", 2: "ovr", 3: "def", 4: "def"}  # the stat that rises with a level, by position
+
+
+def _gain(player: dict) -> int:
+    """Training progress a friendly gave a player: a level is 100 (the progress starts again)."""
+    stat = MAIN.get(player.get("pos"), "ovr")
+    levels = (player.get(f"{stat}_depois") or 0) - (player.get(f"{stat}_antes") or 0)
+    return (player.get("progresso_depois") or 0) - (player.get("progresso_antes") or 0) + 100 * levels
+
+
+def friendly_specialists(friendlies: list[dict], minimum: int = 30) -> Result:
+    """OSMPro series point 6, to measure (owner, 2026-10-28): does a specialist gain more in a friendly? The players a
+    friendly changed, specialists against the rest (recorded from the version after 0.14.7)."""
+    mine, rest = [], []
+    for record in friendlies:
+        roles = set((record.get("especialistas") or {}).values())
+        if not roles:
+            continue
+        for player in record.get("jogadores") or []:
+            (mine if player.get("id") in roles else rest).append(_gain(player))
+    measured = (f"especialistas +{mean(mine):.1f} ({len(mine)}), os outros +{mean(rest):.1f} ({len(rest)})"
+                if mine and rest else f"{len(mine)} especialistas registados")
+    return Result("especialistas", "Especialistas evoluem mais nos amigáveis? (por medir)", measured, len(mine),
+                  READY if len(mine) >= minimum and rest else SHORT)
+
+
+def manager_xp(lines: list[dict], minimum: int = 10) -> Result:
+    """THEORY.md section 22, to keep measuring (owner, 2026-10-28; OSMPro series point 11): the change of the
+    manager's rating in the league by result and opponent, from ``logs/*/xp`` (only matches read one round after the
+    last, as ``osmbot xp``). How many wins against the CPU a loss to a human wipes out."""
+    groups: dict[tuple[str, str], list[int]] = {}
+    for line in {line.get("jogo"): line for line in lines}.values():
+        if line.get("liga_variacao") is not None and line.get("jornadas") == 1:
+            rival = "humano" if line.get("adversario_humano") else "CPU"
+            groups.setdefault((line.get("resultado"), rival), []).append(line["liga_variacao"])
+    names = {"V": "vitória", "E": "empate", "D": "derrota"}
+    measured = ", ".join(f"{names.get(res, res)} {rival} {mean(v):+.0f} ({len(v)})" for (res, rival), v in sorted(groups.items()))
+    losses, wins = groups.get(("D", "humano"), []), groups.get(("V", "CPU"), [])
+    if losses and wins and mean(wins) > 0:
+        measured += f"; uma derrota com um humano = ~{-mean(losses) / mean(wins):.0f} vitórias contra o CPU"
+    return Result("xp", "XP: perder com humanos custa muito (§22, só estudo)", measured or "sem jogos", sum(map(len, groups.values())),
+                  AGREES if len(losses) >= minimum else SHORT)
+
+
 CHECKS: list[Callable[[list[dict]], Result]] = [home_advantage, clearly_stronger, away_433, fatigue,
-                                                tempo_against_stronger, counter_attack]
+                                                tempo_against_stronger, tempo_by_strength, counter_attack]
 
 
-def run(records: Iterable[dict]) -> list[Result]:
+def run(records: Iterable[dict], friendlies: Iterable[dict] = (), xp: Iterable[dict] = ()) -> list[Result]:
+    """Every check: the match records (``logs/*/jogos``), the friendlies' (``logs/*/amigaveis``) and the manager's
+    XP (``logs/*/xp``)."""
     matches = unique_matches(records)
-    return [check(matches) for check in CHECKS]
+    return [check(matches) for check in CHECKS] + [friendly_specialists(list(friendlies)), manager_xp(list(xp))]

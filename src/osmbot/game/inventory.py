@@ -166,6 +166,10 @@ def _open_bag(client, item: dict, confirm: bool, log) -> int:
             spent, _ = client.post("user/bosscoinwallet/consumereward", {"rewardId": reward["id"]})
             time.sleep(PAUSE_BETWEEN_WRITES)
             failures += spent != 200
+            if spent == 200:
+                from osmbot.game import wallet as ledger
+
+                ledger.note("recompensas", (reward.get("reward") or {}).get("value") or 0)
     names = ", ".join(prize_text({**(g.get("reward") or {}), "action": (g.get("action") or {}).get("id")}) for g in got) or "?"
     logs.record("inventario", {"evento": "saco", "item": item["action"]["id"], "saiu": [
         {"acao": (g.get("action") or {}).get("id"), "tipo": (g.get("reward") or {}).get("type"),

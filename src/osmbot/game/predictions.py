@@ -86,5 +86,9 @@ def claim_seasons(client, confirm: bool, log=print) -> int:
             continue
         status, _ = client.put(f"user/history/{season['id']}/claim")
         log(f"Fim de época: prémio de {label} reclamado" if status == 200 else f"Fim de época: {label} recusado ({status})")
+        if status == 200:
+            from osmbot.game import wallet as ledger
+
+            ledger.note("recompensas", season.get("reward") or 0)
         failures += status != 200
     return failures

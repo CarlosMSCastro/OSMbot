@@ -369,6 +369,10 @@ def _boost(client, base: str, where: str, session: dict, products: list[dict], c
             "ganho": gain, "bonus": body.get("variableTrainingProgression") if isinstance(body, dict) else None,
             "rating_depois": Player.from_api(after).rating if after else None})
     COUNTS["claimed"] += status == 200
+    if status == 200:
+        from osmbot.game import wallet as ledger
+
+        ledger.note("treinos acabados", -product["value"])
     time.sleep(PAUSE_BETWEEN_WRITES)
     return int(status != 200)
 

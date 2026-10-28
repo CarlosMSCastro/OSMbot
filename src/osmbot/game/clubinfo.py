@@ -14,7 +14,7 @@ from osmbot.board.info import (cup_phase, eleven_seen, league_round, league_summ
 from osmbot.game import market as market_watch, sales
 from osmbot.game.transfers import saved_transfers
 from osmbot.game.specialists import captain_note, check
-from osmbot.theory.lineup import age_warnings, bench_notes, centre_notes, bench_warnings, empty_places, places, position_warnings, tactic_check, tactic_notes, tactic_warnings
+from osmbot.theory.lineup import age_warnings, bench_notes, centre_notes, listed_starters, bench_warnings, empty_places, places, position_warnings, tactic_check, tactic_notes, tactic_warnings
 from osmbot.medical.policy import open_cases
 from osmbot.prematch.policy import friendlies_played
 from osmbot.theory.fitness import rest_warnings
@@ -164,7 +164,7 @@ def _match_strengths(client, team: dict, league: str, teams: list[dict], week: i
             match_strength(upcoming["strength"], boost_pct=theirs, home=home and upcoming.get("side") == "A"))
 
 
-def club_extra(client, team: dict, base: str, players: list[dict], slot, market: list[dict]) -> dict:
+def club_extra(client, team: dict, base: str, players: list[dict], slot, market: list[dict], match: float | None = None) -> dict:
     from osmbot.game.dashboard import get_many
 
     league = base.rsplit("/teams/", 1)[0]
@@ -247,7 +247,8 @@ def club_extra(client, team: dict, base: str, players: list[dict], slot, market:
     current = current if status == 200 and isinstance(current, dict) else None
     why = {SPECIALISTS_STEP: check(players, current),
            BENCH_STEP: bench_warnings(players, spare),  # THEORY.md section 21: yellow with the reason on hover
-           ELEVEN_STEP: empty_places(players, tactic) + tactic_warnings(tactic, mine, theirs, players, away, spare),
+           ELEVEN_STEP: empty_places(players, tactic) + listed_starters(players, listed, match, time.time())
+           + tactic_warnings(tactic, mine, theirs, players, away, spare),
            POSITIONS_STEP: position_warnings(players, tactic)}  # who is out of position, on the hover
     why[TACTIC_STEP], tactic_tips, known = tactic_check(tactic, strictness, mine, theirs, players, away, spare,
                                                         (upcoming or {}).get("forwards"))

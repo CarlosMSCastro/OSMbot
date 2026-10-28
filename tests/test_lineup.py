@@ -324,3 +324,14 @@ def test_centre_backs_best_in_the_middle_and_the_2nd_by_the_weaker_full_back():
     assert centre_notes([_defender(1, 2, 90), _defender(2, 3, 100), _defender(3, 4, 110), _defender(4, 5, 80)], four) == []
     assert centre_notes([_defender(1, 2, 90), _defender(2, 3, 100), _defender(3, 4, 110), _defender(4, 5, 90)], four) == []
     assert centre_notes(players, None) == []
+
+
+def test_a_starter_for_sale_is_a_warning_only_in_the_last_4_hours():
+    from osmbot.theory.lineup import listed_starters
+
+    players = [{"id": 1, "name": "A", "lineup": 3}, {"id": 2, "name": "B", "lineup": 14}]
+    now = 1_000_000.0
+    assert listed_starters(players, {1: {}, 2: {}}, now + 3 * 3600, now) == ["A: Titular à venda"]
+    assert listed_starters(players, {1: {}}, now + 5 * 3600, now) == []
+    assert listed_starters(players, {2: {}}, now + 3600, now) == []  # on the bench: not a starter
+    assert listed_starters(players, {1: {}}, None, now) == []

@@ -86,6 +86,10 @@ def _spend(client, reward_id: int, action: str, coins_before: int | None, value:
         return 1
     _unspent.pop(reward_id, None)
     log(f"Início de sessão: {action} reclamado e gasto")
+    if path.startswith("user/bosscoinwallet"):
+        from osmbot.game import wallet as ledger
+
+        ledger.note("recompensas", value)
     if coins_before is not None and path.startswith("user/bosscoinwallet") and             client.get("user/bosscoinwallet")[1]["amount"] < coins_before + value:
         log(f"Início de sessão: erro, os boss coins não subiram depois de gastar {action}")
         return 1
@@ -307,6 +311,10 @@ def claim_money(client, confirm: bool, log=print) -> int:
         what = f"{value} boss coins" if coins else f"{value / 1e6:g} M para o {money_names.get(club, club)}".replace(".", ",")
         if status == 200:
             log(f"Inventário: {what} ({action}) na carteira")
+            if coins:
+                from osmbot.game import wallet as ledger
+
+                ledger.note("recompensas", value)
         elif refusals.is_refusal(status):
             refusals.refuse(f"dinheiro:{item['id']}", log, f"! Inventário: o jogo recusou pôr {what} na carteira ({status}); "
                             "volto a tentar amanhã", day=refusals.game_day())

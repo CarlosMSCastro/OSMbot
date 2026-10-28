@@ -2,7 +2,7 @@
 
 Rotina pedida pelo dono (2026-10-28): ver de tempos a tempos se alguma regra do `THEORY.md` deixou de fazer sentido face ao histórico real do bot. **De 7 em 7 dias** o Claude propõe correr a verificação no início de uma sessão e traz ao dono **só** o que "não bate" ou está "pronto a decidir"; o que bate fica registado aqui.
 
-**Correr:** `python tools/verificar_teoria.py` (só lê `logs/*/jogos`; nunca fala com o jogo). Código das medições: `src/osmbot/checks/theory.py` (puro, testado em `tests/test_checks.py`).
+**Correr:** `python tools/verificar_teoria.py` (só lê `logs/*/jogos`, `logs/*/amigaveis` e `logs/*/xp`; nunca fala com o jogo). Código das medições: `src/osmbot/checks/theory.py` (puro, testado em `tests/test_checks.py`).
 
 **Veredictos:** **bate** · **não bate** (levar ao dono) · **amostra curta** (ainda poucos jogos) · **pronto a decidir** (regra por definir, já com jogos que cheguem).
 
@@ -15,6 +15,9 @@ Rotina pedida pelo dono (2026-10-28): ver de tempos a tempos se alguma regra do 
 | `433fora` | Fora, o 4-3-3 B e não o A (§1, [S] pouca amostra) | Pontos por jogo dos teus clubes fora, até 12 % mais fortes, B contra A | 10 em cada | B 3,00 (2), A 2,00 (4) · **amostra curta** |
 | `cansaco` | Titular perde ~4 de condição por jogo (§16) | Titulares em duas jornadas seguidas do mesmo clube | 50 casos | −3,9 (238) · **bate** |
 | `tempo` | 5 defesas contra mais forte: temporização 60–80 (OSMPro Táticas 12, a medir) | Pontos por jogo com 60–80 e abaixo de 60 | 8 em cada | 0,80 (5) / — (0) · **amostra curta** |
+| `ritmo` | Temporização 60–80 qualquer que seja a força (§2; OSMPro Série 4: mais forte → mais rápido, mais fraco → mais lento) | Pontos por jogo com <60, 60–80 e >80, mais forte e mais fraco à parte, todas as formações | 8 em 60–80 e noutra banda, de cada lado | mais forte: 60–80 2,87 (30), >80 3,00 (7); mais fraco: 60–80 0,71 (7) · **amostra curta** |
+| `especialistas` | Especialistas evoluem mais nos amigáveis? (OSMPro Série 6, palpite do autor, a medir) | Ganho de treino por amigável, especialistas contra os outros (quem tinha cada papel fica registado em cada amigável desde a versão a seguir à 0.14.7) | 30 especialistas | 0 · **amostra curta** |
+| `xp` | XP do treinador (§22, só estudo): perder com humanos custa muito | Variação na liga por resultado e adversário (`logs/*/xp`, lidos uma jornada depois); quantas vitórias contra o CPU uma derrota com um humano apaga | 10 derrotas com humanos | derrota humano −706 (3), vitória CPU +23 (20): ~30 vitórias · **amostra curta** |
 | `contra` | 4-3-3 contra contra-ataque (OSMPro Táticas 7, a medir) | Pontos por jogo com o estilo do adversário lido no analista (desde a 0.14.6) | 10 jogos | 0 jogos · **amostra curta** |
 
 ## Por automatizar (medíveis com os registos que já existem)
@@ -28,6 +31,8 @@ Rotina pedida pelo dono (2026-10-28): ver de tempos a tempos se alguma regra do 
 | 4-4-2 B / 3 defesas quando falta um lado (D-072): pontos por jogo | `jogos/` |
 | 4 amigáveis por jogo e o ganho de cada um (§6) | `amigaveis/` |
 | Desarme pelo árbitro (§3): cartões e resultado por rigor | `jogos/` |
+| 4-3-3 contra contra-ataque e o que resulta contra cada estilo, na liga toda (com os relatórios do analista) | `analista/` + `jogos/` |
+| Trainingcamp Terror: o ganho cresce a cada amigável? (§6; só quando o evento aparecer) | `amigaveis/` |
 
 ## Não medíveis com os registos
 

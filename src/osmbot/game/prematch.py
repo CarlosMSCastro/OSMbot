@@ -15,9 +15,11 @@ import time
 
 from osmbot import logs
 from osmbot.game import clubinfo, refusals
+from osmbot.game import wallet as ledger
 from osmbot.game.timers import minutes_text, timer
-from osmbot.prematch.policy import (LEAD, day_end, friendly_choices, friendly_event, friendlies_due, friendlies_missing,
-                                    friendlies_played, in_window, needs_analysis, next_friendly_at, next_opponent)
+from osmbot.prematch.policy import (LEAD, analyst_busy, can_scout, day_end, friendly_choices, friendly_event, friendlies_due,
+                                    friendlies_missing, friendlies_played, in_window, needs_analysis, next_friendly_at,
+                                    next_opponent, scout_target)
 
 FRIENDLY_PRODUCT = 62  # bosscoinproducts: "Friendly"
 FRIENDLY_PRICE = 4  # boss coins
@@ -50,6 +52,17 @@ def _progress(client, base: str) -> dict[int, dict]:
                       "att": p.get("statAtt"), "def": p.get("statDef"), "ovr": p.get("statOvr")} for p in players}
 
 
+def _specialists(client, base: str) -> dict[str, int]:
+    """Who has each specialist role now, by player id (the game keeps a place in the eleven): recorded with every
+    friendly, to see whether a specialist gains more (owner, 2026-10-28; OSMPro series point 6). {} if unreadable."""
+    status, roles = client.get(f"{base}/specialists")
+    _, players = client.get(f"{base}/players")
+    if status != 200 or not isinstance(roles, dict) or not isinstance(players, list):
+        return {}
+    at = {p.get("lineup"): p["id"] for p in players if 1 <= (p.get("lineup") or 0) <= 11}
+    return {role: at[roles[role]] for role in ("captain", "penalty", "freekick", "corners") if roles.get(role) in at}
+
+
 def _changed(before: dict[int, dict], after: dict[int, dict]) -> list[dict]:
     keys = ("progresso", "att", "def", "ovr")
     return [{"id": pid, "nome": now["nome"], "pos": now["pos"], **{f"{k}_antes": before[pid][k] for k in keys},
@@ -78,6 +91,7 @@ def _play_friendlies(client, team: dict, base: str, league: str, week: int, targ
         return 0, before
     played = refused = 0
     progress = _progress(client, base)
+    roles = _specialists(client, base)
     for opponent in choices:
         if played == missing or refused == MAX_REFUSALS:
             break
@@ -98,9 +112,11 @@ def _play_friendlies(client, team: dict, base: str, league: str, week: int, targ
             score = (f"{body.get('homeGoals')}-{body.get('awayGoals')}" if mine_home
                      else f"{body.get('awayGoals')}-{body.get('homeGoals')}")
             log(f"Amigável: {team['name']} {score} {names[opponent]}" + (f" ({event})" if event else ""))
+            ledger.note("amigáveis", -FRIENDLY_PRICE)
             later = _progress(client, base)
             logs.record("amigaveis", {"clube": base, "semana": week, "n_na_jornada": before + played, "evento": event,
-                                      "adversario": names[opponent], "resultado": score, "jogadores": _changed(progress, later)})
+                                      "adversario": names[opponent], "resultado": score, "especialistas": roles,
+                                      "jogadores": _changed(progress, later)})
             progress = later or progress
             continue
         if not refusals.is_refusal(status):
@@ -144,8 +160,10 @@ def _send_analyst(client, team: dict, base: str, league: str, week: int, confirm
     return 1, None
 
 
-def _collect_analyst(client, team: dict, base: str, sent: list[dict], week: int, now: float, confirm: bool, log) -> tuple[int, float | None]:
-    """Collect this week's analyst once its time is over. Returns (failures, when it ends if still working)."""
+def _collect_analyst(client, team: dict, base: str, sent: list[dict], week: int, now: float, confirm: bool, log,
+                     opponent: int | None = None) -> tuple[int, float | None]:
+    """Collect this week's analyst once its time is over: the opponent's report goes with the match (D-041), another
+    club's to ``logs/<PC>/analista`` (owner, 2026-10-28). Returns (failures, when it ends if still working)."""
     for entry in sent:
         timer = entry.get("countdownTimer")
         if entry.get("weekNr") != week or not timer or timer.get("isClaimed"):
@@ -162,8 +180,11 @@ def _collect_analyst(client, team: dict, base: str, sent: list[dict], week: int,
         time.sleep(PAUSE_BETWEEN_WRITES)
         if status == 200:
             COUNTS["collected"] += 1
-            log(f"Análise: {team['name']} levantou o analista")
-            _note(client, base, week, now)  # the report, while the game gives it (D-041)
+            if entry.get("instructionTeamId") in (None, opponent):
+                log(f"Análise: {team['name']} levantou o analista")
+                _note(client, base, week, now, opponent)  # the report, while the game gives it (D-041)
+            else:
+                _keep_report(client, team, base, week, entry["instructionTeamId"], log)
             return 0, None
         if refusals.is_refusal(status):
             refusals.refuse(key, log, f"! Análise (levantar): o jogo recusou ({team['name']}, {status}); volto a tentar na próxima jornada",
@@ -174,12 +195,61 @@ def _collect_analyst(client, team: dict, base: str, sent: list[dict], week: int,
     return 0, None
 
 
-def _note(client, base: str, week: int, now: float) -> None:
+def _keep_report(client, team: dict, base: str, week: int, club: int, log) -> None:
+    """Another club's report, as the game gives it (style of play, tackling, marking, offside trap, formation, pitch,
+    training camp, his eleven), one line in ``logs/<PC>/analista`` (owner, 2026-10-28; reads only)."""
+    status, reports = client.get(f"{API_V11}/{base}/spyresults")
+    reports = reports if status == 200 and isinstance(reports, list) else []
+    report = next((r for r in reports if isinstance(r, dict) and r.get("teamId") == club), None)
+    if report is None:
+        log(f"Análise de outro clube ({team['name']}): relatório não encontrado ({status})")
+        return
+    logs.record("analista", {"clube": base, "semana": week, "analisado": club, "relatorio": report})
+
+
+def _scout(client, team: dict, base: str, league: str, week: int, match: float | None, now: float, opponent: int | None,
+           confirm: bool, log) -> tuple[int, float | None]:
+    """The analyst goes round the other clubs of the league when it has nothing else to do (owner, 2026-10-28;
+    OSMPro series point 5): one club at a time, once per round, never in the way of the next opponent's analysis.
+    Returns (failures, when it ends)."""
+    status, sent = client.get(f"{base}/spyinstructions")
+    sent = sent if status == 200 and isinstance(sent, list) else []
+    if analyst_busy(sent, now):
+        return 0, None
+    setting, minutes = timer(client, league, SPY_TIMER_NAME, SPY_TIMER_SETTING)
+    done = any(s.get("weekNr") == week and s.get("instructionTeamId") == opponent for s in sent)
+    if not can_scout(match, now, minutes * 60, done):
+        return 0, None
+    _, teams = client.get(f"{league}/teams")
+    _, matches = client.get(f"{league}/matches/filter")
+    teams = teams if isinstance(teams, list) else []
+    club = scout_target(teams, matches if isinstance(matches, list) else [], team["id"], week, sent)
+    key = f"analista:explorar:{base}"
+    if club is None or refusals.blocked(key, week=week):
+        return 0, None
+    name = next((t["name"] for t in teams if t["id"] == club), str(club))
+    if not confirm:
+        log(f"{team['name']}: enviaria o analista a {name} (outro clube)")
+        return 0, None
+    status, _ = client.post(f"{base}/spyinstructions", {"instructionTeamId": club, "timerGameSettingId": setting})
+    time.sleep(PAUSE_BETWEEN_WRITES)
+    if status == 200:
+        COUNTS["scouted"] = COUNTS.get("scouted", 0) + 1
+        return 0, now + minutes * 60
+    if refusals.is_refusal(status):
+        refusals.refuse(key, log, f"! Análise de outro clube: o jogo recusou ({team['name']} → {name}, {status}); "
+                        "volto a tentar na próxima jornada", week=week)
+        return 0, None
+    log(f"Análise de outro clube: {team['name']} → {name} falhou ({status})")
+    return 1, None
+
+
+def _note(client, base: str, week: int, now: float, opponent: int | None = None) -> None:
     """Keep the tactics and the analyst's report for the match log (reads only; never stops the pre-match)."""
     try:
         from osmbot.game.matchlog import note_prematch
 
-        note_prematch(client, base, week, now)
+        note_prematch(client, base, week, now, opponent)
     except OSError:
         raise
     except Exception:
@@ -195,7 +265,9 @@ def prepare_club(client, team: dict, base: str, confirm: bool, now: float, log=p
     week = info["weekNr"]
     status, sent = client.get(f"{base}/spyinstructions")  # 404 when nothing was sent
     sent = sent if status == 200 and isinstance(sent, list) else []
-    failures, wake = _collect_analyst(client, team, base, sent, week, now, confirm, log)
+    _, matches = client.get(f"{league}/matches/filter")
+    opponent = next_opponent(matches if isinstance(matches, list) else [], team["id"], week)
+    failures, wake = _collect_analyst(client, team, base, sent, week, now, confirm, log, opponent)
     wakes = [wake]
     if match is None or now >= match:
         return failures, wake
@@ -213,7 +285,7 @@ def prepare_club(client, team: dict, base: str, confirm: bool, now: float, log=p
     if not in_window(match, now):
         wakes.append(match - LEAD)  # the analysis is sent only in the last 4 hours
     else:
-        _note(client, base, week, now)  # the tactics the match will be played with (D-041)
+        _note(client, base, week, now, opponent)  # the tactics the match will be played with (D-041)
         from osmbot.game.specialists import fix_specialists
 
         try:  # the specialists by the owner's rule, following any change of the eleven (D-042)
@@ -223,11 +295,14 @@ def prepare_club(client, team: dict, base: str, confirm: bool, now: float, log=p
         except Exception as error:
             log(f"Especialistas ({team['name']}): erro ({error})")
         _, prep = client.get(f"{base}/matchpreparation")
-        if needs_analysis(prep.get("steps") or [], sent, week):
+        if needs_analysis(prep.get("steps") or [], sent, week, opponent):
             failed, takes = _send_analyst(client, team, base, league, week, confirm, log)
             failures += failed
             if takes:
                 wakes.append(now + takes)  # come back when it is over, to collect it
+    failed, takes = _scout(client, team, base, league, week, match, now, opponent, confirm, log)
+    failures += failed
+    wakes.append(takes)
     ahead = [w for w in wakes if w and w > now]
     return failures, min(ahead) if ahead else None
 

@@ -191,6 +191,7 @@ PATTERNS = [(re.compile(pattern), replace) for pattern, replace in (
     (r"^(.+) \(árbitro (.+)\)$",  # the tackling the referee wants
      lambda m: " or ".join(_TACKLE.get(w, w) for w in m[1].split(" ou ")) + f" ({_REFEREE.get(m[2], m[2])} referee)"),
     (r"^Se mudares para (.+):$", lambda m: f"If you switch to {m[1]}:"),
+    (r"^(.+): Titular à venda$", lambda m: f"{m[1]}: Starter for sale"),
     (r"^(.+) (\d+) devia ser o central do meio$", lambda m: f"{m[1]} {m[2]} should be the middle centre-back"),
     (r"^(.+) (\d+) devia jogar do lado do (DE|DD) \(lateral mais fraco\)$",
      lambda m: f"{m[1]} {m[2]} should play on the {_SPECIFIC[m[3]]} side (weaker full-back)"),
@@ -224,6 +225,7 @@ PATTERNS = [(re.compile(pattern), replace) for pattern, replace in (
     (r"(\d+) j", lambda m: f"{m[1]} g"),
     (r"1 jogo · não dá", lambda m: "1 game · not allowed"),
     (r"(\d+) jogos? · à espera", lambda m: f"{m[1]} game{'s' if m[1] != '1' else ''} · waiting"),
+    (r"⚠ Moral baixa: (.+)", lambda m: f"⚠ Low morale: {m[1]}"),
     (r"⚠ Cansados: (.+)", lambda m: f"⚠ Tired: " + re.sub(r"sem suplente (\w+)", lambda n: f"no cover {_w(n[1])}", m[1])),
     (r"(?:Força (\d+) · )?[Vv]alor do plantel (.+) · (\d+) jogadores · média (.+)",
      lambda m: (f"Strength {m[1]} · squad value" if m[1] else "Squad value") + f" {m[2]} · {m[3]} players · avg {m[4]}"),
