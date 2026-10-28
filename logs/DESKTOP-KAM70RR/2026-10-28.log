@@ -96,3 +96,32 @@
 2026-10-28 00:39:58  Próxima verificação: treino acaba em 0h22 · vídeo de treino reabre em 1h17 · estádio acaba em 2h22 · novo dia em 3h20 · evento de treinos em 4h50 · depósito na poupança em 19h24 · depósito na poupança em 20h06 · depósito na poupança em 21h00 · depósito na poupança em 21h23
 2026-10-28 00:42:23  Parado
 2026-10-28 00:42:24  Resumo: Desde o arranque (4h47): salto +20 boss coins · vídeos: loja 20 · treino 8 (encurtadas 16 h) · dinheiro 0 · treinos: 12 recolhidos, 12 postos · estádio 0 · patrocinadores 8 · recompensas: início 0, missões 0, vídeos acumulados 0 · pré-jogo: amigáveis 1, análises 1
+2026-10-28 00:43:17  Bot ligado · o PC não adormece
+2026-10-28 00:43:24  Real Betis: 0 para recolher
+2026-10-28 00:43:24  KV Mechelen: 0 para recolher
+2026-10-28 00:43:24  Qarabag: 0 para recolher
+2026-10-28 00:43:24  SV Ried: 0 para recolher
+2026-10-28 00:43:27  Real Betis: 0 treino(s) a iniciar
+2026-10-28 00:43:27  KV Mechelen: 0 treino(s) a iniciar
+2026-10-28 00:43:27  Qarabag: 0 treino(s) a iniciar
+2026-10-28 00:43:27  SV Ried: 0 treino(s) a iniciar
+2026-10-28 00:43:38  Vídeos: erro (shop_ads: BrowserType.launch: Executable doesn't exist at C:\Users\Slyther1n\AppData\Local\OSMbot\browsers\winldd-1007\PrintDeps.exe
+╔═══════════════════════════════════════════════════════════╗
+║ Looks like Playwright was just installed or updated.      ║
+║ Please run the following command to download new browser: ║
+║                                                           ║
+║     playwright install winldd                             ║
+║                                                           ║
+║ <3 Playwright Team                                        ║
+╚═══════════════════════════════════════════════════════════╝; money_ads: BrowserType.launch: Executable doesn't exist at C:\Users\Slyther1n\AppData\Local\OSMbot\browsers\winldd-1007\PrintDeps.exe
+╔═══════════════════════════════════════════════════════════╗
+║ Looks like Playwright was just installed or updated.      ║
+║ Please run the following command to download new browser: ║
+║                                                           ║
+║     playwright install winldd                             ║
+║                                                           ║
+║ <3 Playwright Team                                        ║
+╚═══════════════════════════════════════════════════════════╝); volto a tentar
+2026-10-28 00:43:39  Próxima verificação: treino acaba em 0h18 · vídeo de treino reabre em 1h13 · estádio acaba em 2h19 · novo dia em 3h16 · evento de treinos em 4h46 · depósito na poupança em 19h20 · depósito na poupança em 20h02 · depósito na poupança em 20h57 · depósito na poupança em 21h19
+2026-10-28 00:50:42  Parado
+2026-10-28 00:50:42  Resumo: Desde o arranque (0h07): salto +0 boss coins · vídeos: loja 0 · treino 0 (encurtadas 0 h) · dinheiro 0 · treinos: 0 recolhidos, 0 postos · estádio 0 · patrocinadores 0 · recompensas: início 0, missões 0, vídeos acumulados 0 · pré-jogo: amigáveis 0, análises 0

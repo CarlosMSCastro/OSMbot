@@ -177,10 +177,10 @@ def playwright_version() -> str:
     return version("playwright")
 
 
-def firefox_revision(site_packages: Path) -> str:
-    """The Firefox build the packaged Playwright launches (its browsers.json)."""
+def firefox_revision(site_packages: Path, name: str = "firefox") -> str:
+    """The build of ``name`` the packaged Playwright wants (its browsers.json): the Firefox it launches, or winldd."""
     data = json.loads((site_packages / "playwright" / "driver" / "package" / "browsers.json").read_text(encoding="utf-8"))
-    return next(b["revision"] for b in data["browsers"] if b["name"] == "firefox")
+    return next(b["revision"] for b in data["browsers"] if b["name"] == name)
 
 
 ICON = ROOT / "tools" / "assets" / "osmbot.ico"  # osmbot's own icon (tools/make_icon.py); --icone PATH overrides it for a personal build
@@ -259,6 +259,12 @@ def build(make_zip: bool, make_installer: bool = False, icon: Path = ICON) -> No
         raise SystemExit(f"O Playwright da pasta quer firefox-{wanted}, mas este PC tem {firefox.name}. "
                          "Corre: python -m playwright install firefox")
     shutil.copytree(firefox, OUT / "browsers" / firefox.name)
+    # Playwright checks Windows' dependencies again once its mark is 30 days old, with winldd (2026-10-27: no winldd in
+    # the folder and every Firefox launch failed, "Executable doesn't exist at ...winldd-1007\PrintDeps.exe")
+    winldd = firefox.parent / f"winldd-{firefox_revision(OUT / 'Lib' / 'site-packages', 'winldd')}"
+    if not winldd.exists():
+        raise SystemExit(f"{winldd.name} do Playwright nao encontrado. Corre: python -m playwright install winldd")
+    shutil.copytree(winldd, OUT / "browsers" / winldd.name)
 
     print("5/5 Leia-me e icone")
     (OUT / "LEIA-ME.txt").write_text(README, encoding="utf-8")

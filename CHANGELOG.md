@@ -16,6 +16,9 @@ Bola "Tática" no pré-jogo: as instruções e as barras de cada formação, com
 - **O desarme** passa do passo "Onze" para a bola "Tática".
 - **"Claramente mais forte" passa de 5 % para 12 %** (medido em 572 jogos: até 12 % o mais forte ainda perde 1 em 4). Conta para o 4-3-3 A fora, para o fora-de-jogo e para o "só o 5-2-3".
 
+### Corrigido
+- **Vídeos da loja e de dinheiro parados no Windows:** 30 dias depois da instalação do Firefox, o Playwright volta a verificar as dependências do Windows com uma ferramenta (`winldd`) que o pacote não trazia, e todos os arranques do Firefox falhavam ("Executable doesn't exist at …winldd-1007\PrintDeps.exe"). O pacote passa a trazê-la.
+
 ### Documentação
 - `THEORY.md` §1, §2 e §21; D-073 e D-074; `DISCOVERY.md` §3 (códigos da tática, medição dos 12 %).
 
