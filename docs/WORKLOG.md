@@ -2,6 +2,28 @@
 
 Entradas mais recentes primeiro. Cada sessão: o que se fez · o que ficou por fazer · próximo passo.
 
+## 2026-10-28 — Táticas ponto 6: instruções e barras como o autor; bola "Tática" (D-073)
+
+- **Dono:** amigáveis ficam como estão (desarme e estilo do árbitro/adversário do amigável: não). Automatizar a tática: não. Em vez disso, uma bola "Tática" verde/amarela no cartão, com sugestão de barras e instruções; o onze fica como está.
+- **Debatido e decidido:** a bola julga a formação posta (o "Onze" já diz se a formação está certa); o desarme passa para ela; fica a seguir ao "Onze". Teoria: "tudo como o autor, desde que não contradiga" → `THEORY.md` §2 reescrito (7 formações), §21 (a bola), D-073.
+- **Leitura já possível:** `teamtactics` dá tudo; `style` = desarme (já mapeado), `mentality`/`pressing`/`tempo` = barras, `marking`/`offsideTrap` sim/não. `overallMatchTactics`, `defense`, `midfield`, `attack`: não estão no código do site; mapeados com o dono (mais abaixo).
+- **Construído (dono: "mapeamento e construção já"):** `theory/tactics.instructions` (o §2 em código; sai o `build_setup`/`TacticSetup` antigo), `theory/lineup.tactic_check` (bola "Tática": avisos por campo, notas "Se mudares para X:" com a formação que o "Onze" pede, cinzenta sem regra) e o desarme saiu do `tactic_warnings`; `game/clubinfo` (passo `TACTIC_STEP` a seguir ao "Onze"; avançados do adversário depois da análise); `gui/window.tip_tactic` (tabela "Campo · Está › Devia ser"); `i18n`. "Claramente mais forte" do fora de jogo do 4-3-3 = o corte do §1 (5 %, depois 12 %, D-074). 468 testes; pyflakes sem avisos novos. Ensaio com o quadro real (só GETs): os 4 clubes amarelos, como devia (táticas ainda pelo §2 antigo; o SV Ried tem 4-3-3 B com as barras das 5 defesas). Hover ensaiado offscreen em PT e EN.
+- **Códigos verificados com o dono:** print do Real Betis (1 = Jogo de passe e o resto como deduzido) e o SV Ried mudado carrossel a carrossel com GETs a seguir (`DISCOVERY.md` §3). Defesas: 2 = Apoiar meio-campo, 1 = Defesas atacantes (o palpite tinha 1 = apoiar). O hover passa a usar os nomes do jogo; o campo "Plano de jogo" chama-se "Estilo de jogo", como no jogo. **O dono tem de repor a tática do SV Ried** (ficou com remate à vista, avançados a ajudar a defender, médios a pressionar, defesas a apoiar o meio-campo).
+- **Erro meu, corrigido:** os scripts que editaram os ficheiros gravaram-nos com fins de linha CRLF; repostos em LF como o resto do repo.
+- **"Claramente mais forte" medido (pedido do dono):** 572 jogos (`DISCOVERY.md` §3): até 5 % é moeda ao ar, 5–12 % o mais forte ainda perde ~25 %, a partir de 12 % perde 12 % (≥ 18 %: 10 %). Dono: "Ok, pode ser" → **D-074**, `CLEARLY_STRONGER` = 0,12, `THEORY.md` §1 e §2, testes ajustados (8–10 % já não é "claramente"). 468 testes.
+- **Pontos que faltam das Táticas** (pedido do dono: "a profundidade do resto"): a tabela de 25 de 2026-10-26 não ficou guardada; refeita e guardada em `OSMPro/_kb/sintese/taticas.md` ("Revisão com o dono", pontos 7–20, com o estado de cada um).
+- **Versão 0.14.5 (pedido do dono):** bola "Tática", D-073, D-074. `pyproject.toml`, `__init__`, `CHANGELOG.md`, `README.md` (estado), `dist/release-notes-v0.14.5.md`; 468 testes; `build_portable.py --zip --installer` → `dist/windows/` 0.14.5 (553 / 206 / 148 MB), versão confirmada no portátil; os da 0.14.4 apagados. O bot deste PC corre do instalado (`AppData\Local\OSMbot`): o dono corre o instalador. Commit e `gh release create v0.14.5` entregues ao dono (só Windows; Mac com `gh release upload` no Mac).
+- **Falta:** o dono instalar a 0.14.5 (e refazer o dist no Mac). **Próximo passo:** Táticas ponto 12 (print dos "?" da tática), depois 16 e 17 (capitão ≥ 30 e bolas paradas, só leitura nos 4 clubes).
+
+## 2026-10-27 (cont. 4) — Ponto da situação: sínteses e registos (só leitura)
+
+- **Sínteses OSMPro:** 349 de 349 transcritos analisados; revisão com o dono (D-065): Dicas fechada, Táticas pontos 1–5 de 25; próximo: ponto 6. Por rever: as outras 10 categorias. Modo Carreira (~830) por transcrever, por decidir.
+- **Registos 25–27/10:** previsão Galatasaray fechada (errada, sem erro); nova (Hearts 1-1 Rangers). Obras cobradas em todas (481 k–1,01 M). **Relatórios:** 62 jogos únicos (50 amigáveis); "desarme mais duro" em 33 de 50 amigáveis e 1 de 12 oficiais; "estilo defensivo" só no SV Ried, em amigáveis. Às 23:35 o Firefox não arrancou para os vídeos da loja (o Playwright pede o `winldd`); às 22:04–22:40 funcionou com a mesma instalação: a ver se repete.
+
+## 2026-10-27 (cont. 3) — `dist/windows` 0.14.4 (DESKTOP-KAM70RR)
+
+- **Pull 0.14.4 e `dist` (pedido do dono):** nenhum OSMbot a correr; 457 testes; `build_portable.py --zip --installer` → `dist/windows/` 0.14.4 (553 / 206 / 148 MB), versão confirmada no portátil; os da 0.14.2 apagados (só a última). O dono corre o instalador ou substitui a pasta.
+
 ## 2026-10-27 (cont. 2) — Banco a poupar e idade do onze como nota
 
 - **Dono (Real Betis):** Cubarsí 122 (82 %) no banco para não chegar amarelo ao jogo importante, e o passo "Banco" amarelo com "Cubarsí 122 no banco, Konsa 98 a jogar": a regra do banco não sabia do modo poupar (só a da formação). Debatido antes de mexer. Decisão: em modo poupar, um suplente com 80–83 % não avisa e fica a nota "Cubarsí a poupar para o X (82 % → 78 %)"; com 84 % ou mais avisa como antes.

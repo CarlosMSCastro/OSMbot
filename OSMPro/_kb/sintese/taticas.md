@@ -86,6 +86,8 @@ Categoria "Táticas" do canal André Santana (OSM PRO), lida **do mais antigo ao
 | **3-5-2** | casa: passe; fora: remate à vista | atrás · neutros/pressionar (casa) ou ajudar a defesa (fora) · atacar / apoiar o meio | casa alta sem exageros (~62); fora 30–50 | casa 40–65; fora ≤ 39 | 50–80 | fora de jogo **sim** (casa); individual só contra 4-3-3/3-4-3 | **o MC/MCO do meio** (o melhor); centrais com ataque | km3SwT_vy7Y, 4Y1z2_-fsws |
 | **3-2-5** | bola longa | atrás · ajudar a defesa · atacar | alta / 40 | < 30 | 70–80 | só para eventos | — | zHALwHghdDw |
 
+*Revisto com o dono a 2026-10-28 (D-073, ponto 6):* "tudo como o autor, desde que não contradiga" → `THEORY.md` §2 com as 7 formações do §1; ficam de fora o desarme pela pressão, as barras do 4-3-3 acima de 80 e o 4-3-3 fora contra iguais.
+
 ## 4. Instruções por setor (regras gerais)
 
 - ⭐📏 **Defesa atrás, sempre** ("é usado em todo o meta do OSM competitivo"). → 12 vídeos *Bate (§2).*
@@ -138,6 +140,35 @@ Categoria "Táticas" do canal André Santana (OSM PRO), lida **do mais antigo ao
 - **Eventos-desafio** (ganhar 3 seguidos com um clube e uma formação dados): criar uma liga privada contra a CPU. → zHALwHghdDw
 - **Ligas com limite de valor do plantel** e o **campeonato nacional sem evolução do plantel** (≈ −3 pontos por milhão a mais). → 7g4rdnfBd8w, gYsKxMAn1O8
 - 🕰️ **História:** os portugueses dominavam com remate à vista (4-5-1, 4-2-3-1); os italianos bateram-nos com o 4-4-2 de passe (~2010). → 3manfm33wDA, MNH5-g6Mnxk
+
+## Revisão com o dono (D-065): pontos
+
+A tabela de 25 pontos de 2026-10-26 não ficou guardada; refeita a 2026-10-28 a partir desta síntese (os pontos 7+ são a numeração nova).
+
+| # | Ponto | Estado |
+|---|---|---|
+| 1 | Princípios gerais (§1) | Fechado 2026-10-26: julgar pelos remates (`THEORY.md` §23) |
+| 2 | Golear sem subir as barras | Fechado: nada |
+| 3 | 4-3-3 fora contra iguais | Fechado: já resolvido (4-3-3 B fora) |
+| 4 | Rodar formações para descansar | Fechado: "não é bem aplicável" |
+| 5 | Tier list 2025 | Fechado: medido, nada a mudar |
+| 6 | Barras e instruções por formação (§3–§5) | Fechado 2026-10-28: D-073 (§2 "como o autor"), bola "Tática"; D-074 (claramente mais forte = 12 %) |
+| 7 | 4-3-3 contra contra-ataques; contra-ataque contra contra-ataque = 0-0 | Por fechar: só informação (dá para medir) |
+| 8 | Não treinar quem acaba depois do jogo | Fechado: o treino já não tira do onze (dono) |
+| 9 | Item de troca de posição | Fechado: já no `THEORY.md` §7.9 |
+| 10 | §9 Outros (eventos-desafio, ligas com limite, história) | Por fechar: nada a fazer |
+| 11 | Pressão do 4-3-3 a 81 | Fechado: D-073 (banda 60–80) |
+| 12 | Textos de ajuda do jogo ("?" da tática) | **Por fazer:** print do dono; "não ritmo acelerado contra melhor" choca com a temporização 60–80 das 5 defesas |
+| 13 | Desarme pela pressão | Por fechar: fora no D-073 (choca com §3); proposta: sem mudanças |
+| 14 | Margem de +4–5 pontos para jogar fora de posição | Por decidir: aviso das "Posições" (§21) |
+| 15 | Laterais ≥ 35–40 de ataque, centrais ≥ 15–20 | Por decidir: nota no "Onze" ou critério de compra |
+| 16 | Capitão ≥ 30 anos | **Por medir:** nos 4 clubes, se o "mais velho" fica abaixo de 30 (mexe no D-042) |
+| 17 | Ninguém com as 3 bolas paradas | **Por medir:** nos 4 clubes, se a regra do §4 dá as 3 ao mesmo |
+| 18 | Penáltis num médio só com +8–10 pontos | Por decidir: afinação do §4 |
+| 19 | Centrais: o melhor no meio, o 2.º do lado do lateral mais fraco | Por decidir: só aviso; o onze é do dono |
+| 20 | Atacar pelo lado fraco do adversário | Não dá: o relatório do analista dá 404 pela API |
+
+Ordem proposta ao dono: 12 → 16 e 17 → 14 e 15 → fechar os restantes de uma vez.
 
 ## Contradições e dúvidas abertas
 

@@ -1,16 +1,13 @@
 import pytest
 
 from osmbot.theory.tactics import (
-    ForwardsRole,
     Formation,
-    MidfieldRole,
-    PlayStyle,
     Referee,
-    Slider,
     Tackling,
-    build_setup,
     choose_formation,
     choose_tackling,
+    defensive,
+    instructions,
 )
 
 
@@ -36,45 +33,40 @@ def test_negative_margin_rejected():
         choose_formation(80, 80, stronger_pct=-1)
 
 
-@pytest.mark.parametrize("formation", [Formation.F433_A, Formation.F433_B])
-def test_433_setup(formation):
-    s = build_setup(formation)
-    assert s.offside_trap is False
-    assert s.zonal_marking is False
-    assert s.play_style is PlayStyle.PASSING
-    assert (s.pressure.value, s.style.value, s.timing.value) == (75, 75, 75)
-    assert s.forwards is ForwardsRole.SUPPORT_MIDFIELD
-    assert s.midfield is MidfieldRole.HOLD_POSITIONS
+@pytest.mark.parametrize("formation, detail", [(433, "A"), (433, "B"), (532, None), (523, "A"), (523, "B"),
+                                              (541, "A"), (541, "B"), (442, "B"), (343, "A"), (352, "A")])
+def test_every_formation_of_section_1_has_a_rule_with_its_aim_inside_the_band(formation, detail):
+    rule = instructions(formation, detail)
+    for band in (rule.pressing, rule.mentality, rule.tempo):
+        assert band.aim in band and band.high - band.low == 20  # the owner's bands are 20 wide (THEORY.md 2)
 
 
-def test_433_can_play_wings():
-    assert build_setup(Formation.F433_A, prefer_wings=True).play_style is PlayStyle.WINGS
+def test_formations_with_no_rule():
+    assert instructions(451, "A") is None and instructions(442, "A") is None
 
 
-def test_532_setup():
-    s = build_setup(Formation.F532, prefer_wings=True)  # wings flag is irrelevant here
-    assert s.offside_trap is False
-    assert s.zonal_marking is True
-    assert s.play_style is PlayStyle.COUNTER_ATTACK
-    assert s.pressure.value == 30
-    assert s.timing.value == 75
-    assert s.forwards is ForwardsRole.ATTACK_ONLY
-    assert s.midfield is MidfieldRole.HELP_DEFENCE
+def test_the_433_as_the_author():  # D-073
+    rule = instructions(433, "A")
+    assert rule.attack == {2} and rule.midfield == {0} and rule.offside == {True, False} and rule.plan == {1, 2}
+    assert instructions(433, "A", clearly_stronger=True).offside == {True}
+    assert instructions(433, "A", forwards=1).midfield == {1}
+    assert instructions(433, "A", defensive_forwards=True).attack == {1, 2}
 
 
-@pytest.mark.parametrize("formation", list(Formation))
-def test_default_sliders_sit_inside_the_owners_bands(formation):
-    s = build_setup(formation)
-    if formation is Formation.F532:
-        assert (s.pressure.low, s.pressure.high) == (20, 40)
-    else:
-        assert (s.pressure.low, s.pressure.high) == (60, 80)
-    assert (s.timing.low, s.timing.high) == (60, 80)
+def test_the_5_defenders_style_follows_the_strength():
+    assert (instructions(532, None).mentality.low, instructions(532, None).mentality.high) == (20, 40)
+    assert (instructions(523, "A", clearly_weaker=True).mentality.aim) == 15
+    assert instructions(523, "B").attack == {1} and instructions(541, "B").plan == {4}
 
 
-def test_slider_rejects_value_outside_band():
-    with pytest.raises(ValueError):
-        Slider(85, 60, 80)
+def test_the_343_marks_man_to_man_against_3_forwards():
+    assert instructions(343, "B").marking == {False} and instructions(343, "B", forwards=3).marking == {True}
+
+
+def test_defensive_forwards():
+    assert not defensive([])
+    assert defensive([{"specificPosition": 8, "statDef": 40}, {"specificPosition": 4, "statDef": 20}])
+    assert not defensive([{"specificPosition": 8, "statDef": 39}, {"specificPosition": 4, "statDef": 50}])
 
 
 @pytest.mark.parametrize(

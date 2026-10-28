@@ -4,6 +4,21 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-PT/1.1.0/); 
 
 Este ficheiro é o **histórico de versões, para quem lê o repo**. O diário interno de cada sessão de trabalho está em [`docs/WORKLOG.md`](docs/WORKLOG.md).
 
+## [0.14.5] — 2026-10-28
+
+Bola "Tática" no pré-jogo: as instruções e as barras de cada formação, como o autor do OSM PRO; e "claramente mais forte" medido nos registos.
+
+### Adicionado
+- **Bola "Tática"** a seguir ao "Onze": compara o estilo de jogo, as instruções dos avançados, médios e defesas, a marcação, o fora-de-jogo, o desarme e as 3 barras com a regra da formação que está posta (4-3-3, 5-3-2, 5-2-3, 5-4-1, 4-4-2 B, 3-4-3, 3-5-2). Verde se está tudo certo; amarela com uma tabela ao passar o rato ("Campo · Está › Devia ser", com os nomes do jogo); cinzenta numa formação sem regra. Se o "Onze" pedir outra formação, o hover diz também o que essa levaria ("Se mudares para 5-2-3: …"). Só avisa: nunca mexe na tática.
+
+### Alterado
+- **Instruções e barras como o autor:** no 4-3-3, avançados a atacar apenas (apoiar o meio-campo também serve com avançados que defendem bem), médios a ajudar a defesa (manter posições contra um adversário com um só avançado, depois da análise) e fora-de-jogo quando és claramente mais forte; nas 5 defesas, estilo 20–40, ou 0–20 contra um adversário claramente mais forte.
+- **O desarme** passa do passo "Onze" para a bola "Tática".
+- **"Claramente mais forte" passa de 5 % para 12 %** (medido em 572 jogos: até 12 % o mais forte ainda perde 1 em 4). Conta para o 4-3-3 A fora, para o fora-de-jogo e para o "só o 5-2-3".
+
+### Documentação
+- `THEORY.md` §1, §2 e §21; D-073 e D-074; `DISCOVERY.md` §3 (códigos da tática, medição dos 12 %).
+
 ## [0.14.4] — 2026-10-27
 
 Banco sem falsos avisos ao poupar para um jogo importante, e hovers do pré-jogo mais limpos.

@@ -14,7 +14,7 @@ from osmbot.board.info import (cup_phase, eleven_seen, league_summary, next_matc
 from osmbot.game import market as market_watch, sales
 from osmbot.game.transfers import saved_transfers
 from osmbot.game.specialists import check
-from osmbot.theory.lineup import age_warnings, bench_notes, bench_warnings, empty_places, places, position_warnings, tactic_notes, tactic_warnings
+from osmbot.theory.lineup import age_warnings, bench_notes, bench_warnings, empty_places, places, position_warnings, tactic_check, tactic_notes, tactic_warnings
 from osmbot.medical.policy import open_cases
 from osmbot.prematch.policy import friendlies_played
 from osmbot.theory.fitness import rest_warnings
@@ -27,7 +27,8 @@ SPECIALISTS_STEP = 4  # matchpreparation step "Select specialists"
 RULE = "fora da regra"  # a step the game ticks but the owner's rule does not
 VALUES_FOR = 3600.0
 BENCH_STEP, ELEVEN_STEP, POSITIONS_STEP = 1, 0, 2
-CHECKLIST = [(7, "Amigável"), (5, "Análise"), (0, "Onze"), (2, "Posições"), (3, "Em forma"), (1, "Banco"),
+TACTIC_STEP = "tactic"  # not a step of the game: the owner's rule for the tactics (D-073)
+CHECKLIST = [(7, "Amigável"), (5, "Análise"), (0, "Onze"), (TACTIC_STEP, "Tática"), (2, "Posições"), (3, "Em forma"), (1, "Banco"),
              (4, "Especialistas"), (6, "4 treinos")]  # matchpreparation step types, in the card's order
 BOOSTS = [(8, "secret", "Treino secreto"), (9, "camp", "Estágio")]  # matchpreparation steps bought with boss coins: shown under the checklist
 ANALYSIS_STEP = 5
@@ -217,11 +218,13 @@ def club_extra(client, team: dict, base: str, players: list[dict], slot, market:
         rival = upcoming["opponent_id"]  # analysis an estimate, read again as soon as it is done (owner, 2026-10-25)
         upcoming["value"] = squad_value(values, rival)
 
-        def rival_strength() -> tuple[int | None, bool]:
+        def rival_strength() -> tuple[int | None, bool, int | None]:
             squad_of = _list(client, f"{league}/teams/{rival}/players")
-            return opponent_rating(squad_of, GUESS_FORMATION), not eleven_seen(squad_of)
+            seen = eleven_seen(squad_of)  # his forwards, once the analysis shows his eleven (THEORY.md 2)
+            forwards = sum(1 for p in squad_of if 1 <= (p.get("lineup") or 0) <= 11 and p.get("position") == 1) if seen else None
+            return opponent_rating(squad_of, GUESS_FORMATION), not seen, forwards
 
-        upcoming["strength"], upcoming["estimate"] = _cached(
+        upcoming["strength"], upcoming["estimate"], upcoming["forwards"] = _cached(
             ("strength", league, rival, week, bool(done.get(ANALYSIS_STEP))), FIXTURES_FOR, rival_strength)
     referees = _cached(("referees", league), FIXTURES_FOR, lambda: _list(client, f"{league}/referees"))
     strictness = next((r.get("strictness") for r in referees if upcoming and r["id"] == upcoming.get("referee_id")), None)
@@ -243,13 +246,16 @@ def club_extra(client, team: dict, base: str, players: list[dict], slot, market:
     status, current = got[6]  # the game ticks any 4 specialists; yellow when they are not the owner's rule (D-042)
     why = {SPECIALISTS_STEP: check(players, current if status == 200 and isinstance(current, dict) else None),
            BENCH_STEP: bench_warnings(players, spare),  # THEORY.md section 21: yellow with the reason on hover
-           ELEVEN_STEP: empty_places(players, tactic) + tactic_warnings(tactic, strictness, mine, theirs, players, away, spare),
+           ELEVEN_STEP: empty_places(players, tactic) + tactic_warnings(tactic, mine, theirs, players, away, spare),
            POSITIONS_STEP: position_warnings(players, tactic)}  # who is out of position, on the hover
+    why[TACTIC_STEP], tactic_tips, known = tactic_check(tactic, strictness, mine, theirs, players, away, spare,
+                                                        (upcoming or {}).get("forwards"))
+    steps = [(step[0], known, step[2]) if kind == TACTIC_STEP else step for (kind, _), step in zip(CHECKLIST, steps)]
     steps = [(name, False, RULE) if why.get(kind) and done_ else (name, done_, extra)
              for (kind, _), (name, done_, extra) in zip(CHECKLIST, steps)]
     reasons = {name: why[kind] for (kind, _), (name, _, _) in zip(CHECKLIST, steps) if why.get(kind)}
     notes = {ELEVEN_STEP: age_warnings(players) + tactic_notes(tactic, players, mine, theirs, away, spare),  # within the
-             BENCH_STEP: bench_notes(players, pair[1]["opponent"] if spare else None)}  # rule: the step keeps its colour
+             BENCH_STEP: bench_notes(players, pair[1]["opponent"] if spare else None), TACTIC_STEP: tactic_tips}  # rule: the step keeps its colour
     for (kind, _), (name, _, _) in zip(CHECKLIST, steps):
         if notes.get(kind):  # after any warning of the same step (the tackling may still be out of the rule)
             reasons[name] = reasons.get(name, []) + notes[kind]

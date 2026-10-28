@@ -769,6 +769,38 @@ def tip_roles(lines: list[str], title: str | None, colour: str) -> str:
     return (TIP_TITLE.format(escape(title)) if title else "") + f"<table cellspacing='0' cellpadding='0'>{''.join(body)}{extra}</table>"
 
 
+_FIELD = "(Estilo de jogo|Defesa|Médios|Avançados|Marcação|Fora de jogo|Pressão|Estilo|Temporização|Desarme)"
+TACTIC_ROW = re.compile(rf"^{_FIELD}: (.+?), devia ser (.+)$")  # theory/lineup.tactic_check
+TACTIC_WANT = re.compile(rf"^{_FIELD}: (.+)$")
+TACTIC_OTHER = re.compile(r"^Se mudares para (.+):$")
+
+
+def tip_tactic(lines: list[str], title: str | None, colour: str) -> str:
+    """The "Tática" step (D-073) as a table, as the specialists': field, what is set in yellow and what the rule wants
+    in green; under a muted header, what the formation the "Onze" step asks for would take; other lines as text."""
+    from html import escape
+
+    line = "1px solid rgba(139, 140, 248, 90)"
+
+    def cell(text: str, style: str, span: int = 1) -> str:
+        return (f"<td colspan='{span}' style='padding:2px 6px; white-space:nowrap; {style}'>"
+                f"{escape(text).replace(' ', '&nbsp;')}</td>")
+
+    body = []
+    for text in lines:
+        if m := TACTIC_ROW.match(text):
+            body.append("<tr>" + cell(tr(m[1]), "color:#c9ccef") + cell(tr(m[2]), f"color:{COLOURS[YELLOW]}; font-weight:600")
+                        + cell("›", f"color:{MUTED}") + cell(tr(m[3]), f"color:{COLOURS[GREEN]}; font-weight:600") + "</tr>")
+        elif m := TACTIC_OTHER.match(text):
+            top = "; padding-top:8px" if body else ""
+            body.append("<tr>" + cell(tr(text), f"color:{MUTED}; font-weight:600; border-bottom:{line}{top}", 4) + "</tr>")
+        elif m := TACTIC_WANT.match(text):
+            body.append("<tr>" + cell(tr(m[1]), "color:#c9ccef") + cell(tr(m[2]), f"color:{COLOURS[GREEN]}", 3) + "</tr>")
+        else:
+            body.append(f"<tr><td colspan='4' style='padding:4px 6px 0 6px; color:{COLOURS[colour]}'>{escape(tr(text))}</td></tr>")
+    return (TIP_TITLE.format(escape(title)) if title else "") + f"<table cellspacing='0' cellpadding='0'>{''.join(body)}</table>"
+
+
 def tip_grid(grid: dict | None, colour: str | None = None) -> str:
     """A table in a hover, as the game's (owner, 2026-10-15): the column names muted over a thin line, the numbers
     right-aligned, the club's own row on a band of the club's ``colour`` (not at full strength), and a footnote under
@@ -1429,6 +1461,8 @@ class ClubCard(QFrame):
                 return tip_swaps(why, title, GREEN if kind == "done" else YELLOW)
             if any(ROLES.match(line) for line in why):  # the specialists: a table too
                 return tip_roles(why, title, GREEN if kind == "done" else YELLOW)
+            if any(TACTIC_ROW.match(line) or TACTIC_OTHER.match(line) for line in why):  # the tactics (D-073)
+                return tip_tactic(why, title, GREEN if kind == "done" else YELLOW)
             return [(None, tr(line), GREEN if kind == "done" else YELLOW) for line in why]
 
         self.prep.show_steps([(kind, tr(name) + (f" {tr(extra)}" if extra else ""), StepIcon.COLOURS[kind],

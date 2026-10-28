@@ -91,7 +91,9 @@ WORDS = {
     "Médico": "Doctor", "Advogado": "Lawyer", "ninguém": "nobody", "pronto": "ready", "a levantar": "to collect",
     "ATA": "FWD", "MED": "MID", "DEF": "DEF", "GR": "GK", "—": "—",
     "Amigável": "Friendly", "Amigáveis": "Friendlies", "Análise": "Analysis", "Onze": "Line-up", "Posições": "Positions", "Em forma": "Fit",
-    "Banco": "Bench", "Especialistas": "Specialists", "4 treinos": "4 trainings",
+    "Banco": "Bench", "Especialistas": "Specialists", "4 treinos": "4 trainings", "Tática": "Tactics",
+    "Estilo de jogo": "Style of play", "Defesa": "Defence", "Médios": "Midfield", "Avançados": "Attack", "Marcação": "Marking",
+    "Fora de jogo": "Offside trap", "Pressão": "Pressing", "Estilo": "Style", "Temporização": "Tempo", "Desarme": "Tackling",
     "Estimativa antes da análise: os melhores dele num 4-3-3": "Estimate before the analysis: his best in a 4-3-3",
     "pré-eliminatória": "preliminary round", "32 avos-de-final": "round of 64", "16 avos-de-final": "round of 32",
     "oitavos-de-final": "round of 16", "quartos-de-final": "quarter-finals", "meias-finais": "semi-finals",
@@ -130,8 +132,6 @@ def _ordinal(number: str) -> str:
 _TACKLE = {"Cuidadoso": "Careful", "Normal": "Normal", "Agressivo": "Aggressive", "Extremo": "Extreme"}
 _REFEREE = {"muito rigoroso": "very strict", "rigoroso": "strict", "normal": "average", "brando": "lenient",
             "muito brando": "very lenient"}
-def _an(word: str) -> str:
-    return ("an " if word[:1] in "aeiou" else "a ") + word
 
 
 _SPECIFIC = {"MO": "CAM", "MC": "CM", "DC": "CB", "PL": "ST", "MDC": "CDM", "GR": "GK", "ME": "LM", "EE": "LW",
@@ -149,6 +149,20 @@ def _missing(text: str) -> str:
                   text).replace(" fora", " out").replace(" a poupar", " resting")
 
 
+# the tactics' options (theory/tactics, D-073) as "Apoiar meio-campo ou atacar apenas": each one, the first capitalised
+_TACTIC = {"bola longa": "long ball", "jogo de passe": "passing game", "jogar pelas alas": "wing play",
+           "contra-ataque": "counter-attack", "remate à vista": "shoot on sight", "ajudar a defender": "help the defence",
+           "ajudar a defesa": "protect the defence", "apoiar meio-campo": "support midfield", "atacar apenas": "attack only",
+           "manter posições": "keep positions", "pressionar na frente": "press high", "defender atrás": "defend deep",
+           "defesas atacantes": "attacking full-backs", "à zona": "zonal", "individual": "man-to-man", "sim": "yes",
+           "não": "no"}
+
+
+def _options(text: str) -> str:
+    return " or ".join(_TACTIC.get(w.lower(), w) for w in text.split(" ou ")).capitalize()
+
+
+_ALT = "|".join(map(re.escape, _TACTIC))
 _ROLE = {"Capitão": "Captain", "Penáltis": "Penalties", "Livres": "Free kicks", "Cantos": "Corners"}
 PATTERNS = [(re.compile(pattern), replace) for pattern, replace in (
     # pre-match warnings (THEORY.md section 21)
@@ -156,9 +170,6 @@ PATTERNS = [(re.compile(pattern), replace) for pattern, replace in (
     (r"^(.+) (\d+) no banco, (.+) (\d+) a jogar$", lambda m: f"{m[1]} {m[2]} on the bench, {m[3]} {m[4]} playing"),
     (r"^(.+) \((\w+|\?)\) a jogar a (\w+)$",
      lambda m: f"{m[1]} ({_SPECIFIC.get(m[2], m[2])}) playing as {_SPECIFIC.get(m[3], m[3])}"),
-    (r"^Desarme (\w+) com árbitro (.+): devia ser (.+)$",
-     lambda m: f"Tackling {_TACKLE.get(m[1], m[1])} with {_an(_REFEREE.get(m[2], m[2]))} referee: should be "
-               + " or ".join(_TACKLE.get(w, w) for w in m[3].split(" ou "))),
     (r"^Formação (.+?): devia ser de 5 defesas \(adversário mais forte\)$",
      lambda m: f"Formation {m[1]}: should have 5 defenders (stronger opponent)"),
     (r"^Formação (.+?): devia ser 5-2-3 \(adversário claramente mais forte\)$",
@@ -174,6 +185,11 @@ PATTERNS = [(re.compile(pattern), replace) for pattern, replace in (
      lambda m: f"Formation {m[1]} {_missing(m[2])}: {m[3].replace(' ou ', ' or ')} will do"),
     (r"^(Capitão|Penáltis|Livres|Cantos): (.+), pela regra (.+)$",
      lambda m: f"{_ROLE[m[1]]}: {m[2]}, your rule says {m[3]}"),
+    (rf"(?i:(?:{_ALT})(?: ou (?:{_ALT}))*)", lambda m: _options(m[0])),  # the "Tática" step (D-073)
+    (r"^(.+) \(árbitro (.+)\)$",  # the tackling the referee wants
+     lambda m: " or ".join(_TACKLE.get(w, w) for w in m[1].split(" ou ")) + f" ({_REFEREE.get(m[2], m[2])} referee)"),
+    (r"^Se mudares para (.+):$", lambda m: f"If you switch to {m[1]}:"),
+    (r"^Sem regra para o (.+)$", lambda m: f"No rule for the {m[1]}"),
     # card
     (r"(\d+)\.º Campeonato", lambda m: f"{ordinal(m[1])} in the league"),
     (r"ativo até (\d\d:\d\d)", lambda m: f"active until {m[1]}"),

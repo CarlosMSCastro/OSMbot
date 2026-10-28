@@ -15,26 +15,6 @@ class Formation(str, Enum):
     F532 = "5-3-2"
 
 
-class PlayStyle(str, Enum):
-    PASSING = "passing"
-    WINGS = "wings"
-    COUNTER_ATTACK = "counter-attack"
-
-
-class ForwardsRole(str, Enum):
-    SUPPORT_MIDFIELD = "support midfield"
-    ATTACK_ONLY = "attack only"
-
-
-class MidfieldRole(str, Enum):
-    HOLD_POSITIONS = "hold positions"
-    HELP_DEFENCE = "help defence"
-
-
-class DefenceRole(str, Enum):
-    DEFEND_DEEP = "defend deep"
-
-
 class Referee(str, Enum):
     VERY_STRICT = "very strict"
     STRICT = "strict"
@@ -48,35 +28,6 @@ class Tackling(str, Enum):
     NORMAL = "normal"
     AGGRESSIVE = "aggressive"
     EXTREME = "extreme"
-
-
-@dataclass(frozen=True)
-class Slider:
-    """A 0-100 slider that must stay inside ``[low, high]``."""
-
-    value: int
-    low: int
-    high: int
-
-    def __post_init__(self) -> None:
-        if not self.low <= self.value <= self.high:
-            raise ValueError(
-                f"slider value {self.value} outside its band [{self.low}, {self.high}]"
-            )
-
-
-@dataclass(frozen=True)
-class TacticSetup:
-    formation: Formation
-    offside_trap: bool
-    zonal_marking: bool
-    play_style: PlayStyle
-    pressure: Slider
-    style: Slider
-    timing: Slider
-    forwards: ForwardsRole
-    midfield: MidfieldRole
-    defence: DefenceRole
 
 
 HOME_PCT = 5  # [S] home advantage measured in 272 matches (THEORY.md section 1); the pitch's own share is unknown
@@ -105,37 +56,94 @@ def choose_formation(my_rating: float, opp_rating: float, *, stronger_pct: float
     return Formation.F433_A
 
 
-def build_setup(formation: Formation, *, prefer_wings: bool = False) -> TacticSetup:
-    """Instructions and sliders for a formation.
+# The tactics' codes as the game keeps them (`teamtactics`), with the game's own words: read in the owner's clubs
+# while he turned each carousel (2026-10-28, DISCOVERY.md 3); the carousels follow the codes' order
+PLANS = {0: "Bola longa", 1: "Jogo de passe", 2: "Jogar pelas alas", 3: "Contra-ataque", 4: "Remate à vista"}
+ATTACK = {0: "Ajudar a defender", 1: "Apoiar meio-campo", 2: "Atacar apenas"}  # forwards
+MIDFIELD = {0: "Ajudar a defesa", 1: "Manter posições", 2: "Pressionar na frente"}  # midfielders
+DEFENSE = {0: "Defender atrás", 1: "Defesas atacantes", 2: "Apoiar meio-campo"}  # defenders
+PASSING, WINGS, COUNTER, SHOOT = 1, 2, 3, 4
+SUPPORT, ATTACK_ONLY = 1, 2
+HELP_DEFENCE, NEUTRAL = 0, 1
+DEEP = 0
 
-    ``prefer_wings`` only affects 4-3-3 (owner: wingers clearly better than the
-    striker -> play down the wings, otherwise it is indifferent).
-    """
-    if formation is Formation.F532:
-        return TacticSetup(
-            formation=formation,
-            offside_trap=False,
-            zonal_marking=True,
-            play_style=PlayStyle.COUNTER_ATTACK,
-            pressure=Slider(30, 20, 40),
-            style=Slider(30, 20, 40),  # "defensive" band; exact value is our assumption
-            timing=Slider(75, 60, 80),
-            forwards=ForwardsRole.ATTACK_ONLY,
-            midfield=MidfieldRole.HELP_DEFENCE,
-            defence=DefenceRole.DEFEND_DEEP,
-        )
-    return TacticSetup(
-        formation=formation,
-        offside_trap=False,
-        zonal_marking=False,
-        play_style=PlayStyle.WINGS if prefer_wings else PlayStyle.PASSING,
-        pressure=Slider(75, 60, 80),
-        style=Slider(75, 60, 80),
-        timing=Slider(75, 60, 80),
-        forwards=ForwardsRole.SUPPORT_MIDFIELD,
-        midfield=MidfieldRole.HOLD_POSITIONS,
-        defence=DefenceRole.DEFEND_DEEP,
-    )
+
+@dataclass(frozen=True)
+class Band:
+    """A slider's band (THEORY.md 2: never out of it) and the value the owner aims at inside it."""
+
+    low: int
+    high: int
+    aim: int
+
+    def __contains__(self, value: int) -> bool:
+        return self.low <= value <= self.high
+
+
+@dataclass(frozen=True)
+class Instructions:
+    """What THEORY.md section 2 takes for a formation: each field the codes that are right, the sliders their band."""
+
+    plan: frozenset[int]
+    defense: frozenset[int]
+    midfield: frozenset[int]
+    attack: frozenset[int]
+    marking: frozenset[bool]  # True = man-to-man, False = zonal (the game's `marking`)
+    offside: frozenset[bool]
+    pressing: Band
+    mentality: Band  # the slider the game calls style
+    tempo: Band
+
+
+ONE_FORWARD = 1  # [S] his eleven with one forward (4-5-1, 4-2-3-1, 5-4-1): the author's "neutral against the 4-5-1"
+DEFENSIVE_FORWARD = {8: 40, 11: 40, 4: 20}  # wingers ~40 of defence, a striker >= 20 (OSMPro, 10 videos)
+
+
+def instructions(formation: int, detail: str | None, *, away: bool = False, clearly_stronger: bool = False,
+                 clearly_weaker: bool = False, forwards: int | None = None,
+                 defensive_forwards: bool = False) -> Instructions | None:
+    """The instructions and sliders of THEORY.md section 2 (owner, 2026-10-28, D-073: "tudo como o autor"), or None
+    for a formation it has no rule for. ``clearly_stronger``/``clearly_weaker``: more than 12 % apart in match
+    strength (section 1); ``forwards``: how many his eleven has, once the analysis shows it (None before);
+    ``defensive_forwards``: all of ours defend well enough to support the midfield."""
+    def of(*codes):
+        return frozenset(codes)
+
+    attack = of(ATTACK_ONLY, SUPPORT) if defensive_forwards else of(ATTACK_ONLY)
+    midfield = of(NEUTRAL) if forwards == ONE_FORWARD else of(HELP_DEFENCE)  # against the 4-5-1: neutral
+    high = Band(60, 80, 75)
+    five = dict(defense=of(DEEP), midfield=of(HELP_DEFENCE), marking=of(False), offside=of(False),
+                mentality=Band(0, 20, 15) if clearly_weaker else Band(20, 40, 35), tempo=Band(60, 80, 75))
+    if formation == 433:
+        return Instructions(of(PASSING, WINGS), of(DEEP), midfield, attack, of(False),
+                            of(True) if clearly_stronger else of(True, False), high, high, high)
+    if formation == 532:
+        return Instructions(of(COUNTER), attack=of(ATTACK_ONLY), pressing=Band(20, 40, 30), **five)
+    if formation == 523:
+        return Instructions(of(COUNTER), attack=of(SUPPORT) if detail == "B" else of(ATTACK_ONLY),
+                            pressing=Band(20, 40, 35), **five)
+    if formation == 541:
+        return Instructions(of(SHOOT) if detail == "B" else of(COUNTER), attack=attack, pressing=Band(20, 40, 30),
+                            **{**five, "midfield": of(NEUTRAL) if detail == "B" else of(HELP_DEFENCE)})
+    if formation == 442 and detail == "B":
+        return Instructions(of(PASSING), of(DEEP), of(NEUTRAL), of(SUPPORT), of(False), of(False),
+                            Band(40, 60, 58), Band(60, 80, 65), Band(60, 80, 70))
+    if formation == 343:
+        return Instructions(of(WINGS), of(DEEP), midfield, attack, of(True) if forwards == 3 else of(False),
+                            of(True), high, high, high)
+    if formation == 352 and away:  # [S] the author only says offside at home
+        return Instructions(of(SHOOT), of(DEEP), of(HELP_DEFENCE), of(ATTACK_ONLY, SUPPORT), of(False),
+                            of(True, False), Band(20, 40, 35), Band(20, 40, 30), Band(60, 80, 70))
+    if formation == 352:
+        return Instructions(of(PASSING), of(DEEP), of(NEUTRAL), of(ATTACK_ONLY, SUPPORT), of(False), of(True),
+                            Band(60, 80, 62), Band(40, 60, 55), Band(60, 80, 70))
+    return None
+
+
+def defensive(starters: list[dict]) -> bool:
+    """All our forwards defend enough to support the midfield (``DEFENSIVE_FORWARD``); False with none."""
+    forwards = [p for p in starters if p.get("specificPosition") in DEFENSIVE_FORWARD]
+    return bool(forwards) and all((p.get("statDef") or 0) >= DEFENSIVE_FORWARD[p["specificPosition"]] for p in forwards)
 
 
 def choose_tackling(referee: Referee, *, risk_extreme: bool = False) -> Tackling:

@@ -11,14 +11,14 @@
 | Formação | Meio-campo | Quando |
 |---|---|---|
 | **4-3-3 A** | Leva **MCO** (médio centro ofensivo) | **Sempre**, exceto contra um adversário claramente mais forte. Com os melhores planteis da liga, é quase sempre |
-| **5 defesas** (5-3-2, 5-2-3, 5-4-1) | O dono escolhe a que serve aos jogadores | Adversário **mais forte**, por qualquer margem (dono, 2026-10-14; antes: mais de 5 %). **Claramente mais forte** (> 5 %, [S] o mesmo corte): **só o 5-2-3**, em casa ou fora; nenhum 4-3-3 (dono, 2026-10-26, D-070) |
+| **5 defesas** (5-3-2, 5-2-3, 5-4-1) | O dono escolhe a que serve aos jogadores | Adversário **mais forte**, por qualquer margem (dono, 2026-10-14; antes: mais de 5 %). **Claramente mais forte** (> 12 %, D-074; antes [S] 5 %): **só o 5-2-3**, em casa ou fora; nenhum 4-3-3 (dono, 2026-10-26, D-070) |
 | 4-3-3 B | Leva **MCD** (médio centro defensivo) | **Fora de casa é a regra** em vez do A (dono, 2026-10-25); o A também serve fora quando o dono é **claramente mais forte**. Em casa não é a regra, mas **também serve** (verde, com nota; dono, 2026-10-26) |
 
 **Porquê (os números, `WORKLOG.md` 2026-10-13):** pontos por jogo com a mesma diferença de força e o mesmo local: o 4-3-3 A foi o melhor em casa e fora, sendo mais forte (2,78 casa / 2,25 fora) ou parecido (2,41 / 1,33). O 4-3-3 B fora sendo mais forte deu 2,75, mas em 12 jogos quase todos de um clube do dono muito mais forte: não chega para concluir. O 5-3-2 sendo mais fraco: 3 vitórias em 3 jogos, só jogos do dono (os outros clubes quase não o usam). A força pesa muito mais do que a formação; e o banco também (um suplente fraco a entrar por lesão custou um empate).
 
 Implementado em `choose_formation(my_rating, opp_rating, *, stronger_pct=0)`: adversário mais forte → 5 defesas; igual ou mais fraco → 4-3-3 A. O aviso do pré-jogo aceita qualquer formação de 5 defesas.
 
-**4-3-3 B fora de casa (dono, 2026-10-25; OSMPro Dicas §9):** fora de casa (não em campo neutro), quando o adversário não é mais forte, a regra é o **4-3-3 B**. O 4-3-3 A fica amarelo ("devia ser 4-3-3 B (fora de casa)"), exceto quando o dono é **claramente mais forte**: aí os dois estão certos, e o A mostra uma nota ao passar o rato ("4-3-3 A aceite: fora, mas claramente mais forte (+N %)"). Se a leitura da força falhar (raro: desde 2026-10-25 há sempre a estimativa), pede o B, como em casa pede o A. Contra um adversário mais forte continuam as 5 defesas; sem extremos em forma continua o 4-4-2 B. **[S] "Claramente mais forte" = mais de 5 %** de força (com bónus e casa, `match_strength`), o mesmo corte da medição. **Porquê** (`DISCOVERY.md` §3, 516 jogos de todos os clubes): fora, o 4-3-3 B deu 2,33 pontos por jogo contra 1,08 do A com forças parecidas (9 jogos) e 2,88 contra 2,46 sendo mais forte (24 jogos). **[S]** É pouca amostra nas forças parecidas; voltar a medir com mais jogos.
+**4-3-3 B fora de casa (dono, 2026-10-25; OSMPro Dicas §9):** fora de casa (não em campo neutro), quando o adversário não é mais forte, a regra é o **4-3-3 B**. O 4-3-3 A fica amarelo ("devia ser 4-3-3 B (fora de casa)"), exceto quando o dono é **claramente mais forte**: aí os dois estão certos, e o A mostra uma nota ao passar o rato ("4-3-3 A aceite: fora, mas claramente mais forte (+N %)"). Se a leitura da força falhar (raro: desde 2026-10-25 há sempre a estimativa), pede o B, como em casa pede o A. Contra um adversário mais forte continuam as 5 defesas; sem extremos em forma continua o 4-4-2 B. **"Claramente mais forte" = mais de 12 %** de força (com bónus e casa, `match_strength`; D-074, 2026-10-28, medido em 572 jogos: até 12 % o mais forte ainda perde ~1 em 4, a partir daí 12 %; antes [S] 5 %). **Porquê** (`DISCOVERY.md` §3, 516 jogos de todos os clubes): fora, o 4-3-3 B deu 2,33 pontos por jogo contra 1,08 do A com forças parecidas (9 jogos) e 2,88 contra 2,46 sendo mais forte (24 jogos). **[S]** É pouca amostra nas forças parecidas; voltar a medir com mais jogos.
 
 **Sem extremos em forma → 4-4-2 B (dono, 2026-10-14):** o 4-3-3 A precisa de **1 EE e 1 ED** (posição específica) em forma: condição ≥ 80 % (§16), sem lesão nem castigo, no plantel todo (titulares ou banco). Se faltar um dos lados, o **4-4-2 B** (2 PL, sem extremos) conta como certo em vez do 4-3-3 A; outra formação continua a dar aviso (alargado a 2026-10-27: também 5-3-2 e 3-5-2, ver abaixo). Na janela o passo "Onze" fica **verde** com uma nota ao passar o rato ("4-4-2 B aceite: sem ED em forma (…)"). Só quando a regra da força diz 4-3-3 A; contra um mais forte continuam as 5 defesas.
 
@@ -47,17 +47,27 @@ Implementado em `choose_formation(my_rating, opp_rating, *, stronger_pct=0)`: ad
 
 ## 2. Instruções por formação
 
-| | **4-3-3** (A e B) | **5-3-2** |
-|---|---|---|
-| Fora de jogo (offside trap) | Não | Não |
-| Marcação à zona | **Sim** *(corrigido pelo dono, 2026-10-13; antes estava "Não")* | Sim |
-| Estilo de jogo | Jogo de passe **ou** pelas alas (ver abaixo) | Contra-ataque |
-| Slider Pressão | 60–80, perto de **75** | 20–40, perto de **30** |
-| Slider Estilo | 60–80, perto de **75** | Defensivo: 20–40 **[S: 30]** |
-| Slider Temporização | 60–80, perto de **75** | 60–80, perto de **75** |
-| Avançados | Apoiar o meio-campo | Só atacar |
-| Médios | Manter posições | Ajudar a defesa |
-| Defesa | Defender atrás | Defender atrás |
+*Revisto pelo dono a 2026-10-28 (D-073; OSMPro, Táticas ponto 6): "tudo como o autor, desde que não contradiga funcionalidades que temos atualmente". Fontes: `OSMPro/_kb/sintese/taticas.md` §3–§5. Antes o §2 só tinha o 4-3-3 (avançados a apoiar o meio, médios a manter posições, sem fora de jogo) e o 5-3-2 (estilo [S: 30]).*
+
+**O que não muda por ser "como o autor"** (choca com o que já existe): o desarme continua pelo árbitro (§3; o autor ajusta-o à pressão e no 3-4-3 usa normal); as barras do 4-3-3 ficam em 60–80 (o autor vai até 100); a formação continua a ser a do §1 (D-049, D-070, D-072).
+
+| Formação | Plano de jogo | Defesa | Médios | Avançados | Pressão | Estilo | Temporização | Marcação | Fora de jogo |
+|---|---|---|---|---|---|---|---|---|---|
+| **4-3-3** (A e B) | passe **ou** alas (ver abaixo) | atrás | ajudar a defesa; **neutros** contra 4-5-1 ou remate à vista | atacar; apoiar o meio também serve com avançados defensivos | 60–80 (~75) | 60–80 (~75) | 60–80 (~75) | zona | **sim** sendo claramente mais forte (> 12 %, o corte do §1); senão sim ou não |
+| **5-3-2** | contra-ataque | atrás | ajudar a defesa | atacar | 20–40 (~30) | pela força (ver abaixo) | 60–80 (~75) | zona | não |
+| **5-2-3** | contra-ataque | atrás | ajudar a defesa | atacar (B: apoiar o meio) | 20–40 (~35) | pela força | 60–80 (~75) | zona | não |
+| **5-4-1** A | contra-ataque | atrás | ajudar a defesa | atacar; apoiar o meio com avançado defensivo | 20–40 (~30) | pela força | 60–80 (~75) | zona | não |
+| **5-4-1** B | remate à vista | atrás | neutros | atacar; apoiar o meio com avançado defensivo | 20–40 (~30) | pela força | 60–80 (~75) | zona | não |
+| **4-4-2 B** | passe | atrás | neutros | apoiar o meio | 40–60 (~58) | 60–80 (~65) | 60–80 (~70) | zona | não |
+| **3-4-3** | alas | atrás | ajudar a defesa; neutros contra 4-5-1 ou remate à vista | atacar; apoiar o meio com avançados defensivos | 60–80 (~75) | 60–80 (~75) | 60–80 (~75) | zona; **individual** contra 3 avançados | sim |
+| **3-5-2** casa | passe | atrás | neutros | atacar ou apoiar o meio | 60–80 (~62) | 40–60 (~55) | 60–80 (~70) | zona | sim |
+| **3-5-2** fora | remate à vista | atrás | ajudar a defesa | atacar ou apoiar o meio | 20–40 (~35) | 20–40 (~30) | 60–80 (~70) | zona | sim ou não |
+
+- **Estilo nas 5 defesas, pela força** (autor: ~40 contra um igual, 10–15 contra um muito melhor): adversário mais forte até 12 % → **20–40 (~35)**; claramente mais forte (> 12 %, D-074, onde só o 5-2-3 serve, D-070) → **0–20 (~15)**. Substitui o [S: 30].
+- **Avançados defensivos** (autor, 10 vídeos): extremo com ~40 de defesa, PL com ≥ 20. **[S]** Todos os avançados do onze acima disso.
+- **Médios e marcação pela formação do adversário:** só se sabe depois da análise (onze dele visível; a formação deduz-se pelas posições). Antes da análise vale a primeira opção (ajudar a defesa; zona).
+- **"Claramente mais forte"** é o do §1 (força do jogo, com bónus e casa, > 12 %, D-074).
+- **[S]** 3-5-2 fora: o autor só fala do fora de jogo em casa; servem os dois. 5-4-1 A/B: o autor dá os dois estilos e o bot aceita qualquer 5-4-1 (§1), por isso a regra segue o `formationDetail`.
 
 **Regra dos sliders:** o jogo pede valores fixos; o dono **nunca sai da banda** que define o estilo, mas pode "brincar" dentro dela. O código valida que o valor fica na banda (`Slider`).
 
@@ -657,11 +667,13 @@ Na checklist do cartão, o passo fica **amarelo** quando o jogo o dá como feito
 **Onze (tática):**
 - **Desarme vs árbitro do próximo jogo**, pela tabela do §3 com o que o dono aceita.
 - **Idade do onze** (dono, 2026-10-22; OSMPro, Dicas: EfHyzY6C5AI, 7da7tn75LAI): pelo menos **3 titulares com mais de 26 anos e 3 com menos de 26**; um onze demasiado jovem tem bónus negativo e o jogo avisa. Fora disso, **nota** (passo verde com ⓘ; dono, 2026-10-27, antes amarelo): "Onze com só 2 jogadores acima de 26 anos" (o jogo dá bónus negativo a um onze demasiado jovem). **[S]** O lado contrário (onze demasiado velho) avisa igual, com "abaixo de 26"; o autor só fala do jovem. Os 4 onzes do dono cumpriam no dia (5/4, 6/5, 4/5, 5/6).
-- **Formação** (§1): com o adversário mais forte (antes da análise pela estimativa, depois pelo onze real dele; dono, 2026-10-25) (qualquer margem, com bónus e casa, §1) pede **5 defesas** e aceita qualquer uma (5-3-2, 5-2-3, 5-4-1; D-049); com o adversário claramente mais forte (> 5 %) só o **5-2-3** ("devia ser 5-2-3 (adversário claramente mais forte)"; D-070). Em casa o 4-3-3 B também serve (verde, nota "4-3-3 B aceite: em casa a regra é o 4-3-3 A"; dono, 2026-10-26; antes ficava amarelo); fora é o B que se pede e o A fica amarelo, exceto sendo claramente mais forte (dono, 2026-10-25).
+- **Formação** (§1): com o adversário mais forte (antes da análise pela estimativa, depois pelo onze real dele; dono, 2026-10-25) (qualquer margem, com bónus e casa, §1) pede **5 defesas** e aceita qualquer uma (5-3-2, 5-2-3, 5-4-1; D-049); com o adversário claramente mais forte (> 12 %, D-074) só o **5-2-3** ("devia ser 5-2-3 (adversário claramente mais forte)"; D-070). Em casa o 4-3-3 B também serve (verde, nota "4-3-3 B aceite: em casa a regra é o 4-3-3 A"; dono, 2026-10-26; antes ficava amarelo); fora é o B que se pede e o A fica amarelo, exceto sendo claramente mais forte (dono, 2026-10-25).
 
 **Posições** (dono, 2026-10-14): o jogo conta quantos titulares estão no lugar da sua posição específica (9/11 = 2 fora). O hover diz **quem**: "Messi (ED) a jogar a PL". O mapa de cada lugar de cada formação vem do código do próprio jogo (`theory/lineup.places`). Nomes: GR, DE, DC, DD, MDC, MC, MO, ME, MD, EE, PL, ED.
 
 **Especialistas:** como já estava (D-042), amarelo fora da regra (§4); o hover passa a dizer que papel está errado e quem a regra pede.
+
+**Tática** (dono, 2026-10-28, D-073): uma bola nova a seguir ao "Onze", que não vem da checklist do jogo. Lê a tática do jogo (`teamtactics`, só leitura) e julga-a pelo §2 **para a formação que está posta**; se o "Onze" estiver amarelo, o hover junta as barras e instruções da formação sugerida ("se mudares para 3-4-3: …"). Verde: plano de jogo, defesa, médios, avançados, marcação, fora de jogo e desarme certos e as 3 barras dentro da banda. Amarela: hover em tabela, uma linha por campo, "Campo · Está · Devia ser" (ex. "Pressão · 45 · 60–80 (~75)"). O **desarme passa do "Onze" para aqui**. Formação sem regra no §2: bola cinzenta, "sem regra para o X". Amigáveis: não (dono). Nunca escreve na tática. Código: `theory/tactics.instructions` (§2), `theory/lineup.tactic_check`, `gui/window.tip_tactic`. Os números de cada opção estão em `DISCOVERY.md` §3 (verificados com o dono, 2026-10-28); o hover usa os nomes do jogo ("Jogo de passe", "Atacar apenas"…).
 
 **Treino secreto e estágio na janela** (dono, 2026-10-14): por baixo dos 8 passos, no fim da lista, com os ícones do próprio jogo (o escudo com cadeado e a tenda). **Marcado** para o próximo jogo: texto **verde** e ícone a cores com um anel verde. **Não marcado**: texto **cinzento** e ícone a cinzento. Sem jogo nesta jornada (o jogo não deixa marcar): igual a não marcado, e o hover diz porquê. Só mostra: comprar continua a ser decisão do dono (§6).
 

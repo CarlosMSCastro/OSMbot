@@ -3,7 +3,7 @@ warns, the eleven, the bench and the tactics are the owner's."""
 from __future__ import annotations
 
 from osmbot.theory.fitness import MATCH_DROP, YELLOW_BELOW
-from osmbot.theory.tactics import Formation, choose_formation
+from osmbot.theory.tactics import ATTACK, DEFENSE, MIDFIELD, PLANS, Band, Formation, choose_formation, defensive, instructions
 
 MAIN_STAT = {1: "statAtt", 2: "statOvr", 3: "statDef", 4: "statDef"}  # the rating that counts for each position
 ELEVEN = range(1, 12)
@@ -213,7 +213,7 @@ def _suggest(tactic: dict, players: list[dict] | None, spare: bool = False) -> s
             + " ou ".join(dict.fromkeys(options)))
 
 
-CLEARLY_STRONGER = 0.05  # [S] away, more than 5 % stronger (match strength): the 4-3-3 A is right too (owner, 2026-10-25)
+CLEARLY_STRONGER = 0.12  # more than 12 % stronger (match strength; measured in 572 matches, D-074): the 4-3-3 A away, the offside trap, only the 5-2-3
 
 
 def _clearly_stronger(mine: float | None, opponent: float | None) -> bool:
@@ -250,18 +250,14 @@ def tactic_notes(tactic: dict | None, players: list[dict] | None, mine: float | 
     return [f"{formation_name(tactic)}{' B' if tactic.get('formation') == 442 else ''} aceite: {why}"] if why else []
 
 
-def tactic_warnings(tactic: dict | None, strictness: int | None, mine: float | None, opponent: float | None,
+def tactic_warnings(tactic: dict | None, mine: float | None, opponent: float | None,
                     players: list[dict] | None = None, away: bool = False, spare: bool = False) -> list[str]:
-    """What is out of the rule in the tactics: the tackling for the next match's referee, and the formation
+    """What is out of the rule in the formation (the tackling went to the "Tática" step, ``tactic_check``)
     (``_wanted``: 4-3-3 A at home (the B too), B away, or the 4-4-2 B when a side has no fit winger; 5 defenders, any of them,
     against a stronger opponent, only the 5-2-3 against a clearly stronger one). ``opponent``: before the analysis an estimate (THEORY.md section 1); None when unknown."""
     if not tactic:
         return []
     warnings = []
-    style = tactic.get("style")
-    if strictness in ACCEPTED and style is not None and style not in ACCEPTED[strictness]:
-        wanted = " ou ".join(TACKLING[s] for s in sorted(ACCEPTED[strictness]))
-        warnings.append(f"Desarme {TACKLING.get(style, style)} com árbitro {REFEREES[strictness]}: devia ser {wanted}")
     wanted_formation = choose_formation(mine, opponent) if mine and opponent else Formation.F433_A
     current = formation_name(tactic)
     if wanted_formation == Formation.F532:  # any formation with 5 defenders: the owner picks the one that fits the players
@@ -276,3 +272,73 @@ def tactic_warnings(tactic: dict | None, strictness: int | None, mine: float | N
     elif current and (instead := _suggest(tactic, players, spare)):  # the rule's 4-3-3, but nobody fit for a side
         warnings.append(instead)
     return warnings
+
+
+def _suggested(tactic: dict, players: list[dict] | None, mine: float | None, opponent: float | None, away: bool,
+               spare: bool) -> tuple[str, int, str | None] | None:
+    """The formation the "Onze" step asks for when the one set is out of the rule (``tactic_warnings``): its name,
+    code and detail, for the "Tática" step to say what the instructions would be; None when it is right."""
+    current = formation_name(tactic)
+    if mine and opponent and choose_formation(mine, opponent) == Formation.F532:
+        if _clearly_stronger(opponent, mine):
+            return None if current == "5-2-3" else ("5-2-3", 523, "A")
+        return None if current.startswith("5-") else ("5-3-2", 532, None)
+    wanted = _wanted(mine, opponent, away)
+    if current not in wanted and not _home_b(tactic, away) and not _instead(tactic, players, spare):
+        return wanted[0], 433, wanted[0][-1]
+    if _suggest(tactic, players, spare):
+        missing = _missing(players, spare)
+        for name, formation, detail, group in INSTEAD:
+            if missing.keys() & group and not set(
+                    places({"formation": formation, "formationDetail": detail or "A"}).values()) & missing.keys():
+                return name, formation, detail
+    return None
+
+
+FIELDS = (("Estilo de jogo", "overallMatchTactics", "plan", PLANS), ("Defesa", "defense", "defense", DEFENSE),
+          ("Médios", "midfield", "midfield", MIDFIELD), ("Avançados", "attack", "attack", ATTACK),
+          ("Marcação", "marking", "marking", {False: "À zona", True: "Individual"}),
+          ("Fora de jogo", "offsideTrap", "offside", {True: "Sim", False: "Não"}),
+          ("Pressão", "pressing", "pressing", None), ("Estilo", "mentality", "mentality", None),
+          ("Temporização", "tempo", "tempo", None))
+
+
+def _rule(value, names: dict | None) -> str:
+    if isinstance(value, Band):
+        return f"{value.low}–{value.high} (~{value.aim})"
+    return " ou ".join(names.get(c, f"código {c}") for c in sorted(value)).capitalize()
+
+
+def tactic_check(tactic: dict | None, strictness: int | None, mine: float | None, opponent: float | None,
+                 players: list[dict] | None = None, away: bool = False, spare: bool = False,
+                 forwards: int | None = None) -> tuple[list[str], list[str], bool]:
+    """The "Tática" step (owner, 2026-10-28, D-073; THEORY.md 2 and 21): the instructions, the sliders and the tackling
+    set in the game against the rule for the formation that is set. Returns (warnings, notes, known): a warning per
+    field out of the rule, "Pressão: 45, devia ser 60–80 (~75)"; notes with what the formation the "Onze" step asks for
+    would take ("Se mudares para 5-2-3:" and a line per field); known False when section 2 has no rule for the
+    formation set (the step stays grey). ``forwards``: how many his eleven has, after the analysis."""
+    if not tactic:
+        return [], [], False
+    starters = [p for p in players or [] if p.get("lineup") in ELEVEN]
+    context = dict(away=away, clearly_stronger=_clearly_stronger(mine, opponent),
+                   clearly_weaker=_clearly_stronger(opponent, mine), forwards=forwards,
+                   defensive_forwards=defensive(starters))
+    rule = instructions(tactic.get("formation"), tactic.get("formationDetail"), **context)
+    warnings, notes = [], []
+    if rule:
+        for label, key, field, names in FIELDS:
+            value, wanted = tactic.get(key), getattr(rule, field)
+            if value is not None and value not in wanted:
+                now = value if names is None else names.get(value, f"código {value}")
+                warnings.append(f"{label}: {now}, devia ser {_rule(wanted, names)}")
+    else:
+        notes.append(f"Sem regra para o {formation_name(tactic)}")
+    style = tactic.get("style")
+    if strictness in ACCEPTED and style is not None and style not in ACCEPTED[strictness]:
+        wanted = " ou ".join(TACKLING[s] for s in sorted(ACCEPTED[strictness]))
+        warnings.append(f"Desarme: {TACKLING.get(style, style)}, devia ser {wanted} (árbitro {REFEREES[strictness]})")
+    other = _suggested(tactic, players, mine, opponent, away, spare)
+    if other and (better := instructions(other[1], other[2], **context)):
+        notes.append(f"Se mudares para {other[0]}:")
+        notes += [f"{label}: {_rule(getattr(better, field), names)}" for label, _, field, names in FIELDS]
+    return warnings, notes, rule is not None
