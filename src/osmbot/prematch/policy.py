@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 LEAD = 4 * 3600  # act only when the match is this close: before that the owner may still do it himself (owner, 2026-10-08)
+ANALYSIS_LEAD = 2 * 3600  # the bot analyses the opponent only this close, when the owner has not (owner, 2026-10-29)
 FRIENDLY_STEP = 7  # matchpreparation step "Play 1 Friendly"
 FRIENDLIES_PER_MATCH = 4  # owner, 2026-10-11: 4 friendlies before each match (THEORY.md section 6)
 FRIENDLY_TIMES = (16 * 3600, 12 * 3600, 8 * 3600, 4 * 3600)  # spread over the day (owner, 2026-10-12): the k-th is due this long before the match [S]
@@ -106,6 +107,11 @@ def needs_analysis(steps: list[dict], sent: list[dict], week: int, opponent: int
 SCOUT_MARGIN = 10 * 60  # an analysis of another club must end this long before the opponent's window opens
 
 
+def analysis_window(match_time: float | None, now: float) -> bool:
+    """True from 2 hours before the match until it starts: the bot's analysis of the opponent (owner, 2026-10-29)."""
+    return match_time is not None and match_time - ANALYSIS_LEAD <= now < match_time
+
+
 def analyst_busy(sent: list[dict], now: float) -> bool:
     """The analyst works on one club at a time (the game: "AlreadySpying", 2026-10-28): busy while a timer runs or
     a finished one is not collected yet."""
@@ -114,7 +120,7 @@ def analyst_busy(sent: list[dict], now: float) -> bool:
 
 def scout_target(teams: list[dict], matches: list[dict], team_id: int, week: int, sent: list[dict]) -> int | None:
     """The next club for the analyst to go round the league (owner, 2026-10-28; OSMPro series point 5), once per
-    round: the opponents of the coming rounds first (not the next one: his analysis is in the 4 h before the match,
+    round: the opponents of the coming rounds first (not the next one: his analysis is in the 2 h before the match,
     closest to it), then the rest by place in the table. None when every club is done this round."""
     done = {s.get("instructionTeamId") for s in sent if s.get("weekNr") == week}
     following = next_opponent(matches, team_id, week)
@@ -128,9 +134,10 @@ def scout_target(teams: list[dict], matches: list[dict], team_id: int, week: int
 
 
 def can_scout(match: float | None, now: float, seconds: float, opponent_done: bool) -> bool:
-    """Another club may be analysed now when it ends well before the next opponent's analysis is due (the last 4 h
-    before the match), or when that one is done already."""
-    return opponent_done or match is None or now + seconds + SCOUT_MARGIN <= match - LEAD
+    """Another club may be analysed now when it ends well before the bot's analysis of the next opponent (the last
+    2 h before the match), and never once the opponent is analysed (owner, 2026-10-29): his analysis stays the last
+    one until the match; the round after it, the tour starts again."""
+    return not opponent_done and (match is None or now + seconds + SCOUT_MARGIN <= match - ANALYSIS_LEAD)
 
 
 def _involves(match: dict, team_id: int) -> bool:

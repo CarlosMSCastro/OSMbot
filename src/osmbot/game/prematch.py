@@ -17,7 +17,7 @@ from osmbot import logs
 from osmbot.game import clubinfo, refusals
 from osmbot.game import wallet as ledger
 from osmbot.game.timers import minutes_text, timer
-from osmbot.prematch.policy import (LEAD, analyst_busy, can_scout, day_end, friendly_choices, friendly_event, friendlies_due,
+from osmbot.prematch.policy import (ANALYSIS_LEAD, LEAD, analysis_window, analyst_busy, can_scout, day_end, friendly_choices, friendly_event, friendlies_due,
                                     friendlies_missing, friendlies_played, in_window, needs_analysis, next_friendly_at,
                                     next_opponent, scout_target)
 
@@ -210,7 +210,8 @@ def _keep_report(client, team: dict, base: str, week: int, club: int, log) -> No
 def _scout(client, team: dict, base: str, league: str, week: int, match: float | None, now: float, opponent: int | None,
            confirm: bool, log) -> tuple[int, float | None]:
     """The analyst goes round the other clubs of the league when it has nothing else to do (owner, 2026-10-28;
-    OSMPro series point 5): one club at a time, once per round, never in the way of the next opponent's analysis.
+    OSMPro series point 5): one club at a time, once per round, from the match until the next opponent is analysed
+    (by the owner, or by the bot 2 h before the match), never after (owner, 2026-10-29).
     Returns (failures, when it ends)."""
     status, sent = client.get(f"{base}/spyinstructions")
     sent = sent if status == 200 and isinstance(sent, list) else []
@@ -257,8 +258,8 @@ def _note(client, base: str, week: int, now: float, opponent: int | None = None)
 
 
 def prepare_club(client, team: dict, base: str, confirm: bool, now: float, log=print, rng=random) -> tuple[int, float | None]:
-    """One club: collect a finished analyst (any hour), the friendlies due by now, and the analysis when the match is
-    4 hours away or less. Returns (failures, time to wake at)."""
+    """One club: collect a finished analyst (any hour), the friendlies due by now, the specialists when the match is
+    4 hours away or less and the analysis at 2 hours. Returns (failures, time to wake at)."""
     match = _match_time(client, base)
     league = base.rsplit("/teams/", 1)[0]
     _, info = client.get(league)
@@ -283,7 +284,7 @@ def prepare_club(client, team: dict, base: str, confirm: bool, now: float, log=p
         failures += failed
     wakes.append(next_friendly_at(day, now, played, events))
     if not in_window(match, now):
-        wakes.append(match - LEAD)  # the analysis is sent only in the last 4 hours
+        wakes.append(match - LEAD)  # the specialists only in the last 4 hours
     else:
         _note(client, base, week, now, opponent)  # the tactics the match will be played with (D-041)
         from osmbot.game.specialists import fix_specialists
@@ -295,7 +296,9 @@ def prepare_club(client, team: dict, base: str, confirm: bool, now: float, log=p
         except Exception as error:
             log(f"Especialistas ({team['name']}): erro ({error})")
         _, prep = client.get(f"{base}/matchpreparation")
-        if needs_analysis(prep.get("steps") or [], sent, week, opponent):
+        if not analysis_window(match, now):
+            wakes.append(match - ANALYSIS_LEAD)  # the bot's analysis only in the last 2 h: before, it is the owner's
+        elif needs_analysis(prep.get("steps") or [], sent, week, opponent):
             failed, takes = _send_analyst(client, team, base, league, week, confirm, log)
             failures += failed
             if takes:

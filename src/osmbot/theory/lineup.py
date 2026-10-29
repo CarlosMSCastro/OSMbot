@@ -110,14 +110,9 @@ def places(tactic: dict | None) -> dict[int, int]:
     return dict(enumerate(codes, start=1))
 
 
-LISTED_LEAD = 4 * 3600  # the starters for sale are a warning in the last 4 h before the match (owner, 2026-10-28)
-
-
-def listed_starters(players: list[dict], listed: Iterable, match: float | None, now: float) -> list[str]:
-    """Starters on the transfer list in the last 4 hours before the match (owner, 2026-10-28; OSMPro series point 2):
-    the game's transfer engine may sell them minutes before it and leave the place empty (THEORY.md section 21)."""
-    if match is None or not 0 <= match - now <= LISTED_LEAD:
-        return []
+def listed_starters(players: list[dict], listed: Iterable) -> list[str]:
+    """Starters on the transfer list, at any time (owner, 2026-10-29; before only in the 4 hours before the match):
+    the game's transfer engine may sell them minutes before a match and leave the place empty (THEORY.md section 21)."""
     ids = set(listed)
     return [f"{p['name']}: Titular à venda" for p in sorted(players, key=lambda p: p.get("lineup") or 0)
             if p.get("lineup") in ELEVEN and p.get("id") in ids]

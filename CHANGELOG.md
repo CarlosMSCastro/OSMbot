@@ -4,6 +4,20 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-PT/1.1.0/); 
 
 Este ficheiro é o **histórico de versões, para quem lê o repo**. O diário interno de cada sessão de trabalho está em [`docs/WORKLOG.md`](docs/WORKLOG.md).
 
+## [0.14.11] — 2026-10-29
+
+O analista deixa de ocupar o lugar da tua análise do adversário; o aviso de titular à venda aparece a toda a hora.
+
+### Alterado
+- **Analista:** a volta pelos outros clubes da liga começa quando acaba o jogo e para quando o próximo adversário fica analisado (por ti ou pelo bot); a partir daí não vai a mais nenhum clube até ao jogo, e a análise do adversário é sempre a última. Se não a fizeres, o bot analisa o adversário **2 h antes do jogo** (antes eram 4 h). Para analisar à mão com o analista noutro clube, acaba essa análise com boss coins e manda-o logo ao adversário.
+- **Titular à venda:** o aviso no "Onze" aparece a qualquer hora, não só nas 4 h antes do jogo (o motor de transferências pode vendê-lo entre jogos e os amigáveis ficam com 10).
+
+### Adicionado
+- **Especialistas de cada jogo** no registo dos jogos, e a verificação semanal `cantos`: mede se os cantos num médio diferente do dos livres dão melhor resultado do que um só jogador nos dois.
+
+### Documentação
+- `THEORY.md` §4, §6 e §21; `DECISIONS.md` D-076; `VERIFICACAO.md` (`cantos`).
+
 ## [0.14.10] — 2026-10-29
 
 O passo "Análise" do pré-jogo deixa de mostrar um relógio ou "por levantar" que não são do próximo adversário.

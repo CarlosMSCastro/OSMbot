@@ -1,5 +1,5 @@
 from osmbot.game import prematch
-from osmbot.prematch.policy import LEAD, analyst_busy, can_scout, needs_analysis, scout_target
+from osmbot.prematch.policy import ANALYSIS_LEAD, analyst_busy, can_scout, needs_analysis, scout_target
 
 NOW = 1_000_000.0
 TEAMS = [{"id": i, "name": f"C{i}", "ranking": i} for i in range(1, 7)]
@@ -23,7 +23,7 @@ def test_another_club_analysed_does_not_count_as_the_opponent_s_analysis():
 
 
 def test_the_analyst_goes_round_the_coming_opponents_first_never_the_next_one_and_once_a_round():
-    assert scout_target(TEAMS, MATCHES, 1, 10, []) == 5  # 2 is next: his analysis is in the last 4 h
+    assert scout_target(TEAMS, MATCHES, 1, 10, []) == 5  # 2 is next: his analysis is in the last 2 h
     assert scout_target(TEAMS, MATCHES, 1, 10, [sent(5)]) == 3
     assert scout_target(TEAMS, MATCHES, 1, 10, [sent(5), sent(3)]) == 4  # then by place in the table
     assert scout_target(TEAMS, MATCHES, 1, 10, [sent(c) for c in (3, 4, 5, 6)]) is None
@@ -33,9 +33,9 @@ def test_the_analyst_goes_round_the_coming_opponents_first_never_the_next_one_an
 def test_the_analyst_works_on_one_club_at_a_time_and_keeps_out_of_the_opponent_s_window():
     assert analyst_busy([sent(4, claimed=False)], NOW) and not analyst_busy([sent(4)], NOW)
     hour = 3600
-    assert can_scout(NOW + LEAD + 2 * hour, NOW, hour, False)
-    assert not can_scout(NOW + LEAD + hour, NOW, hour, False)  # would end too close to the window
-    assert can_scout(NOW + hour, NOW, hour, True)  # the opponent's analysis is done: free again
+    assert can_scout(NOW + ANALYSIS_LEAD + 2 * hour, NOW, hour, False)
+    assert not can_scout(NOW + ANALYSIS_LEAD + hour, NOW, hour, False)  # would end too close to the bot's analysis
+    assert not can_scout(NOW + 10 * hour, NOW, hour, True)  # the opponent is analysed: no other club until the match
     assert can_scout(None, NOW, hour, False)
 
 

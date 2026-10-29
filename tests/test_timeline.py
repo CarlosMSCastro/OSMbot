@@ -70,7 +70,7 @@ def test_the_next_friendly_and_the_analysis_in_the_timeline():
                                "prep": {"steps": [(f"Amigáveis ({played})", played >= 1, None), ("Análise", analysed, None)]}}]}
         return [(r["left"], r["title"]) for r in future_view(snapshot, NOW) if r["title"] != "A vs ?" and r.get("club") == 0]
 
-    assert ("4h00", "Amigáveis") in rows(0, True, 20 * 3600) and ("16h00", "Análise") in rows(0, False, 20 * 3600)
+    assert ("4h00", "Amigáveis") in rows(0, True, 20 * 3600) and ("18h00", "Análise") in rows(0, False, 20 * 3600)
     assert ("já", "Amigáveis") in rows(1, True, 10 * 3600)  # the 2nd was due 2 h ago
-    assert ("2h00", "Amigáveis e Análise") in rows(3, False, 6 * 3600)
+    assert ("2h00", "Amigáveis") in rows(3, False, 6 * 3600) and ("4h00", "Análise") in rows(3, False, 6 * 3600)
     assert not [t for _, t in rows(4, True, 6 * 3600) if "Amig" in t]

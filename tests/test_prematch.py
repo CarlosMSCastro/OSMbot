@@ -125,10 +125,19 @@ def test_nothing_before_the_first_friendly_time_and_it_wakes_up_then():
     assert client.posts == []
 
 
-def test_friendlies_are_spread_over_the_day_and_the_analysis_waits_for_the_4_hours():
+def test_friendlies_are_spread_over_the_day_and_the_analysis_waits_for_the_2_hours():
     client = FakeClient([step(7, 0), step(5, 0)], match_in=LEAD + 600, friendlies=1)  # 3 due by now, the owner played 1
-    assert prepare(client)[0] == (0, NOW + 600)  # back at 4 h: the 4th friendly and the analyst
+    assert prepare(client)[0] == (0, NOW + 600)  # back at 4 h: the 4th friendly
     assert [path for path, _ in client.posts] == [f"{BASE}/matches"] * 2
+
+
+def test_the_bot_analyses_the_opponent_only_in_the_last_2_hours():
+    client = FakeClient([step(7, 4), step(5, 0)], match_in=3 * 3600, friendlies=4)
+    assert prepare(client)[0] == (0, NOW + 3600)  # back at 2 h for the analysis
+    assert client.posts == []
+    client = FakeClient([step(7, 4), step(5, 0)], match_in=2 * 3600, friendlies=4)
+    prepare(client)
+    assert [form["instructionTeamId"] for path, form in client.posts if path.endswith("/spyinstructions")] == [3]
 
 
 def test_friendly_times_before_the_match():

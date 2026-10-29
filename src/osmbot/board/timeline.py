@@ -14,7 +14,7 @@ from osmbot.prematch.policy import day_end, friendly_deadlines
 
 MERGE_WITHIN = 15 * 60  # s: the same kind of action this close to the last one joins it
 KEEP = 40  # past entries kept
-PREP_BEFORE = 4 * 3600  # the analysis is sent 4 h before the match (THEORY.md section 6)
+PREP_BEFORE = 2 * 3600  # the analysis is sent 2 h before the match (THEORY.md section 6; owner, 2026-10-29)
 SIDES = {"H": "casa", "A": "fora"}
 
 _ACTIONS = (  # (pattern, kind, text): kinds in MERGED join the previous entry of the same kind

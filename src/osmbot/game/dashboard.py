@@ -172,7 +172,7 @@ def collect(client) -> dict:
         try:  # the card's extras (D-026): a problem here never hides the rest of the board
             from osmbot.game.clubinfo import club_extra
 
-            club.update(club_extra(client, team, base, players, slot, market, club.get("match")))
+            club.update(club_extra(client, team, base, players, slot, market))
         except OSError:
             raise
         except Exception as error:

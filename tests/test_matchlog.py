@@ -81,10 +81,12 @@ def test_the_tactics_read_before_the_match_keep_the_analyst_s_report():
     game = FakeGame(week=17)
     game.get = lambda path: (200, [{"formation": 352}]) if path.endswith("spyresults") else (200, {"formation": 433})
     matchlog.note_prematch(game, f"{L}/teams/1", 17, now=5.0)
-    game.get = lambda path: (404, "") if path.endswith("spyresults") else (200, {"formation": 442})
+    game.get = lambda path: (404, "") if path.endswith("spyresults") else (200, {"corners": 7}) if path.endswith(
+        "specialists") else (200, {"formation": 442})
     matchlog.note_prematch(game, f"{L}/teams/1", 17, now=6.0)  # the report gone: the earlier one stays
     kept = matchlog._load()["antes"][f"{L}/teams/1"]
     assert kept["tatica"] == {"formation": 442} and kept["analise"] == [{"formation": 352}]
+    assert kept["especialistas"] == {"corners": 7}  # the places of the eleven, for the corners check
 
 
 def test_the_season_so_far_is_logged_once_with_results_and_referees(monkeypatch):

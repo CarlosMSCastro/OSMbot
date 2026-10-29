@@ -95,3 +95,23 @@ def test_against_stronger_compares_five_defenders_with_the_451():
     games += [match(100 + i, 100, 90, "0-0", formation=("433A", "451A")) for i in range(15)]
     result = theory.against_stronger(games)
     assert result.verdict == theory.READY and result.measured == "contra mais forte: 5 defesas 0.00 pts/jogo (15), 4-5-1 1.00 (15)"
+
+
+def test_corners_compare_one_man_on_both_set_pieces_with_another_midfielder():
+    def eleven(clash=True):  # the midfielder 8 has most attack; with no clash a forward has more
+        rows = [{"id": n, "lineup": n, "position": 2 if n in (7, 8) else 3, "statAtt": 50, "statOvr": 50, "statDef": 50}
+                for n in range(1, 12)]
+        rows[7]["statAtt"] = 100
+        if not clash:
+            rows[10].update(position=1, statAtt=110)
+        return {"casa": rows, "fora": []}
+
+    old = [{**match(i, 110, 100, "2-0", "casa"), "onze": eleven(), "t": theory.OLD_CORNERS_UNTIL - 1} for i in range(10)]
+    new = [{**match(20 + i, 110, 100, "1-0", "casa"), "onze": eleven(), "t": theory.NEW_CORNERS_FROM + 1} for i in range(10)]
+    placed = [{**match(40, 110, 100, "0-1", "casa"), "onze": eleven(), "t": theory.NEW_CORNERS_FROM + 1,
+               "especialistas": {"corners": 8, "freekick": 8}}]  # the places recorded win over the date
+    ignored = [{**match(50, 110, 100, "0-1", "casa"), "onze": eleven(clash=False), "t": 0},
+               {**match(51, 110, 100, "0-1", "casa"), "onze": eleven(), "t": theory.OLD_CORNERS_UNTIL + 1}]  # no clash; 2026-10-29
+    result = theory.corners_not_free_kicks(old + new + placed + ignored)
+    assert result.sample == 21 and result.verdict == theory.AGREES  # one man 2.73 (11), another midfielder 3.00 (10)
+    assert theory.corners_not_free_kicks(old).verdict == theory.SHORT

@@ -2,3 +2,57 @@
 {"t":1793265442,"saldo":3343,"antes":3342,"diferenca":1,"partes":{"vídeos da loja":1}}
 {"t":1793265491,"saldo":3344,"antes":3343,"diferenca":1,"partes":{"vídeos da loja":1}}
 {"t":1793265671,"saldo":3348,"antes":3344,"diferenca":4,"partes":{"vídeos da loja":3,"fora do bot":1}}
+{"t":1793266087,"saldo":3350,"antes":3348,"diferenca":2,"partes":{"fora do bot":2}}
+{"t":1793266136,"saldo":3351,"antes":3350,"diferenca":1,"partes":{"vídeos da loja":1}}
+{"t":1793267198,"saldo":3347,"antes":3351,"diferenca":-4,"partes":{"amigáveis":-4}}
+{"t":1793268527,"saldo":3343,"antes":3347,"diferenca":-4,"partes":{"amigáveis":-4}}
+{"t":1793269142,"saldo":3344,"antes":3343,"diferenca":1,"partes":{"vídeos da loja":2,"fora do bot":-1}}
+{"t":1793269564,"saldo":3351,"antes":3344,"diferenca":7,"partes":{"vídeos da loja":6,"fora do bot":1}}
+{"t":1793272336,"saldo":3352,"antes":3351,"diferenca":1,"partes":{"vídeos da loja":1}}
+{"t":1793272726,"saldo":3353,"antes":3352,"diferenca":1,"partes":{"vídeos da loja":1}}
+{"t":1793272815,"saldo":3354,"antes":3353,"diferenca":1,"partes":{"vídeos da loja":1}}
+{"t":1793274769,"saldo":3355,"antes":3354,"diferenca":1,"partes":{"vídeos da loja":1}}
+{"t":1793275807,"saldo":3351,"antes":3355,"diferenca":-4,"partes":{"amigáveis":-4}}
+{"t":1793276405,"saldo":3357,"antes":3351,"diferenca":6,"partes":{"vídeos da loja":6}}
+{"t":1793276523,"saldo":3358,"antes":3357,"diferenca":1,"partes":{"vídeos da loja":1}}
+{"t":1793276539,"saldo":3359,"antes":3358,"diferenca":1,"partes":{"vídeos da loja":1}}
+{"t":1793278298,"saldo":3355,"antes":3359,"diferenca":-4,"partes":{"amigáveis":-4}}
+{"t":1793278378,"saldo":3356,"antes":3355,"diferenca":1,"partes":{"vídeos da loja":1}}
+{"t":1793279499,"saldo":3357,"antes":3356,"diferenca":1,"partes":{"vídeos da loja":1}}
+{"t":1793280588,"saldo":3364,"antes":3357,"diferenca":7,"partes":{"vídeos da loja":7}}
+{"t":1793281580,"saldo":3360,"antes":3364,"diferenca":-4,"partes":{"amigáveis":-4}}
+{"t":1793282041,"saldo":3361,"antes":3360,"diferenca":1,"partes":{"vídeos da loja":1}}
+{"t":1793282970,"saldo":3357,"antes":3361,"diferenca":-4,"partes":{"amigáveis":-4}}
+{"t":1793283150,"saldo":3358,"antes":3357,"diferenca":1,"partes":{"vídeos da loja":1}}
+{"t":1793283778,"saldo":3359,"antes":3358,"diferenca":1,"partes":{"vídeos da loja":1}}
+{"t":1793283869,"saldo":3360,"antes":3359,"diferenca":1,"partes":{"vídeos da loja":1}}
+{"t":1793283997,"saldo":3362,"antes":3360,"diferenca":2,"partes":{"vídeos da loja":2}}
+{"t":1793284231,"saldo":3365,"antes":3362,"diferenca":3,"partes":{"vídeos da loja":3}}
+{"t":1793285715,"saldo":3366,"antes":3365,"diferenca":1,"partes":{"vídeos da loja":1}}
+{"t":1793286794,"saldo":3367,"antes":3366,"diferenca":1,"partes":{"vídeos da loja":1}}
+{"t":1793287405,"saldo":3365,"antes":3367,"diferenca":-2,"partes":{"fora do bot":-2}}
+{"t":1793287428,"saldo":3366,"antes":3365,"diferenca":1,"partes":{"vídeos da loja":1}}
+{"t":1793287684,"saldo":3362,"antes":3366,"diferenca":-4,"partes":{"fora do bot":-4}}
+{"t":1793287999,"saldo":3371,"antes":3362,"diferenca":9,"partes":{"fora do bot":9}}
+{"t":1793288763,"saldo":3364,"antes":3371,"diferenca":-7,"partes":{"fora do bot":-7}}
+{"t":1793288809,"saldo":3333,"antes":3364,"diferenca":-31,"partes":{"fora do bot":-31}}
+{"t":1793288930,"saldo":3331,"antes":3333,"diferenca":-2,"partes":{"fora do bot":-2}}
+{"t":1793289049,"saldo":3329,"antes":3331,"diferenca":-2,"partes":{"fora do bot":-2}}
+{"t":1793289483,"saldo":3331,"antes":3329,"diferenca":2,"partes":{"vídeos da loja":2}}
+{"t":1793289530,"saldo":3332,"antes":3331,"diferenca":1,"partes":{"vídeos da loja":1}}
+{"t":1793289663,"saldo":3329,"antes":3332,"diferenca":-3,"partes":{"vídeos da loja":2,"fora do bot":-5}}
+{"t":1793289774,"saldo":3331,"antes":3329,"diferenca":2,"partes":{"vídeos da loja":2}}
+{"t":1793290201,"saldo":3327,"antes":3331,"diferenca":-4,"partes":{"amigáveis":-4}}
+{"t":1793290466,"saldo":3328,"antes":3327,"diferenca":1,"partes":{"vídeos da loja":1}}
+{"t":1793291114,"saldo":3329,"antes":3328,"diferenca":1,"partes":{"vídeos da loja":1}}
+{"t":1793292708,"saldo":3325,"antes":3329,"diferenca":-4,"partes":{"amigáveis":-4}}
+{"t":1793293012,"saldo":3326,"antes":3325,"diferenca":1,"partes":{"vídeos da loja":1}}
+{"t":1793293083,"saldo":3327,"antes":3326,"diferenca":1,"partes":{"fora do bot":1}}
+{"t":1793293087,"saldo":3327,"antes":3327,"diferenca":0,"partes":{"vídeos da loja":1,"fora do bot":-1}}
+{"t":1793293160,"saldo":3328,"antes":3327,"diferenca":1,"partes":{"vídeos da loja":1}}
+{"t":1793293234,"saldo":3329,"antes":3328,"diferenca":1,"partes":{"vídeos da loja":1}}
+{"t":1793293317,"saldo":3330,"antes":3329,"diferenca":1,"partes":{"vídeos da loja":1}}
+{"t":1793293945,"saldo":3332,"antes":3330,"diferenca":2,"partes":{"vídeos da loja":2}}
+{"t":1793294134,"saldo":3333,"antes":3332,"diferenca":1,"partes":{"vídeos da loja":1}}
+{"t":1793294769,"saldo":3230,"antes":3333,"diferenca":-103,"partes":{"fora do bot":-103}}
+{"t":1793294883,"saldo":3229,"antes":3230,"diferenca":-1,"partes":{"fora do bot":-1}}

@@ -6,3 +6,4 @@
 {"t":1792772588,"evento":"pôr","tipo":"doctor","clube":"leagues/248015013/teams/8","semana":6,"jogador":877230515,"nome":"Gabriel","antes":{"fora":3,"lesao":5,"suspensao":0}}
 {"t":1792772590,"evento":"levantar","tipo":"lawyer","clube":"leagues/248015013/teams/8","semana":6,"caso":12587705,"jogador":877706761,"nome":"Pedri","antes":{"fora":3,"lesao":0,"suspensao":46},"depois":{"fora":1,"lesao":0,"suspensao":46}}
 {"t":1793091826,"evento":"levantar","tipo":"lawyer","clube":"leagues/246031208/teams/1","semana":32,"caso":12749471,"jogador":953074922,"nome":"Gabriel","antes":{"fora":3,"lesao":0,"suspensao":36},"depois":{"fora":1,"lesao":0,"suspensao":36}}
+{"t":1793282804,"evento":"levantar","tipo":"doctor","clube":"leagues/215028346/teams/9","semana":8,"caso":7430566,"jogador":924982546,"nome":"van Brederode","antes":{"fora":1,"lesao":29,"suspensao":0},"depois":{"fora":0,"lesao":0,"suspensao":0}}

@@ -9,6 +9,7 @@ Verdicts: "bate" (the records agree with the rule), "não bate" (they do not: br
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import datetime
 from statistics import mean
 from typing import Callable, Iterable
 
@@ -236,6 +237,49 @@ def friendly_specialists(friendlies: list[dict], minimum: int = 30) -> Result:
                   READY if len(mine) >= minimum and rest else SHORT)
 
 
+OLD_CORNERS_UNTIL = datetime(2026, 10, 29).timestamp()  # matches logged before: corners and free kicks could be one man
+NEW_CORNERS_FROM = datetime(2026, 10, 30).timestamp()  # from the match of 2026-10-29 on (logged the morning after)
+
+
+def _taker(players: list[dict]) -> int | None:
+    """The one with most attack, ties to the rest of his stats (THEORY.md section 4)."""
+    best = max(players, key=lambda p: (p.get("statAtt") or 0, (p.get("statOvr") or 0) + (p.get("statDef") or 0)), default=None)
+    return best.get("id") if best else None
+
+
+def _corners_clash(match: dict, side: str) -> bool | None:
+    """Whether the corners and the free kicks were one man in a match where the midfielder with most attack is
+    also the starter with most attack (the clash of THEORY.md section 4); None when there was no clash or it cannot
+    be told. The places recorded before the match when there (from the version after 0.14.10), else by the date:
+    the old rule (one man) before 2026-10-28, the new one (another midfielder) from 2026-10-29."""
+    starters = [p for p in (match.get("onze") or {}).get(side) or [] if 1 <= (p.get("lineup") or 0) <= 11]
+    if len(starters) < 11 or _taker(starters) != _taker([p for p in starters if p.get("position") == 2]):
+        return None
+    places = match.get("especialistas") or {}
+    if places.get("corners") and places.get("freekick"):
+        return places["corners"] == places["freekick"]
+    when = match.get("t") or 0
+    return True if when < OLD_CORNERS_UNTIL else False if when >= NEW_CORNERS_FROM else None
+
+
+def corners_not_free_kicks(matches: list[dict], minimum: int = 10) -> Result:
+    """THEORY.md section 4 (owner, 2026-10-28; OSMPro Táticas point 17), to keep measuring (owner, 2026-10-29: "os
+    nossos resultados eram bons com a teoria antiga"): the owner's league matches where the midfielder with most
+    attack also takes the free kicks, with him on the corners too (the old rule) or another midfielder (the new)."""
+    groups: dict[bool, list[tuple[dict, str]]] = {True: [], False: []}
+    for match, side in _own(matches):
+        clash = _corners_clash(match, side)
+        if clash is not None:
+            groups[clash].append((match, side))
+    same, other = groups[True], groups[False]
+    goals = lambda pairs: mean(_goals(m)[0 if s == "casa" else 1] for m, s in pairs) if pairs else 0.0
+    edge = lambda pairs: mean(_edge(m, s) for m, s in pairs) if pairs else 0.0
+    measured = (f"o mesmo nos cantos e livres {_ppg(same):.2f} pts/jogo, {goals(same):.1f} golos, força {edge(same):+.0f} % ({len(same)}); "
+                f"outro médio nos cantos {_ppg(other):.2f}, {goals(other):.1f} golos, força {edge(other):+.0f} % ({len(other)})")
+    verdict = SHORT if min(len(same), len(other)) < minimum else AGREES if _ppg(other) >= _ppg(same) else DISAGREES
+    return Result("cantos", "Cantos ≠ livres (§4): outro médio nos cantos", measured, len(same) + len(other), verdict)
+
+
 def manager_xp(lines: list[dict], minimum: int = 10) -> Result:
     """THEORY.md section 22, to keep measuring (owner, 2026-10-28; OSMPro series point 11): the change of the
     manager's rating in the league by result and opponent, from ``logs/*/xp`` (only matches read one round after the
@@ -261,7 +305,8 @@ def manager_xp(lines: list[dict], minimum: int = 10) -> Result:
 
 
 CHECKS: list[Callable[[list[dict]], Result]] = [home_advantage, clearly_stronger, away_433, fatigue,
-                                                away_523, against_stronger, tempo_against_stronger, tempo_by_strength, counter_attack]
+                                                away_523, against_stronger, tempo_against_stronger, tempo_by_strength, counter_attack,
+                                                corners_not_free_kicks]
 
 
 def run(records: Iterable[dict], friendlies: Iterable[dict] = (), xp: Iterable[dict] = ()) -> list[Result]:

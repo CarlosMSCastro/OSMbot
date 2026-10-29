@@ -61,7 +61,8 @@ def note_prematch(client, base: str, week: int, now: float | None = None, oppone
     before the match: read on every pass of the last hours, so the last read is the one the match was played with.
     The game gives a report per club analysed in the round (``teamId``; the analyst also goes round the league)."""
     data = _load()
-    entry = {"semana": week, "lido": now or time.time(), "tatica": _body(client, f"{base}/teamtactics")}
+    entry = {"semana": week, "lido": now or time.time(), "tatica": _body(client, f"{base}/teamtactics"),
+             "especialistas": _body(client, f"{base}/specialists")}  # places of the eleven (corners ≠ free kicks, THEORY.md 4)
     report = _body(client, f"{API_V11}/{base}/spyresults")
     if isinstance(report, list) and opponent is not None:
         report = [r for r in report if isinstance(r, dict) and r.get("teamId") == opponent]
@@ -190,6 +191,7 @@ def log_round(client, league_id: int, my_teams: dict[int, dict], log, now: float
             line["tatica"] = kept.get("tatica") if same and kept.get("tatica") else _body(client, f"{base}/teamtactics")
             line["tatica_lida"] = "antes do jogo" if same and kept.get("tatica") else "depois do jogo"
             line["analise"] = kept.get("analise") if same else None
+            line["especialistas"] = kept.get("especialistas") if same else None
             mine_home = team == match["homeTeamId"]
             score = f"{match['homeGoals']}-{match['awayGoals']}" if mine_home else f"{match['awayGoals']}-{match['homeGoals']}"
             other = match["awayTeamId"] if mine_home else match["homeTeamId"]
