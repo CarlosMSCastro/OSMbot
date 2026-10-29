@@ -545,9 +545,9 @@ class CareCell(QWidget):
 
 class StepIcon(QWidget):
     """The mark of a pre-match step, all the same size (owner, 2026-10-10): done (green with a tick), waiting for
-    the analyst (blue with a clock), to collect (yellow with "!"), still open (grey ring)."""
+    the analyst (blue with a clock), to collect (yellow with "!"), still open (grey ring), not allowed (grey with a dash)."""
 
-    COLOURS = {"done": GREEN, "waiting": BLUE, "collect": YELLOW, "open": GREY, "progress": YELLOW}
+    COLOURS = {"done": GREEN, "waiting": BLUE, "collect": YELLOW, "open": GREY, "progress": YELLOW, "blocked": GREY}
 
     def __init__(self, kind: str = "open"):
         super().__init__()
@@ -573,6 +573,8 @@ class StepIcon(QWidget):
         elif self.kind == "waiting":
             painter.drawLine(QPointF(8, 8), QPointF(8, 4.6))
             painter.drawLine(QPointF(8, 8), QPointF(10.6, 9.4))
+        elif self.kind == "blocked":
+            painter.drawLine(QPointF(4.8, 8), QPointF(11.2, 8))
         else:
             painter.drawLine(QPointF(8, 4.2), QPointF(8, 8.8))
             painter.drawPoint(QPointF(8, 11.4))

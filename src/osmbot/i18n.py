@@ -103,6 +103,8 @@ WORDS = {
     # daily rewards
     "Início de sessão por reclamar": "Login reward to claim", "Prémio diário por reclamar": "Daily prize to claim",
     "Prémio diário": "Daily prize",
+    "O adversário está em treino secreto: o jogo não deixa analisar": "The opponent is on a secret training: the game does not allow the analysis",
+    "A força dele é estimada (onze e tática não se veem)": "His strength is an estimate (his eleven and tactics cannot be seen)",
     # timeline
     "já": "now", "Vídeos da loja": "Shop videos", "Acelerar treinos": "Speed up trainings",
     "Vídeos de dinheiro": "Money videos", "Reward cumulativo": "Cumulative reward", "Novo dia (diárias)": "New day (daily)",
@@ -224,6 +226,7 @@ PATTERNS = [(re.compile(pattern), replace) for pattern, replace in (
     (r"(\d+) jogos?", lambda m: f"{m[1]} game{'s' if m[1] != '1' else ''}"),
     (r"(\d+) j", lambda m: f"{m[1]} g"),
     (r"1 jogo · não dá", lambda m: "1 game · not allowed"),
+    (r"Se fez estágio, tem mais (.+) % que não se vê", lambda m: f"If he went on a training camp, he has {m[1]} % more that cannot be seen"),
     (r"(\d+) jogos? · à espera", lambda m: f"{m[1]} game{'s' if m[1] != '1' else ''} · waiting"),
     (r"⚠ Moral baixa: (.+)", lambda m: f"⚠ Low morale: {m[1]}"),
     (r"⚠ Cansados: (.+)", lambda m: f"⚠ Tired: " + re.sub(r"sem suplente (\w+)", lambda n: f"no cover {_w(n[1])}", m[1])),

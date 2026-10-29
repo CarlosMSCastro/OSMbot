@@ -2,6 +2,13 @@
 
 Entradas mais recentes primeiro. Cada sessão: o que se fez · o que ficou por fazer · próximo passo.
 
+## 2026-10-29 — Análise com o adversário em treino secreto
+
+- **Dist:** `dist/windows` refeito na 0.14.9 (`build_portable.py --zip --installer`): portable 206 MB, instalador 148 MB. Os ficheiros da 0.14.5 continuam lá.
+- **Problema (dono, Real Betis vs Barcelona):** o Barcelona está em treino secreto (e, para o dono, muito provavelmente em estágio). O quadro mostrava "Análise" com relógio e depois "por levantar". Lido no jogo (só GET): passo 5 com `enabled` false e "The opponent is on a secret training". O relógio era do analista a dar a volta à liga (outro clube): o quadro contava qualquer analista da jornada.
+- **Corrigido:** o "Análise" só conta o analista mandado ao próximo adversário (`instructionTeamId`). Com o passo desligado fica cinzento com um traço, "Análise não dá", e o hover diz: "O adversário está em treino secreto: o jogo não deixa analisar", "A força dele é estimada (onze e tática não se veem)" e "Se fez estágio, tem mais N % que não se vê" (`CampBoostPercentage` da liga). `game/clubinfo`, `gui/view`, `gui/window` (`StepIcon` "blocked"), `i18n`; 1 teste novo, 505 testes. Ainda não visto na janela a correr.
+- **Versão 0.14.10 (pedido do dono):** `pyproject.toml`, `__init__`, `CHANGELOG.md`, `README.md` (estado), `dist/release-notes-v0.14.10.md`; `build_portable.py --zip --installer` → `dist/windows` 0.14.10.
+
 ## 2026-10-28 (cont. 3) — Ciclos do estádio no hover; jornada e calendário da época
 
 - **Dist:** o `dist/windows` 0.14.5 não tem a correção do `spyresults` em v1.1 (feita depois do build). Dono: sem nova versão por agora.

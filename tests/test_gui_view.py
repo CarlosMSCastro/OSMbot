@@ -91,6 +91,14 @@ def test_pre_match_checklist_shows_done_waiting_and_open_points():
     assert later["steps"][1] == ("collect", "Análise", "por levantar", [])
 
 
+def test_analysis_the_game_does_not_allow_is_not_waiting_nor_to_collect():
+    data = club()
+    data["prep"]["steps"][1] = ("Análise", False, "treino secreto")
+    data["prep"]["why"] = {"Análise": ["O adversário está em treino secreto: o jogo não deixa analisar"]}
+    assert club_view(data, NOW)["prep"]["steps"][1] == (
+        "blocked", "Análise", "não dá", ["O adversário está em treino secreto: o jogo não deixa analisar"])
+
+
 def test_secret_training_and_training_camp_come_after_the_steps_green_when_booked():
     boosts = [{"kind": "secret", "name": "Treino secreto", "on": True, "blocked": ""},
               {"kind": "camp", "name": "Estágio", "on": False, "blocked": ""}]

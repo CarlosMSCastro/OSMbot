@@ -356,6 +356,8 @@ def club_view(club: dict, now: float, shortened: dict | None = None) -> dict:
             steps.append(("done", name, "ⓘ" if reasons else "", reasons))
         elif analyst == "fora da regra":  # done in the game but not as the owner's rule: yellow (owner, 2026-10-12)
             steps.append(("progress", name, "", reasons))
+        elif analyst == "treino secreto":  # the game does not allow it: no clock, nothing to collect (owner, 2026-10-29)
+            steps.append(("blocked", name, "não dá", reasons))
         elif analyst and analyst > now:
             steps.append(("waiting", name, span(analyst - now), reasons))
         elif analyst:

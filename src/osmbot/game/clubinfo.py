@@ -25,6 +25,7 @@ GUESS_FORMATION = 433  # [S] another club's eleven is unknown before the analysi
 FIXTURES_FOR = 10 * 60.0
 SPECIALISTS_STEP = 4  # matchpreparation step "Select specialists"
 RULE = "fora da regra"  # a step the game ticks but the owner's rule does not
+HIDDEN = "treino secreto"  # the analysis the game does not allow: the opponent is on a secret training
 VALUES_FOR = 3600.0
 BENCH_STEP, ELEVEN_STEP, POSITIONS_STEP = 1, 0, 2
 TACTIC_STEP = "tactic"  # not a step of the game: the owner's rule for the tactics (D-073)
@@ -200,16 +201,6 @@ def club_extra(client, team: dict, base: str, players: list[dict], slot, market:
     status, prep = got[2]
     prep = prep if status == 200 and isinstance(prep, dict) else {}
     done = {s["type"]: s.get("progressAmount", 0) >= s.get("completionAmount", 1) for s in prep.get("steps") or []}
-    analyst = None
-    for entry in _as_list(got[3]):
-        timer = _timer(entry)
-        if entry.get("weekNr") == week and timer:
-            analyst = timer["finishedTimestamp"]
-    steps = [(name, done.get(kind, False), analyst if kind == ANALYSIS_STEP and not done.get(kind) else None)
-             for kind, name in CHECKLIST]
-    friendlies = friendlies_played(matches, team["id"], week)  # owner, 2026-10-11: "Amigáveis (1)" … "(4)", green from the 1st
-    steps = [(f"Amigáveis ({friendlies})", friendlies >= 1, None) if kind == FRIENDLY_STEP else step
-             for (kind, _), step in zip(CHECKLIST, steps)]
     status, tactic = got[7]
     tactic = tactic if status == 200 and isinstance(tactic, dict) else None
     strength = team_rating(players, (tactic or {}).get("formation"))
@@ -226,6 +217,19 @@ def club_extra(client, team: dict, base: str, players: list[dict], slot, market:
 
         upcoming["strength"], upcoming["estimate"], upcoming["forwards"] = _cached(
             ("strength", league, rival, week, bool(done.get(ANALYSIS_STEP))), FIXTURES_FOR, rival_strength)
+    by_type = {s["type"]: s for s in prep.get("steps") or []}
+    rival = (upcoming or {}).get("opponent_id")
+    analyst = None  # only the analyst sent to the next opponent: one going round the league is not his analysis
+    for entry in _as_list(got[3]):
+        timer = _timer(entry)
+        if entry.get("weekNr") == week and timer and entry.get("instructionTeamId") in (None, rival):
+            analyst = timer["finishedTimestamp"]
+    hidden = not (by_type.get(ANALYSIS_STEP) or {}).get("enabled", True)  # the opponent's secret training (2026-10-29)
+    steps = [(name, done.get(kind, False), (HIDDEN if hidden else analyst) if kind == ANALYSIS_STEP and not done.get(kind) else None)
+             for kind, name in CHECKLIST]
+    friendlies = friendlies_played(matches, team["id"], week)  # owner, 2026-10-11: "Amigáveis (1)" … "(4)", green from the 1st
+    steps = [(f"Amigáveis ({friendlies})", friendlies >= 1, None) if kind == FRIENDLY_STEP else step
+             for (kind, _), step in zip(CHECKLIST, steps)]
     referees = _cached(("referees", league), FIXTURES_FOR, lambda: _list(client, f"{league}/referees"))
     strictness = next((r.get("strictness") for r in referees if upcoming and r["id"] == upcoming.get("referee_id")), None)
     mine, theirs = _match_strengths(client, team, league, teams, week, upcoming, strength, done)
@@ -262,7 +266,11 @@ def club_extra(client, team: dict, base: str, players: list[dict], slot, market:
     for (kind, _), (name, _, _) in zip(CHECKLIST, steps):
         if notes.get(kind):  # after any warning of the same step (the tackling may still be out of the rule)
             reasons[name] = reasons.get(name, []) + notes[kind]
-    by_type = {s["type"]: s for s in prep.get("steps") or []}
+    if hidden:  # the game does not let the analyst see him: say so, and what the estimate leaves out
+        camp = {g["name"]: g["value"] for g in _settings(client, team["leagueId"])}.get("CampBoostPercentage")
+        reasons[dict(CHECKLIST)[ANALYSIS_STEP]] = ["O adversário está em treino secreto: o jogo não deixa analisar",
+                                    "A força dele é estimada (onze e tática não se veem)"] + (
+            [f"Se fez estágio, tem mais {camp} % que não se vê"] if camp else [])
     boosts = [{"kind": key, "name": name, "on": done.get(kind, False),  # marked for the next match (owner, 2026-10-14)
                "blocked": "" if (by_type.get(kind) or {}).get("enabled", True) else by_type[kind].get("disabledText") or "?"}
               for kind, key, name in BOOSTS]

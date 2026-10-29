@@ -4,6 +4,19 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-PT/1.1.0/); 
 
 Este ficheiro é o **histórico de versões, para quem lê o repo**. O diário interno de cada sessão de trabalho está em [`docs/WORKLOG.md`](docs/WORKLOG.md).
 
+## [0.14.10] — 2026-10-29
+
+O passo "Análise" do pré-jogo deixa de mostrar um relógio ou "por levantar" que não são do próximo adversário.
+
+### Corrigido
+- **Análise no pré-jogo:** o passo só conta o analista mandado ao próximo adversário. Antes, o analista a passar pelos outros clubes da liga aparecia como se fosse a análise do adversário (relógio e depois "por levantar").
+
+### Alterado
+- **Adversário em treino secreto:** o jogo não deixa analisar, e o passo passa a cinzento com um traço, "Análise não dá". Ao passar o rato: que o adversário está em treino secreto, que a força dele é estimada (onze e tática não se veem) e quanto teria a mais se tiver feito estágio.
+
+### Documentação
+- `DISCOVERY.md` §3: o passo de análise desligado com o adversário em treino secreto.
+
 ## [0.14.9] — 2026-10-28
 
 A análise do adversário só conta quando foi mesmo ao adversário; os jogadores In Form ficam marcados nos registos do mercado.
