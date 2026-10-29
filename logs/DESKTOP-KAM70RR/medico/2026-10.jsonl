@@ -15,3 +15,6 @@
 {"t":1793045444,"evento":"pôr","tipo":"lawyer","clube":"leagues/246031208/teams/1","semana":32,"jogador":953074922,"nome":"Gabriel","antes":{"fora":3,"lesao":0,"suspensao":36}}
 {"t":1793218529,"evento":"pôr","tipo":"lawyer","clube":"leagues/246031208/teams/1","semana":34,"jogador":951865239,"nome":"Cubarsí","antes":{"fora":2,"lesao":0,"suspensao":43}}
 {"t":1793225096,"evento":"pôr","tipo":"doctor","clube":"leagues/215028346/teams/9","semana":8,"jogador":924982546,"nome":"van Brederode","antes":{"fora":3,"lesao":29,"suspensao":0}}
+{"t":1793247415,"evento":"levantar","tipo":"lawyer","clube":"leagues/246031208/teams/1","semana":34,"caso":12750239,"jogador":951865239,"nome":"Cubarsí","antes":{"fora":2,"lesao":0,"suspensao":43},"depois":{"fora":1,"lesao":0,"suspensao":43}}
+{"t":1793253953,"evento":"levantar","tipo":"doctor","clube":"leagues/215028346/teams/9","semana":8,"caso":7430198,"jogador":924982546,"nome":"van Brederode","antes":{"fora":3,"lesao":29,"suspensao":0},"depois":{"fora":1,"lesao":29,"suspensao":0}}
+{"t":1793253955,"evento":"pôr","tipo":"doctor","clube":"leagues/215028346/teams/9","semana":8,"jogador":924982546,"nome":"van Brederode","antes":{"fora":3,"lesao":29,"suspensao":0}}

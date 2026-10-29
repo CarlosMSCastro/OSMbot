@@ -146,6 +146,9 @@ def _days(span: str) -> str:
 
 def _missing(text: str) -> str:
     """'sem ED em forma (Saka 72 %, Bowen 82 % a poupar)' -> 'no fit RW (Saka 72 %, Bowen 82 % resting)'."""
+    text = re.sub(r"só (\d+) (\w+) em forma para (\d+)", lambda w: f"only {w[1]} fit {_SPECIFIC.get(w[2], w[2])} for {w[3]}",
+                  text)
+    text = re.sub(r"só (\d+) defesas no plantel", lambda w: f"only {w[1]} defenders in the squad", text)
     return re.sub(r"sem (\w+) (em forma|no plantel)", lambda w: f"no {'fit ' if w[2] == 'em forma' else ''}"
                   f"{_SPECIFIC.get(w[1], w[1])}{' in the squad' if w[2] == 'no plantel' else ''}",
                   text).replace(" fora", " out").replace(" a poupar", " resting")
@@ -180,13 +183,20 @@ PATTERNS = [(re.compile(pattern), replace) for pattern, replace in (
      lambda m: f"Formation {m[1]}: should be 5-2-3 (clearly stronger opponent)"),
     (r"^Formação (.+?): devia ser (.+) \(fora de casa\)$",
      lambda m: f"Formation {m[1]}: should be {m[2].replace(' ou ', ' or ')} (away from home)"),
-    (r"^Formação (.+?): devia ser (.+)$", lambda m: f"Formation {m[1]}: should be {m[2]}"),
+    (r"^Formação (.+?): devia ser (.+), mas ((?:sem|só) .+)$",
+     lambda m: f"Formation {m[1]}: should be {m[2].replace(' ou ', ' or ')}, but {_missing(m[3])}"),
+    (r"^Formação (.+?): devia ser (.+)$", lambda m: f"Formation {m[1]}: should be {m[2].replace(' ou ', ' or ')}"),
     (r"^4-3-3 A aceite: fora, mas claramente mais forte \((.+)\)$",
      lambda m: f"4-3-3 A accepted: away, but clearly stronger ({m[1]})"),
     (r"^4-3-3 B aceite: em casa a regra é o 4-3-3 A$", lambda m: "4-3-3 B accepted: at home the rule is the 4-3-3 A"),
-    (r"^(\d-\d-\d(?: B)?) aceite: (sem .+)$", lambda m: f"{m[1]} accepted: " + _missing(m[2])),
-    (r"^Formação (.+?) (sem .+): serve (.+)$",
+    (r"^(\d-\d-\d(?: [AB])?) aceite: ((?:sem|só) .+)$", lambda m: f"{m[1]} accepted: " + _missing(m[2])),
+    (r"^Formação (.+?) ((?:sem|só) .+): serve (.+)$",
      lambda m: f"Formation {m[1]} {_missing(m[2])}: {m[3].replace(' ou ', ' or ')} will do"),
+    (r"^Formação (.+?) ((?:sem|só) .+)$", lambda m: f"Formation {m[1]} {_missing(m[2])}"),
+    (r"^Sem 5 defesas contra um mais forte: (.+)$",
+     lambda m: "No 5 at the back against a stronger opponent: " + _missing(m[1])),
+    (r'^arranja um MO ou MDC: mercado, olheiro ou carta "mudar posição"$',
+     lambda m: 'get a CAM or CDM: market, scout or the "change position" card'),
     (r"^(Capitão|Penáltis|Livres|Cantos): (.+), pela regra (.+)$",
      lambda m: f"{_ROLE[m[1]]}: {m[2]}, your rule says {m[3]}"),
     (rf"(?i:(?:{_ALT})(?: ou (?:{_ALT}))*)", lambda m: _options(m[0])),  # the "Tática" step (D-073)

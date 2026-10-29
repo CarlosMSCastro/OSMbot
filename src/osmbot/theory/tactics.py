@@ -62,7 +62,7 @@ PLANS = {0: "Bola longa", 1: "Jogo de passe", 2: "Jogar pelas alas", 3: "Contra-
 ATTACK = {0: "Ajudar a defender", 1: "Apoiar meio-campo", 2: "Atacar apenas"}  # forwards
 MIDFIELD = {0: "Ajudar a defesa", 1: "Manter posições", 2: "Pressionar na frente"}  # midfielders
 DEFENSE = {0: "Defender atrás", 1: "Defesas atacantes", 2: "Apoiar meio-campo"}  # defenders
-PASSING, WINGS, COUNTER, SHOOT = 1, 2, 3, 4
+LONG_BALL, PASSING, WINGS, COUNTER, SHOOT = 0, 1, 2, 3, 4
 SUPPORT, ATTACK_ONLY = 1, 2
 HELP_DEFENCE, NEUTRAL = 0, 1
 DEEP = 0
@@ -137,6 +137,9 @@ def instructions(formation: int, detail: str | None, *, away: bool = False, clea
     if formation == 352:
         return Instructions(of(PASSING), of(DEEP), of(NEUTRAL), of(ATTACK_ONLY, SUPPORT), of(False), of(True),
                             Band(60, 80, 62), Band(40, 60, 55), Band(60, 80, 70))
+    if formation == 424:  # [S] the author's experimental 4-2-4 B, only with no MO nor MDC (owner, 2026-10-29)
+        return Instructions(of(LONG_BALL), of(DEEP), of(HELP_DEFENCE), of(ATTACK_ONLY), of(True), of(False),
+                            Band(80, 100, 85), high, high)
     return None
 
 

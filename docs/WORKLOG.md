@@ -2,6 +2,16 @@
 
 Entradas mais recentes primeiro. Cada sessão: o que se fez · o que ficou por fazer · próximo passo.
 
+## 2026-10-29 (cont. 2) — Só formações que o plantel consegue jogar (D-077)
+
+- **Dist:** `dist/windows` refeito na 0.14.11 (depois do pull); apagados os ficheiros da 0.14.9.
+- **Problema (dono, taça SV Ried vs LASK Linz, neutro, 96 x 96):** o Claude recomendou o 4-3-3 A sem ver o plantel; o Ried não tem nenhum MCO. O quadro também pedia o A.
+- **Decidido (dono, D-077):** só sugerir formações com jogadores em forma (nem cansados nem a poupar) para EE, ED, DE, DD, MCO e MCD; lateral nunca coberto por DC; sem MCO o 4-3-3 B, fora sem MCD o A; sem os dois, 5-2-3 A e senão 4-2-4 (barras [S] do autor), com o aviso para arranjar um (mercado, olheiro, carta "mudar posição"); 5 defesas só com 7 DEF no plantel e 3 DC + DE + DD em forma.
+- **Código:** `theory/lineup._plan` (substitui `_missing`, `_instead`, `_suggest`, `_home_b`), `_lacks`, `INSTEAD`; 4-2-4 em `theory/tactics.instructions`; inglês em `i18n`. Testes com um plantel inteiro (`tests/test_lineup.py`). 511 testes.
+- **Visto com os dados reais (só GET, 20:32):** SV Ried passa a "Formação 5-2-3: devia ser 4-3-3 B" (e a tática do B); Betis e Qarabag com as notas de antes.
+- **Versão 0.14.12 (pedido do dono):** `pyproject.toml`, `__init__`, `CHANGELOG.md`, `README.md` (estado), `dist/release-notes-v0.14.12.md`; 511 testes; `build_portable.py --zip --installer` → `dist/windows/` 0.14.12 (553 / 206 / 148 MB), versão confirmada no portátil; os da 0.14.11 apagados. Commit e `gh release create v0.14.12` entregues ao dono (só Windows).
+- **Por fazer:** ver na janela a correr. Faltam as notas de lançamento da 0.14.10 e da 0.14.11 em `dist/`.
+
 ## 2026-10-29 (cont.) — Conflito do analista: a volta à liga bloqueia a análise do dono
 
 - **Dono (KV Mechelen vs Anderlecht, em casa):** fez a análise e o quadro continuava a dar 4-3-3 A. Lido no jogo (só GET): a 1.ª análise do dono **não ficou registada** (nenhuma `spyinstructions` para o adversário, passo 5 em 0/1); minutos antes o bot tinha levantado o relatório de outro clube e mandado o analista a outro (volta à liga, `prematch._scout`), ~6 h antes do jogo (`can_scout` deixa até às 4 h + 1 h). O analista só faz um clube de cada vez ("AlreadySpying"): **hipótese forte** de que foi isso que impediu a análise do dono. À 2.ª tentativa ficou registada.

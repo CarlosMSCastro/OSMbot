@@ -168,74 +168,144 @@ def test_the_formation_is_4_3_3_a_and_5_defenders_only_against_a_stronger_analys
     assert tactic_notes({**five, "formation": 433, "formationDetail": "B"}, [], 100, 108) == []
 
 
-def winger(name, side, fitness=90, out=0):
-    return {"name": name, "specificPosition": 8 if side == "EE" else 11, "fitness": fitness, "unavailable": out}
+# A whole squad, all fit (name, specificPosition, position): 7 defenders, two MO and an MDC, a winger on each side
+SQUAD = [("Raya", 6, 4), *[(f"DC{i}", 3, 3) for i in range(1, 6)], ("Cucurella", 9, 3), ("James", 12, 3),
+         ("Gueye", 2, 2), ("Neves", 2, 2), ("Wirtz", 1, 2), ("Ødegaard", 1, 2), ("Rice", 5, 2), ("Doku", 8, 1),
+         ("Saka", 11, 1), ("Haaland", 4, 1)]
+
+
+def squad(**changes):
+    """The squad with a player's fitness changed (``Saka=72``), out (``"fora"``) or not in it (None)."""
+    players = []
+    for name, specific, position in SQUAD:
+        change = changes.get(name, 90)
+        if change is not None:
+            players.append({"name": name, "specificPosition": specific, "position": position,
+                            "fitness": 90 if change == "fora" else change, "unavailable": 2 if change == "fora" else 0})
+    known = {name for name, _, _ in SQUAD}
+    return players + [{"name": name, "specificPosition": 11, "position": 1, "fitness": fitness, "unavailable": 0}
+                      for name, fitness in changes.items() if name not in known]  # a name not in it: another ED
 
 
 def test_without_a_fit_winger_on_a_side_the_4_4_2_b_is_taken_and_noted():
     b442 = {"formation": 442, "formationDetail": "B", "style": 2}
-    tired = [winger("Saka", "ED", 72), winger("Doku", "EE", 75)]
+    tired = squad(Saka=72, Doku=75)
     assert tactic_warnings(b442, 108, 100, tired) == [] and tactic_notes(b442, tired, 108, 100) == [
         "4-4-2 B aceite: sem EE em forma (Doku 75 %); sem ED em forma (Saka 72 %)"]
-    one_side = [winger("Doku", "EE"), winger("Saka", "ED", out=2)]  # one fit EE is not enough: the ED is out
+    one_side = squad(Saka="fora")  # one fit EE is not enough: the ED is out
     assert tactic_notes(b442, one_side, 108, 100) == ["4-4-2 B aceite: sem ED em forma (Saka fora)"]
-    assert tactic_notes(b442, [winger("Doku", "EE")], 108, None) == ["4-4-2 B aceite: sem ED no plantel"]
+    assert tactic_notes(b442, squad(Saka=None), 108, None) == ["4-4-2 B aceite: sem ED no plantel"]
 
 
 def test_with_a_fit_winger_on_each_side_the_4_4_2_b_is_still_out_of_the_rule():
     b442 = {"formation": 442, "formationDetail": "B", "style": 2}
-    fit = [winger("Doku", "EE"), winger("Saka", "ED", 72), winger("Bowen", "ED", 85)]  # a fit one on the bench counts
+    fit = squad(Saka=72, Bowen=85)  # a fit one on the bench counts
     assert tactic_warnings(b442, 108, 100, fit) == ["Formação 4-4-2: devia ser 4-3-3 A"]
     assert tactic_notes(b442, fit, 108, 100) == []
 
 
 def test_only_the_4_4_2_b_and_only_when_the_rule_says_4_3_3_a():
-    tired = [winger("Doku", "EE", 70), winger("Saka", "ED", 70)]
+    tired = squad(Doku=70, Saka=70)
     a442 = {"formation": 442, "formationDetail": "A", "style": 2}
-    assert tactic_warnings(a442, 108, 100, tired) == ["Formação 4-4-2: devia ser 4-3-3 A"]  # the owner: only the B
+    assert tactic_warnings(a442, 108, 100, tired) == [  # the owner: only the B; and only what the squad can play
+        "Formação 4-4-2: devia ser 4-4-2 B ou 5-3-2 ou 3-5-2"]
     b442 = {**a442, "formationDetail": "B"}
     assert tactic_warnings(b442, 100, 103, tired) == ["Formação 4-4-2: devia ser de 5 defesas (adversário mais forte)"]
     assert tactic_notes(b442, tired, 100, 108) == []
 
 
-def fullback(name, side, fitness=90, out=0):
-    return {"name": name, "specificPosition": 9 if side == "DE" else 12, "fitness": fitness, "unavailable": out}
-
-
 def test_without_fit_full_backs_3_defenders_serve_and_the_4_3_3_is_told_so():
-    squad = [winger("Doku", "EE"), winger("Saka", "ED"), fullback("Cucurella", "DE", 76), fullback("James", "DD")]
+    no_left = squad(Cucurella=76)
     a433 = {"formation": 433, "formationDetail": "A", "style": 2}
-    assert tactic_warnings(a433, 108, 100, squad) == [
+    assert tactic_warnings(a433, 108, 100, no_left) == [
         "Formação 4-3-3 A sem DE em forma (Cucurella 76 %): serve 3-4-3 ou 3-5-2"]
     t343 = {"formation": 343, "formationDetail": "A", "style": 2}
-    assert tactic_warnings(t343, 108, 100, squad) == []
-    assert tactic_notes(t343, squad, 108, 100) == ["3-4-3 aceite: sem DE em forma (Cucurella 76 %)"]
-    assert tactic_warnings({**t343, "formation": 352}, 108, 100, squad) == []
-    assert tactic_warnings({"formation": 442, "formationDetail": "B", "style": 2}, 108, 100, squad) == [
-        "Formação 4-4-2: devia ser 4-3-3 A"]  # it needs the full-backs too
-    assert tactic_warnings(t343, 100, 103, squad) == [  # against a stronger one: still 5 defenders
-        "Formação 3-4-3: devia ser de 5 defesas (adversário mais forte)"]
+    assert tactic_warnings(t343, 108, 100, no_left) == []
+    assert tactic_notes(t343, no_left, 108, 100) == ["3-4-3 aceite: sem DE em forma (Cucurella 76 %)"]
+    assert tactic_warnings({**t343, "formation": 352}, 108, 100, no_left) == []
+    assert tactic_warnings({"formation": 442, "formationDetail": "B", "style": 2}, 108, 100, no_left) == [
+        "Formação 4-4-2: devia ser 3-4-3 ou 3-5-2"]  # it needs the full-backs too
+    # nobody in the squad counts too: the owner never covers a full-back with a centre-back (2026-10-29)
+    assert tactic_notes(t343, squad(Cucurella=None), 108, 100) == ["3-4-3 aceite: sem DE no plantel"]
 
 
 def test_resting_for_the_important_match_counts_as_tired():
-    squad = [winger("Doku", "EE"), winger("Saka", "ED"), fullback("Cucurella", "DE", 82), fullback("James", "DD", 83)]
+    resting = squad(Cucurella=82, James=83)
     t343 = {"formation": 343, "formationDetail": "A", "style": 2}
-    assert tactic_warnings(t343, 108, 100, squad) == ["Formação 3-4-3: devia ser 4-3-3 A"]  # not resting: the rule
-    assert tactic_warnings(t343, 108, 100, squad, spare=True) == []
-    assert tactic_notes(t343, squad, 108, 100, spare=True) == [
+    assert tactic_warnings(t343, 108, 100, resting) == ["Formação 3-4-3: devia ser 4-3-3 A"]  # not resting: the rule
+    assert tactic_warnings(t343, 108, 100, resting, spare=True) == []
+    assert tactic_notes(t343, resting, 108, 100, spare=True) == [
         "3-4-3 aceite: sem DE em forma (Cucurella 82 % a poupar); sem DD em forma (James 83 % a poupar)"]
 
 
 def test_no_wingers_take_two_strikers_and_with_no_full_backs_either_only_the_3_5_2():
-    tired = [winger("Doku", "EE", 70), winger("Saka", "ED", 70), fullback("Cucurella", "DE"), fullback("James", "DD")]
+    tired = squad(Doku=70, Saka=70)
     for formation in (532, 352):
         assert tactic_warnings({"formation": formation, "formationDetail": "A", "style": 2}, 108, 100, tired) == []
     assert tactic_warnings({"formation": 433, "formationDetail": "A", "style": 2}, 108, 100, tired) == [
         "Formação 4-3-3 A sem EE em forma (Doku 70 %); sem ED em forma (Saka 70 %): serve 4-4-2 B ou 5-3-2 ou 3-5-2"]
-    both = tired[:2] + [fullback("Cucurella", "DE", 70), fullback("James", "DD")]
+    both = squad(Doku=70, Saka=70, Cucurella=70)
     assert tactic_warnings({"formation": 433, "formationDetail": "A", "style": 2}, 108, 100, both)[0].endswith(": serve 3-5-2")
     assert tactic_warnings({"formation": 343, "formationDetail": "A", "style": 2}, 108, 100, both) == [
-        "Formação 3-4-3: devia ser 4-3-3 A"]
+        "Formação 3-4-3: devia ser 3-5-2"]
+
+
+def test_without_an_mo_the_4_3_3_b_and_without_an_mdc_away_the_a():
+    # the SV Ried's cup match, 2026-10-29: no MO in the squad, the "Onze" step asked for the 4-3-3 A
+    no_mo = squad(Wirtz=None, Ødegaard=None)
+    a433, b433 = ({"formation": 433, "formationDetail": d, "style": 2} for d in "AB")
+    assert tactic_warnings(a433, 96, 96, no_mo) == ["Formação 4-3-3 A sem MO no plantel: serve 4-3-3 B"]
+    assert tactic_warnings(b433, 96, 96, no_mo) == [] and tactic_notes(b433, no_mo, 96, 96) == [
+        "4-3-3 B aceite: sem MO no plantel"]
+    assert tactic_warnings({"formation": 523, "formationDetail": "A", "style": 2}, 96, 96, no_mo) == [
+        "Formação 5-2-3: devia ser 4-3-3 B"]
+    assert tactic_check({**OWNERS_433, "formation": 523}, 3, 96, 96, no_mo)[1][0] == "Se mudares para 4-3-3 B:"
+    no_mdc = squad(Rice=60)
+    assert tactic_warnings(a433, 104, 100, no_mdc, away=True) == [] and tactic_notes(a433, no_mdc, 104, 100, away=True) == [
+        "4-3-3 A aceite: sem MDC em forma (Rice 60 %)"]
+    assert tactic_warnings(a433, 104, 100, no_mdc) == []  # at home the A is the rule anyway
+
+
+def test_without_an_mo_nor_an_mdc_the_5_2_3_a_then_the_4_2_4_and_get_one():
+    get = 'arranja um MO ou MDC: mercado, olheiro ou carta "mudar posição"'
+    neither = squad(Wirtz=None, Ødegaard=None, Rice="fora")
+    t523, t424 = ({"formation": f, "formationDetail": "A", "style": 2} for f in (523, 424))
+    a433 = {**t523, "formation": 433}
+    assert tactic_warnings(t523, 104, 100, neither) == []
+    assert tactic_notes(t523, neither, 104, 100) == ["5-2-3 A aceite: sem MO no plantel; sem MDC em forma (Rice fora)", get]
+    assert tactic_warnings(a433, 104, 100, neither) == ["Formação 4-3-3 A sem MO no plantel: serve 5-2-3 A ou 4-2-4", get]
+    assert tactic_warnings(t424, 104, 100, neither) == [] and tactic_notes(t424, neither, 104, 100)[0].startswith("4-2-4 aceite")
+    six = [p for p in neither if p["name"] != "DC5"]  # 6 defenders: no 5 at the back, the 4-2-4
+    assert tactic_warnings(t523, 104, 100, six) == ["Formação 5-2-3: devia ser 4-2-4", get]
+    assert tactic_warnings(a433, 104, 100, squad(Wirtz=None, Ødegaard=None, Rice=None, Doku=70)) == [
+        "Formação 4-3-3 A sem MO no plantel; sem EE em forma (Doku 70 %)", get]
+
+
+def test_five_defenders_only_with_seven_in_the_squad_and_three_fit_centre_backs():
+    a433 = {"formation": 433, "formationDetail": "A", "style": 2}
+    five = {**a433, "formation": 532}
+    assert tactic_warnings(a433, 100, 103, squad()) == ["Formação 4-3-3 A: devia ser de 5 defesas (adversário mais forte)"]
+    six = squad(DC5=None)
+    assert tactic_warnings(a433, 100, 103, six) == [] and tactic_notes(a433, six, 100, 103) == [
+        "Sem 5 defesas contra um mais forte: só 6 defesas no plantel"]
+    tired = squad(DC1=70, DC2=75, DC3="fora")  # the tired ones can sit on the bench, but 3 must play
+    assert tactic_warnings(five, 100, 103, tired) == ["Formação 5-3-2: devia ser 4-3-3 A"]
+    assert tactic_notes(a433, tired, 100, 103) == [
+        "Sem 5 defesas contra um mais forte: só 2 DC em forma para 3 (DC1 70 %, DC2 75 %, DC3 fora)"]
+    assert tactic_warnings(five, 100, 103, squad(DC1=70, DC2=75)) == []  # 3 fit of 5
+    # a 5 at the back the squad cannot play: the ones it can
+    assert tactic_warnings(five, 100, 103, squad(Wirtz=None, Ødegaard=None)) == [
+        "Formação 5-3-2 sem MO no plantel: serve 5-2-3 ou 5-4-1"]
+    # clearly stronger and no wingers for the 5-2-3 [S]: any 5 at the back the squad can play
+    t541 = {**a433, "formation": 541}
+    assert tactic_warnings(t541, 100, 113, squad(Doku=70)) == [] and tactic_notes(t541, squad(Doku=70), 100, 113) == [
+        "5-4-1 aceite: sem EE em forma (Doku 70 %)"]
+
+
+def test_the_4_2_4_has_instructions():
+    t424 = {**OWNERS_433, "formation": 424, "overallMatchTactics": 0, "marking": True, "pressing": 85}
+    assert tactic_check(t424, 3, 104, 100, squad(Wirtz=None, Ødegaard=None, Rice=None)) == ([], [], True)
+    assert warnings_of({**t424, "pressing": 75}, opponent=100) == ["Pressão: 75, devia ser 80–100 (~85)"]
 
 
 def test_the_warnings_are_translated():
@@ -260,6 +330,12 @@ def test_the_warnings_are_translated():
             "Formation 5-3-2: should be 5-2-3 (clearly stronger opponent)"
         assert tr("4-3-3 B aceite: em casa a regra é o 4-3-3 A") == "4-3-3 B accepted: at home the rule is the 4-3-3 A"
         assert tr("Formação 5-2-3: devia ser 4-3-3 A") == "Formation 5-2-3: should be 4-3-3 A"
+        assert tr("5-2-3 A aceite: sem MO no plantel; sem MDC em forma (Rice fora)") ==             "5-2-3 A accepted: no CAM in the squad; no fit CDM (Rice out)"
+        assert tr("Formação 4-3-3 A sem MO no plantel: serve 5-2-3 A ou 4-2-4") ==             "Formation 4-3-3 A no CAM in the squad: 5-2-3 A or 4-2-4 will do"
+        assert tr("Sem 5 defesas contra um mais forte: só 2 DC em forma para 3 (DC1 70 %)") ==             "No 5 at the back against a stronger opponent: only 2 fit CB for 3 (DC1 70 %)"
+        assert tr("Sem 5 defesas contra um mais forte: só 6 defesas no plantel") ==             "No 5 at the back against a stronger opponent: only 6 defenders in the squad"
+        assert tr('arranja um MO ou MDC: mercado, olheiro ou carta "mudar posição"') ==             'get a CAM or CDM: market, scout or the "change position" card'
+        assert tr("Formação 4-3-3 A sem MO no plantel; sem EE em forma (Doku 70 %)") ==             "Formation 4-3-3 A no CAM in the squad; no fit LW (Doku 70 %)"
     finally:
         set_language("pt", save=False)
 

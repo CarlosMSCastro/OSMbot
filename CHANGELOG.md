@@ -4,6 +4,24 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-PT/1.1.0/); 
 
 Este ficheiro é o **histórico de versões, para quem lê o repo**. O diário interno de cada sessão de trabalho está em [`docs/WORKLOG.md`](docs/WORKLOG.md).
 
+## [0.14.12] — 2026-10-29
+
+O pré-jogo só sugere formações que o teu plantel consegue jogar.
+
+### Corrigido
+- **Formação sem MCO:** o "Onze" pedia o 4-3-3 A mesmo sem nenhum MCO no plantel. Agora sem MCO em forma pede o **4-3-3 B**; fora de casa, sem MCD em forma, o **4-3-3 A**.
+
+### Alterado
+- **Só formações que dá para jogar:** cada lugar de extremo, lateral, MCO e MCD precisa de um jogador em forma no plantel (cansados e a poupar para um jogo importante não contam). Um lado sem lateral no plantel conta como em falta (já não se assume um DC a cobrir).
+- **Sem MCO nem MCD:** pede o **5-2-3 A** e, se não der, o **4-2-4**, com o aviso para arranjares um (mercado, olheiro ou carta "mudar posição"; só sugestão).
+- **5 defesas** contra um adversário mais forte só com **7 defesas no plantel** e 3 DC, DE e DD em forma; sem isso ficam as de 4 ou 3 defesas, com uma nota. Entre as 5 defesas, só as que o plantel consegue jogar.
+
+### Adicionado
+- **4-2-4:** instruções e barras no passo "Tática" (bola longa, marcação individual, pressão 80–100; tiradas do 4-2-4 B experimental do OSMPro, a confirmar).
+
+### Documentação
+- `THEORY.md` §1 e §2; `DECISIONS.md` D-077.
+
 ## [0.14.11] — 2026-10-29
 
 O analista deixa de ocupar o lugar da tua análise do adversário; o aviso de titular à venda aparece a toda a hora.
