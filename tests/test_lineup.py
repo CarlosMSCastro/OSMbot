@@ -370,6 +370,29 @@ def test_a_green_starter_who_would_reach_the_important_match_yellow_is_warned():
     assert rest_warnings(players, weak, weak) == [] and rest_warnings(players, weak, None) == []
 
 
+def test_rest_only_for_the_harder_match_and_a_much_weaker_rival_is_not_important():
+    from osmbot.theory.fitness import important_match, rest_warnings, spare_for
+
+    assert important_match(90, 96, rival=True) is False  # a direct rival with 94 % of our strength
+    assert important_match(91.2, 96, rival=True) and not important_match(91.2, 96, rival=False)  # 95 %
+    assert important_match(97, 96, rival=False) and not important_match(96, 96, rival=False)
+    assert important_match(None, 96, rival=True) and not important_match(None, 96, rival=False)  # unknown: as before
+    easy = {"opponent": "Elche", "important": False, "difficulty": 0.94}
+    rival = {"opponent": "Betis", "important": True, "difficulty": 0.92}
+    assert not spare_for(easy, rival)  # the rival is the easier one: they play the next
+    hard = {**rival, "difficulty": 1.02}
+    assert spare_for(easy, hard) and spare_for({**easy, "important": True}, hard)  # also when both important
+    assert not spare_for(easy, {**hard, "important": False})
+    assert spare_for({"opponent": "Elche", "important": False}, {"opponent": "Real", "important": True})  # no strengths
+    paz = [{"name": "N. Paz", "lineup": 6, "unavailable": 0, "fitness": 82}]
+    assert rest_warnings(paz, easy, rival) == [] and rest_warnings(paz, easy, hard)[0]["then"] == 78
+    # the SV Ried, 2026-10-29: 96 at home against the Rapid Vienna (95), then away at the Rheindorf Altach (88, a direct
+    # rival): with the home advantage 94 % and 96 %, the Altach a little harder, but not 5 % (owner): the Paz plays
+    rapid = {"opponent": "Rapid Vienna", "important": important_match(95, 96 * 1.05, False), "difficulty": 95 / (96 * 1.05)}
+    altach = {"opponent": "Rheindorf Altach", "important": important_match(88 * 1.05, 96, True), "difficulty": 88 * 1.05 / 96}
+    assert (rapid["important"], altach["important"]) == (False, True) and not spare_for(rapid, altach)
+
+
 def test_the_next_two_matches():
     from osmbot.board.info import next_matches
 

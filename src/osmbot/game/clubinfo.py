@@ -17,7 +17,7 @@ from osmbot.game.specialists import captain_note, check
 from osmbot.theory.lineup import age_warnings, bench_notes, centre_notes, listed_starters, bench_warnings, empty_places, places, position_warnings, tactic_check, tactic_notes, tactic_warnings
 from osmbot.medical.policy import open_cases
 from osmbot.prematch.policy import friendlies_played
-from osmbot.theory.fitness import rest_warnings
+from osmbot.theory.fitness import important_match, rest_warnings, spare_for
 from osmbot.theory.tactics import match_strength
 
 GUESS_FORMATION = 433  # [S] another club's eleven is unknown before the analysis: his best 4-3-3 (THEORY.md 1, 16)
@@ -234,18 +234,19 @@ def club_extra(client, team: dict, base: str, players: list[dict], slot, market:
     strictness = next((r.get("strictness") for r in referees if upcoming and r["id"] == upcoming.get("referee_id")), None)
     mine, theirs = _match_strengths(client, team, league, teams, week, upcoming, strength, done)
 
-    def important(match: dict) -> dict:  # stronger opponent or a direct rival (owner, 2026-10-22, THEORY.md 16)
+    def important(match: dict) -> dict:  # stronger opponent or a close direct rival (owner, 2026-10-29, THEORY.md 16)
         rival = match["opponent_id"]
         rating = _cached(("strength_guess", league, rival, week), FIXTURES_FOR,  # [S] his eleven unknown: best 4-3-3
                          lambda: team_rating(_list(client, f"{league}/teams/{rival}/players"), GUESS_FORMATION))
         home = not match.get("neutral")
-        stronger = bool(rating and strength) and match_strength(rating, home=home and match["side"] == "A") \
-            > match_strength(strength, home=home and match["side"] == "H")
-        return {"opponent": match["opponent"], "important": match["danger"] or stronger}
+        theirs = match_strength(rating, home=home and match["side"] == "A") if rating else None
+        ours = match_strength(strength, home=home and match["side"] == "H") if strength else None
+        return {"opponent": match["opponent"], "important": important_match(theirs, ours, match["danger"]),
+                "difficulty": theirs / ours if theirs and ours else None}
 
     pair = [important(m) for m in next_matches(matches, teams, team["id"], week)]
     rest = rest_warnings(players, *(pair + [None, None])[:2])
-    spare = len(pair) > 1 and not pair[0]["important"] and pair[1]["important"]  # rest them before it (THEORY.md 1, 16)
+    spare = spare_for(*(pair + [None, None])[:2])  # rest them before the harder one (THEORY.md 1, 16)
     away = bool(upcoming) and upcoming.get("side") == "A" and not upcoming.get("neutral")  # the 4-3-3 B away (THEORY.md 1)
     status, current = got[6]  # the game ticks any 4 specialists; yellow when they are not the owner's rule (D-042)
     current = current if status == 200 and isinstance(current, dict) else None

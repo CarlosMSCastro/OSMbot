@@ -2,6 +2,13 @@
 
 Entradas mais recentes primeiro. Cada sessão: o que se fez · o que ficou por fazer · próximo passo.
 
+## 2026-10-29 (cont. 3) — Poupar só para o jogo mais difícil (D-078)
+
+- **Dono (SV Ried):** o bot sugeria poupar o N. Paz (82 %) contra o Rapid Vienna (2.º, 95, em casa) para o Rheindorf Altach (3.º, 88, fora), só por o Altach ser rival direto (2 lugares).
+- **Decidido (D-078):** rival direto só é importante com ≥ 95 % da nossa força; poupa-se só se o jogo seguinte for importante e ≥ 5 % mais difícil do que o próximo. Com a casa a contar, Rapid 94 % e Altach 96 %: sem a margem o Paz continuava poupado.
+- **Código:** `theory/fitness.important_match`, `spare_for`; `game/clubinfo` (cada jogo leva a `difficulty`). 512 testes.
+- **Versão 0.14.13 (pedido do dono, 2026-10-30):** o bot instalado era o 0.14.12, compilado antes desta correção, e voltou a sugerir poupar o N. Paz. `pyproject.toml`, `__init__`, `CHANGELOG.md`, `README.md` (estado), `dist/release-notes-v0.14.13.md`; 512 testes; `build_portable.py --zip --installer`.
+
 ## 2026-10-29 (cont. 2) — Só formações que o plantel consegue jogar (D-077)
 
 - **Dist:** `dist/windows` refeito na 0.14.11 (depois do pull); apagados os ficheiros da 0.14.9.

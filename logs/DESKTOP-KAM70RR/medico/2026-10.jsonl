@@ -18,3 +18,4 @@
 {"t":1793247415,"evento":"levantar","tipo":"lawyer","clube":"leagues/246031208/teams/1","semana":34,"caso":12750239,"jogador":951865239,"nome":"Cubarsí","antes":{"fora":2,"lesao":0,"suspensao":43},"depois":{"fora":1,"lesao":0,"suspensao":43}}
 {"t":1793253953,"evento":"levantar","tipo":"doctor","clube":"leagues/215028346/teams/9","semana":8,"caso":7430198,"jogador":924982546,"nome":"van Brederode","antes":{"fora":3,"lesao":29,"suspensao":0},"depois":{"fora":1,"lesao":29,"suspensao":0}}
 {"t":1793253955,"evento":"pôr","tipo":"doctor","clube":"leagues/215028346/teams/9","semana":8,"jogador":924982546,"nome":"van Brederode","antes":{"fora":3,"lesao":29,"suspensao":0}}
+{"t":1793308360,"evento":"pôr","tipo":"doctor","clube":"leagues/222034673/teams/3","semana":10,"jogador":974422179,"nome":"Kimmich","antes":{"fora":1,"lesao":18,"suspensao":0}}

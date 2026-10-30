@@ -4,6 +4,20 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-PT/1.1.0/); 
 
 Este ficheiro é o **histórico de versões, para quem lê o repo**. O diário interno de cada sessão de trabalho está em [`docs/WORKLOG.md`](docs/WORKLOG.md).
 
+## [0.14.13] — 2026-10-30
+
+Poupar titulares só para o jogo mais difícil.
+
+### Corrigido
+- **Poupar para o jogo errado:** o bot sugeria poupar um titular num jogo difícil só porque o seguinte era contra um rival direto, mesmo muito mais fraco.
+
+### Alterado
+- **Rival direto:** só conta como jogo importante com pelo menos **95 %** da tua força; um adversário mais forte conta sempre.
+- **Poupar:** só quando o jogo seguinte é importante **e pelo menos 5 % mais difícil** do que o próximo, com a vantagem de casa a contar. Vale para a linha dos cansados, o banco e a formação.
+
+### Documentação
+- `THEORY.md` §16; `DECISIONS.md` D-078.
+
 ## [0.14.12] — 2026-10-29
 
 O pré-jogo só sugere formações que o teu plantel consegue jogar.
