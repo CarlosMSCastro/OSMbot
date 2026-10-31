@@ -3,9 +3,15 @@ from pathlib import Path
 
 import osmbot
 from osmbot.gui.view import RED, care_ring, sponsor_view, squad_view, stadium_rings
-from osmbot.gui.view import BLUE, GREEN, GREY, YELLOW, account_view, board_view, club_view, daily_view, next_check
+from osmbot.gui.view import BLUE, GREEN, GREY, YELLOW, account_view, board_view, club_view, daily_view, mission_ready, next_check
 
 NOW = 1_000_000.0
+
+
+def test_mission_ready_only_with_a_daily_mission_waiting():
+    assert mission_ready({"daily": {"missions": {"ready": True, "day_pending": False}}})
+    assert not mission_ready({"daily": {"missions": {"ready": False, "day_pending": True}}})  # a full inventory keeps it open
+    assert not mission_ready({"daily": {"missions": None}}) and not mission_ready(None)
 
 
 def club(**changes):

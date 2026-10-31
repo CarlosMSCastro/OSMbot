@@ -142,8 +142,8 @@ Já decidido noutras categorias e não volta: capitão 30+, cantos, penáltis nu
 | 3 | 4-5-1 / 4-2-3-1 contra mais fortes (remate à vista) | 2024–26 | Fechado 2026-10-28 (dono): fica o §1; medido na verificação semanal (`451`, liga toda) |
 | 4 | Contra-táticas pela formação do adversário | 2024 | Fechado 2026-10-30 (dono): fica o §1; em 394 jogos a contra-tática não rendeu mais; medido na verificação semanal (`tabela`, `vs523`, liga toda) |
 | 5 | 4-4-2 B de passe: 61 / 49 / 72, avançados a atacar, médios a pressionar à frente | 2025 | Fechado 2026-10-30 (dono): aplicado contra contra-ataque (D-079, `THEORY.md` §2) |
-| 6 | O valor sobe muito mais depressa do que a nota | 2025 | Confirmado nos registos (2026-10-30, `DISCOVERY.md`: duplica a cada ~10 pontos); falta o dono decidir. Proposta: nenhuma regra muda |
-| 7 | Boss coins: o melhor uso é acelerar treinos | 2025 | Por rever |
+| 6 | O valor sobe muito mais depressa do que a nota | 2025 | Fechado 2026-10-31 (dono): registado em `DISCOVERY.md` (duplica a cada ~10 pontos); nenhuma regra muda |
+| 7 | Boss coins: o melhor uso é acelerar treinos | 2025 | Fechado 2026-10-31 (dono): fica como está, só nos eventos (D-081, `THEORY.md` §5) |
 
 ## Contradições e dúvidas abertas
 

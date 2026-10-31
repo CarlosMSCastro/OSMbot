@@ -415,6 +415,12 @@ def club_view(club: dict, now: float, shortened: dict | None = None) -> dict:
 LATE_MISSIONS = 3 * 3600  # this close to the new day, every mission not done is said at the top, not only the owner's
 
 
+def mission_ready(snapshot: dict | None) -> bool:
+    """A daily mission waits to be claimed: nothing else wakes the bot for it (e.g. the owner just finished one by
+    hand). Not the day reward: with a full inventory it stays open and would ask for a pass at every read."""
+    return bool((((snapshot or {}).get("daily") or {}).get("missions") or {}).get("ready"))
+
+
 def _missions_to_do(daily: dict, now: float, lang: str) -> list[str]:
     """The daily missions the owner should do himself (owner, 2026-10-25: "avisar lá em cima que falta fazer
     alguma"): those the bot never does (buy, sell, scout, list), and in the last hours of the day any not done."""

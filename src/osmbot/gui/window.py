@@ -29,7 +29,7 @@ from PySide6.QtWidgets import (QAbstractItemView, QApplication, QFrame, QGridLay
 
 from osmbot import __version__
 from osmbot.i18n import LANGUAGES, language, load_language, set_language, tr
-from osmbot.gui.view import BLUE, GREEN, GREY, ORANGE, RED, YELLOW, board_view
+from osmbot.gui.view import BLUE, GREEN, GREY, ORANGE, RED, YELLOW, board_view, mission_ready
 
 COLOURS = {GREEN: "#5cd17a", BLUE: "#7cc4ff", YELLOW: "#f5c542", GREY: "#8f95b8", RED: "#ff6b6b", ORANGE: "#ff9f43",
            None: "#eef0ff"}
@@ -2319,6 +2319,10 @@ class MainWindow(QMainWindow):
                 from osmbot.game.loop import request_pass
 
                 request_pass(f"Clube novo ({', '.join(new)})")
+            if mission_ready(result["snapshot"]) and self.running():  # finished by hand: no timer wakes the bot for it
+                from osmbot.game.loop import request_pass
+
+                request_pass("Missão por reclamar")
             self.payload = {**self.payload, "snapshot": newest(result["snapshot"], self.payload.get("snapshot"))}
             if not self.running():
                 self.payload["status"] = "PARADO"

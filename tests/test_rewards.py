@@ -78,8 +78,15 @@ def test_unknown_goal_is_never_claimed_and_no_dailies_means_no_day_reward():
 
 
 def test_mission_summary_for_the_board():
-    assert mission_summary(week(), CATALOGUE) == {"claimed": 0, "total": 3, "day_pending": False}
-    assert mission_summary(week(claimed={10, 11, 12}), CATALOGUE, now=DAY3) == {"claimed": 3, "total": 3, "day_pending": True}
+    assert mission_summary(week(), CATALOGUE) == {"claimed": 0, "total": 3, "day_pending": False, "ready": True}
+    assert mission_summary(week(claimed={10, 11, 12}), CATALOGUE, now=DAY3) == {"claimed": 3, "total": 3, "day_pending": True,
+                                                                                "ready": False}
+
+
+def test_a_mission_short_of_its_goal_or_refused_is_not_ready():
+    behind = [mission(10, 287, 0, order=1), mission(11, 326, 1, order=2), mission(12, 333, 2, order=3)]
+    assert not mission_summary(behind, CATALOGUE)["ready"]
+    assert not mission_summary(week(claimed={11, 12}), CATALOGUE, refused={10})["ready"]
 
 
 def test_inventory_limits_are_respected():

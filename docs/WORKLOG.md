@@ -2,6 +2,15 @@
 
 Entradas mais recentes primeiro. Cada sessão: o que se fez · o que ficou por fazer · próximo passo.
 
+## 2026-10-31 — Missão pronta acorda o bot (D-080)
+
+- **Pergunta do dono:** o bot não reclamava a missão "gastar 25 M" acabada à mão. Leitura do jogo (só leitura): 126 M de 25 M, por reclamar, e `next_claim` escolhia-a; faltava só uma passagem, e nada a marcava.
+- **Feito:** a leitura do quadro de 3 em 3 min pede uma passagem quando há uma diária pronta (`mission_summary["ready"]`, `gui/view.mission_ready`, `gui/window.on_read`). Prémio do dia de fora, para o inventário cheio não pedir passagens sem fim. Só funciona com a janela (o `run_active` em terminal não lê o quadro de 3 em 3 min).
+- **Próximo:** ver no registo "Missão por reclamar: passagem já" na próxima missão feita à mão. Sem versão nova (o dono pede quando quiser).
+- **OSMPROworld ponto 6 fechado (dono):** registado, nenhuma regra muda. **Ponto 7 fechado (D-081):** boss coins em treinos só nos eventos; fica como está. OSMPROworld fechada (7 de 7).
+- **Versão 0.14.15 (pedido do dono):** D-080 e D-081. `pyproject.toml`, `__init__`, `CHANGELOG.md`, `README.md` (estado), `dist/release-notes-v0.14.15.md`; 518 testes; `build_portable.py --zip --installer` → `dist/windows/` 0.14.15.
+- **Próximo:** sínteses OSMPro por rever (categorias sem tabela de pontos fechada).
+
 ## 2026-10-30 — Pechinchas, conquistas e OSMPROworld ponto 4
 
 - **Pechinchas no Betis (só resposta):** servem para revenda, não para a equipa. Lammens +30 M em ~1 dia contra Messi +41 M em ~3; nos 30 dias de registo a liga espanhola vendeu 3 entre 100 e 150 M e nenhum acima. **Por decidir pelo dono:** ordenar as revendas pelo lucro nos clubes com dinheiro.

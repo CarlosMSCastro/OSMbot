@@ -85,11 +85,12 @@ def next_claim(user_missions: list[dict], catalogue: list[dict], refused: set[in
 
 def mission_summary(user_missions: list[dict], catalogue: list[dict], refused: set[int] | frozenset = frozenset(),
                     day_done: set | frozenset = frozenset(), now: float = 0.0) -> dict:
-    """For the board: {"claimed", "total", "day_pending"} (day_pending: the day reward can be claimed now)."""
+    """For the board: {"claimed", "total", "day_pending", "ready"} (day_pending: the day reward can be claimed now;
+    ready: a daily mission reached its goal and waits for the bot's next pass)."""
     dailies = [m for m in user_missions if is_daily(m)]
     claim = next_claim(user_missions, catalogue, refused, day_done, now)
     return {"claimed": sum(m["isClaimed"] for m in dailies), "total": len(dailies),
-            "day_pending": bool(claim) and not is_daily(claim)}
+            "day_pending": bool(claim) and not is_daily(claim), "ready": bool(claim) and is_daily(claim)}
 
 
 def prize_index(action_rewards: list[dict], rewards: list[dict]) -> dict[str, dict]:

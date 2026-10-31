@@ -4,6 +4,16 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-PT/1.1.0/); 
 
 Este ficheiro é o **histórico de versões, para quem lê o repo**. O diário interno de cada sessão de trabalho está em [`docs/WORKLOG.md`](docs/WORKLOG.md).
 
+## [0.14.15] — 2026-10-31
+
+A missão acabada à mão é reclamada em poucos minutos.
+
+### Corrigido
+- **Missões feitas à mão:** a leitura do quadro, de 3 em 3 minutos, acorda o bot quando vê uma missão diária pronta a reclamar. Antes esperava pela passagem seguinte (até ~45 min) e, perto do novo dia, a missão podia perder-se com o prémio do dia. Só com a janela aberta.
+
+### Documentação
+- `THEORY.md` §5 e §17; `DECISIONS.md` D-080 e D-081 (boss coins em treinos só nos eventos).
+
 ## [0.14.14] — 2026-10-31
 
 4-4-2 B do autor contra equipas em contra-ataque.
