@@ -4,6 +4,19 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-PT/1.1.0/); 
 
 Este ficheiro é o **histórico de versões, para quem lê o repo**. O diário interno de cada sessão de trabalho está em [`docs/WORKLOG.md`](docs/WORKLOG.md).
 
+## [0.14.14] — 2026-10-31
+
+4-4-2 B do autor contra equipas em contra-ataque.
+
+### Alterado
+- **4-4-2 B contra contra-ataque:** com a análise a mostrar o adversário em contra-ataque, o passo "Tática" pede pressão ~61, estilo ~49, temporização ~72, médios a pressionar à frente e avançados a atacar. Antes da análise, ou contra outro estilo, fica a linha habitual.
+
+### Verificação
+- Duas medições semanais novas: a contra-tática pela formação do adversário rende mais (`tabela`) e o que resulta contra o 5-2-3 sendo mais forte (`vs523`).
+
+### Documentação
+- `THEORY.md` §2 e §19; `DECISIONS.md` D-079; `DISCOVERY.md` (o valor duplica a cada ~10 pontos de nota; ciclos do estádio).
+
 ## [0.14.13] — 2026-10-30
 
 Poupar titulares só para o jogo mais difícil.

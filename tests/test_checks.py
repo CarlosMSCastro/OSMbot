@@ -97,6 +97,22 @@ def test_against_stronger_compares_five_defenders_with_the_451():
     assert result.verdict == theory.READY and result.measured == "contra mais forte: 5 defesas 0.00 pts/jogo (15), 4-5-1 1.00 (15)"
 
 
+def test_counter_formations_compares_the_authors_table_with_the_rest():
+    games = [match(i, 100, 100, "1-0", formation=("532A", "523A")) for i in range(15)]  # 5-3-2 is the counter to the 5-2-3
+    result = theory.counter_formations(games)
+    assert result.verdict == theory.READY and result.key == "tabela"
+    assert result.measured == "forças parecidas: contra-tática 3.00 pts/jogo (15), outras 0.00 (15)"
+
+
+def test_against_523_counts_only_the_stronger_side():
+    games = [match(i, 110, 100, "1-0", formation=("433A", "523A")) for i in range(8)]
+    games += [match(100 + i, 110, 100, "0-1", formation=("433B", "523A")) for i in range(8)]
+    games += [match(200 + i, 90, 100, "1-0", formation=("532A", "523A")) for i in range(5)]  # weaker: not counted
+    result = theory.against_523(games)
+    assert result.verdict == theory.READY
+    assert result.measured == "mais forte contra 5-2-3: 4-3-3 A 3.00 pts/jogo (8), B 0.00 (8), 5-3-2 0.00 (0)"
+
+
 def test_corners_compare_one_man_on_both_set_pieces_with_another_midfielder():
     def eleven(clash=True):  # the midfielder 8 has most attack; with no clash a forward has more
         rows = [{"id": n, "lineup": n, "position": 2 if n in (7, 8) else 3, "statAtt": 50, "statOvr": 50, "statDef": 50}

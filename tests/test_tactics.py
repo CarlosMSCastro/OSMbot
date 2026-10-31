@@ -59,6 +59,34 @@ def test_the_5_defenders_style_follows_the_strength():
     assert instructions(523, "B").attack == {1} and instructions(541, "B").plan == {4}
 
 
+def test_the_442_b_takes_the_author_s_line_only_against_counter_attack():  # D-079
+    rule = instructions(442, "B", counter=True)
+    assert rule.plan == {1} and rule.midfield == {2} and rule.attack == {2} and rule.offside == {False}
+    assert (rule.pressing.aim, rule.mentality.aim, rule.tempo.aim) == (61, 49, 72)
+    for band in (rule.pressing, rule.mentality, rule.tempo):
+        assert band.aim in band and band.high - band.low == 20
+    assert instructions(442, "B").midfield == {1} and instructions(442, "B").mentality.aim == 65
+    assert instructions(433, "A", counter=True) == instructions(433, "A")
+
+
+def test_the_counter_attack_is_read_from_the_report_on_the_next_opponent():
+    from osmbot.game.clubinfo import plays_counter
+
+    class Client:
+        def __init__(self, status, body):
+            self.answer = status, body
+
+        def get(self, path):
+            assert path.endswith("/api/v1.1/leagues/1/teams/2/spyresults")
+            return self.answer
+
+    reports = [{"teamId": 7, "overallMatchTactics": 3}, {"teamId": 9, "overallMatchTactics": 1}]
+    assert plays_counter(Client(200, reports), "leagues/1/teams/2", 7)
+    assert not plays_counter(Client(200, reports), "leagues/1/teams/2", 9)  # another style
+    assert not plays_counter(Client(200, reports), "leagues/1/teams/2", 8)  # the analyst went elsewhere
+    assert not plays_counter(Client(404, None), "leagues/1/teams/2", 7)
+
+
 def test_the_343_marks_man_to_man_against_3_forwards():
     assert instructions(343, "B").marking == {False} and instructions(343, "B", forwards=3).marking == {True}
 

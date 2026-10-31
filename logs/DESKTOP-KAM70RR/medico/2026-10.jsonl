@@ -19,3 +19,4 @@
 {"t":1793253953,"evento":"levantar","tipo":"doctor","clube":"leagues/215028346/teams/9","semana":8,"caso":7430198,"jogador":924982546,"nome":"van Brederode","antes":{"fora":3,"lesao":29,"suspensao":0},"depois":{"fora":1,"lesao":29,"suspensao":0}}
 {"t":1793253955,"evento":"pôr","tipo":"doctor","clube":"leagues/215028346/teams/9","semana":8,"jogador":924982546,"nome":"van Brederode","antes":{"fora":3,"lesao":29,"suspensao":0}}
 {"t":1793308360,"evento":"pôr","tipo":"doctor","clube":"leagues/222034673/teams/3","semana":10,"jogador":974422179,"nome":"Kimmich","antes":{"fora":1,"lesao":18,"suspensao":0}}
+{"t":1793398244,"evento":"pôr","tipo":"doctor","clube":"leagues/248015013/teams/8","semana":14,"jogador":877836739,"nome":"Barcola","antes":{"fora":2,"lesao":3,"suspensao":0}}

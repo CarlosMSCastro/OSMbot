@@ -2,6 +2,16 @@
 
 Entradas mais recentes primeiro. Cada sessão: o que se fez · o que ficou por fazer · próximo passo.
 
+## 2026-10-30 — Pechinchas, conquistas e OSMPROworld ponto 4
+
+- **Pechinchas no Betis (só resposta):** servem para revenda, não para a equipa. Lammens +30 M em ~1 dia contra Messi +41 M em ~3; nos 30 dias de registo a liga espanhola vendeu 3 entre 100 e 150 M e nenhum acima. **Por decidir pelo dono:** ordenar as revendas pelo lucro nos clubes com dinheiro.
+- **Conquistas:** 45 de 68 feitas; o dono quer fechá-las todas com o tempo (`THEORY.md` §19, com o que disse de cada uma). Estádio: só o KV Mechelen chega ao "Builder" sem adiantar o timer (~22/11; capacidade **[H]**, `DISCOVERY.md` §3).
+- **OSMPROworld ponto 4 fechado:** fica o §1. Contra-tática sem ganho (74 casos, −0,15 contra −0,06 face ao esperado). Duas verificações novas: `tabela` e `vs523` (`checks/theory.py`), 514 testes. Dono acha que sofre contra o 5-2-3: 3 jogos (1 V, 1 E, 1 D), sempre mais forte. Sem mudanças; sugestão por decidir: 4-3-3 B com os médios a ajudar a defesa.
+- **OSMPROworld ponto 5 fechado (D-079):** barras lidas no ecrã do vídeo português (o inglês ficou privado): 61 / 49 / 72, médios a pressionar à frente, avançados a atacar; a nota antiga ("estilo muito baixo") era da legenda fraca. Com a análise a mostrar contra-ataque, o passo "Tática" pede esta linha para o 4-4-2 B; senão fica a atual. Falta construir o dist para chegar ao bot instalado.
+- **OSMPROworld ponto 6 explicado, por decidir:** curva confirmada em 845 jogadores do mercado (`DISCOVERY.md`): o valor duplica a cada ~10 pontos, ~+7 % por ponto. Proposta: registar e não mudar nenhuma regra (treinar para a equipa, mercado fraco acima de 150 M). O dono decide em 2026-10-31.
+- **Versão 0.14.14 (pedido do dono, 2026-10-31):** D-079 e as medições `tabela` e `vs523`. `pyproject.toml`, `__init__`, `CHANGELOG.md`, `README.md` (estado), `dist/release-notes-v0.14.14.md`; 516 testes; `build_portable.py --zip --installer`.
+- **Próximo:** decisão do dono sobre o ponto 6; depois OSMPROworld ponto 7.
+
 ## 2026-10-29 (cont. 3) — Poupar só para o jogo mais difícil (D-078)
 
 - **Dono (SV Ried):** o bot sugeria poupar o N. Paz (82 %) contra o Rapid Vienna (2.º, 95, em casa) para o Rheindorf Altach (3.º, 88, fora), só por o Altach ser rival direto (2 lugares).

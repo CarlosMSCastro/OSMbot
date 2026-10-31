@@ -15,6 +15,8 @@ Rotina pedida pelo dono (2026-10-28): ver de tempos a tempos se alguma regra do 
 | `433fora` | Fora, o 4-3-3 B e não o A (§1, [S] pouca amostra) | Pontos por jogo dos teus clubes fora, até 12 % mais fortes, B contra A | 10 em cada | B 3,00 (2), A 2,00 (4) · **amostra curta** |
 | `cansaco` | Titular perde ~4 de condição por jogo (§16) | Titulares em duas jornadas seguidas do mesmo clube | 50 casos | −3,9 (238) · **bate** |
 | `523fora` | Fora: 4-3-3 (a regra, §1) ou 5-2-3 (OSMPro OSMPROworld 2)? | Pontos por jogo das equipas de fora (todos os clubes das ligas) com forças a ±12 %, em 4-3-3 e em 5-2-3 | 15 de cada | 4-3-3 com amostra, 5-2-3 quase sem jogos · **amostra curta** |
+| `tabela` | A contra-tática do autor pela formação do adversário rende mais (OSMPro OSMPROworld 4)? | Pontos por jogo (todos os clubes, forças a ±12 %) de quem usou a contra-tática da tabela e de quem usou outra | 15 de cada | contra-tática 0,91 (66), outras 1,34 (440), sem acertar pelo campo · **pronto a decidir** (2026-10-30: fica o §1) |
+| `vs523` | Contra 5-2-3, sendo mais forte: 4-3-3 A, B ou 5-3-2 (OSMPro OSMPROworld 4; dono, 2026-10-30)? | Pontos por jogo de quem é mais forte, todos os clubes | 8 no A e 8 no B | A 1,20 (5), B 2,40 (5), 5-3-2 sem jogos · **amostra curta** |
 | `451` | Contra mais forte: 5 defesas (a regra, §1) ou 4-5-1 / 4-2-3-1 (OSMPro OSMPROworld 3)? | Pontos por jogo de quem é mais de 3 % mais fraco (todos os clubes, casa e fora), com 5 defesas e com 4-5-1 / 4-2-3-1 | 15 de cada | 5 defesas 1,10 (21), 4-5-1 0,34 (59) · **bate** (a regra das 5 defesas sai melhor; voltar a ver com mais jogos) |
 | `tempo` | 5 defesas contra mais forte: temporização 60–80 (OSMPro Táticas 12, a medir) | Pontos por jogo com 60–80 e abaixo de 60 | 8 em cada | 0,80 (5) / — (0) · **amostra curta** |
 | `ritmo` | Temporização 60–80 qualquer que seja a força (§2; OSMPro Série 4: mais forte → mais rápido, mais fraco → mais lento) | Pontos por jogo com <60, 60–80 e >80, mais forte e mais fraco à parte, todas as formações | 8 em 60–80 e noutra banda, de cada lado | mais forte: 60–80 2,87 (30), >80 3,00 (7); mais fraco: 60–80 0,71 (7) · **amostra curta** |
@@ -38,6 +40,7 @@ Rotina pedida pelo dono (2026-10-28): ver de tempos a tempos se alguma regra do 
 | Treino crítico ~+10 pontos em média; idade só ajuda abaixo de 85 (§5) | `treinos/` |
 | Vantagem de casa pelo nível do campo do estádio (§1, nota "para mais tarde") | `jogos/` |
 | 4-4-2 B / 3 defesas quando falta um lado (D-072): pontos por jogo | `jogos/` |
+| 4-4-2 B do autor contra contra-ataque (D-079): pontos por jogo, quando houver jogos | `jogos/` |
 | 4 amigáveis por jogo e o ganho de cada um (§6) | `amigaveis/` |
 | Desarme pelo árbitro (§3): cartões e resultado por rigor | `jogos/` |
 | 4-3-3 contra contra-ataque e o que resulta contra cada estilo, na liga toda (com os relatórios do analista) | `analista/` + `jogos/` |

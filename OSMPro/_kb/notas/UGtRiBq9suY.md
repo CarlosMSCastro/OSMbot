@@ -19,4 +19,4 @@
 
 ## Dúvidas
 
-- Os números das barras estão só no ecrã.
+- Vídeo privado em 2026-10-30. Números lidos na versão portuguesa (9wEpMh4wUk4): pressão 61, estilo 49, temporização 72; o "muito baixo / muito alta" acima era da legenda fraca.

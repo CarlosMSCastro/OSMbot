@@ -66,12 +66,14 @@ Implementado em `choose_formation(my_rating, opp_rating, *, stronger_pct=0)`: ad
 | **5-4-1** A | contra-ataque | atrás | ajudar a defesa | atacar; apoiar o meio com avançado defensivo | 20–40 (~30) | pela força | 60–80 (~75) | zona | não |
 | **5-4-1** B | remate à vista | atrás | neutros | atacar; apoiar o meio com avançado defensivo | 20–40 (~30) | pela força | 60–80 (~75) | zona | não |
 | **4-4-2 B** | passe | atrás | neutros | apoiar o meio | 40–60 (~58) | 60–80 (~65) | 60–80 (~70) | zona | não |
+| **4-4-2 B** contra contra-ataque | passe (nunca alas) | atrás | pressionar à frente | atacar | 60–80 (~61) | 40–60 (~49) | 60–80 (~72) | zona | não |
 | **3-4-3** | alas | atrás | ajudar a defesa; neutros contra 4-5-1 ou remate à vista | atacar; apoiar o meio com avançados defensivos | 60–80 (~75) | 60–80 (~75) | 60–80 (~75) | zona; **individual** contra 3 avançados | sim |
 | **3-5-2** casa | passe | atrás | neutros | atacar ou apoiar o meio | 60–80 (~62) | 40–60 (~55) | 60–80 (~70) | zona | sim |
 | **3-5-2** fora | remate à vista | atrás | ajudar a defesa | atacar ou apoiar o meio | 20–40 (~35) | 20–40 (~30) | 60–80 (~70) | zona | sim ou não |
 | **4-2-4** [S] | bola longa | atrás | ajudar a defesa | atacar | 80–100 (~85) | 60–80 (~75) | 60–80 (~75) | individual | não |
 
 - **Estilo nas 5 defesas, pela força** (autor: ~40 contra um igual, 10–15 contra um muito melhor): adversário mais forte até 12 % → **20–40 (~35)**; claramente mais forte (> 12 %, D-074, onde só o 5-2-3 serve, D-070) → **0–20 (~15)**. Substitui o [S: 30].
+- **4-4-2 B contra contra-ataque** (dono, 2026-10-30, D-079): a tática do autor, lida no ecrã do vídeo (9wEpMh4wUk4): 4 vitórias seguidas, "sempre contra táticas de contra-ataque"; perdeu quando pôs alas por engano. Só depois da análise mostrar o adversário em contra-ataque; antes, ou contra outro estilo, a linha de cima.
 - **Avançados defensivos** (autor, 10 vídeos): extremo com ~40 de defesa, PL com ≥ 20. **[S]** Todos os avançados do onze acima disso.
 - **Médios e marcação pela formação do adversário:** só se sabe depois da análise (onze dele visível; a formação deduz-se pelas posições). Antes da análise vale a primeira opção (ajudar a defesa; zona).
 - **"Claramente mais forte"** é o do §1 (força do jogo, com bónus e casa, > 12 %, D-074).
@@ -634,6 +636,8 @@ Há **3 componentes** a melhorar, cada um com **níveis 0, 1, 2 e 3**:
 *Mais respostas do dono, 2026-10-13:*
 
 - **Objetivo de longo prazo: domínio mundial.** Conquistas em todos os países, pela **ordem alfabética** dos países. **O jogo conta o país com qualquer uma das 3** (campeonato, taça ou objetivo da época, numa liga "Major"; verificado no código do site em 2026-10-14, `DISCOVERY.md`). **[?]** Falta o dono dizer se a regra dele abaixo ("só feito quando não falta nada") se mantém, sabendo isto. Um país só fica "feito" quando lá não falta nada; por exemplo, um país onde só faltava a taça foi repetido por isso.
+- **Fechar todas as conquistas do jogo** (dono, 2026-10-30): além do domínio mundial, quer, ao longo do tempo, fechar todas as conquistas (`users/{id}/achievementprogresses`; a 2026-10-30, 45 de 68). Sem nada no bot, nem ordem ou regra decidida.
+  - *O que o dono disse (2026-10-30):* **Founder:** ainda não criou nenhuma liga (o Qarabag foi um clube "indisponível" de ~120 boss coins numa liga existente, e só entrou 1 treinador real); criará uma a seu tempo, só para a conquista. **Winners Cup:** acha que é a competição para que algumas épocas dão bilhete; talvez Bélgica e Espanha dêem, e ainda não sabe se joga (quase 1 mês). **[?]** O que é e se conta como torneio. **VIP League, torneios, Lendas:** a seu tempo. **Loyalty e Club Legend:** repete alguns clubes no fim. **Top-100:** conta lá chegar com o domínio mundial.
 - **Que clube escolher** ao criar a liga: em regra o de **maior valor e mais jogadores**, sobretudo nas ligas que o dono não acompanha. Pode escolher outro **muito perto do melhor** por gosto pessoal. Não é obrigatoriamente o de melhor onze. *Em observação (dono, 2026-10-14: "vamos indo vamos vendo"; regra igual por agora):* o objetivo da época não segue a força do plantel (`DISCOVERY.md`) e o país conta com o objetivo; um clube com mais folga entre objetivo e força pode ser mais seguro do que o mais forte (o mais forte pode ter objetivo 1.º).
 - **Estágios: só em momentos cruciais**, como eliminatórias da taça contra adversários difíceis. Não há calendário fixo.
 - **Quando criar a liga seguinte:** quando apetecer ao dono, sem regra. Sinal de que pode valer a pena: o campeonato atual a acalmar (equipas desistem, mais jogos contra bots, plantéis mais caros, transferências mais lentas).

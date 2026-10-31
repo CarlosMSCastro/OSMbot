@@ -64,7 +64,7 @@ MIDFIELD = {0: "Ajudar a defesa", 1: "Manter posições", 2: "Pressionar na fren
 DEFENSE = {0: "Defender atrás", 1: "Defesas atacantes", 2: "Apoiar meio-campo"}  # defenders
 LONG_BALL, PASSING, WINGS, COUNTER, SHOOT = 0, 1, 2, 3, 4
 SUPPORT, ATTACK_ONLY = 1, 2
-HELP_DEFENCE, NEUTRAL = 0, 1
+HELP_DEFENCE, NEUTRAL, PRESS = 0, 1, 2
 DEEP = 0
 
 
@@ -101,11 +101,12 @@ DEFENSIVE_FORWARD = {8: 40, 11: 40, 4: 20}  # wingers ~40 of defence, a striker 
 
 def instructions(formation: int, detail: str | None, *, away: bool = False, clearly_stronger: bool = False,
                  clearly_weaker: bool = False, forwards: int | None = None,
-                 defensive_forwards: bool = False) -> Instructions | None:
+                 defensive_forwards: bool = False, counter: bool = False) -> Instructions | None:
     """The instructions and sliders of THEORY.md section 2 (owner, 2026-10-28, D-073: "tudo como o autor"), or None
     for a formation it has no rule for. ``clearly_stronger``/``clearly_weaker``: more than 12 % apart in match
     strength (section 1); ``forwards``: how many his eleven has, once the analysis shows it (None before);
-    ``defensive_forwards``: all of ours defend well enough to support the midfield."""
+    ``defensive_forwards``: all of ours defend well enough to support the midfield; ``counter``: the analysis shows
+    him in counter-attack (the 4-4-2 B's other line, D-079)."""
     def of(*codes):
         return frozenset(codes)
 
@@ -125,6 +126,9 @@ def instructions(formation: int, detail: str | None, *, away: bool = False, clea
     if formation == 541:
         return Instructions(of(SHOOT) if detail == "B" else of(COUNTER), attack=attack, pressing=Band(20, 40, 30),
                             **{**five, "midfield": of(NEUTRAL) if detail == "B" else of(HELP_DEFENCE)})
+    if formation == 442 and detail == "B" and counter:  # the author's own, read on screen (9wEpMh4wUk4), D-079
+        return Instructions(of(PASSING), of(DEEP), of(PRESS), of(ATTACK_ONLY), of(False), of(False),
+                            Band(60, 80, 61), Band(40, 60, 49), Band(60, 80, 72))
     if formation == 442 and detail == "B":
         return Instructions(of(PASSING), of(DEEP), of(NEUTRAL), of(SUPPORT), of(False), of(False),
                             Band(40, 60, 58), Band(60, 80, 65), Band(60, 80, 70))

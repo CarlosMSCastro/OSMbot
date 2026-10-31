@@ -18,8 +18,9 @@ from osmbot.theory.lineup import age_warnings, bench_notes, centre_notes, listed
 from osmbot.medical.policy import open_cases
 from osmbot.prematch.policy import friendlies_played
 from osmbot.theory.fitness import important_match, rest_warnings, spare_for
-from osmbot.theory.tactics import match_strength
+from osmbot.theory.tactics import COUNTER, match_strength
 
+API_V11 = "https://web-api.onlinesoccermanager.com/api/v1.1"  # the analyst's report is v1.1 only
 GUESS_FORMATION = 433  # [S] another club's eleven is unknown before the analysis: his best 4-3-3 (THEORY.md 1, 16)
 
 FIXTURES_FOR = 10 * 60.0
@@ -165,6 +166,13 @@ def _match_strengths(client, team: dict, league: str, teams: list[dict], week: i
             match_strength(upcoming["strength"], boost_pct=theirs, home=home and upcoming.get("side") == "A"))
 
 
+def plays_counter(client, base: str, rival: int) -> bool:
+    """The analyst's report shows him in counter-attack (D-079); False with no report on him."""
+    status, reports = client.get(f"{API_V11}/{base}/spyresults")
+    return status == 200 and isinstance(reports, list) and any(
+        isinstance(r, dict) and r.get("teamId") == rival and r.get("overallMatchTactics") == COUNTER for r in reports)
+
+
 def club_extra(client, team: dict, base: str, players: list[dict], slot, market: list[dict]) -> dict:
     from osmbot.game.dashboard import get_many
 
@@ -209,13 +217,13 @@ def club_extra(client, team: dict, base: str, players: list[dict], slot, market:
         rival = upcoming["opponent_id"]  # analysis an estimate, read again as soon as it is done (owner, 2026-10-25)
         upcoming["value"] = squad_value(values, rival)
 
-        def rival_strength() -> tuple[int | None, bool, int | None]:
+        def rival_strength() -> tuple[int | None, bool, int | None, bool]:
             squad_of = _list(client, f"{league}/teams/{rival}/players")
             seen = eleven_seen(squad_of)  # his forwards, once the analysis shows his eleven (THEORY.md 2)
             forwards = sum(1 for p in squad_of if 1 <= (p.get("lineup") or 0) <= 11 and p.get("position") == 1) if seen else None
-            return opponent_rating(squad_of, GUESS_FORMATION), not seen, forwards
+            return opponent_rating(squad_of, GUESS_FORMATION), not seen, forwards, bool(seen) and plays_counter(client, base, rival)
 
-        upcoming["strength"], upcoming["estimate"], upcoming["forwards"] = _cached(
+        upcoming["strength"], upcoming["estimate"], upcoming["forwards"], upcoming["counter"] = _cached(
             ("strength", league, rival, week, bool(done.get(ANALYSIS_STEP))), FIXTURES_FOR, rival_strength)
     by_type = {s["type"]: s for s in prep.get("steps") or []}
     rival = (upcoming or {}).get("opponent_id")
@@ -256,7 +264,7 @@ def club_extra(client, team: dict, base: str, players: list[dict], slot, market:
            + tactic_warnings(tactic, mine, theirs, players, away, spare),
            POSITIONS_STEP: position_warnings(players, tactic)}  # who is out of position, on the hover
     why[TACTIC_STEP], tactic_tips, known = tactic_check(tactic, strictness, mine, theirs, players, away, spare,
-                                                        (upcoming or {}).get("forwards"))
+                                                        (upcoming or {}).get("forwards"), bool((upcoming or {}).get("counter")))
     steps = [(step[0], known, step[2]) if kind == TACTIC_STEP else step for (kind, _), step in zip(CHECKLIST, steps)]
     steps = [(name, False, RULE) if why.get(kind) and done_ else (name, done_, extra)
              for (kind, _), (name, done_, extra) in zip(CHECKLIST, steps)]

@@ -167,6 +167,42 @@ def against_stronger(matches: list[dict], minimum: int = 15) -> Result:
                   READY if len(five) >= minimum and len(four) >= minimum else SHORT)
 
 
+COUNTERS = {"451": {"523", "541"}, "442": {"451", "523"}, "433": {"451", "532", "541", "523"}, "523": {"532"},
+            "532": {"451", "442"}, "541": {"442"}, "343": {"532", "541", "523"}}  # the author's table (OSMPro p4cMIlwKQAg)
+
+
+def counter_formations(matches: list[dict], minimum: int = 15) -> Result:
+    """OSMPro OSMPROworld point 4, to measure (owner, 2026-10-30): does the author's counter to the opponent's formation
+    earn more than the rest? Every club of the leagues, both sides, strengths within 12 %, against a formation of his table."""
+    counter, other = [], []
+    for m in _league(matches):
+        for side, rival in (("casa", "fora"), ("fora", "casa")):
+            form = (m["estatisticas"][side].get("formacao") or "")[:3]
+            against = (m["estatisticas"][rival].get("formacao") or "")[:3]
+            if form and against in COUNTERS and abs(_edge(m, side)) <= 12:
+                (counter if form in COUNTERS[against] else other).append((m, side))
+    measured = f"forças parecidas: contra-tática {_ppg(counter):.2f} pts/jogo ({len(counter)}), outras {_ppg(other):.2f} ({len(other)})"
+    return Result("tabela", "Contra-tática pela formação (o autor) rende mais?", measured, len(counter) + len(other),
+                  READY if len(counter) >= minimum and len(other) >= minimum else SHORT)
+
+
+def against_523(matches: list[dict], minimum: int = 8) -> Result:
+    """OSMPro OSMPROworld point 4 (owner, 2026-10-30, "acho que me esgaço contra 523"): the stronger side against a
+    5-2-3 with the 4-3-3 A, the B or the 5-3-2 (the author's answer). Every club of the leagues."""
+    groups: dict[str, list[tuple[dict, str]]] = {"433A": [], "433B": [], "532": []}
+    for m in _league(matches):
+        for side, rival in (("casa", "fora"), ("fora", "casa")):
+            form = m["estatisticas"][side].get("formacao") or ""
+            if (m["estatisticas"][rival].get("formacao") or "")[:3] == "523" and _edge(m, side) > 0:
+                key = form if form in groups else form[:3]
+                if key in groups:
+                    groups[key].append((m, side))
+    a, b, five = groups["433A"], groups["433B"], groups["532"]
+    measured = f"mais forte contra 5-2-3: 4-3-3 A {_ppg(a):.2f} pts/jogo ({len(a)}), B {_ppg(b):.2f} ({len(b)}), 5-3-2 {_ppg(five):.2f} ({len(five)})"
+    return Result("vs523", "Contra 5-2-3: 4-3-3 A, B ou 5-3-2?", measured, len(a) + len(b) + len(five),
+                  READY if len(a) >= minimum and len(b) >= minimum else SHORT)
+
+
 def tempo_against_stronger(matches: list[dict], minimum: int = 8) -> Result:
     """OSMPro Táticas point 12, to measure (owner, 2026-10-28): 5 defenders against a stronger side with the tempo at
     60–80 (the rule) or below 60 (the game's help text: "not fast against a better side")."""
@@ -305,8 +341,8 @@ def manager_xp(lines: list[dict], minimum: int = 10) -> Result:
 
 
 CHECKS: list[Callable[[list[dict]], Result]] = [home_advantage, clearly_stronger, away_433, fatigue,
-                                                away_523, against_stronger, tempo_against_stronger, tempo_by_strength, counter_attack,
-                                                corners_not_free_kicks]
+                                                away_523, against_stronger, counter_formations, against_523,
+                                                tempo_against_stronger, tempo_by_strength, counter_attack, corners_not_free_kicks]
 
 
 def run(records: Iterable[dict], friendlies: Iterable[dict] = (), xp: Iterable[dict] = ()) -> list[Result]:

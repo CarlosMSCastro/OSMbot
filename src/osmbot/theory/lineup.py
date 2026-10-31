@@ -380,18 +380,19 @@ def _rule(value, names: dict | None) -> str:
 
 def tactic_check(tactic: dict | None, strictness: int | None, mine: float | None, opponent: float | None,
                  players: list[dict] | None = None, away: bool = False, spare: bool = False,
-                 forwards: int | None = None) -> tuple[list[str], list[str], bool]:
+                 forwards: int | None = None, counter: bool = False) -> tuple[list[str], list[str], bool]:
     """The "Tática" step (owner, 2026-10-28, D-073; THEORY.md 2 and 21): the instructions, the sliders and the tackling
     set in the game against the rule for the formation that is set. Returns (warnings, notes, known): a warning per
     field out of the rule, "Pressão: 45, devia ser 60–80 (~75)"; notes with what the formation the "Onze" step asks for
     would take ("Se mudares para 5-2-3:" and a line per field); known False when section 2 has no rule for the
-    formation set (the step stays grey). ``forwards``: how many his eleven has, after the analysis."""
+    formation set (the step stays grey). ``forwards``: how many his eleven has, after the analysis; ``counter``: he
+    plays counter-attack, after the analysis."""
     if not tactic:
         return [], [], False
     starters = [p for p in players or [] if p.get("lineup") in ELEVEN]
     context = dict(away=away, clearly_stronger=_clearly_stronger(mine, opponent),
                    clearly_weaker=_clearly_stronger(opponent, mine), forwards=forwards,
-                   defensive_forwards=defensive(starters))
+                   defensive_forwards=defensive(starters), counter=counter)
     rule = instructions(tactic.get("formation"), tactic.get("formationDetail"), **context)
     warnings, notes = [], []
     if rule:

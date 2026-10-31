@@ -74,7 +74,7 @@ Vídeos do canal inglês do mesmo autor (OSM PRO, @OSMPROworld), set. 2023 → j
 ### Outras
 
 - **3-5-2:** jogo de passe, equilibrada; MC é a chave; pressão 62–69, estilo 40–65, temporização ~61; laterais ofensivos (3 defesas); individual contra 3 atacantes. (hWtVe_RQuaU)
-- **4-4-2 B de passe:** estilo muito baixo e temporização muito alta; venceu um 5-2-3 e um 5-3-2. (UGtRiBq9suY) *Interessa ao 4-4-2 B do dono (§1).*
+- **4-4-2 B de passe:** pressão 61, estilo 49, temporização 72 (lido no ecrã, 9wEpMh4wUk4), avançados a atacar, médios a pressionar à frente; 4 vitórias seguidas, sempre contra contra-ataque. (UGtRiBq9suY) *Interessa ao 4-4-2 B do dono (§1).*
 - **Tier list (2025):** S 4-3-3; 4-5-1 logo a seguir; A 5-2-3 e 4-2-3-1; B 6-3-1, 5-4-1, 5-3-2, 4-4-2; C/D 4-2-4, 3-5-2, 3-4-3, 3-3-4, 3-2-5. (NadYTsKqGoI)
 - **Uso real (2024):** batalhas: 4-5-1/4-2-3-1 8, 4-3-3 7, 4-4-2 e 5-2-3 5; campeonato nacional: 4-3-3 16, 4-5-1 8, 5-2-3 5. (Uv5V8z7983U)
 
@@ -140,9 +140,9 @@ Já decidido noutras categorias e não volta: capitão 30+, cantos, penáltis nu
 | 1 | Especialistas: nunca o mesmo jogador em dois papéis | 2024 | Fechado 2026-10-28 (dono, opção a): fica o §4 (livres e penáltis podem coincidir); 157 relatórios do comentador sem queixas, 34 × "All Specialists were doing their job" |
 | 2 | 4-3-3 em casa e 5-2-3 fora, com o mesmo ataque | 2024–25 | Fechado 2026-10-28 (dono): fica o §1; medido na verificação semanal (`523fora`, liga toda) |
 | 3 | 4-5-1 / 4-2-3-1 contra mais fortes (remate à vista) | 2024–26 | Fechado 2026-10-28 (dono): fica o §1; medido na verificação semanal (`451`, liga toda) |
-| 4 | Contra-táticas pela formação do adversário | 2024 | Por rever |
-| 5 | 4-4-2 B de passe: estilo muito baixo, temporização muito alta | 2025 | Por rever |
-| 6 | O valor sobe muito mais depressa do que a nota | 2025 | Por rever |
+| 4 | Contra-táticas pela formação do adversário | 2024 | Fechado 2026-10-30 (dono): fica o §1; em 394 jogos a contra-tática não rendeu mais; medido na verificação semanal (`tabela`, `vs523`, liga toda) |
+| 5 | 4-4-2 B de passe: 61 / 49 / 72, avançados a atacar, médios a pressionar à frente | 2025 | Fechado 2026-10-30 (dono): aplicado contra contra-ataque (D-079, `THEORY.md` §2) |
+| 6 | O valor sobe muito mais depressa do que a nota | 2025 | Confirmado nos registos (2026-10-30, `DISCOVERY.md`: duplica a cada ~10 pontos); falta o dono decidir. Proposta: nenhuma regra muda |
 | 7 | Boss coins: o melhor uso é acelerar treinos | 2025 | Por rever |
 
 ## Contradições e dúvidas abertas
