@@ -29,7 +29,7 @@ from PySide6.QtWidgets import (QAbstractItemView, QApplication, QFrame, QGridLay
 
 from osmbot import __version__
 from osmbot.i18n import LANGUAGES, get_pref, language, load_language, set_language, set_pref, tr
-from osmbot.gui.view import BLUE, GREEN, GREY, ORANGE, RED, YELLOW, board_view, mission_ready
+from osmbot.gui.view import BLUE, GREEN, GREY, ORANGE, RED, YELLOW, board_view, mission_ready, pitch_spots
 
 COLOURS = {GREEN: "#5cd17a", BLUE: "#7cc4ff", YELLOW: "#f5c542", GREY: "#8f95b8", RED: "#ff6b6b", ORANGE: "#ff9f43",
            None: "#eef0ff"}
@@ -1240,7 +1240,7 @@ class SaleArrow(QWidget):
 class Pitch(QWidget):
     """The eleven drawn on a pitch (owner, 2026-11-02: no table)."""
 
-    WIDTH, HEIGHT, SPOT = 420, 470, 21  # SPOT: the radius of a player's circle
+    WIDTH, HEIGHT, SPOT, AHEAD = 420, 470, 21, 38  # SPOT: the radius of a player's circle; AHEAD: an MCO's or MCD's step
 
     def __init__(self):
         super().__init__()
@@ -1305,8 +1305,8 @@ class Pitch(QWidget):
         for row, line in enumerate(lines):
             y = field.top() + 34 + row * step
             gap = field.width() / len(line)
-            for column, player in enumerate(line):
-                self._player(painter, field.left() + gap * (column + 0.5), y, player, min(gap - 4, 104))
+            for across, depth, player in pitch_spots(line):
+                self._player(painter, field.left() + across * field.width(), y - depth * self.AHEAD, player, min(gap - 4, 104))
 
 
 class PitchPopup(QFrame):

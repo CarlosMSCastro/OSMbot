@@ -52,7 +52,9 @@ def pick_free_kick_taker(starters: Iterable[Player]) -> Optional[Player]:
 def pick_corner_taker(starters: Iterable[Player], free_kick: Optional[Player] = None) -> Optional[Player]:
     """Midfielder with the highest attack stat. When he also takes the free kicks (``free_kick``), another midfielder
     (OSMPro Táticas point 17, owner 2026-10-28): the best average grade among those with ``MIN_MATCHES``, and of
-    averages within ``CLOSE_GRADES`` of it the more defensive; with none of them, the next by attack; with no other
+    averages within ``CLOSE_GRADES`` of it the more defensive; one newly arrived, with fewer matches, still competes
+    when he has at least the chosen one's attack, again the more defensive winning (owner, 2026-11-02: buying and selling
+    all the time, the best ones are often new); with nobody with ``MIN_MATCHES``, the next by attack; with no other
     midfielder, the same one."""
     mids = [p for p in starters if p.position is Position.MID]
     first = _best(mids, _attack)
@@ -63,8 +65,10 @@ def pick_corner_taker(starters: Iterable[Player], free_kick: Optional[Player] = 
     if not graded:
         return _best(others, _attack)
     top = max(p.average_grade for p in graded)
-    return _best((p for p in graded if p.average_grade >= top - CLOSE_GRADES - 1e-9),
-                 lambda p: (p.stat_def, p.average_grade, _attack(p)))
+    defensive = lambda p: (p.stat_def, p.average_grade, _attack(p))
+    chosen = _best((p for p in graded if p.average_grade >= top - CLOSE_GRADES - 1e-9), defensive)
+    new = [p for p in others if p.matches < MIN_MATCHES and p.stat_att >= chosen.stat_att]
+    return _best([chosen, *new], defensive)
 
 
 @dataclass(frozen=True)

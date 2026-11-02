@@ -2,6 +2,15 @@
 
 Entradas mais recentes primeiro. Cada sessão: o que se fez · o que ficou por fazer · próximo passo.
 
+## 2026-11-02 — Medição em bruto: humano contra CPU (DESKTOP-KAM70RR)
+
+- **Revisão do pull:** só docs e registos; `dist/windows` 0.15.1 igual ao código, 527 testes. Falta confirmar a versão no PC do trabalho.
+- **Conclusões novas (`DISCOVERY.md` §3, sem mudanças no bot nem no `THEORY.md`):** à mesma força, humano contra CPU rende muito mais do que humano contra humano; a vantagem do 4-3-3 é em boa parte esse efeito; um CPU em 3-3-4 rende muito menos; a vantagem de casa pode ser só de jogos do CPU; sem degrau nos 12 %; no amigável conta ganhar, não por quantos.
+- **Correção:** `451` (fechada hoje, "fica a regra") está contaminada, tal como `523fora`, `tabela` e `vs523`: comparam sobretudo humanos com CPU. Os números estão certos, a conclusão não fica provada.
+- **Por decidir pelo dono:** separar humano e CPU nas verificações semanais; rever o "adversário do amigável indiferente" (`THEORY.md` §6). **Próximo:** esta decisão; depois Outros, ponto 1.
+- **Feito no código (D-083), por empacotar:** cantos com recém-chegados; aviso de jogo decisivo só quando pesa; no campo do hover, MCO à frente e MCD atrás, com esses nomes, e losango no 4-4-2 B. Lê a `specificPosition` do jogador, por isso quem joga fora da posição não se desloca.
+- **Versão 0.15.2 (pedido do dono):** `pyproject.toml`, `__init__`, `CHANGELOG.md`, `README.md` (estado), `dist/release-notes-v0.15.2.md`; 529 testes; `build_portable.py --zip --installer` → `dist/windows/` 0.15.2 (553 / 206 / 148 MB); os da 0.15.1 apagados. Falta o dono instalar nos PCs.
+
 ## 2026-11-02 — `dist/windows` 0.15.1 (PT-LA-02-0095-N)
 
 - **Pull 0.15.1 (dono) e `dist` (pedido do dono):** nenhum OSMbot a correr; 527 testes; `build_portable.py --zip --installer` → `dist/windows/` 0.15.1 (553 / 206 / 148 MB); `dist/release-notes-v0.15.1.md` feito a partir do `CHANGELOG.md`; os da 0.14.12 apagados. Este PC corre `Documents\osmbot-portable`, ainda 0.14.12: o dono corre o instalador ou substitui a pasta.

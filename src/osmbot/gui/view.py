@@ -181,10 +181,25 @@ def opponent_tip(name: str, value: tuple | None) -> dict | None:
 ESTIMATE_TIP = "Estimativa antes da análise: os melhores dele num 4-3-3"
 
 
+PITCH_PLACES = {"MO": "MCO", "MDC": "MCD"}  # as the owner names them, on the pitch (2026-11-02)
+PITCH_DEPTH = {"MCO": 1, "MCD": -1}  # ahead of or behind the line (owner, 2026-11-02: 4-3-3 and the diamond)
+
+
+def pitch_spots(line: list[dict]) -> list[tuple[float, int, dict]]:
+    """Where each player of a line stands: across the pitch (0 to 1) and his depth (1 ahead of the line, -1 behind it,
+    0 on it). Players of the same depth share the width, so a diamond has its MCO and MCD in the middle."""
+    groups: dict[int, list[dict]] = {}
+    for player in line:
+        groups.setdefault(PITCH_DEPTH.get(player["place"], 0), []).append(player)
+    return [((column + 0.5) / len(group), depth, player) for depth, group in groups.items()
+            for column, player in enumerate(group)]
+
+
 def eleven_view(players: list[dict] | None) -> dict | None:
     """The hover of the club's strength (owner, 2026-11-02): the eleven on a pitch, attack on top. Each player: his
     name, rating and place; green at the eleven's average or above, red 10 or more below it, yellow between; his
-    condition only below 80, the line the game turns yellow. Places left to right as the game's lineup numbers them."""
+    condition only below 80, the line the game turns yellow. Places left to right as the game's lineup numbers them,
+    the MCO a little ahead of the midfield and the MCD a little behind it (``pitch_spots``)."""
     from osmbot.theory.fitness import YELLOW_BELOW
     from osmbot.theory.lineup import SPECIFIC, rating
 
@@ -195,8 +210,9 @@ def eleven_view(players: list[dict] | None) -> dict | None:
     for p in sorted(players, key=lambda p: p["lineup"]):
         level = rating(p)
         fitness = p.get("fitness", 100)
+        place = SPECIFIC.get(p.get("specificPosition"), "")
         lines.setdefault(p["position"], []).append({
-            "name": p["name"], "rating": level, "place": SPECIFIC.get(p.get("specificPosition"), ""),
+            "name": p["name"], "rating": level, "place": PITCH_PLACES.get(place, place),
             "colour": GREEN if level >= average else RED if level <= average - 10 else YELLOW,
             "fitness": fitness if fitness < YELLOW_BELOW else None})
     shape = "-".join(str(len(lines[pos])) for pos in (3, 2, 1) if pos in lines)

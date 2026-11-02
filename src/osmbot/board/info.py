@@ -32,8 +32,13 @@ def next_matches(matches: list[dict], teams: list[dict], team_id: int, week: int
 
 def decisive_match(upcoming: dict | None, boosts: list[dict], strength: float | None) -> str | None:
     """The reminder of the camp and the secret training (owner, 2026-11-02; THEORY.md 21): next match against a human
-    manager, a direct rival or in the cup, with one of them not marked yet. Only a reminder: buying them is the owner's."""
+    manager, a direct rival or in the cup, with one of them not marked yet, and only when he is at least as strong on the
+    day or is known to be boosted (owner, 2026-11-02: "não pode sugerir esses 2 sempre"). Only a reminder: buying them
+    is the owner's."""
     if not upcoming or not upcoming.get("human") or not (upcoming.get("danger") or upcoming.get("cup")):
+        return None
+    mine, theirs = upcoming.get("match") or (strength, upcoming.get("strength"))
+    if mine and theirs and mine > theirs and not upcoming.get("boosted"):
         return None
     missing = [b["name"] for b in boosts if not b.get("on") and not b.get("blocked")]
     if not missing:

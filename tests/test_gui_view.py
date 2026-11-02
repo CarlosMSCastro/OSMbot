@@ -440,3 +440,16 @@ def test_the_eleven_on_the_pitch_has_the_attack_on_top_with_the_rating_and_the_t
     assert [(p["name"], p["place"], p["colour"], p["fitness"]) for p in attack] == [
         ("P9", "EE", GREEN, None), ("P10", "PL", GREEN, 76), ("P11", "ED", YELLOW, None)]
     assert view["lines"][-1][0]["colour"] == RED  # 18 below the average
+
+
+def test_the_mco_and_the_mcd_stand_apart_from_the_midfield():  # owner, 2026-11-02
+    from osmbot.gui.view import eleven_view, pitch_spots
+
+    def midfield(*spots):
+        squad = [{"name": f"P{n}", "lineup": n, "position": 2, "specificPosition": spot, "statAtt": 90, "statDef": 90,
+                  "statOvr": 90, "fitness": 100} for n, spot in enumerate(spots, 6)]
+        return [(across, depth, p["place"]) for across, depth, p in pitch_spots(eleven_view(squad)["lines"][0])]
+
+    assert sorted(midfield(2, 1, 2)) == [(0.25, 0, "MC"), (0.5, 1, "MCO"), (0.75, 0, "MC")]  # 4-3-3 A
+    assert sorted(midfield(2, 5, 2)) == [(0.25, 0, "MC"), (0.5, -1, "MCD"), (0.75, 0, "MC")]  # 4-3-3 B
+    assert sorted(midfield(2, 5, 2, 1)) == [(0.25, 0, "MC"), (0.5, -1, "MCD"), (0.5, 1, "MCO"), (0.75, 0, "MC")]  # diamond

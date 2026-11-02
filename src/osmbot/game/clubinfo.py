@@ -168,9 +168,19 @@ def _match_strengths(client, team: dict, league: str, teams: list[dict], week: i
 
 def plays_counter(client, base: str, rival: int) -> bool:
     """The analyst's report shows him in counter-attack (D-079); False with no report on him."""
+    return any(r.get("overallMatchTactics") == COUNTER for r in _reports_on(client, base, rival))
+
+
+def uses_camp(client, base: str, rival: int) -> bool:
+    """The analyst's report shows his training camp (owner, 2026-11-02); False with no report on him."""
+    return any(r.get("isUsingTrainingCamp") for r in _reports_on(client, base, rival))
+
+
+def _reports_on(client, base: str, rival: int) -> list[dict]:
     status, reports = client.get(f"{API_V11}/{base}/spyresults")
-    return status == 200 and isinstance(reports, list) and any(
-        isinstance(r, dict) and r.get("teamId") == rival and r.get("overallMatchTactics") == COUNTER for r in reports)
+    if status != 200 or not isinstance(reports, list):
+        return []
+    return [r for r in reports if isinstance(r, dict) and r.get("teamId") == rival]
 
 
 def club_extra(client, team: dict, base: str, players: list[dict], slot, market: list[dict]) -> dict:
@@ -217,13 +227,14 @@ def club_extra(client, team: dict, base: str, players: list[dict], slot, market:
         rival = upcoming["opponent_id"]  # analysis an estimate, read again as soon as it is done (owner, 2026-10-25)
         upcoming["value"] = squad_value(values, rival)
 
-        def rival_strength() -> tuple[int | None, bool, int | None, bool]:
+        def rival_strength() -> tuple[int | None, bool, int | None, bool, bool]:
             squad_of = _list(client, f"{league}/teams/{rival}/players")
             seen = eleven_seen(squad_of)  # his forwards, once the analysis shows his eleven (THEORY.md 2)
             forwards = sum(1 for p in squad_of if 1 <= (p.get("lineup") or 0) <= 11 and p.get("position") == 1) if seen else None
-            return opponent_rating(squad_of, GUESS_FORMATION), not seen, forwards, bool(seen) and plays_counter(client, base, rival)
+            return (opponent_rating(squad_of, GUESS_FORMATION), not seen, forwards,
+                    bool(seen) and plays_counter(client, base, rival), bool(seen) and uses_camp(client, base, rival))
 
-        upcoming["strength"], upcoming["estimate"], upcoming["forwards"], upcoming["counter"] = _cached(
+        upcoming["strength"], upcoming["estimate"], upcoming["forwards"], upcoming["counter"], upcoming["camp"] = _cached(
             ("strength", league, rival, week, bool(done.get(ANALYSIS_STEP))), FIXTURES_FOR, rival_strength)
     by_type = {s["type"]: s for s in prep.get("steps") or []}
     rival = (upcoming or {}).get("opponent_id")
@@ -241,6 +252,8 @@ def club_extra(client, team: dict, base: str, players: list[dict], slot, market:
     referees = _cached(("referees", league), FIXTURES_FOR, lambda: _list(client, f"{league}/referees"))
     strictness = next((r.get("strictness") for r in referees if upcoming and r["id"] == upcoming.get("referee_id")), None)
     mine, theirs = _match_strengths(client, team, league, teams, week, upcoming, strength, done)
+    if upcoming:  # for the reminder of a decisive match: what is known of the day (THEORY.md 21)
+        upcoming["match"], upcoming["boosted"] = (mine, theirs), hidden or upcoming["camp"]
 
     def important(match: dict) -> dict:  # stronger opponent or a close direct rival (owner, 2026-10-29, THEORY.md 16)
         rival = match["opponent_id"]

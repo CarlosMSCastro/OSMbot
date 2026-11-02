@@ -82,7 +82,7 @@ def test_corners_leave_the_free_kick_taker_for_the_midfielder_with_the_best_aver
     star = _graded(make_player(Position.MID, att=99), 8.9, 20)  # free kicks and the most attack among midfielders
     attacking = _graded(make_player(Position.MID, att=90), 8.1, 20)
     steady = _graded(make_player(Position.MID, att=60), 8.6, 20)
-    new = _graded(make_player(Position.MID, att=70), 9.5, 2)  # too few matches
+    new = _graded(make_player(Position.MID, att=55), 9.5, 2)  # too few matches, and less attack than the one chosen
     chosen = pick_specialists([star, attacking, steady, new, make_player(Position.ATT, att=80)])
     assert chosen.free_kick_taker is star and chosen.corner_taker is steady
 
@@ -92,6 +92,17 @@ def test_close_averages_go_to_the_more_defensive_midfielder(make_player):
     a = _graded(make_player(Position.MID, att=80, deff=40), 8.5, 10)
     b = _graded(make_player(Position.MID, att=70, deff=75), 8.3, 10)
     assert pick_corner_taker([star, a, b], star) is b
+
+
+def test_a_new_midfielder_competes_for_the_corners_with_enough_attack(make_player):  # owner, 2026-11-02
+    star = _graded(make_player(Position.MID, att=125), 8.7, 21)
+    regular = _graded(make_player(Position.MID, att=117, deff=114), 8.1, 16)
+    new = _graded(make_player(Position.MID, att=119, deff=125), 9.0, 1)
+    weak = _graded(make_player(Position.MID, att=103, deff=130), 9.0, 1)
+    assert pick_corner_taker([star, regular, new, weak], star) is new
+    assert pick_corner_taker([star, regular, weak], star) is regular  # less attack than the one chosen
+    soft = _graded(make_player(Position.MID, att=119, deff=100), 9.0, 1)
+    assert pick_corner_taker([star, regular, soft], star) is regular  # less defence: the rule's own preference
 
 
 def test_corners_stay_when_they_do_not_collide_or_nobody_else_can_take_them(make_player):

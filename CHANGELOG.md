@@ -4,6 +4,17 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-PT/1.1.0/); 
 
 Este ficheiro é o **histórico de versões, para quem lê o repo**. O diário interno de cada sessão de trabalho está em [`docs/WORKLOG.md`](docs/WORKLOG.md).
 
+## [0.15.2] — 2026-11-02
+
+Reforços recém-chegados nos cantos, aviso de jogo decisivo só quando pesa, e o meio-campo certo no campo.
+
+### Alterado
+- **Cantos:** quando o médio com mais ataque já bate os livres, um médio com menos de 3 jogos também entra na escolha, se tiver pelo menos o ataque do escolhido; ganha o de mais defesa.
+- **Aviso de jogo decisivo:** deixa de pedir sempre o estágio e o treino secreto. Só aparece quando o adversário é pelo menos tão forte no dia, ou se sabe que está reforçado.
+
+### Corrigido
+- **Onze no campo:** o MCO fica um pouco à frente do meio-campo e o MCD um pouco atrás, com esses nomes; no losango ficam os dois ao centro.
+
 ## [0.15.1] — 2026-11-02
 
 Volta o botão de maximizar, e o onze num campo ao passar o rato.
