@@ -26,6 +26,28 @@ def config_file() -> Path:
     return CONFIG_FILE
 
 
+def get_pref(key: str, default=None):
+    """A choice of the window's kept on this PC, beside the language (~/.osmbot/config.json)."""
+    try:
+        return json.loads(config_file().read_text(encoding="utf-8")).get(key, default)
+    except (OSError, ValueError):
+        return default
+
+
+def set_pref(key: str, value) -> None:
+    path = config_file()
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        data = {}
+    data[key] = value
+    try:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
+    except OSError:
+        pass
+
+
 def load_language() -> str:
     """The language chosen on this PC (Portuguese until one is chosen)."""
     global _language
@@ -85,7 +107,7 @@ WORDS = {
     "Capitão": "Captain", "Penáltis": "Penalties", "Livres": "Free kicks", "Cantos": "Corners", "Aceite": "Accepted", "Vendas": "Sales", "Valor do plantel": "Squad value", "Clube": "Club", "J": "P", "DG": "GD", "Valor": "Value", "× valor": "× value",
     "Jogadores": "Players", "Média": "Avg", "Pos": "Pos", "Força": "Strength", "Jogador": "Player", "Idade": "Age",
     "Preço": "Price", "Lucro": "Profit",
-    "Campeões": "Champions", "Patrocinadores": "Sponsors", "Cansados": "Tired", "CASA": "HOME", "FORA": "AWAY", "folga": "rest", "em": "in",
+    "Campeões": "Champions", "Fixar a coluna da direita": "Pin the right column", "Patrocinadores": "Sponsors", "Cansados": "Tired", "CASA": "HOME", "FORA": "AWAY", "folga": "rest", "em": "in",
     # club card
     "Treinos": "Training", "Campo": "Pitch", "Capacidade": "Capacity", "no máximo": "at max", "parado": "idle",
     "Médico": "Doctor", "Advogado": "Lawyer", "ninguém": "nobody", "pronto": "ready", "a levantar": "to collect",
@@ -239,6 +261,10 @@ PATTERNS = [(re.compile(pattern), replace) for pattern, replace in (
     (r"Se fez estágio, tem mais (.+) % que não se vê", lambda m: f"If he went on a training camp, he has {m[1]} % more that cannot be seen"),
     (r"(\d+) jogos? · à espera", lambda m: f"{m[1]} game{'s' if m[1] != '1' else ''} · waiting"),
     (r"⚠ Moral baixa: (.+)", lambda m: f"⚠ Low morale: {m[1]}"),
+    (r"^(\d+) M parados a (\d+) jornadas do fim: (.+) por (\d+) M reforça (.+)$",
+     lambda m: f"{m[1]} M idle with {m[2]} rounds left: {m[3]} for {m[4]} M upgrades {m[5]}"),
+    (r"^Jogo decisivo contra (.+?)( \(força .+\))?: falta (.+)$",
+     lambda m: f"Decisive match against {m[1]}{(m[2] or '').replace('força', 'strength')}: missing {m[3].replace(' e ', ' and ')}"),
     (r"⚠ Cansados: (.+)", lambda m: f"⚠ Tired: " + re.sub(r"sem suplente (\w+)", lambda n: f"no cover {_w(n[1])}", m[1])),
     (r"(?:Força (\d+) · )?[Vv]alor do plantel (.+) · (\d+) jogadores · média (.+)",
      lambda m: (f"Strength {m[1]} · squad value" if m[1] else "Squad value") + f" {m[2]} · {m[3]} players · avg {m[4]}"),

@@ -106,3 +106,15 @@ Vídeos do canal André Santana (OSM PRO) sobre curiosidades do jogo e da comuni
 - **Estádio:** campo primeiro aqui e no OSMPROworld, contra os treinos primeiro do §8. Falta saber se a regra do autor é só para ligas curtas.
 - **Treino crítico e nota máxima de 255:** são estimativas do autor. 🔬 Dá para procurar nos `logs/*/treinos/`.
 - **"Forma" escondida e ciclos de venda:** são perceções do autor, sem prova.
+
+## Revisão com o dono (D-065): pontos
+
+Já decidido noutras categorias e não volta: especialistas e capitão, nacionalidade, ordem do estádio, preço de venda, 4-3-3, moral baixa. Treino crítico já medido (`THEORY.md`, +100 em 3,7 %).
+
+| # | Ponto | Estado |
+|---|---|---|
+| 1 | A hora do contador não é a hora real da simulação | Fechado 2026-11-01 (dono, opção a): conta a hora do contador; não se mede, nada no bot |
+| 2 | Aniversários a meio da liga mudam idade, valor e capitão | Fechado 2026-11-02 (dono, opção a): confirmado num caso em `DISCOVERY.md` §3; o bot já lê o plantel no momento |
+| 3 | Pacotes duram 6 dias e guardam-se até 10 | Fechado 2026-11-02 (dono, opção b): Reportado em `DISCOVERY.md`; o bot regista cada pacote e o prazo (`THEORY.md` §20), nunca os abre |
+| 4 | Truque do olheiro: pedir um velho de nota alta | Fechado 2026-11-02 (dono, opção a): dica de emergência no `THEORY.md`, na regra do olheiro; nada no bot |
+| 5 | Com notas muito altas os médios valem mais do que os avançados | Fechado 2026-11-02 (dono, opção b): medido; a vantagem não é a posição mas o preço: sugestões de revenda em 24–60 M de valor, sem revendas nas últimas 8 jornadas (`THEORY.md` §7.7) |

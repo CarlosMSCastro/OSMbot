@@ -30,6 +30,18 @@ def next_matches(matches: list[dict], teams: list[dict], team_id: int, week: int
     return [_upcoming(m, teams, team_id) for m in ahead[:count]]
 
 
+def decisive_match(upcoming: dict | None, boosts: list[dict], strength: float | None) -> str | None:
+    """The reminder of the camp and the secret training (owner, 2026-11-02; THEORY.md 21): next match against a human
+    manager, a direct rival or in the cup, with one of them not marked yet. Only a reminder: buying them is the owner's."""
+    if not upcoming or not upcoming.get("human") or not (upcoming.get("danger") or upcoming.get("cup")):
+        return None
+    missing = [b["name"] for b in boosts if not b.get("on") and not b.get("blocked")]
+    if not missing:
+        return None
+    sides = f" (força {strength} × {upcoming['strength']})" if strength and upcoming.get("strength") else ""
+    return f"Jogo decisivo contra {upcoming['opponent']}{sides}: falta {' e '.join(missing)}"
+
+
 def _upcoming(match: dict, teams: list[dict], team_id: int) -> dict:
     opponent, side = _side(match, team_id)
     places = {t["id"]: t for t in teams}
@@ -37,7 +49,7 @@ def _upcoming(match: dict, teams: list[dict], team_id: int) -> dict:
     rank = theirs.get("ranking")
     danger = bool(mine and rank and abs(rank - mine) <= DIRECT_RIVAL)
     return {"opponent": theirs.get("name", "?"), "opponent_id": opponent, "rank": rank, "side": side, "danger": danger,
-            "cup": match["matchType"] == CUP_MATCH, "referee_id": match.get("refereeId"),
+            "cup": match["matchType"] == CUP_MATCH, "human": bool(theirs.get("userId")), "referee_id": match.get("refereeId"),
             "neutral": bool(match.get("isPlayedOnNeutralGround"))}
 
 

@@ -116,7 +116,7 @@ def test_sale_picks_are_the_affordable_sale_players_by_resale_profit_with_reinfo
     from osmbot.transfers.engine import resale, sale_picks
 
     assert resale(10e6) == 25e6 and resale(50e6) == 125e6 and resale(70e6) == 0.75 * 175e6  # 75 % above 150 M (THEORY.md 7.5)
-    players = [_starter(1, 3, 79), _starter(2, 3, 90, lineup=2), _starter(3, 3, 95, lineup=14)]  # the bench does not count
+    players = [_starter(1, 3, 79), _starter(2, 3, 90, lineup=2), {**_starter(3, 3, 95, lineup=14), "specificPosition": 9}]  # another place
     market = [_sale(1, 3, 85, 14.3e6, 11e6),  # beats the weakest DEF (79), at 1.3×
               _sale(2, 1, 70, 12e6, 10e6),  # to sell again, at 1.2×: a bargain, the best bet
               _sale(3, 3, 99, 30e6, 25e6),  # too dear
@@ -126,11 +126,11 @@ def test_sale_picks_are_the_affordable_sale_players_by_resale_profit_with_reinfo
               _sale(7, 2, 70, 19e6, 15e6)]
     picks = sale_picks(market, players, money=20e6, count=5)
     assert [(p["nome"], p["reforco"], p["pechincha"]) for p in picks] == [
-        ("S2", False, True), ("S7", False, False), ("S1", True, False), ("S6", False, False)]
-    assert picks[2]["lucro"] == 27.5e6 - 14.3e6 and picks[2]["fraco"] == "T1 79"
+        ("S1", True, False), ("S2", False, True), ("S7", False, False), ("S6", False, False)]  # the reinforcement first
+    assert picks[0]["lucro"] == 27.5e6 - 14.3e6 and picks[0]["fraco"] == "T1 79"
     assert len(sale_picks(market, players, money=20e6)) == 3
     big = _sale(8, 3, 90, 17e6, 12e6)  # a reinforcement is shown whatever its value
-    assert sale_picks([big], players, 20e6)[0]["reforco"] and not sale_picks([_sale(9, 1, 90, 75e6, 50e6)], players, 80e6)
+    assert sale_picks([big], players, 20e6)[0]["reforco"] and not sale_picks([_sale(9, 1, 90, 90e6, 70e6)], players, 100e6)
 
 
 def test_reinforcements_go_by_specific_position_below_the_average_and_a_listed_starter_counts_as_his_cover():
@@ -148,7 +148,7 @@ def test_reinforcements_go_by_specific_position_below_the_average_and_a_listed_s
     players = [player(1, mc, 96, 6), player(2, mco, 115, 7), player(3, gr, 118, 1),
                player(4, mc, 111, 14), player(5, mco, 100, 15)]
     mine = {"id": 50, "price": 55e6, "team": {"userId": 7, "isForeignTeam": False}, "player": {"id": 1}}  # MC 96 listed
-    assert weak_spots(players, set()) == {mc: (96, "T1 96")}  # MCO 115 and GR 118 are above the average (109.7)
+    assert weak_spots(players, set()) == {mc: (111, "T4 111")}  # the better MC on the bench counts as the starter
     assert weak_spots(players, {1}) == {mc: (111, "T4 111")}  # the listed MC counts as the MC on the bench (average 114.7)
     market = [offer(10, mco, 118), offer(11, mc, 105), offer(12, mc, 112), mine]
     picks = sale_picks(market, players, money=200e6)
@@ -183,9 +183,52 @@ def test_an_empty_place_counts_as_whoever_would_take_it_and_a_position_with_no_b
     thin = [p for p in players if p["id"] not in (5, 6)]  # only the 4 defenders the eleven needs
     picks = sale_picks(market, thin, money=141.9e6, places=places)
     assert [(p["nome"], p["suplente"], p["reforco"]) for p in picks] == [
-        ("S12", "DEF sem suplente", False), ("S10", "DEF sem suplente", False), ("S11", "DEF sem suplente", False)]  # by × value
+        ("S12", "DEF sem suplente", False), ("S10", None, False), ("S11", None, False)]  # 1 backup, by × value
     tired_only = thin + [player(7, de, 80, 15, fitness=70)]
     assert depth_gaps(tired_only, set(), places) == {3: "DEF sem suplente"}  # a tired backup does not count
+
+
+def test_a_gap_takes_one_place_of_the_card_a_goalkeeper_gap_needs_fewer_than_two_and_the_last_rounds_stop_the_flips():
+    from osmbot.transfers.engine import depth_gaps, idle_money, sale_picks
+
+    def keeper(pid, lineup, fitness=100, unavailable=0):
+        return {**_starter(pid, 4, 80, lineup), "specificPosition": 6, "fitness": fitness, "unavailable": unavailable}
+
+    field = [_starter(n, 3, 110, n) for n in range(2, 12)]
+    assert depth_gaps([keeper(1, 1), keeper(20, 12, fitness=76)] + field, set()).get(4) is None  # tired still covers
+    hurt = [keeper(1, 1, unavailable=3), keeper(20, 12)] + field
+    assert depth_gaps(hurt, set())[4] == "GR sem suplente"  # one of the two out: one more is asked for
+    market = [_sale(1, 4, 60, 3e6, 2e6), _sale(2, 4, 61, 3e6, 2e6), _sale(3, 4, 62, 3e6, 2e6), _sale(4, 2, 80, 45e6, 30e6),
+              _sale(5, 1, 80, 14e6, 12e6)]
+    picks = sale_picks(market, hurt, 100e6)
+    assert [p["nome"] for p in picks] == ["S1", "S4", "S5"] and picks[0]["suplente"]  # 1 backup; 24-60 M before 12 M
+    assert [p["nome"] for p in sale_picks(market, hurt, 100e6, rounds_left=8)] == ["S1"]  # flips stop near the end
+    eleven = [keeper(1, 1), keeper(20, 12)] + field[:-1] + [{**_starter(11, 2, 90, 11), "specificPosition": 5}]
+    buy = _sale(6, 2, 112, 60e6, 50e6)
+    buy["player"]["specificPosition"] = 5
+    assert idle_money([buy], eleven, 280e6, 9) is None
+    assert idle_money([buy], eleven, 280e6, 5) == "280 M parados a 5 jornadas do fim: S6 112 por 60 M reforça T11 90"
+
+
+def test_a_better_player_on_the_bench_means_the_starter_is_only_resting_him():
+    from osmbot.transfers.engine import weak_spots
+
+    def player(pid, spot, rating, lineup):
+        return {**_starter(pid, 4 if spot == 6 else 3, rating, lineup), "specificPosition": spot}
+
+    resting = [player(1, 6, 50, 1), player(2, 6, 103, 12)] + [player(n, 3, 100, n) for n in range(3, 13)]
+    assert 6 not in weak_spots(resting, set())  # the keeper of 50 stands in for the 103 for one match
+
+
+def test_the_decisive_match_reminder():
+    from osmbot.board.info import decisive_match
+
+    boosts = [{"name": "estágio", "on": False, "blocked": ""}, {"name": "treino secreto", "on": True, "blocked": ""}]
+    match = {"opponent": "Sabah", "human": True, "cup": True, "danger": False, "strength": 104}
+    assert decisive_match(match, boosts, 107) == "Jogo decisivo contra Sabah (força 107 × 104): falta estágio"
+    assert decisive_match({**match, "human": False}, boosts, 107) is None  # the CPU
+    assert decisive_match({**match, "cup": False}, boosts, 107) is None  # a normal match
+    assert decisive_match(match, [{**b, "on": True} for b in boosts], 107) is None  # all marked
 
 
 def test_the_empty_places_of_the_eleven_are_warned_with_the_position_the_formation_wants():

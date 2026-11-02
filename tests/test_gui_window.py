@@ -23,6 +23,7 @@ def window(monkeypatch, tmp_path):
     from osmbot.gui import window as module
 
     monkeypatch.setattr(browser, "STATE_FILE", tmp_path / "no-session.json")  # never reads the real game
+    monkeypatch.setattr("osmbot.logs.CONFIG_FILE", tmp_path / "config.json")  # never touches the real choices
     app = QApplication.instance() or QApplication([])
     win = module.MainWindow(app)
     yield win
@@ -90,7 +91,7 @@ def test_atualizar_comes_first_in_ver_and_works_while_the_bot_works(window, monk
 
     view = next(menu.menu() for menu in window.menuBar().actions() if menu.text() == "Ver")
     names = [action.text() for action in view.actions() if not action.isSeparator()]
-    assert names[0] == "Atualizar" and len(names) == 4
+    assert names[0] == "Atualizar" and len(names) == 5
     session = tmp_path / "session.json"
     session.write_text("{}", encoding="utf-8")
     monkeypatch.setattr(browser, "STATE_FILE", session)
@@ -232,3 +233,32 @@ def test_hovers_have_the_first_line_as_a_title_and_one_line_stays_plain():
     html = tip_text("Força 108\nValor do plantel: 998 M\n\nMédia: 29 M")
     assert html.startswith("<div") and "Força 108</div>" in html and "Valor do plantel: 998 M" in html and "<br><br>" in html
     assert "Fora da regra</div>" in tip_html([(None, "Akanni 51 entra antes de Ndicka 107", None)], "Fora da regra")
+
+
+def test_the_right_column_opens_from_the_tab_over_the_clubs_and_can_be_pinned(window):
+    from osmbot.gui.window import BOARD
+    from osmbot.i18n import get_pref
+
+    window.go(BOARD)
+    assert window.side_tab.isVisibleTo(window.board_page) and not window.side_panel.isVisibleTo(window.board_page)
+    window._open_side()
+    assert window.side_panel.isVisibleTo(window.board_page) and window.side_timer.isActive()
+    window._check_side()  # the mouse is not there
+    assert not window.side_panel.isVisibleTo(window.board_page) and not window.side_timer.isActive()
+    window.pin_side(True)
+    assert window.side_panel.isVisibleTo(window.board_page) and not window.side_tab.isVisibleTo(window.board_page)
+    assert get_pref("side_pinned") is True
+    window.pin_side(False)
+    assert not window.side_panel.isVisibleTo(window.board_page)
+
+
+def test_the_board_opens_maximized_unless_it_was_left_otherwise(window):
+    from osmbot.gui.window import BOARD, START
+    from osmbot.i18n import set_pref
+
+    window.go(BOARD)
+    assert window.windowState() & __import__("PySide6.QtCore").QtCore.Qt.WindowMaximized
+    window.go(START)
+    set_pref("maximized", False)
+    window.go(BOARD)
+    assert not window.windowState() & __import__("PySide6.QtCore").QtCore.Qt.WindowMaximized

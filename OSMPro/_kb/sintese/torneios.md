@@ -116,3 +116,20 @@ Os torneios são **ligas curtas e diárias** (uma jornada por dia, muitas vezes 
 - Advogado não reduz uma suspensão de 1 dia. (LglmdSgkNII)
 - 🕰️ Ver os estágios dos adversários já foi possível e foi retirado. (r0YeSOretI8)
 - GR falham penáltis; o número da camisola não conta. (KHrlkId6Iqo)
+
+## Revisão com o dono (D-065): pontos
+
+Já decidido noutras categorias e não volta: titular à venda, treino no onze, 4-3-3 fora, nacionalidade, vantagem de casa.
+
+| # | Ponto | Estado |
+|---|---|---|
+| 1 | Tática feita ≥ 30 min antes do jogo | Fechado 2026-11-01 (dono, opção b): hábito no `THEORY.md` §6 **[H]**, nada no bot |
+| 2 | Desempate: pontos, diferença de golos, golos marcados, sem confronto direto | Fechado 2026-11-01 (dono, opção a): Reportado em `DISCOVERY.md`, nada no bot |
+| 3 | Não aceitar propostas de outros treinadores | Fechado 2026-11-01 (dono, opção b): Reportado em `DISCOVERY.md`, sem regra, nada no bot |
+| 4 | Cada venda faz aparecer jogadores novos no mercado | Fechado 2026-11-01 (dono, opção a): medido, 522 de 785 vendas a bots trazem anúncios em 2 min (`DISCOVERY.md` §3, `THEORY.md` §7.7); nada no bot |
+| 5 | "Ganhar em casa, descansar fora" | Fechado 2026-11-01 (dono, opção a): fica o D-078; dica no `THEORY.md` §16, nada no bot |
+| 6 | Estágio ativado nos últimos 5 minutos | Fechado 2026-11-01 (dono): já é o que faz; nada na teoria nem no bot. Medido: em 98 jogos do dono, 12 estágios dele e 5 dos adversários, todos nesses mesmos 12 (2 V, 3 D); quem ativa primeiro não está nos registos |
+| 6b | Nota: a síntese diz que o treino secreto "não dá bónus" | Errado: o jogo dá +2 % (`SecretBoostPercentage`, `THEORY.md` §1) |
+| 7 | 6-3-1 contra 4-3-3 | Fechado 2026-11-01 (dono, opção a): só registo; nos ~600 jogos de liga registados ninguém o jogou; nada no bot |
+| 8 | Botão de alinhamento automático do jogo | Fechado 2026-11-01 (dono, opção a): dica de emergência no `THEORY.md` §6, nada no bot |
+| 9 | O evento do olheiro aumenta as vendas? | Fechado 2026-11-01 (dono, opção a): registado em `DISCOVERY.md` §3 (Transfer Madness confirmado, Bargain Scout provável); nada no bot |

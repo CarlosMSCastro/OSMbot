@@ -17,6 +17,27 @@ def player(pid, lineup=1, age=25, position=3, unavailable=0, value=10):
             "value": value}
 
 
+@pytest.fixture(autouse=True)
+def packs_file(tmp_path, monkeypatch):
+    path = tmp_path / "pacotes.json"
+    monkeypatch.setattr(inventory, "PACKS_FILE", path)
+    return path
+
+
+def test_a_player_pack_is_noted_once_with_its_deadline_and_never_used(monkeypatch):
+    records, lines = [], []
+    monkeypatch.setattr(inventory.logs, "record", lambda name, data: records.append((name, data)))
+    items = [item("pack", 11, 6 * 24 * HOUR, value=0), item("swap", 7)]
+    inventory._note_packs(items, lines.append, NOW)
+    inventory._note_packs(items, lines.append, NOW + HOUR)
+    assert len(lines) == 1 and "faltam 6.0 dias" in lines[0]
+    assert records[0][0] == "inventario" and records[0][1]["evento"] == "pacote" and records[0][1]["item"] == "pack"
+    assert due(items, NOW + 6 * 24 * HOUR - HOUR) == []  # the bot never opens it
+    inventory._note_packs([item("swap", 7)], lines.append, NOW)  # opened: gone from the file
+    inventory._note_packs([item("no", 11)], lines.append, NOW)
+    assert lines[1].endswith("sem prazo")
+
+
 def test_only_universal_trainers_and_bags_are_used_and_only_4_hours_before_they_expire():
     items = [item("ut", 12, 3 * HOUR), item("bag", 13, 2 * HOUR), item("later", 12, 30 * HOUR), item("swap", 7),
              item("gone", 12, -HOUR), item("tp", 9, HOUR)]

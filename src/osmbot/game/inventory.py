@@ -8,15 +8,18 @@ wallet. Swaps and progression never expire and are never used. A refused request
 """
 from __future__ import annotations
 
+import json
 import time
+from pathlib import Path
 
 from osmbot import logs
 from osmbot.game import refusals
 from osmbot.game.timers import minutes_text
-from osmbot.inventory.policy import (BAG, UNIVERSAL, UNIVERSAL_TRAINER, active_until, due, expires, pick_club,
-                                     universal_trainee, wake_times)
+from osmbot.inventory.policy import (BAG, PACK, UNIVERSAL, UNIVERSAL_TRAINER, active_until, due, expires, new_packs,
+                                     pick_club, universal_trainee, wake_times)
 from osmbot.rewards.texts import prize_text
 
+PACKS_FILE = Path.home() / ".osmbot" / "pacotes.json"  # the packs already noted on this machine
 PAUSE_BETWEEN_WRITES = 1.5  # seconds
 UNIVERSAL_SETTING = "TrainingUniversalSession"  # gamesettings: the 6 h session of the universal trainer
 BOSS_COINS = 1  # reward type
@@ -178,6 +181,33 @@ def _open_bag(client, item: dict, confirm: bool, log) -> int:
     return failures
 
 
+def _packs_seen() -> list:
+    try:
+        return json.loads(PACKS_FILE.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return []
+
+
+def _note_packs(items: list[dict], log, now: float) -> None:
+    """Note each player pack once, with its deadline, to confirm the 6 days and the window's warning (THEORY.md
+    section 20). Only reads: opening a pack stays with the owner."""
+    seen = _packs_seen()
+    for item in new_packs(items, seen):
+        when = expires(item)
+        logs.record("inventario", {"evento": "pacote", "item": item["id"], "acao": item["action"]["id"],
+                                   "valor": item["reward"].get("value"), "expira": when})
+        deadline = (f"expira a {time.strftime('%d/%m %H:%M', time.localtime(when))}, faltam {(when - now) / 86400:.1f} dias"
+                    if when else "sem prazo")
+        log(f"Pacote de jogador no inventário: {deadline}")
+    held = [i["id"] for i in items if i["reward"]["type"] == PACK]
+    if held != seen:
+        try:
+            PACKS_FILE.parent.mkdir(parents=True, exist_ok=True)
+            PACKS_FILE.write_text(json.dumps(held), encoding="utf-8")
+        except OSError:
+            pass
+
+
 def run_inventory(confirm: bool, log=None, clock=time.time) -> tuple[int, list[float]]:
     """Keep each active universal trainer busy, then use the items due (THEORY.md section 20).
     Returns (failures, times to wake at). Without ``confirm`` only shows the plan."""
@@ -192,6 +222,7 @@ def run_inventory(confirm: bool, log=None, clock=time.time) -> tuple[int, list[f
         now = clock()
         _, items = client.get("user/userrewards")
         items = items if isinstance(items, list) else []
+        _note_packs(items, log, now)
         teams = list(_teams(client))
         active = [bool(active_until(client.get(f"{base}/timers")[1] or [], now)) for _, _, base in teams]
         if not (any(active) or due(items, now)):  # nothing to do: the squads are not read

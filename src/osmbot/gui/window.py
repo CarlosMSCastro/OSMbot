@@ -20,7 +20,7 @@ import traceback
 from datetime import datetime
 from pathlib import Path
 
-from PySide6.QtCore import QLockFile, QObject, QPoint, QPointF, QRectF, QSize, Qt, QTimer, Signal
+from PySide6.QtCore import QEvent, QLockFile, QObject, QPoint, QPointF, QRectF, QSize, Qt, QTimer, Signal
 from PySide6.QtGui import (QAction, QColor, QCursor, QFont, QFontDatabase, QFontMetrics, QIcon, QImage, QPainter, QPainterPath, QPalette, QPen,
                            QPixmap, QRegion)
 from PySide6.QtWidgets import (QAbstractItemView, QApplication, QFrame, QGridLayout, QGroupBox, QHBoxLayout, QLabel,
@@ -28,7 +28,7 @@ from PySide6.QtWidgets import (QAbstractItemView, QApplication, QFrame, QGridLay
                                QSystemTrayIcon, QTableWidget, QTableWidgetItem, QToolTip, QVBoxLayout, QWidget)
 
 from osmbot import __version__
-from osmbot.i18n import LANGUAGES, language, load_language, set_language, tr
+from osmbot.i18n import LANGUAGES, get_pref, language, load_language, set_language, set_pref, tr
 from osmbot.gui.view import BLUE, GREEN, GREY, ORANGE, RED, YELLOW, board_view, mission_ready
 
 COLOURS = {GREEN: "#5cd17a", BLUE: "#7cc4ff", YELLOW: "#f5c542", GREY: "#8f95b8", RED: "#ff6b6b", ORANGE: "#ff9f43",
@@ -1140,7 +1140,11 @@ class FixturesPopup(QFrame):
 
 
 class FixturesLabel(EventLabel):
-    """ " · J15/38" by the club's place (owner, 2026-10-28); the season opens while the mouse is over it."""
+    """The season by the club's place (owner, 2026-11-02): a block per league round, green/yellow/red once played, faint
+    the rest, then "J15/38"; the season opens while the mouse is over it (owner, 2026-10-28)."""
+
+    GAP = 1
+    TEXT_GAP = 8  # px between the blocks and "J15/38"
 
     def __init__(self):
         super().__init__()
@@ -1148,13 +1152,32 @@ class FixturesLabel(EventLabel):
         self.setStyleSheet(f"color:{MUTED};")
         self.popup = FixturesPopup()
         self.popup.parent_label = self
+        self.strip: list[dict] = []
+        self.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
 
     def show_round(self, text: str, view: dict | None) -> None:
         self.view = view
-        self.setText(f" · {tr(text)}" if text else "")
+        self.strip = (view or {}).get("strip") or []
+        self.setText(tr(text) if text else "")
         self.setVisible(bool(text))
+        self.update()
         if view and self.popup.isVisible():
             self.popup.show_view(view)
+
+    def paintEvent(self, event) -> None:
+        super().paintEvent(event)
+        if not self.strip:
+            return
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.Antialiasing)
+        painter.setPen(Qt.NoPen)
+        room = self.width() - self.fontMetrics().horizontalAdvance(self.text()) - self.TEXT_GAP
+        width = (room - self.GAP * (len(self.strip) - 1)) / len(self.strip)
+        top = (self.height() - 10) / 2
+        for index, block in enumerate(self.strip):
+            colour = QColor(COLOURS[block["colour"]]) if block["colour"] else QColor(255, 255, 255, 120 if block["next"] else 38)
+            painter.setBrush(colour)
+            painter.drawRoundedRect(QRectF(index * (width + self.GAP), top, width, 10), 1, 1)
 
 
 def escape_text(text: str) -> str:
@@ -1443,10 +1466,11 @@ class ClubCard(QFrame):
         place_row = QHBoxLayout()
         place_row.setSpacing(0)
         place_row.addWidget(self.header)
-        place_row.addWidget(self.round)
         place_row.addStretch(1)
         titles.addLayout(place_row)
         titles.addWidget(self.cup)
+        titles.addSpacing(3)
+        titles.addWidget(self.round)  # a line of its own: 48 blocks and the text do not fit beside the place
         head.addLayout(titles, 1)
         club.addLayout(head)
         club.addSpacing(4)
@@ -1601,11 +1625,11 @@ class ClubCard(QFrame):
         self.boosts.show_boosts(club["prep"].get("boosts") or [])
         self._show_trainings(club["trainings"])
         self.badge.show_value(club.get("value_badge"))
-        self.tired.setVisible(bool(club["tired"] or club.get("morale") or club["rest"]))
+        self.tired.setVisible(bool(club["tired"] or club.get("morale") or club["rest"] or club.get("reminders")))
         self.tired.setText("<br>".join(escape_text(line) for line in  # rich text: a "\n" would read as a space
                                        ([tr(f"⚠ Cansados: {club['tired']}")] if club["tired"] else [])
                                        + ([tr(f"⚠ Moral baixa: {club['morale']}")] if club.get("morale") else [])
-                                       + [f"⚠ {tr(line)}" for line in club["rest"]]))
+                                       + [f"⚠ {tr(line)}" for line in club["rest"] + (club.get("reminders") or [])]))
         self.tired.setToolTip(tip_text("\n\n".join(tr(part) for part in (club.get("tired_tip") or "").split("\n\n"))))
         self.sale_picks.show_sale(club.get("sale"))
 
@@ -1649,6 +1673,29 @@ class ClubCard(QFrame):
             ring.hover = (tr(left), self.full if colour == GREEN else TEXT)
             name.setText(player)
             pos.setText(tr(position))
+
+
+class SideTab(QFrame):
+    """The thin tab on the board's right edge: the mouse over it opens the right column (owner, 2026-11-02)."""
+
+    WIDTH = 18
+
+    def __init__(self, opened):
+        super().__init__()
+        self.opened = opened
+        self.setObjectName("sideTab")
+        self.setStyleSheet("QFrame#sideTab { background: rgba(139, 140, 248, 70); border-radius: 8px; }")
+        self.setFixedWidth(self.WIDTH)
+        self.setCursor(Qt.PointingHandCursor)
+        column = QVBoxLayout(self)
+        column.setContentsMargins(0, 0, 0, 0)
+        mark = QLabel("‹")
+        mark.setAlignment(Qt.AlignCenter)
+        mark.setStyleSheet(f"color:{TEXT}; background: transparent; font-size: 14pt;")
+        column.addWidget(mark)
+
+    def enterEvent(self, _event) -> None:
+        self.opened()
 
 
 class Backdrop(QWidget):
@@ -1877,12 +1924,17 @@ class MainWindow(QMainWindow):
 
     GAP = 14  # board: between the clubs and the right column
     SIDE = 300 if MAC else 340  # board: the right column (boss coins, timeline)
+    SIDE_CHECK = 250  # ms: how often the open column looks whether the mouse left it
 
     def __init__(self, app: QApplication):
         super().__init__()
         from osmbot.logs import machine
 
         self.app = app
+        self.side_pinned = bool(get_pref("side_pinned", False))  # the right column: over the clubs, on a tab, unless pinned
+        self.side_timer = QTimer(self)
+        self.side_timer.setInterval(self.SIDE_CHECK)
+        self.side_timer.timeout.connect(self._check_side)
         self.bridge = Bridge()
         self.bridge.board.connect(self.on_board)
         self.bridge.finished.connect(self.on_finished)
@@ -2058,8 +2110,59 @@ class MainWindow(QMainWindow):
         right.setAttribute(Qt.WA_TranslucentBackground)
         right.setLayout(side)
         right.setFixedWidth(self.SIDE)
+        self.board_page, self.board_row, self.side_panel = page, outer, right
+        self.side_tab = SideTab(self._open_side)
+        outer.addWidget(self.side_tab)
         outer.addWidget(right)
+        self._place_side()
         return page
+
+    # ---- the right column (owner, 2026-11-02) --------------------------------------------------------------------
+    def _place_side(self) -> None:
+        """Pinned: a column beside the clubs. Not pinned: the tab, and the column opens over the clubs without moving them."""
+        right = self.side_panel
+        self.side_timer.stop()
+        right.setAttribute(Qt.WA_TranslucentBackground, self.side_pinned)
+        right.setObjectName("sidePanel")
+        right.setAttribute(Qt.WA_StyledBackground, not self.side_pinned)  # solid: the clubs must not show through
+        right.setStyleSheet("" if self.side_pinned else "QWidget#sidePanel { background: #0c102c; border-radius: 14px; }")
+        if self.side_pinned:
+            self.board_row.addWidget(right)
+            right.show()
+        else:
+            self.board_row.removeWidget(right)
+            right.setParent(self.board_page)
+            right.hide()
+        self.side_tab.setVisible(not self.side_pinned)
+
+    def _open_side(self) -> None:
+        if self.side_pinned:
+            return
+        tab = self.side_tab
+        corner = tab.mapTo(self.board_page, QPoint(tab.width(), 0))
+        self.side_panel.setGeometry(corner.x() - self.SIDE, corner.y(), self.SIDE, tab.height())
+        self.side_panel.raise_()
+        self.side_panel.show()
+        self.side_timer.start()
+
+    def _check_side(self) -> None:
+        for widget in (self.side_panel, self.side_tab):
+            if widget.rect().contains(widget.mapFromGlobal(QCursor.pos())):
+                return
+        self.side_panel.hide()
+        self.side_timer.stop()
+
+    def pin_side(self, pinned: bool) -> None:
+        self.side_pinned = pinned
+        set_pref("side_pinned", pinned)
+        self._place_side()
+        self._fit_width()
+
+    def changeEvent(self, event) -> None:
+        """The window stays as it was left, maximized or not."""
+        super().changeEvent(event)
+        if event.type() == QEvent.WindowStateChange and self.pages.currentIndex() == BOARD and not self.isMinimized():
+            set_pref("maximized", self.isMaximized())
 
     def _build_menu(self) -> None:
         style = self.style()
@@ -2080,6 +2183,9 @@ class MainWindow(QMainWindow):
         bot.addAction(self.quit_action)
         view = self.menuBar().addMenu(tr("Ver"))
         view.addAction(self.reload_action)
+        self.pin_action = QAction(tr("Fixar a coluna da direita"), self, checkable=True, checked=self.side_pinned,
+                                  triggered=self.pin_side)
+        view.addAction(self.pin_action)
         view.addSeparator()
         for action in (self.notices_action, self.logs_action, self.failures_action):
             view.addAction(action)
@@ -2145,7 +2251,10 @@ class MainWindow(QMainWindow):
                 frame.moveLeft(max(screen.left(), min(frame.left(), screen.right() - frame.width())))  # all of it on the screen
                 frame.moveTop(max(screen.top(), min(frame.top(), screen.bottom() - frame.height())))
                 self.move(frame.topLeft())
+            if get_pref("maximized", True):  # big by default: not full screen (owner, 2026-11-02)
+                self.setWindowState(self.windowState() | Qt.WindowMaximized)
         else:
+            self.setWindowState(self.windowState() & ~Qt.WindowMaximized)
             self.setFixedSize(LAUNCHER_SIZE)
         self.refresh_state()
 
@@ -2407,7 +2516,8 @@ class MainWindow(QMainWindow):
         need = widest + self.clubs_scroll.verticalScrollBar().sizeHint().width()
         self.clubs_scroll.setMinimumWidth(need)
         margin = self.clubs_scroll.mapTo(self, QPoint(0, 0)).x()  # the same on the right of the boss coins
-        self.setMinimumWidth(margin + need + self.GAP + self.SIDE + margin)
+        side = self.SIDE if self.side_pinned else SideTab.WIDTH
+        self.setMinimumWidth(margin + need + self.GAP + side + margin)
 
     def _logo(self, club: dict) -> tuple[QPixmap | None, str | None]:
         """The club's logo and colour (match stripe, timeline dot); fetched in the background the first time (then kept on disk)."""

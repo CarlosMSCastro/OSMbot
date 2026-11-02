@@ -33,6 +33,7 @@ class Player:
     lineup: int = 0  # 1-11 starting eleven, 12-18 bench, 0 out (DISCOVERY.md section 3)
     average_grade: float = 0.0  # the game's average match grade this season (averagePlayerGrade)
     matches: int = 0  # matchesPlayed
+    spot: int = 0  # specificPosition (0: not known)
 
     @property
     def starter(self) -> bool:
@@ -64,4 +65,5 @@ class Player:
             lineup=int(data.get("lineup") or 0),
             average_grade=float(data.get("averagePlayerGrade") or 0),
             matches=int(data.get("matchesPlayed") or 0),
+            spot=int(data.get("specificPosition") or 0),
         )

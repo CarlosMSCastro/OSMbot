@@ -301,7 +301,8 @@ def fixtures_view(fixtures: list[dict], round_text: str) -> dict | None:
             if f.get("score"):
                 cell.update(score=f["score"], colour={"W": GREEN, "D": YELLOW, "L": RED}[f["result"]])
         cells.append(cell)
-    return {"title": f"Época · {round_text}" if round_text else "Época", "cells": cells}
+    strip = [{"colour": cell["colour"], "next": cell["next"]} for cell in cells if cell["kind"] == "liga"]  # a block per league round
+    return {"title": f"Época · {round_text}" if round_text else "Época", "cells": cells, "strip": strip}
 
 
 def club_view(club: dict, now: float, shortened: dict | None = None) -> dict:
@@ -403,7 +404,7 @@ def club_view(club: dict, now: float, shortened: dict | None = None) -> dict:
             "tired": tired_text, "tired_tip": tired_tip,
             "morale": " · ".join(f"{p['name']} {p['morale']}" for p in club.get("low_morale") or []), "rest": [  # THEORY.md 16: rest him before the important one
                 f"{p['name']} {p['fitness']}%: se jogar contra o {p['first']}, chega a ~{p['then']}% contra o {p['second']}"
-                for p in club.get("rest") or []], "sale": sale_view(club), "value_badge": rating_badge(club.get("strength")), "table_tip": table_tip,
+                for p in club.get("rest") or []], "reminders": club.get("reminders") or [], "sale": sale_view(club), "value_badge": rating_badge(club.get("strength")), "table_tip": table_tip,
             "injured": _people(club.get("injured") or [], "no médico", now),
             "suspended": _people(club.get("suspended") or [], "no advogado", now),
             "stadium_rings": stadium_rings(club.get("stadium"), now),

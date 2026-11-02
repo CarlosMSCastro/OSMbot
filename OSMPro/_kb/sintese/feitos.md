@@ -70,3 +70,15 @@ Vídeos do canal André Santana (OSM PRO) a mostrar conquistas do autor e o mét
 
 - **Amigáveis por dia:** o autor faz 2, e chegou a fazer 3–4 numa liga sem mercado (qHg5SZ6QWkc); o bot faz mais. 🔬 Medir a quebra por amigável em `logs/*/amigaveis/`.
 - **Regra dos 14 M:** é de 2020 e o próprio autor duvida dela.
+
+## Revisão com o dono (D-065): pontos
+
+Já decidido noutras categorias e não volta: compra ≤ 1,5×, fraco por linha, 4-3-3 em casa e fora, preço de venda até 150 M (substitui os 14 M), amigáveis por jornada (descida medida), estágio perto do jogo.
+
+| # | Ponto | Estado |
+|---|---|---|
+| 1 | Domínio mundial: entrar numa liga já no fim, num clube livre acima do objetivo | Fechado 2026-11-01 (dono): um país fica feito com uma das 3; atalho no `THEORY.md` §19, nada no bot |
+| 2 | Sendo superior ou contra a CPU, 4-4-2 em vez de 4-3-3 em casa | Fechado 2026-11-01 (dono, opção a): fica o 4-3-3 A; medido em `DISCOVERY.md` §3; nada no bot |
+| 3 | Flanco forte: juntar os melhores do mesmo lado | Fechado 2026-11-01 (dono, opção a): ignorado; 39 jogos em casa não o confirmam, sem regra nem bot |
+| 4 | Não fazer venda instantânea antes de passar para a Taça dos Vencedores | Fechado 2026-11-01 (dono, opção b): a regra do `THEORY.md` já cobre; nada nos docs nem no bot |
+| 5 | Na Liga VIP vende-se mais depressa, a ~2× | Fechado 2026-11-01 (dono, opção a): Reportado em `DISCOVERY.md`, com as ligas especiais; nada no bot |

@@ -29,6 +29,23 @@ TRAINER_POSITION: dict[int, Position] = {
 }
 
 
+def real_starters(rows: Iterable[tuple[int, int, int, bool]]) -> set[int]:
+    """Who the eleven really is (owner, 2026-11-02): a starter only standing in for a better player of his specific
+    position on the bench gives way to him, so a goalkeeper of 50 in for one match does not take the trainings.
+    ``rows``: (id, specific position, rating, starter) of the players who can play; 0 as the position: not known, the
+    starter stays. On a tie the starter stays."""
+    real, spots = set(), {}
+    for row in rows:
+        if row[1]:
+            spots.setdefault(row[1], []).append(row)
+        elif row[3]:
+            real.add(row[0])
+    for group in spots.values():
+        places = sum(1 for row in group if row[3])
+        real |= {row[0] for row in sorted(group, key=lambda r: (-r[2], not r[3]))[:places]}
+    return real
+
+
 def pick_trainee(
     players: Iterable[Player],
     position: Position,
@@ -46,8 +63,11 @@ def pick_trainee(
     Best = highest rating; ties go to the higher forecast, then the lower id.
     With ``sessions`` (player id -> sessions this round): the rotation above, ties to the higher forecast.
     """
+    squad = list(players)
+    real = real_starters((p.id, p.spot, p.rating, p.starter) for p in squad
+                         if p.position is position and not p.injured and p.id not in unavailable_ids)
     candidates = []
-    for p in players:
+    for p in squad:
         if p.position is not position or p.injured or p.id in unavailable_ids:
             continue
         if p.age >= max_age and position is not Position.GK:  # owner: goalkeepers train regardless of age
@@ -60,7 +80,7 @@ def pick_trainee(
         return None
     if sessions is None:
         return max(candidates, key=lambda c: c[:3])[3]
-    starters = [c for c in candidates if c[3].starter]
+    starters = [c for c in candidates if c[3].id in real]
     return max(starters or candidates, key=lambda c: (-sessions.get(c[3].id, 0), c[1], c[0], c[2]))[3]
 
 

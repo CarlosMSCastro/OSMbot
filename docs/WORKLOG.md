@@ -2,6 +2,25 @@
 
 Entradas mais recentes primeiro. Cada sessão: o que se fez · o que ficou por fazer · próximo passo.
 
+## 2026-11-01 — Síntese Competições fechada (5 de 5)
+
+- **Competições revista com o dono (D-065):** tabela de pontos em `OSMPro/_kb/sintese/competicoes.md`; 5 fechados, sem nenhuma mudança no bot. Bónus de "jogador da semana" ignorado; nota acima de 100 em ligas especiais e bilhetes que expiram ficam como Reportado (`DISCOVERY.md`); competições sem evolução: o dono avisa antes de entrar (`THEORY.md`).
+- **Medido:** a posição não muda a evolução nos treinos (700 treinos, `DISCOVERY.md` §3); amigáveis por medir.
+- **Feitos fechada (5 de 5, D-065):** tabela em `OSMPro/_kb/sintese/feitos.md`, sem mudanças no bot. **Decisão do dono:** um país fica feito com uma das 3 conquistas (`THEORY.md` §19, substitui "só feito quando não falta nada"). Medido: em casa e mais forte, o 4-3-3 rende mais do que o 4-4-2 (`DISCOVERY.md` §3). Flanco forte ignorado.
+- **Curiosidades fechada (5 de 5, 2026-11-02).** Código novo, **ainda sem versão**, 522 testes: linha "Pacote de jogador no inventário" com o prazo (`game/inventory._note_packs`; falta confirmar os 6 dias no 1.º pacote registado); cartão de compras com 1 suplente no máximo, GR só com menos de 2 disponíveis, titular a descansar não conta como lugar fraco, revendas 24–60 M primeiro e nenhuma nas últimas 8 jornadas (`transfers/engine`); avisos "M parados" e "Jogo decisivo" (`idle_money`, `board/info.decisive_match`).
+- **Onze de descanso (dono):** o treino vai para o melhor do banco, não para o fraco que o substitui (`training.policy.real_starters`, normal e universal; `THEORY.md` §5).
+- **Janela (dono, 2026-11-02):** abre maximizada e lembra-se (`config.json`, `maximized`); a coluna da direita fica fechada numa aba fina e abre por cima dos clubes com o rato, ou fixa-se em Ver (`side_pinned`). Modo compacto e cartões em colunas ficam para depois. A jornada passou a barra de blocos (verde/amarelo/vermelho por jogo de liga, `FixturesLabel`), com o texto e o calendário ao passar o rato.
+- **Versão 0.15.0 (pedido do dono, 2026-11-02):** tudo o de cima; `pyproject.toml`, `__init__`, `CHANGELOG.md`, `README.md` (estado), `dist/release-notes-v0.15.0.md`; 526 testes; `build_portable.py --zip --installer`.
+- **Próximo:** síntese Outros; depois Entrevistas, Talvez-OSM.
+
+## 2026-11-01 — Síntese Torneios fechada (9 de 9)
+
+- **Torneios revista com o dono (D-065):** tabela de pontos em `OSMPro/_kb/sintese/torneios.md`; 9 fechados, sem nenhuma mudança no bot. Teoria: tática 30 min antes **[H]** e botão de melhorar o onze em emergência (§6), dica de poupar fora (§16), renovação da lista (§7.7).
+- **Medido:** a lista renova-se com as vendas de humanos a bots (522 de 785 trazem anúncios em 2 min; compras ao jogo 5 de 686); Transfer Madness ~4× as vendas, Bargain Scout ~2× (1 evento) (`DISCOVERY.md` §3). Estágios: em 98 jogos do dono, os 5 dos adversários calharam todos em jogos com estágio dele. 6-3-1: ninguém o jogou nos ~600 jogos de liga.
+- **4-3-3 B contra o 5-2-3, sendo mais forte (dono):** continua a medir-se na verificação `vs523`; volta-se a isto com 8 jogos no A e 8 no B (hoje A 1,20 e B 2,40, com 5 de cada). Os médios a ajudar a defesa já são a regra do §2.
+- **Por medir, fora da verificação semanal:** se cada compra cobra mesmo 1 boss coin (Série ponto 10).
+- **KV Mechelen x Genk (taça, jornada 12), ordem do dono:** analista ao Anderlecht acelerado com 2 boss coins (`spyinstructions/{id}/boost`, escrita nova, `DISCOVERY.md` §3); o relatório do Anderlecht não foi guardado em `logs/*/analista`. Repetir o Genk recusado (400, só uma análise por clube na jornada). O dono comprou o Bisseck (titular do Genk) por 28,97 M às 21:40; o Genk jogou com um DE a DC; 3-1.
+
 ## 2026-10-31 — Missão pronta acorda o bot (D-080)
 
 - **Pergunta do dono:** o bot não reclamava a missão "gastar 25 M" acabada à mão. Leitura do jogo (só leitura): 126 M de 25 M, por reclamar, e `next_claim` escolhia-a; faltava só uma passagem, e nada a marcava.

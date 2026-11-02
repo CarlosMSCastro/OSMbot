@@ -8,6 +8,7 @@ from __future__ import annotations
 
 UNIVERSAL, BAG = 12, 13  # reward types of the items the bot uses (v1.1/rewards)
 USED_TYPES = (UNIVERSAL, BAG)
+PACK = 11  # player pack: never used by the bot, only noted when it arrives
 USE_BEFORE = 4 * 3600  # owner: "quando faltar 3 ou 4 horas"
 WARN_BEFORE = 24 * 3600
 NEVER = 4_000_000_000  # an item that does not expire carries a huge expiredTimestamp
@@ -26,6 +27,11 @@ def due(items: list[dict], now: float) -> list[dict]:
     """The universal trainers and bags to use now: within USE_BEFORE of expiring (and not expired), soonest first."""
     found = [i for i in items if i["reward"]["type"] in USED_TYPES and expires(i) and now < expires(i) <= now + USE_BEFORE]
     return sorted(found, key=expires)
+
+
+def new_packs(items: list[dict], seen: list) -> list[dict]:
+    """The player packs in the inventory not noted yet (OSMPro Curiosidades point 3, owner 2026-11-02)."""
+    return [i for i in items if i["reward"]["type"] == PACK and i["id"] not in seen]
 
 
 def wake_times(items: list[dict], now: float) -> list[float]:
@@ -54,8 +60,14 @@ def universal_trainee(players: list[dict], sessions: list[dict], listed: set[int
     def best(group: list[dict]) -> dict | None:
         return min(group, key=lambda p: (rounds.get(p["id"], 0), -forecasts.get(p["id"], 0)), default=None)
 
+    from osmbot.theory.lineup import rating
+    from osmbot.training.policy import real_starters
+
     pool = [p for p in players if fits(p)]
-    return best([p for p in pool if 1 <= p.get("lineup", 0) <= 11]) or best(pool)
+    real = real_starters((p["id"], p.get("specificPosition") or 0, rating(p) if p.get("specificPosition") else 0,
+                          1 <= p.get("lineup", 0) <= 11)
+                         for p in players if p["id"] not in listed and not p.get("unavailable"))
+    return best([p for p in pool if p["id"] in real]) or best(pool)
 
 
 def pick_club(options: list[dict]) -> dict | None:

@@ -187,3 +187,18 @@ def test_at_the_end_of_a_claim_bonus_event_the_trainings_that_would_finish_after
                 session(5, end + 1800, trainer=5),  # universal trainer, 1h30, put at 22:00
                 session(6, now - 60), session(7, end + 600, claimed=True)]  # ready to collect / already collected
     assert [s["id"] for s in event_end_sessions(sessions, now, (opens, end), (120, 90))] == [1, 2, 5]
+
+
+def test_a_starter_standing_in_for_a_better_player_does_not_take_the_training(make_player):
+    from dataclasses import replace
+
+    filler = replace(make_player(Position.GK, age=20, deff=50), lineup=1, spot=6)
+    keeper = replace(make_player(Position.GK, age=27, deff=103), lineup=12, spot=6)
+    forecasts = {filler.id: 66, keeper.id: 20}
+    assert pick_trainee([filler, keeper], Position.GK, forecasts=forecasts, sessions={}) is keeper
+    other_place = replace(make_player(Position.DEF, age=25, deff=90), lineup=2, spot=9)
+    bench_dc = replace(make_player(Position.DEF, age=25, deff=110), lineup=13, spot=3)
+    chosen = pick_trainee([other_place, bench_dc], Position.DEF, forecasts={other_place.id: 30, bench_dc.id: 20}, sessions={})
+    assert chosen is other_place  # a DC does not replace a DE
+    assert pick_trainee([filler, keeper], Position.GK, unavailable_ids=frozenset({keeper.id}), forecasts=forecasts,
+                        sessions={}) is filler  # listed: the filler really plays

@@ -4,6 +4,28 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-PT/1.1.0/); 
 
 Este ficheiro é o **histórico de versões, para quem lê o repo**. O diário interno de cada sessão de trabalho está em [`docs/WORKLOG.md`](docs/WORKLOG.md).
 
+## [0.15.0] — 2026-11-02
+
+Janela maior e mais limpa, cartão de compras corrigido e dois avisos novos.
+
+### Adicionado
+- **Janela maximizada:** abre grande, sem ser ecrã inteiro, e lembra-se de como a deixaste.
+- **Coluna da direita recolhível:** as boss coins e a timeline ficam numa aba fina na borda e abrem por cima dos clubes ao passar o rato. Para as ter sempre abertas: Ver → Fixar a coluna da direita.
+- **Barra da época:** em vez de só "J34/48", um bloco por jornada de liga, verde, amarelo ou vermelho conforme o resultado, com o calendário ao passar o rato.
+- **Aviso de dinheiro parado:** nas últimas 8 jornadas, se o saldo chegar para um reforço do onze, a janela diz quem comprar.
+- **Aviso de jogo decisivo:** contra um treinador humano, rival direto ou na taça, lembra o estágio e o treino secreto por marcar, com a força dos dois lados.
+- **Pacotes de jogadores no registo:** o bot escreve quando vê um pacote no inventário e qual o prazo. Nunca os abre.
+
+### Alterado
+- **Sugestões de compra:** primeiro os reforços e as revendas de valor 24–60 M, que rendem mais por vaga de venda; nas últimas 8 jornadas não sugere revendas.
+
+### Corrigido
+- **Cartão de compras:** uma posição sem suplente já não ocupa as 3 sugestões, só 1. Um GR só é pedido com menos de 2 disponíveis, porque o jogo obriga a ter 2. Um titular a substituir alguém melhor no banco já não conta como lugar fraco.
+- **Onze de descanso:** os treinos, incluindo o treinador universal, vão para o melhor do banco e não para o fraco que o substitui.
+
+### Documentação
+- `THEORY.md` §5, §7.6, §7.7, §7.9, §19, §20 e §21; `DECISIONS.md` D-082; medições em `DISCOVERY.md`; sínteses OSMPro Competições, Feitos e Curiosidades fechadas.
+
 ## [0.14.15] — 2026-10-31
 
 A missão acabada à mão é reclamada em poucos minutos.

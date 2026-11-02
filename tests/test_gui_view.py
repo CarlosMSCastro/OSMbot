@@ -410,3 +410,14 @@ def test_the_season_s_calendar_has_a_box_per_round():
     assert [(c["top"], c["score"], c["colour"]) for c in view["cells"]] == [
         ("J1 · CASA", "2-1", GREEN), ("Taça oitavos · NEUTRO", "", None), ("folga", "", None)]
     assert fixtures_view([], "") is None
+
+
+def test_the_season_strip_has_a_block_per_league_round_only():
+    from osmbot.gui.view import GREEN, fixtures_view
+
+    won = {"week": 1, "round": 1, "kind": "liga", "cup": "", "next": False, "played": True, "opponent": "A", "side": "H",
+           "score": "1-0", "result": "W"}
+    next_one = {"week": 3, "round": 2, "kind": "liga", "cup": "", "next": True, "played": False, "opponent": "B", "side": "A"}
+    cup = {"week": 2, "round": None, "kind": "taça", "cup": "final", "next": False, "played": True, "opponent": "C", "side": "H",
+           "score": "2-0", "result": "W"}
+    assert fixtures_view([won, cup, next_one], "J1/2")["strip"] == [{"colour": GREEN, "next": False}, {"colour": None, "next": True}]
