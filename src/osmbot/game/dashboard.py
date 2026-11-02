@@ -177,6 +177,8 @@ def collect(client) -> dict:
             raise
         except Exception as error:
             club["extra_error"] = f"{type(error).__name__}: {error}"
+        club["eleven"] = [{key: p.get(key) for key in ("name", "lineup", "position", "specificPosition", "statAtt", "statDef",
+                                                       "statOvr", "fitness")} for p in players if p.get("lineup") in range(1, 12)]
         budget = funds["balance"] + (funds["savings"] or 0)  # a tired starter with no cover: "SALE" options (THEORY.md 16)
         club["cover"] = {pos: sale_options(market, pos, budget) for pos in uncovered(players, club["tired"])}
         try:  # the game's players worth buying: to sell again at once or to strengthen the eleven (THEORY.md 7.7)

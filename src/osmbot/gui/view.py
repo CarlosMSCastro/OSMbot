@@ -181,6 +181,28 @@ def opponent_tip(name: str, value: tuple | None) -> dict | None:
 ESTIMATE_TIP = "Estimativa antes da análise: os melhores dele num 4-3-3"
 
 
+def eleven_view(players: list[dict] | None) -> dict | None:
+    """The hover of the club's strength (owner, 2026-11-02): the eleven on a pitch, attack on top. Each player: his
+    name, rating and place; green at the eleven's average or above, red 10 or more below it, yellow between; his
+    condition only below 80, the line the game turns yellow. Places left to right as the game's lineup numbers them."""
+    from osmbot.theory.fitness import YELLOW_BELOW
+    from osmbot.theory.lineup import SPECIFIC, rating
+
+    if not players:
+        return None
+    average = sum(rating(p) for p in players) / len(players)
+    lines: dict[int, list[dict]] = {}
+    for p in sorted(players, key=lambda p: p["lineup"]):
+        level = rating(p)
+        fitness = p.get("fitness", 100)
+        lines.setdefault(p["position"], []).append({
+            "name": p["name"], "rating": level, "place": SPECIFIC.get(p.get("specificPosition"), ""),
+            "colour": GREEN if level >= average else RED if level <= average - 10 else YELLOW,
+            "fitness": fitness if fitness < YELLOW_BELOW else None})
+    shape = "-".join(str(len(lines[pos])) for pos in (3, 2, 1) if pos in lines)
+    return {"title": f"{shape} · média {average:.0f}", "lines": [lines[pos] for pos in (1, 2, 3, 4) if pos in lines]}
+
+
 def rating_badge(strength: int | None, ours: int | None = None, estimate: bool = False) -> dict | None:
     """The team's strength in a circle, the number the game shows (owner, 2026-10-13). The club's own is blue; the
     opponent's (``ours`` given) is green when weaker, red when stronger, yellow when close. Before the analysis the
@@ -404,7 +426,7 @@ def club_view(club: dict, now: float, shortened: dict | None = None) -> dict:
             "tired": tired_text, "tired_tip": tired_tip,
             "morale": " · ".join(f"{p['name']} {p['morale']}" for p in club.get("low_morale") or []), "rest": [  # THEORY.md 16: rest him before the important one
                 f"{p['name']} {p['fitness']}%: se jogar contra o {p['first']}, chega a ~{p['then']}% contra o {p['second']}"
-                for p in club.get("rest") or []], "reminders": club.get("reminders") or [], "sale": sale_view(club), "value_badge": rating_badge(club.get("strength")), "table_tip": table_tip,
+                for p in club.get("rest") or []], "reminders": club.get("reminders") or [], "sale": sale_view(club), "eleven": eleven_view(club.get("eleven")), "value_badge": rating_badge(club.get("strength")), "table_tip": table_tip,
             "injured": _people(club.get("injured") or [], "no médico", now),
             "suspended": _people(club.get("suspended") or [], "no advogado", now),
             "stadium_rings": stadium_rings(club.get("stadium"), now),

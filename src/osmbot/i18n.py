@@ -261,6 +261,7 @@ PATTERNS = [(re.compile(pattern), replace) for pattern, replace in (
     (r"Se fez estágio, tem mais (.+) % que não se vê", lambda m: f"If he went on a training camp, he has {m[1]} % more that cannot be seen"),
     (r"(\d+) jogos? · à espera", lambda m: f"{m[1]} game{'s' if m[1] != '1' else ''} · waiting"),
     (r"⚠ Moral baixa: (.+)", lambda m: f"⚠ Low morale: {m[1]}"),
+    (r"^([\d-]+) · média (\d+)$", lambda m: f"{m[1]} · average {m[2]}"),
     (r"^(\d+) M parados a (\d+) jornadas do fim: (.+) por (\d+) M reforça (.+)$",
      lambda m: f"{m[1]} M idle with {m[2]} rounds left: {m[3]} for {m[4]} M upgrades {m[5]}"),
     (r"^Jogo decisivo contra (.+?)( \(força .+\))?: falta (.+)$",

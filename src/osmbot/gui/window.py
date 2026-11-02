@@ -1237,6 +1237,102 @@ class SaleArrow(QWidget):
         painter.drawLine(int(middle + 5), int(y - 6), int(middle), int(y - 11))
 
 
+class Pitch(QWidget):
+    """The eleven drawn on a pitch (owner, 2026-11-02: no table)."""
+
+    WIDTH, HEIGHT, SPOT = 420, 470, 21  # SPOT: the radius of a player's circle
+
+    def __init__(self):
+        super().__init__()
+        self.setFixedSize(self.WIDTH, self.HEIGHT)
+        self.view: dict | None = None
+
+    def show_view(self, view: dict) -> None:
+        self.view = view
+        self.update()
+
+    def _ground(self, painter: QPainter, field: QRectF) -> None:
+        for index in range(8):  # the mowed stripes
+            band = QRectF(field.left(), field.top() + index * field.height() / 8, field.width(), field.height() / 8)
+            painter.fillRect(band, QColor(26, 92, 58) if index % 2 else QColor(30, 104, 65))
+        painter.setBrush(Qt.NoBrush)
+        painter.setPen(QPen(QColor(255, 255, 255, 80), 1.4))
+        painter.drawRect(field)
+        middle = field.center().y()
+        painter.drawLine(QPointF(field.left(), middle), QPointF(field.right(), middle))
+        painter.drawEllipse(field.center(), 42, 42)
+        for box in (QRectF(field.center().x() - 88, field.top(), 176, 52), QRectF(field.center().x() - 88, field.bottom() - 52, 176, 52)):
+            painter.drawRect(box)
+
+    def _player(self, painter: QPainter, x: float, y: float, player: dict, room: float) -> None:
+        centre = QPointF(x, y)
+        painter.setPen(QPen(QColor(COLOURS.get(player["colour"], MUTED)), 2.6))
+        painter.setBrush(QColor(10, 12, 32, 235))
+        painter.drawEllipse(centre, self.SPOT, self.SPOT)
+        font = QFont(FONT, 10)
+        font.setBold(True)
+        painter.setFont(font)
+        painter.setPen(QColor(TEXT))
+        painter.drawText(QRectF(x - self.SPOT, y - self.SPOT, 2 * self.SPOT, 2 * self.SPOT), Qt.AlignCenter, str(player["rating"]))
+        font = QFont(FONT, 8)
+        painter.setFont(font)
+        name = painter.fontMetrics().elidedText(player["name"], Qt.ElideRight, int(room))
+        below = QRectF(x - room / 2, y + self.SPOT + 2, room, 15)
+        painter.setPen(QColor(0, 0, 0, 170))
+        painter.drawText(below.translated(0, 1), Qt.AlignCenter, name)
+        painter.setPen(QColor(TEXT))
+        painter.drawText(below, Qt.AlignCenter, name)
+        font.setPointSize(7)
+        painter.setFont(font)
+        tired = player.get("fitness") is not None
+        painter.setPen(QColor(COLOURS[YELLOW]) if tired else QColor(255, 255, 255, 170))
+        painter.drawText(below.translated(0, 13), Qt.AlignCenter, player["place"] + (f" · {player['fitness']}%" if tired else ""))
+
+    def paintEvent(self, _event) -> None:
+        if not self.view:
+            return
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.Antialiasing)
+        font = QFont(FONT, 10)
+        font.setBold(True)
+        painter.setFont(font)
+        painter.setPen(QColor(TEXT))
+        painter.drawText(QRectF(0, 0, self.WIDTH, 22), Qt.AlignLeft | Qt.AlignVCenter, tr(self.view["title"]))
+        field = QRectF(0.5, 28.5, self.WIDTH - 1, self.HEIGHT - 29)
+        self._ground(painter, field)
+        lines = self.view["lines"]
+        step = (field.height() - 88) / max(len(lines) - 1, 1)
+        for row, line in enumerate(lines):
+            y = field.top() + 34 + row * step
+            gap = field.width() / len(line)
+            for column, player in enumerate(line):
+                self._player(painter, field.left() + gap * (column + 0.5), y, player, min(gap - 4, 104))
+
+
+class PitchPopup(QFrame):
+    """What opens over the club's strength: the eleven (Pitch)."""
+
+    def __init__(self):
+        super().__init__(None, Qt.ToolTip | Qt.FramelessWindowHint)
+        self.setObjectName("calendar")
+        self.setStyleSheet("QFrame#calendar { background: #161b40; border: 1px solid rgba(139, 140, 248, 110); border-radius: 10px; }")
+        row = QHBoxLayout(self)
+        row.setContentsMargins(14, 10, 14, 14)
+        self.pitch = Pitch()
+        row.addWidget(self.pitch)
+
+    def show_by(self, widget: QWidget, view: dict) -> None:
+        self.pitch.show_view(view)
+        self.adjustSize()
+        screen = (widget.screen() or QApplication.primaryScreen()).availableGeometry()
+        where = widget.mapToGlobal(QPoint(0, widget.height() + 6))
+        if where.y() + self.height() > screen.bottom():
+            where.setY(max(screen.top() + 8, widget.mapToGlobal(QPoint(0, 0)).y() - self.height() - 6))
+        where.setX(max(screen.left() + 8, min(where.x(), screen.right() - self.width() - 8)))
+        self.move(where)
+        self.show()
+
+
 class ValueBadge(QWidget):
     """The squad value in a circle, as in the game (owner, 2026-10-13): the short value inside a ring coloured by
     its place in the league by value; the whole value, players and average on hover."""
@@ -1245,7 +1341,23 @@ class ValueBadge(QWidget):
         super().__init__()
         self.setFixedSize(size, size)
         self.text, self.colour = "", MUTED
+        self.eleven: dict | None = None
+        self.popup: PitchPopup | None = None
         self.setVisible(False)
+
+    def show_eleven(self, view: dict | None) -> None:
+        self.eleven = view
+        if view and self.popup and self.popup.isVisible():
+            self.popup.pitch.show_view(view)
+
+    def enterEvent(self, _event) -> None:
+        if self.eleven:
+            self.popup = self.popup or PitchPopup()
+            self.popup.show_by(self, self.eleven)
+
+    def leaveEvent(self, _event) -> None:
+        if self.popup:
+            self.popup.hide()
 
     def show_value(self, badge: dict | None) -> None:
         self.setVisible(bool(badge))
@@ -1625,6 +1737,7 @@ class ClubCard(QFrame):
         self.boosts.show_boosts(club["prep"].get("boosts") or [])
         self._show_trainings(club["trainings"])
         self.badge.show_value(club.get("value_badge"))
+        self.badge.show_eleven(club.get("eleven"))
         self.tired.setVisible(bool(club["tired"] or club.get("morale") or club["rest"] or club.get("reminders")))
         self.tired.setText("<br>".join(escape_text(line) for line in  # rich text: a "\n" would read as a space
                                        ([tr(f"⚠ Cansados: {club['tired']}")] if club["tired"] else [])
@@ -2152,6 +2265,17 @@ class MainWindow(QMainWindow):
         self.side_panel.hide()
         self.side_timer.stop()
 
+    def _allow_maximize(self) -> None:
+        """Windows: a window created at a fixed size (the start screen) never gets its maximize button, and Qt does not
+        give it back with the limits lifted (seen on 0.15.0; tried on the real platform, 2026-11-02): ask Windows."""
+        if sys.platform != "win32":
+            return
+        style_index, maximize_box = -16, 0x00010000
+        frame_changed = 0x0001 | 0x0002 | 0x0004 | 0x0020  # SWP_NOSIZE, NOMOVE, NOZORDER, FRAMECHANGED
+        user32, window = ctypes.windll.user32, int(self.winId())
+        user32.SetWindowLongW(window, style_index, user32.GetWindowLongW(window, style_index) | maximize_box)
+        user32.SetWindowPos(window, 0, 0, 0, 0, 0, frame_changed)
+
     def pin_side(self, pinned: bool) -> None:
         self.side_pinned = pinned
         set_pref("side_pinned", pinned)
@@ -2251,6 +2375,7 @@ class MainWindow(QMainWindow):
                 frame.moveLeft(max(screen.left(), min(frame.left(), screen.right() - frame.width())))  # all of it on the screen
                 frame.moveTop(max(screen.top(), min(frame.top(), screen.bottom() - frame.height())))
                 self.move(frame.topLeft())
+            self._allow_maximize()
             if get_pref("maximized", True):  # big by default: not full screen (owner, 2026-11-02)
                 self.setWindowState(self.windowState() | Qt.WindowMaximized)
         else:

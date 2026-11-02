@@ -421,3 +421,22 @@ def test_the_season_strip_has_a_block_per_league_round_only():
     cup = {"week": 2, "round": None, "kind": "taça", "cup": "final", "next": False, "played": True, "opponent": "C", "side": "H",
            "score": "2-0", "result": "W"}
     assert fixtures_view([won, cup, next_one], "J1/2")["strip"] == [{"colour": GREEN, "next": False}, {"colour": None, "next": True}]
+
+
+def test_the_eleven_on_the_pitch_has_the_attack_on_top_with_the_rating_and_the_tired():
+    from osmbot.gui.view import GREEN, RED, YELLOW, eleven_view
+
+    def player(lineup, position, spot, rating, fitness=100):
+        return {"name": f"P{lineup}", "lineup": lineup, "position": position, "specificPosition": spot, "statAtt": rating,
+                "statDef": rating, "statOvr": rating, "fitness": fitness}
+
+    assert eleven_view(None) is None
+    squad = [player(1, 4, 6, 80)] + [player(n, 3, 3, 100) for n in (2, 3, 4, 5)] + [player(n, 2, 2, 100) for n in (6, 7, 8)]
+    squad += [player(9, 1, 8, 110), player(10, 1, 4, 100, fitness=76), player(11, 1, 11, 90)]
+    view = eleven_view(squad)
+    assert view["title"] == "4-3-3 · média 98"
+    assert [len(line) for line in view["lines"]] == [3, 3, 4, 1]
+    attack = view["lines"][0]
+    assert [(p["name"], p["place"], p["colour"], p["fitness"]) for p in attack] == [
+        ("P9", "EE", GREEN, None), ("P10", "PL", GREEN, 76), ("P11", "ED", YELLOW, None)]
+    assert view["lines"][-1][0]["colour"] == RED  # 18 below the average

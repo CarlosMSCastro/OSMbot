@@ -11,6 +11,7 @@ Entradas mais recentes primeiro. Cada sessão: o que se fez · o que ficou por f
 - **Onze de descanso (dono):** o treino vai para o melhor do banco, não para o fraco que o substitui (`training.policy.real_starters`, normal e universal; `THEORY.md` §5).
 - **Janela (dono, 2026-11-02):** abre maximizada e lembra-se (`config.json`, `maximized`); a coluna da direita fica fechada numa aba fina e abre por cima dos clubes com o rato, ou fixa-se em Ver (`side_pinned`). Modo compacto e cartões em colunas ficam para depois. A jornada passou a barra de blocos (verde/amarelo/vermelho por jogo de liga, `FixturesLabel`), com o texto e o calendário ao passar o rato.
 - **Versão 0.15.0 (pedido do dono, 2026-11-02):** tudo o de cima; `pyproject.toml`, `__init__`, `CHANGELOG.md`, `README.md` (estado), `dist/release-notes-v0.15.0.md`; 526 testes; `build_portable.py --zip --installer`.
+- **Versão 0.15.1 (pedido do dono, 2026-11-02), 527 testes:** corrigido o botão de maximizar no Windows (`_allow_maximize`: uma janela criada de tamanho fixo nunca o recebe; testado na plataforma real); o círculo da força mostra o onze num campo ao passar o rato (`eleven_view`, `Pitch`).
 - **Próximo:** síntese Outros; depois Entrevistas, Talvez-OSM.
 
 ## 2026-11-01 — Síntese Torneios fechada (9 de 9)

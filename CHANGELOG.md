@@ -4,6 +4,16 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-PT/1.1.0/); 
 
 Este ficheiro é o **histórico de versões, para quem lê o repo**. O diário interno de cada sessão de trabalho está em [`docs/WORKLOG.md`](docs/WORKLOG.md).
 
+## [0.15.1] — 2026-11-02
+
+Volta o botão de maximizar, e o onze num campo ao passar o rato.
+
+### Adicionado
+- **Onze no campo:** ao passar o rato pelo círculo da força do clube, abre um campo com os titulares na formação, cada um com a nota, o nome e a posição. A cor compara-o com a média do onze; a condição só aparece abaixo de 80.
+
+### Corrigido
+- **Maximizar (Windows):** o botão de maximizar faltava depois de encolher a janela, porque a janela de arranque tem tamanho fixo. Maximizada, a janela também deixa de tapar a barra de tarefas.
+
 ## [0.15.0] — 2026-11-02
 
 Janela maior e mais limpa, cartão de compras corrigido e dois avisos novos.

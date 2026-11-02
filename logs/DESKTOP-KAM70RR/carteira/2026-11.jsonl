@@ -46,3 +46,8 @@
 {"t":1793580318,"saldo":3171,"antes":3170,"diferenca":1,"partes":{"vídeos da loja":1}}
 {"t":1793580390,"saldo":3172,"antes":3171,"diferenca":1,"partes":{"vídeos da loja":1}}
 {"t":1793580458,"saldo":3173,"antes":3172,"diferenca":1,"partes":{"vídeos da loja":1}}
+{"t":1793581856,"saldo":3176,"antes":3173,"diferenca":3,"partes":{"vídeos da loja":3}}
+{"t":1793581882,"saldo":3173,"antes":3176,"diferenca":-3,"partes":{"fora do bot":-3}}
+{"t":1793581921,"saldo":3174,"antes":3173,"diferenca":1,"partes":{"vídeos da loja":1}}
+{"t":1793581995,"saldo":3175,"antes":3174,"diferenca":1,"partes":{"vídeos da loja":1}}
+{"t":1793582153,"saldo":3176,"antes":3175,"diferenca":1,"partes":{"vídeos da loja":1}}
