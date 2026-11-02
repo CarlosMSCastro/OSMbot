@@ -2,6 +2,14 @@
 
 Entradas mais recentes primeiro. Cada sessão: o que se fez · o que ficou por fazer · próximo passo.
 
+## 2026-11-02 — `dist/windows` 0.15.1 (PT-LA-02-0095-N)
+
+- **Pull 0.15.1 (dono) e `dist` (pedido do dono):** nenhum OSMbot a correr; 527 testes; `build_portable.py --zip --installer` → `dist/windows/` 0.15.1 (553 / 206 / 148 MB); `dist/release-notes-v0.15.1.md` feito a partir do `CHANGELOG.md`; os da 0.14.12 apagados. Este PC corre `Documents\osmbot-portable`, ainda 0.14.12: o dono corre o instalador ou substitui a pasta.
+- **Pendentes OSMPro medidos nos registos (pedido do dono):** evolução por posição nos amigáveis fechada (não muda); compra cobra boss coins, compatível com 1 BC; Táticas 7 e 12 continuam abertos: amostra curta (ponto 7) e nenhum jogo abaixo de 60 de temporização (ponto 12). `DISCOVERY.md` §3, sínteses. Sem mudanças no bot.
+- **Verificações fechadas:** `451` fica a regra das 5 defesas; `especialistas` sem ganho nos amigáveis, nada muda (`VERIFICACAO.md`).
+- **Outros de OSM (D-065):** tabela de 7 pontos em `OSMPro/_kb/sintese/outros.md`, por decidir pelo dono. **Próximo:** ponto 1 (amigáveis com lugar vazio); depois Entrevistas, Talvez OSM.
+- **Sem decisão (2026-10-30):** o aviso de poupar titulares mandou poupar o melhor médio do Ried contra o 2.º (mais difícil) para um confronto direto contra um clube bem mais fraco; a sugestão foi reestruturada na 0.14.13.
+
 ## 2026-11-01 — Síntese Competições fechada (5 de 5)
 
 - **Competições revista com o dono (D-065):** tabela de pontos em `OSMPro/_kb/sintese/competicoes.md`; 5 fechados, sem nenhuma mudança no bot. Bónus de "jogador da semana" ignorado; nota acima de 100 em ligas especiais e bilhetes que expiram ficam como Reportado (`DISCOVERY.md`); competições sem evolução: o dono avisa antes de entrar (`THEORY.md`).

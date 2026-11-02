@@ -106,3 +106,19 @@ Vídeos variados do canal André Santana (OSM PRO): atualidade, avisos, shorts, 
 - **Bónus de nacionalidade:** o autor estima ~2 %, sem fonte oficial. O jogo diz só que existe. (crlPdOuieJI, EB9eB6-DF8k, 7B4YWtYOq4s)
 - **Limite de venda:** 2,2× (relatos de nov. 2022) ou 2,5× (o autor, no mesmo vídeo). 🔬 Confirmar nos registos de transferências.
 - **Estádio e amigáveis:** os mesmos choques das outras categorias, a fechar no fim de tudo.
+
+## Revisão com o dono (D-065): pontos
+
+Já decidido noutras categorias e não volta: compra ≤ 1,5×, preço de venda (D-071; os 2,2× de 2022 não pesam), fraco por linha, especialistas e cantos, 4-3-3, amigáveis por jornada, ordem do estádio, nacionalidade, jogador da semana, idade do onze, titular à venda, rotação dos treinos.
+
+Já coberto pelo bot, sem ponto: hora da simulação e adiamentos (lê o temporizador do jogo); lugares de venda (lê o máximo do jogo, 4 ou 6 vistos nos registos).
+
+| # | Ponto | Estado |
+|---|---|---|
+| 1 | Amigáveis com um lugar vazio no onze: 11 em 4 dias (Ried 6, Mechelen 5), todos ganhos, nenhum jogo oficial | Por decidir |
+| 2 | Fora, arriscar 4-3-3 quando o campo do adversário está no nível 0 | Por decidir; a medir: casa a ±12 %, nível 0 1,90 pts/jogo (39), níveis 1–3 2,00 (7) |
+| 3 | Dois jogos fora seguidos: 4-3-3 no 1.º e 4-5-1 no 2.º | Por decidir |
+| 4 | Médico: com um só lugar, primeiro quem tem menos dias de lesão, exceto os dispensáveis | Por decidir |
+| 5 | Pôr à venda os cansados | Por decidir |
+| 6 | 5.º preparador pago, 25 boss coins por conta e por dia (dez. 2024); o autor diz que não compensa | Por decidir |
+| 7 | Entrar no browser exige um email associado à conta | Por decidir |

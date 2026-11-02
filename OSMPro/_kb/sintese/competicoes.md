@@ -71,6 +71,6 @@ Já decidido noutras categorias e não volta: 4-3-3 em casa e fora, contra-táti
 |---|---|---|
 | 1 | O bónus de "jogador da semana" fica até ao fim da época | Fechado 2026-11-01 (dono, opção c): ignorado, nada nos docs nem no bot |
 | 2 | Nota acima de 100 continua a evoluir bem em ligas especiais | Fechado 2026-11-01 (dono, opção a): Reportado em `DISCOVERY.md`, só para ligas especiais; nada no bot |
-| 3 | Avançados e GR evoluem mais depressa do que médios e defesas | Fechado 2026-11-01 (dono, opção a): não se confirma em 700 treinos (`DISCOVERY.md` §3, `THEORY.md`); amigáveis por medir; nada no bot |
+| 3 | Avançados e GR evoluem mais depressa do que médios e defesas | Fechado 2026-11-01 (dono, opção a): não se confirma em 700 treinos nem em 308 amigáveis (2026-11-02; `DISCOVERY.md` §3, `THEORY.md`); nada no bot |
 | 4 | Aviso de bilhetes (VIP, Taça dos Vencedores) que expiram | Fechado 2026-11-01 (dono, opção a): Reportado em `DISCOVERY.md`; o aviso faz-se quando sair um bilhete e se vir como o jogo o mostra |
 | 5 | Bot desligado em ligas sem evolução | Fechado 2026-11-01 (dono, opção a): regra no `THEORY.md`, o dono avisa antes de entrar; nada no bot por agora |

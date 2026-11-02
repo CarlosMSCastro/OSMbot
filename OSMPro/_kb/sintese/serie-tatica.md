@@ -150,7 +150,7 @@ Os choques do resumo (4-3-3 fora, médios do 4-3-3, suplente de outra posição,
 | 7 | Moral depois de uma derrota | Fechado 2026-10-28 (dono, opção b): "⚠ Moral baixa" na linha dos cansados, titulares abaixo de 80 (`THEORY.md` §16) |
 | 8 | Eventos de transferências (6 vagas, preços mais altos) | Fechado 2026-10-28 (dono, opção b): nada; o aviso de vagas já passa a 6 no evento e o calendário está na janela |
 | 9 | Ofertas especiais (+13–53 BC sim; 1 000–4 000 não) | Fechado 2026-10-28 (dono, opção a): dica no `THEORY.md` §7.6, nada no bot |
-| 10 | Cada compra na lista custa 1 boss coin? | Fechado 2026-10-28: o catálogo do jogo diz `TransferFee` = 1 BC (e venda instantânea 5, olheiro 15, treino secreto 3; `DISCOVERY.md` §3); cobrança por medir com o registo da carteira |
+| 10 | Cada compra na lista custa 1 boss coin? | Fechado 2026-10-28: o catálogo do jogo diz `TransferFee` = 1 BC (e venda instantânea 5, olheiro 15, treino secreto 3; `DISCOVERY.md` §3); cobrança vista na carteira a 2026-11-02 (28 de 29 compras com o saldo a descer, compatível com 1 BC) |
 | 11 | XP do treinador (+4 / −1 000) | Fechado 2026-10-28 (dono, opção a): medido (vitória CPU +23, derrota com humano −706 ≈ 30 vitórias); no `THEORY.md` §22 e na verificação semanal (`xp`) |
 | 12 | Rodar o onze contra fracos e na taça | Fechado 2026-10-28 (dono, opção a): nada; o aviso "poupar para o jogo importante" (§16) já cobre |
 
