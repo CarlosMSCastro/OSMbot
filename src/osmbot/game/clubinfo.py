@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import time
 
-from osmbot.board.info import (cup_phase, eleven_seen, league_round, likely_eleven, league_summary, next_match, next_matches,
+from osmbot.board.info import (cup_phase, eleven_seen, formation_slots, formation_title, league_round, likely_eleven, league_summary, next_match, next_matches,
                                opponent_rating, season_fixtures, squad_value, stale_listings, team_rating, value_table)
 from osmbot.game import market as market_watch, sales
 from osmbot.game.transfers import saved_transfers
@@ -242,10 +242,15 @@ def club_extra(client, team: dict, base: str, players: list[dict], slot, market:
             forwards = sum(1 for p in squad_of if 1 <= (p.get("lineup") or 0) <= 11 and p.get("position") == 1) if seen else None
             strength = opponent_rating(squad_of, GUESS_FORMATION)
             if seen:  # his real eleven, on hover of the circle (owner, 2026-11-03)
-                eleven = {"players": [p for p in squad_of if 1 <= (p.get("lineup") or 0) <= 11], "estimate": False}
+                report = next(iter(_reports_on(client, base, rival)), {})  # his formation, for the places on the pitch
+                eleven = {"players": [p for p in squad_of if 1 <= (p.get("lineup") or 0) <= 11], "estimate": False,
+                          "slots": formation_slots(report.get("formation"), report.get("formationDetail")),
+                          "shape": formation_title(report.get("formation"), report.get("formationDetail"))}
             else:  # before the analysis: his likely eleven, and the circle is its average (owner, 2026-11-03: "tem que
-                likely = likely_eleven(squad_of, _list(client, f"{league}/teams/{rival}/playergrades/"), matches, rival)
-                eleven = {**likely, "estimate": True} if likely else None  # bater certo os 2"); none: the 4-3-3 guess
+                likely = likely_eleven(squad_of, _list(client, f"{league}/teams/{rival}/playergrades/"), matches, rival,
+                                       human=upcoming["human"])  # the computer does not rest players for us
+                eleven = ({**likely, "estimate": True, "shape": formation_title(likely["formation"], likely["detail"])}
+                          if likely else None)  # bater certo os 2"); none: the 4-3-3 guess
                 strength = round(likely["average"]) if likely else strength
             return (strength, not seen, forwards, bool(seen) and plays_counter(client, base, rival),
                     bool(seen) and uses_camp(client, base, rival), eleven)

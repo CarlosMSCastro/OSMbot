@@ -2,6 +2,21 @@
 
 Entradas mais recentes primeiro. Cada sessão: o que se fez · o que ficou por fazer · próximo passo.
 
+## 2026-11-03 — Versão 0.16.1 (PT-LA-02-0095-N)
+
+- **Versão 0.16.1 (pedido do dono):** D-087 (médico por ordem), D-088 (onze provável com 11, pelo lugar). `pyproject.toml`, `__init__`, `CHANGELOG.md`, `README.md`, `dist/release-notes-v0.16.1.md`; 549 testes; `build_portable.py --zip --installer` → `dist/windows/` 0.16.1, os da 0.16.0 apagados. Commit e `gh release create v0.16.1` entregues ao dono (só Windows).
+
+## 2026-11-03 — Campo do onze provável (PT-LA-02-0095-N)
+
+- **Erros vistos pelo dono em 3 campos (D-088):** posições e lados pelo lugar da formação (`board/info.formation_slots`, `eleven_view(slots=…)`), título com a variante ("4-4-2 A"), preencher com qualquer posição quando não há livre na mesma, contra o computador sempre o último jogo, coluna dos médios a 0,08. Também o onze do próprio clube e o do adversário analisado (formação do relatório). Com dados reais dos 4 adversários: Levante 4-4-2 A com o MCD no lugar de ME; Genk J12 (J13 poupou), troca do ED pelo Junya Ito 78 (o outro livre tem 75); Qabala 4-5-1 A com o ME por um jogador de outra posição (nota 40). 549 testes. Entra na próxima versão.
+
+## 2026-11-03 — Outros de OSM, ponto 1 (PT-LA-02-0095-N)
+
+- **Amigáveis com lugar vazio: fechado, nada muda.** Os buracos são sempre dos primeiros amigáveis da jornada, logo depois do jogo oficial. O dono às vezes só fecha o onze nas últimas horas. O jogo não dá o onze de um amigável, por isso não se sabe se jogou com 10 (`DISCOVERY.md`, `outros.md`). 
+- **Ponto 2 (4-3-3 fora com o relvado do adversário no nível 0): medir primeiro** (dono). O bot não muda; fica em `VERIFICACAO.md` (por automatizar), 1,90 pts/jogo (39) contra 2,00 (7). 
+- **Ponto 3 (dois jogos fora seguidos, 4-3-3 e depois 4-5-1): fechado, nada muda.** Medido: o cansaço é ~−4 por jogo em qualquer posição de campo e em todas as formações usadas (`DISCOVERY.md`); nunca jogámos em 4-5-1. 
+- **Ponto 4 (médico): adotado, D-087.** Ordem por menos jogos fora, os à venda por último (`medical/policy.doctor_candidates`, lê `transferplayers/0`); 546 testes. "Fora do onze e do banco" não se lê: o jogo tira do onze todo o lesionado (36 de 36, `DISCOVERY.md`), o que explica também os buracos dos amigáveis do ponto 1. Entra na próxima versão. **Próximo:** ponto 5 (pôr à venda os cansados).
+
 ## 2026-11-03 — Versão 0.16.0 (PT-LA-02-0095-N)
 
 - **Versão 0.16.0 (pedido do dono):** D-085 (relistar), D-086 (onze provável), aviso "parado na lista" ao triplo, balões e campo. `pyproject.toml`, `__init__`, `CHANGELOG.md`, `README.md` (estado), `DISCOVERY.md` §7 (listar/retirar feito), `dist/release-notes-v0.16.0.md`; 544 testes; `build_portable.py --zip --installer` → `dist/windows/` 0.16.0 (553 / 206 / 148 MB), versão confirmada e `status` a correr no portátil; os da 0.15.3 apagados. Commit e `gh release create v0.16.0` entregues ao dono (só Windows).

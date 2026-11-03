@@ -274,3 +274,28 @@ def test_a_starter_with_no_row_is_filled_by_the_formation():
     matches = [{"homeTeamId": 7, "awayTeamId": 8, "weekNr": 5, "matchData": {"homeFormation": 451}}]
     likely = likely_eleven(squad, rows, matches, 7)
     assert len(likely["players"]) == 11 and [p["id"] for p in likely["players"] if p["sub"]] == [6]  # no. 6 is free again: the best midfielder left
+
+
+def test_with_nobody_free_in_the_position_the_best_free_one_of_any_position_plays_the_place():
+    from osmbot.board.info import likely_eleven
+
+    # owner, 2026-11-03: "não pode dar uma tática de 10": a 4-3-3 A whose MO left and no free midfielder
+    squad = _club(1, {4: [90], 3: [90, 90, 90, 90, 80], 2: [90, 90], 1: [90, 90, 90, 70]})
+    squad[-1]["statOvr"] = 60  # the free forward, as a midfielder; the free defender is 80 in defence, 50 overall
+    squad[5]["statOvr"] = 50
+    eleven = [1, 2, 3, 4, 5, 7, 99, 8, 9, 10, 11]  # 99 (the MO, place 7) was sold
+    matches = [{"homeTeamId": 7, "awayTeamId": 8, "weekNr": 4, "matchData": {"homeFormation": 433, "homeFormationDetail": "A"}}]
+    likely = likely_eleven(squad, _grades(4, eleven), matches, 7)
+    sub = next(p for p in likely["players"] if p["sub"])
+    assert len(likely["players"]) == 11 and (sub["id"], sub["lineup"], sub["position"]) == (12, 7, 2)
+    assert likely["slots"][7] == 1 and (likely["formation"], likely["detail"]) == (433, "A")
+
+
+def test_against_the_computer_the_likely_eleven_is_always_his_last_match():
+    from osmbot.board.info import likely_eleven
+
+    squad = _club(1, {4: [100], 3: [100, 100, 100, 100, 60], 2: [100, 100, 100, 60, 60], 1: [100, 100, 100, 60]})
+    best, rested = [1, 2, 3, 4, 5, 7, 8, 9, 12, 13, 14], [1, 2, 3, 6, 5, 10, 11, 9, 15, 13, 14]
+    matches = [{"homeTeamId": 7, "awayTeamId": 8, "weekNr": w, "matchData": {"homeFormation": 433}} for w in (1, 2)]
+    likely = likely_eleven(squad, _grades(1, best) + _grades(2, rested), matches, 7, human=False)
+    assert likely["week"] == 2 and likely["skipped"] == []  # the computer does not rest players for us

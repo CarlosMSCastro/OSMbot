@@ -115,10 +115,10 @@ Já coberto pelo bot, sem ponto: hora da simulação e adiamentos (lê o tempori
 
 | # | Ponto | Estado |
 |---|---|---|
-| 1 | Amigáveis com um lugar vazio no onze: 11 em 4 dias (Ried 6, Mechelen 5), todos ganhos, nenhum jogo oficial | Por decidir |
-| 2 | Fora, arriscar 4-3-3 quando o campo do adversário está no nível 0 | Por decidir; a medir: casa a ±12 %, nível 0 1,90 pts/jogo (39), níveis 1–3 2,00 (7) |
-| 3 | Dois jogos fora seguidos: 4-3-3 no 1.º e 4-5-1 no 2.º | Por decidir |
-| 4 | Médico: com um só lugar, primeiro quem tem menos dias de lesão, exceto os dispensáveis | Por decidir |
+| 1 | Amigáveis com um lugar vazio no onze: 11 em 4 dias (Ried 6, Mechelen 5), todos ganhos, nenhum jogo oficial | **Fechado (2026-11-03): nada muda.** Os buracos são dos 1.os amigáveis da jornada, logo a seguir ao jogo oficial; os das horas seguintes já têm o onze completo. O dono às vezes só fecha o onze nas últimas horas. O jogo não mostra quem jogou um amigável (sem notas, resultado 0-0 no calendário), por isso não se sabe se jogou com 10 ou completou |
+| 2 | Fora, arriscar 4-3-3 quando o campo do adversário está no nível 0 | **A medir (dono, 2026-11-03):** o bot não muda; entra na rotina de verificação (`docs/VERIFICACAO.md`). Fora, forças a ±12 %: nível 0 1,90 pts/jogo (39), níveis 1–3 2,00 (7) |
+| 3 | Dois jogos fora seguidos: 4-3-3 no 1.º e 4-5-1 no 2.º | **Fechado (2026-11-03): nada muda.** Medido nos registos (374 titulares em 2 jornadas seguidas): o cansaço não depende da posição (ATA −4,0, MED −3,9, DEF −4,1; só o GR −3,2) e a mediana é −4 em todas as formações usadas (4-3-3 A em 39 jogos; 4-3-3 B, 5-2-3, 3-4-3, 4-4-2, 5-4-1 em 1–4 jogos). Nunca jogámos em 4-5-1, por isso não há medida direta; a condição dos adversários não fica registada. Poupar faz-se tirando titulares, não mudando a formação |
+| 4 | Médico: com um só lugar, primeiro quem tem menos dias de lesão, exceto os dispensáveis | **Adotado (2026-11-03, D-087):** ordem por menos jogos fora, os que estão à venda no fim. Nunca houve dois lesionados ao mesmo tempo (13 envios) |
 | 5 | Pôr à venda os cansados | Por decidir |
 | 6 | 5.º preparador pago, 25 boss coins por conta e por dia (dez. 2024); o autor diz que não compensa | Por decidir |
 | 7 | Entrar no browser exige um email associado à conta | Por decidir |

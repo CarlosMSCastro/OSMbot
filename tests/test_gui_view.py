@@ -475,3 +475,21 @@ def test_two_midfielders_one_step_apart_in_the_middle_stand_side_by_side():
     assert x2 - x1 >= 0.3 and (d1, d2) == (0, 1)
     diamond = [{"place": "MCD"}, {"place": "MC"}, {"place": "MC"}, {"place": "MCO"}]  # untouched
     assert sorted((round(x, 2), d) for x, d, _ in pitch_spots(diamond)) == [(0.25, 0), (0.5, -1), (0.5, 1), (0.75, 0)]
+
+
+def test_with_the_formation_each_player_stands_and_is_named_by_his_place():
+    from osmbot.board.info import formation_slots
+    from osmbot.gui.view import eleven_view, pitch_spots
+
+    # owner, 2026-11-03: a 4-4-2 A read as "DD, DC, DE, DC" and "MC, MCD, MC, MC" (the players' own positions)
+    own = {1: 6, 2: 12, 3: 3, 4: 9, 5: 3, 6: 5, 7: 2, 8: 2, 9: 2, 10: 4, 11: 4}
+    squad = [{"name": f"P{n}", "lineup": n, "position": 4 if n == 1 else 3 if n <= 5 else 2 if n <= 9 else 1,
+              "specificPosition": spot, "statAtt": 80, "statDef": 80, "statOvr": 80} for n, spot in own.items()]
+    view = eleven_view(squad, slots=formation_slots(442, "A"), shape="4-4-2 A")
+    assert view["title"] == "4-4-2 A · média 80"
+    assert [[p["place"] for p in line] for line in view["lines"]] == [
+        ["PL", "PL"], ["ME", "MC", "MC", "MD"], ["DE", "DC", "DC", "DD"], ["GR"]]
+    assert {d for _, d, _ in pitch_spots(view["lines"][1])} == {0}  # nobody dropped behind: a flat four
+    # a 4-5-1 A: the MCD in the middle, behind, the four others where they were
+    mids = [{"place": p} for p in ("ME", "MC", "MCD", "MC", "MD")]
+    assert sorted((round(x, 3), d) for x, d, _ in pitch_spots(mids)) == [(0.125, 0), (0.375, 0), (0.5, -1), (0.625, 0), (0.875, 0)]

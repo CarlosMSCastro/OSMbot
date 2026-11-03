@@ -4,6 +4,18 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-PT/1.1.0/); 
 
 Este ficheiro é o **histórico de versões, para quem lê o repo**. O diário interno de cada sessão de trabalho está em [`docs/WORKLOG.md`](docs/WORKLOG.md).
 
+## [0.16.1] — 2026-11-03
+
+Onze provável do adversário sempre com 11 e com cada jogador no seu lugar, e o médico por ordem.
+
+### Alterado
+- **Médico:** com mais do que um lesionado, vai primeiro quem tem menos jogos fora (um tratamento tira quase sempre 1 jogo, e pode chegar para voltar a jogar); quem está à venda vai no fim. Todos continuam a ir.
+- **Onze provável do adversário:** sem ninguém livre na posição de quem saiu, entra o melhor livre de qualquer posição, com a nota para esse lugar; já não fica com 10 ("falta 1"). Contra o computador é sempre o onze do último jogo.
+
+### Corrigido
+- **Campo do onze:** cada jogador aparece no lado e com o nome do lugar da formação, não da sua própria posição (antes saíam defesas como "DD, DC, DE, DC" e ataques com dois EE). O título diz a variante da formação ("4-4-2 A"). Vale para o teu onze, para o provável do adversário e para o real depois da análise.
+- **Campo:** o MCD do 4-5-1 já não sai do centro, e dois médios lado a lado já não ficam na diagonal.
+
 ## [0.16.0] — 2026-11-03
 
 Os jogadores que sobem de preço à venda voltam à lista ao preço novo, e o onze provável do adversário no círculo da força.

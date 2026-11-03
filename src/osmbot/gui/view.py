@@ -182,7 +182,7 @@ ESTIMATE_TIP = "Estimativa antes da análise: os melhores dele num 4-3-3"
 
 
 PITCH_PLACES = {"MO": "MCO", "MDC": "MCD"}  # as the owner names them, on the pitch (2026-11-02)
-SAME_COLUMN, SIDE_BY_SIDE = 0.15, 0.3  # across the pitch: closer than this, one step apart in depth, overlap; moved this far
+SAME_COLUMN, SIDE_BY_SIDE = 0.08, 0.3  # across the pitch: closer than this (the same column), one step apart in depth, overlap; moved this far (0.15 also moved the 4-5-1 A MCD, 0.125 from its MCs, owner 2026-11-03)
 PITCH_DEPTH = {"MCO": 1, "MCD": -1}  # ahead of or behind the line (owner, 2026-11-02: 4-3-3 and the diamond)
 
 
@@ -203,28 +203,35 @@ def pitch_spots(line: list[dict]) -> list[tuple[float, int, dict]]:
     return [tuple(spot) for spot in spots]
 
 
-def eleven_view(players: list[dict] | None, before: str = "") -> dict | None:
+def eleven_view(players: list[dict] | None, before: str = "", slots: dict | None = None,
+                shape: str | None = None) -> dict | None:
     """The hover of the club's strength (owner, 2026-11-02): the eleven on a pitch, attack on top. Each player: his
     name, rating and place; green at the eleven's average or above, red 10 or more below it, yellow between; his
     condition only below 80, the line the game turns yellow. Places left to right as the game's lineup numbers them,
     the MCO a little ahead of the midfield and the MCD a little behind it (``pitch_spots``). ``before``: put ahead of
-    the title (the opponent's likely eleven, owner 2026-11-03); a player marked ``sub`` stands in for one who left."""
+    the title (the opponent's likely eleven, owner 2026-11-03); a player marked ``sub`` stands in for one who left.
+    ``slots``: place in the eleven -> the formation's specific position there; with it each player stands and is named
+    by his place, not by his own position (owner, 2026-11-03: a DD in the DE place, a diamond's MO read as MC).
+    ``shape``: the formation's name for the title ("4-4-2 B"), else counted from the lines."""
     from osmbot.theory.fitness import YELLOW_BELOW
+    from osmbot.board.info import GENERAL
     from osmbot.theory.lineup import SPECIFIC, rating
 
     if not players:
         return None
+    slots = {int(k): v for k, v in (slots or {}).items()}  # the keys may come back as text from a cache
     average = sum(rating(p) for p in players) / len(players)
     lines: dict[int, list[dict]] = {}
     for p in sorted(players, key=lambda p: p["lineup"]):
         level = rating(p)
         fitness = p.get("fitness", 100)
-        place = SPECIFIC.get(p.get("specificPosition"), "")
-        lines.setdefault(p["position"], []).append({
+        code = slots.get(p["lineup"]) or p.get("specificPosition")
+        place = SPECIFIC.get(code, "")
+        lines.setdefault(GENERAL.get(slots.get(p["lineup"]), p["position"]), []).append({
             "name": p["name"], "rating": level, "place": PITCH_PLACES.get(place, place), "sub": bool(p.get("sub")),
             "colour": GREEN if level >= average else RED if level <= average - 10 else YELLOW,
             "fitness": fitness if fitness < YELLOW_BELOW else None})
-    shape = "-".join(str(len(lines[pos])) for pos in (3, 2, 1) if pos in lines)
+    shape = shape or "-".join(str(len(lines[pos])) for pos in (3, 2, 1) if pos in lines)
     return {"title": f"{before}{shape} · média {average:.0f}", "lines": [lines[pos] for pos in (1, 2, 3, 4) if pos in lines]}
 
 
@@ -234,11 +241,11 @@ def rival_eleven_view(eleven: dict | None) -> dict | None:
     if not eleven or not eleven.get("players"):
         return None
     if not eleven.get("estimate"):
-        return eleven_view(eleven["players"], "Onze dele · ")
+        return eleven_view(eleven["players"], "Onze dele · ", eleven.get("slots"), eleven.get("shape"))
     skipped = eleven.get("skipped") or []
     rested = f" (J{', J'.join(map(str, skipped))} poupou)" if skipped else ""
     short = 11 - len(eleven["players"])  # no free player for a place (all out or in the eleven already)
-    view = eleven_view(eleven["players"], f"Provável: J{eleven['week']}{rested} · ")
+    view = eleven_view(eleven["players"], f"Provável: J{eleven['week']}{rested} · ", eleven.get("slots"), eleven.get("shape"))
     return {**view, "title": view["title"] + (f" · falta {short}" if short > 0 else "")}
 
 
@@ -468,7 +475,7 @@ def club_view(club: dict, now: float, shortened: dict | None = None) -> dict:
             "tired": tired_text, "tired_tip": tired_tip,
             "morale": " · ".join(f"{p['name']} {p['morale']}" for p in club.get("low_morale") or []), "rest": [  # THEORY.md 16: rest him before the important one
                 f"{p['name']} {p['fitness']}%: se jogar contra o {p['first']}, chega a ~{p['then']}% contra o {p['second']}"
-                for p in club.get("rest") or []], "reminders": club.get("reminders") or [], "sale": sale_view(club), "eleven": eleven_view(club.get("eleven")), "value_badge": rating_badge(club.get("strength")), "table_tip": table_tip,
+                for p in club.get("rest") or []], "reminders": club.get("reminders") or [], "sale": sale_view(club), "eleven": eleven_view(club.get("eleven"), slots=club.get("places")), "value_badge": rating_badge(club.get("strength")), "table_tip": table_tip,
             "injured": _people(club.get("injured") or [], "no médico", now),
             "suspended": _people(club.get("suspended") or [], "no advogado", now),
             "stadium_rings": stadium_rings(club.get("stadium"), now),

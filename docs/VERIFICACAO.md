@@ -25,6 +25,8 @@ Rotina pedida pelo dono (2026-10-28): ver de tempos a tempos se alguma regra do 
 | `cantos` | Cantos ≠ livres (§4; dono, 2026-10-29: "os nossos resultados eram bons com a teoria antiga") | Pontos por jogo, golos e força dos teus jogos de liga em que o médio com mais ataque é também o dos livres: ele nos cantos (a regra antiga, jogos até 2026-10-27) ou outro médio (a nova, desde o jogo de 2026-10-29; os especialistas de cada jogo ficam registados desde a versão a seguir à 0.14.10) | 10 em cada | antiga 2,54, 2,6 golos, força +22 % (28); nova 0 jogos · **amostra curta** |
 | `contra` | 4-3-3 contra contra-ataque (OSMPro Táticas 7, a medir) | Pontos por jogo com o estilo do adversário lido no analista (desde a 0.14.6) | 10 jogos | 0 jogos · **amostra curta** |
 
+**2026-11-03 (corrida, 744 jogos nos registos):** nada "não bate". `casa` 4,4 % (425) · `12pc` 21 % / 8 % (728) · `cansaco` −3,9 (374): batem. `451`, `tabela` e `especialistas` "pronto a decidir" já decididos (ficam as regras; números iguais: 1,12 / 0,34; 0,96 / 1,31; +16,8 / +20,1). Mexeram-se, ainda curtos: `cantos` regra nova 3,00 pts/jogo em 5 jogos (antiga 2,54 em 28); `433fora` B 2,50 (4) / A 2,00 (4); `xp` 6 derrotas com humanos (faltam 4). À mão, "100 % até 150 M, 75 % acima" (D-071): vendas do dono com máximo acima de 150 M só 1 (a 75 %, 18 h): **amostra curta**. Próxima: ~2026-11-10.
+
 ## Lembretes com data
 
 | Quando | O quê |
@@ -38,7 +40,7 @@ Rotina pedida pelo dono (2026-10-28): ver de tempos a tempos se alguma regra do 
 | Venda a 100 % do máximo até 150 M, 75 % acima (D-071, [S] amostras pequenas) | `transferencias/` |
 | Campo de treinos +10 / +25 / +50 % na previsão (§5) | `treinos/` |
 | Treino crítico ~+10 pontos em média; idade só ajuda abaixo de 85 (§5) | `treinos/` |
-| Vantagem de casa pelo nível do campo do estádio (§1, nota "para mais tarde") | `jogos/` |
+| Vantagem de casa pelo nível do campo do estádio (§1, nota "para mais tarde"); e fora, com o relvado do adversário no nível 0, o 4-3-3 rende mais? (OSMPro Outros, ponto 2; dono, 2026-11-03: medir primeiro). 2026-11-03, forças a ±12 %: nível 0 1,90 pts/jogo (39), níveis 1–3 2,00 (7) · **amostra curta** | `jogos/` + `analista/` (`stadiumPitchBonus`) |
 | 4-4-2 B / 3 defesas quando falta um lado (D-072): pontos por jogo | `jogos/` |
 | 4-4-2 B do autor contra contra-ataque (D-079): pontos por jogo, quando houver jogos | `jogos/` |
 | 4 amigáveis por jogo e o ganho de cada um (§6) | `amigaveis/` |

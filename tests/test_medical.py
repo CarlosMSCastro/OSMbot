@@ -25,15 +25,18 @@ def test_who_goes_to_the_doctor_and_the_lawyer():
 
 
 class FakeClient:
-    def __init__(self, injured=(), suspended=(), doctor=(), lawyer=(), status=200, settings=NORMAL_SETTINGS):
-        self.settings = settings
+    def __init__(self, injured=(), suspended=(), doctor=(), lawyer=(), status=200, settings=NORMAL_SETTINGS,
+                 out=None, listed=()):
+        self.settings, self.out, self.listed = settings, out or {}, list(listed)
         self.injured, self.suspended = list(injured), list(suspended)
         self.doctor, self.lawyer, self.status = list(doctor), list(lawyer), status
         self.writes = []
         self.week = 14
 
     def get(self, path):
-        players = [{"id": pid, "name": f"P{pid}", "unavailable": 3} for pid in self.injured + self.suspended]
+        players = [{"id": pid, "name": f"P{pid}", "unavailable": self.out.get(pid, 3)} for pid in self.injured + self.suspended]
+        if path == f"{BASE}/transferplayers/0":
+            return 200, [{"id": 900 + pid, "player": {"id": pid}} for pid in self.listed]
         lists = {f"{BASE}/players/injured": [p for p in players if p["id"] in self.injured],
                  f"{BASE}/doctortreatments": self.doctor, f"{BASE}/lawyercases": self.lawyer}
         if path in lists:
@@ -63,6 +66,18 @@ def test_every_injured_player_goes_to_the_doctor_and_every_suspended_one_to_the_
                              ("POST", f"{BASE}/doctortreatments", {"playerId": 11, "timerGameSettingId": 48}),
                              ("POST", f"{BASE}/lawyercases", {"playerId": 20, "timerGameSettingId": 45})]
     assert "Médico: Club pôs P10 no médico (8 h)" in lines
+
+
+def test_doctor_order_fewest_games_out_first_and_the_transfer_list_last():
+    assert doctor_candidates([10, 11, 12, 13], [], {10: 4, 11: 1, 12: 2, 13: 1}, {11}) == [13, 12, 10, 11]
+    assert doctor_candidates([10, 11], [case(1, 11, NOW + 60)], {10: 3, 11: 1}) == [10]  # 11 is with the doctor
+
+
+def test_with_one_place_the_shortest_injury_gets_it():
+    # the game takes one at a time: the first sent gets the place, the next waits (THEORY.md section 18)
+    client = FakeClient(injured=[10, 11, 12], out={10: 3, 11: 1, 12: 1}, listed=[11])
+    treat(client)
+    assert [w[2]["playerId"] for w in client.writes] == [12, 10, 11]
 
 
 def test_in_an_event_the_doctor_and_the_lawyer_take_the_event_timer():

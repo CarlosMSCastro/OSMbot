@@ -122,7 +122,7 @@ def treat_club(client, team: dict, base: str, confirm: bool, now: float, log=pri
     names = {**_names(players), **_names(injured_players)}
     info = {**{p["id"]: p for p in players}, **{p["id"]: p for p in injured_players}}
     suspended = [p["id"] for p in players if p.get("unavailable", 0) >= LAWYER_MIN_GAMES and p["id"] not in injured]
-    failures, wake = 0, []
+    failures, wake, listed = 0, [], None
     for kind, people in (("doctor", injured), ("lawyer", suspended)):
         path = KINDS[kind][0]
         if kind == "lawyer" and not people:
@@ -133,8 +133,17 @@ def treat_club(client, team: dict, base: str, confirm: bool, now: float, log=pri
         if collected:  # read again: the player may be fit already, and the case is no longer open
             cases = _list(client, f"{base}/{path}")
             if kind == "doctor":
-                people = [p["id"] for p in _list(client, f"{base}/players/injured")]
-        wanted = doctor_candidates(people, cases) if kind == "doctor" else lawyer_candidates(people, cases, week)
+                fresh = _list(client, f"{base}/players/injured")
+                people = [p["id"] for p in fresh]
+                info.update({p["id"]: p for p in fresh})  # the games out after the treatment
+        if kind == "doctor":
+            if people and listed is None:  # the transfer list goes last (THEORY.md section 18)
+                _, market = client.get(f"{base}/transferplayers/0")
+                listed = {(ad.get("player") or {}).get("id") for ad in market} if isinstance(market, list) else set()
+            out = {pid: (info.get(pid) or {}).get("unavailable") for pid in people}
+            wanted = doctor_candidates(people, cases, out, listed or set())
+        else:
+            wanted = lawyer_candidates(people, cases, week)
         failed, ends = _send(client, team, base, kind, wanted, names, cases, now, week, confirm, log, info)
         failures += failed
         wake += running_until(cases, now) + ends
