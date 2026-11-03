@@ -131,3 +131,35 @@ def test_match_strength_adds_the_boosts_and_the_home_advantage():
     assert match_strength(109, boost_pct=3) == pytest.approx(112.27)
     assert match_strength(107, boost_pct=3, home=True) == pytest.approx(115.72, abs=0.01)  # FC Van away, 2026-10-14
     assert match_strength(100, boost_pct=3 + 25, home=True, home_pct=0) == 128  # camp and logins add up
+
+
+def test_the_pitch_gives_the_home_advantage():
+    from osmbot.theory.tactics import HOME_PCT, pitch_pct
+
+    assert [pitch_pct(level) for level in range(4)] == [0, 2, 4, 6]  # DISCOVERY.md section 3
+    assert pitch_pct(None) == HOME_PCT  # unknown: the measured average
+
+
+def test_against_a_human_the_tactic_varies_inside_the_rule():
+    from osmbot.theory.tactics import PASSING, WINGS, instructions, same_as, varied
+
+    rule = instructions(433, "A")
+    last = {"formation": 433, "formationDetail": "A", "overallMatchTactics": PASSING, "pressing": 72, "mentality": 70,
+            "tempo": 79}
+    change = varied(rule, last)
+    assert change["overallMatchTactics"] == WINGS
+    assert (change["pressing"], change["mentality"], change["tempo"]) == (62, 80, 69)  # ~10 away, toward the aim side, inside 60-80
+    assert varied(rule, {**last, "pressing": 62})["pressing"] == 72  # under the aim: up
+    assert same_as({**last, "pressing": 75}, last) and not same_as({**last, "overallMatchTactics": WINGS}, last)
+
+
+def test_the_tactic_step_asks_to_vary_only_against_a_human():
+    from osmbot.theory.lineup import tactic_check
+
+    tactic = {"formation": 433, "formationDetail": "A", "overallMatchTactics": 1, "defense": 0, "midfield": 0,
+              "attack": 2, "marking": False, "offsideTrap": True, "pressing": 72, "mentality": 70, "tempo": 79}
+    _, notes, _ = tactic_check(tactic, 3, 100, 100, last=dict(tactic))
+    assert notes[0] == "Contra humano, igual ao último jogo: varia dentro da regra"
+    assert "Estilo de jogo: Jogar pelas alas" in notes and "Pressão: 62" in notes
+    assert not any("varia" in n for n in tactic_check(tactic, 3, 100, 100, cpu=True, last=dict(tactic))[1])
+    assert not any("varia" in n for n in tactic_check({**tactic, "pressing": 62}, 3, 100, 100, last=dict(tactic))[1])

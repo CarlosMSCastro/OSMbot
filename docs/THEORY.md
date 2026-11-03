@@ -37,6 +37,8 @@ Implementado em `choose_formation(my_rating, opp_rating, *, stronger_pct=0)`: ad
 - **Sem MCO nem MCD em forma** (raro: o dono costuma ter um dos dois): o bot avisa e sugere arranjar um: **mercado** (SALE da posição, §7.6), **olheiro**, ou a carta **"mudar posição"** do inventário (troca de posição universal, §7). **Só sugestão:** comprar, mandar o olheiro e usar itens são escritas (regra 5). Até lá pede uma formação **só com MC no meio** (dono, 2026-10-29): **1.º o 5-2-3 A** (2 MC; se houver as 5 defesas como abaixo e EE e ED em forma; tier A do autor, instruções no §2); **senão o 4-2-4** (2 MC; sem instruções nem dados nossos, o autor "não recomendo em situação alguma", barras [S] no §2).
 - **5 defesas** (contra um adversário mais forte, §1): só se pedem com **pelo menos 7 defesas no plantel** (5 titulares + 2 no banco) e, desses, **5 em forma nas posições certas: 3 DC, 1 DE e 1 DD**; os cansados ou a poupar podem ficar no banco (dono, 2026-10-29). Com menos, ficam as formações de 4 ou 3 defesas que o plantel consegue jogar, com a nota "Sem 5 defesas contra um mais forte: …". Entre as 5 defesas, só se pede a que tem os outros lugares cobertos (p. ex. o 5-2-3 precisa de EE e ED em forma; o 5-3-2 de um MCO). **[S]** Claramente mais forte sem poder jogar o 5-2-3: serve qualquer 5 defesas que o plantel consiga jogar (nota "5-4-1 aceite: sem EE em forma (…)").
 
+**Casa pelo relvado (dono, 2026-11-03; D-090):** a vantagem de casa deixa de ser 5 % para todos: o nosso relvado pelo nosso estádio (nível 0–3 → +0/2/4/6 %), o dele pelo relatório do analista (`stadiumPitchBonus`; desta jornada ou o último guardado em `logs/`). Sem nada, 5 % **[S]**.
+
 **"Mais forte" conta os bónus do jogo e a casa (dono, 2026-10-14; `match_strength`):** força = rating da equipa × (1 + bónus %) × 1,05 para quem joga em casa. **Adversário em treino secreto (dono, 2026-11-02):** somam-se-lhe o treino secreto e o estágio. **[S]** O estágio não se vê e pode não existir; a janela diz que é suposição. Porquê: taça de 2026-11-02, a janela via 140 contra 105 e o jogo deu 716 contra 779.
 - **Bónus:** os de cada lado somam-se, como o jogo os mostra no círculo ao lado do emblema ("+3 %"). Do dono: sequência de logins (`matchBoost`) + estágio (`CampBoostPercentage`, 25 %) e treino secreto (`SecretBoostPercentage`, 2 %) quando marcados. Do adversário: só os logins, depois da análise e só com treinador humano (como o site); o estágio e o treino secreto dele não se veem.
 - **Quanto vale o estágio (dono, 2026-10-24; fechada a 2026-10-25: "não muda nada a nossa teoria").** O dono estranhou que o estágio desse 4-3-3 A fora contra o 1.º com o plantel muito mais forte. Os registos (`DISCOVERY.md` §3, 12 jogos) mostram que o estágio ajuda (8 V, 3 E, 1 D), mas não chegam para dizer quanto: não provam os 25 % e a força do jogo não o inclui. A regra fica como está (o código soma os 25 %) até haver mais jogos com estágio só de um lado; o dono decide a formação nesses jogos.
@@ -54,6 +56,8 @@ Implementado em `choose_formation(my_rating, opp_rating, *, stronger_pct=0)`: ad
 **Confronto direto (dono, 2026-10-08):** um jogo contra um clube que está **a 1 ou 2 lugares** do do dono na classificação, acima ou abaixo. São os jogos que o dono gosta de ver ele próprio nas últimas horas (§6). O quadro marca-os com um símbolo de perigo (D-026).
 
 ## 2. Instruções por formação
+
+**Não ser previsível contra humanos (dono, 2026-11-03; D-091, opção b):** o adversário humano vê a nossa tática pelo analista, e a regra dava sempre a mesma. Contra um humano, se a tática posta é igual à do último jogo oficial do clube (mesma formação e estilo de jogo, barras a ±5), a janela sugere variar **dentro da regra**: o outro estilo de jogo que a regra aceita (ex. 4-3-3: passe ↔ alas) e cada barra ~10 do último valor, para o lado do alvo, sem sair da banda. Só nota: o passo não muda de cor e a tática é do dono. **Depois (opção a):** escolher a tática pela dele, quando os relatórios da liga toda chegarem para medir o que ganha a quê. **[S]** O ~10 e os ±5.
 
 *Revisto pelo dono a 2026-10-28 (D-073; OSMPro, Táticas ponto 6): "tudo como o autor, desde que não contradiga funcionalidades que temos atualmente". Fontes: `OSMPro/_kb/sintese/taticas.md` §3–§5. Antes o §2 só tinha o 4-3-3 (avançados a apoiar o meio, médios a manter posições, sem fora de jogo) e o 5-3-2 (estilo [S: 30]).*
 
@@ -183,7 +187,7 @@ Implementado em `plan_training` / `pick_trainee`:
 
 | Ponto | Custo | Regras e notas do dono |
 |---|---|---|
-| **Treino secreto** | 3 coins | **6 por época**. Esconde o 11 e as táticas do adversário. Dá **+2%** de melhoria à equipa. Usa alguns por época, normalmente **junto com um estágio**. |
+| **Treino secreto** | 3 coins | **6 por época**. Esconde o 11 e as táticas do adversário. Dá **+2%** de melhoria à equipa. Usa alguns por época, normalmente **junto com um estágio**; o dono (2026-11-03) **nunca sozinho**: provoca o estágio do adversário (ver Jogo decisivo, §21). |
 | **Estágio** | Progressivo: **10, 20, 50, 100, 200, 500** coins | **Limite de 6 por época.** Sem treino secreto, o adversário é alertado. Caríssimo, mas usa alguns por época. |
 
 *Notas nossas (não são regras do dono):*
@@ -699,7 +703,10 @@ Há **3 componentes** a melhorar, cada um com **níveis 0, 1, 2 e 3**:
 
 *Fonte: o dono, 2026-10-13, depois de ver o empate em que um suplente fraco entrou por lesão. O bot **só avisa**: o onze, o banco e a tática são do dono.*
 
+**Jogo decisivo, regra atual (dono, 2026-11-03; D-089):** o lembrete só aparece (1) se se sabe que o adversário está reforçado (estágio no relatório do analista, ou treino secreto, que anda com o estágio), (2) em 1.º contra 2.º na liga, ou (3) na taça com ele mais forte no dia. O texto abaixo, de 2026-11-02, fica como histórico.
+
 **Jogo decisivo** (dono, 2026-11-02): com o próximo jogo contra um **treinador humano**, rival direto (±2 lugares) ou na taça, a janela lembra o estágio e o treino secreto por marcar, com a força dos dois lados. **Não sempre (dono, 2026-11-02):** só quando ele é pelo menos tão forte no dia (força do jogo, com a casa e os bónus conhecidos) ou se sabe que está reforçado (treino secreto, porque o jogo não deixa analisar; estágio, se o relatório do analista o mostrar). Antes da análise a força dele é a estimativa e o estágio não se vê. Só lembra; comprar é do dono.
+**Treino secreto só com estágio (dono, 2026-11-03):** "Não gosto da ideia de fazer o treino secreto sem estágio. Pode provocar o estágio dele por medo": o adversário vê que não te pode analisar e marca estágio. Por isso os dois vão juntos, nunca o treino secreto sozinho para tapar uma diferença pequena. Caso que levantou a questão: SV Ried fora, 5.º contra 6.º, jornada 12 de 22, 106 contra 108 no dia (a diferença era só a casa dele); nem estágio nem treino secreto.
 
 Na checklist do cartão, o passo fica **amarelo** quando o jogo o dá como feito mas algo está fora da regra, e o **hover diz o quê**. Um passo que o jogo não dá como feito (por ex. onze com menos de 11, posição sem suplente) continua sem verde, como já estava.
 

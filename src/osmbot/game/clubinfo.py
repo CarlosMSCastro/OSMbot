@@ -18,7 +18,7 @@ from osmbot.theory.lineup import age_warnings, bench_notes, centre_notes, listed
 from osmbot.medical.policy import open_cases
 from osmbot.prematch.policy import friendlies_played
 from osmbot.theory.fitness import important_match, rest_warnings, spare_for
-from osmbot.theory.tactics import COUNTER, match_strength
+from osmbot.theory.tactics import COUNTER, HOME_PCT, match_strength, pitch_pct
 
 API_V11 = "https://web-api.onlinesoccermanager.com/api/v1.1"  # the analyst's report is v1.1 only
 GUESS_FORMATION = 433  # [S] another club's eleven is unknown before the analysis: his best 4-3-3 (THEORY.md 1, 16)
@@ -170,9 +170,10 @@ def _match_strengths(client, team: dict, league: str, teams: list[dict], week: i
         if user and done.get(ANALYSIS_STEP) else 0
     if hidden:
         theirs += hidden_boost(settings)
-    home = not upcoming.get("neutral")
-    return (match_strength(strength, boost_pct=own, home=home and upcoming.get("side") == "H"),
-            match_strength(upcoming["strength"], boost_pct=theirs, home=home and upcoming.get("side") == "A"))
+    home, base = not upcoming.get("neutral"), f"{league}/teams/{team['id']}"
+    return (match_strength(strength, boost_pct=own, home=home and upcoming.get("side") == "H", home_pct=own_pitch(client, base)),
+            match_strength(upcoming["strength"], boost_pct=theirs, home=home and upcoming.get("side") == "A",
+                           home_pct=rival_pitch(client, base, rival)))
 
 
 def plays_counter(client, base: str, rival: int) -> bool:
@@ -183,6 +184,84 @@ def plays_counter(client, base: str, rival: int) -> bool:
 def uses_camp(client, base: str, rival: int) -> bool:
     """The analyst's report shows his training camp (owner, 2026-11-02); False with no report on him."""
     return any(r.get("isUsingTrainingCamp") for r in _reports_on(client, base, rival))
+
+
+def own_pitch(client, base: str) -> float:
+    """The home advantage of the own stadium's pitch (owner, 2026-11-03)."""
+    def read():
+        status, stadium = client.get(f"{base}/stadium")
+        parts = stadium.get("stadiumParts") if status == 200 and isinstance(stadium, dict) else None
+        return next((p.get("level") for p in parts or [] if p.get("stadiumPartType") == 1), None)
+    return pitch_pct(_cached(("pitch", base), VALUES_FOR, read))
+
+
+def rival_pitch(client, base: str, rival: int) -> float:
+    """His pitch's home advantage, from the analyst's report (``stadiumPitchBonus``, owner 2026-11-03): this round's,
+    or the last one kept in ``logs/*/analista`` or with a match; unknown: the average ``HOME_PCT``."""
+    def read():
+        bonus = next((r.get("stadiumPitchBonus") for r in _reports_on(client, base, rival)
+                      if isinstance(r.get("stadiumPitchBonus"), (int, float))), None)
+        return bonus if bonus is not None else logged_pitch(base.rsplit("/teams/", 1)[0].rsplit("/", 1)[-1], rival)
+    bonus = _cached(("rival_pitch", base, rival), VALUES_FOR, read)
+    return float(bonus) if bonus is not None else HOME_PCT
+
+
+def logged_pitch(league: str, rival: int) -> float | None:
+    """The last pitch bonus of ``rival`` in the analyst's reports kept in the repo's logs (any PC); None without."""
+    import json
+    from osmbot import logs
+
+    repo = logs.repo_folder()
+    if repo is None:
+        return None
+    found = (0, None)
+    for path in list((repo / "logs").glob("*/analista/*.jsonl")) + list((repo / "logs").glob("*/jogos/*.jsonl")):
+        try:
+            lines = path.read_text(encoding="utf-8").splitlines()
+        except OSError:
+            continue
+        for line in lines:
+            if f'"teamId":{rival},' not in line.replace(" ", ""):
+                continue
+            try:
+                entry = json.loads(line)
+            except ValueError:
+                continue
+            reports = [entry["relatorio"]] if "relatorio" in entry else entry.get("analise") or []
+            for report in reports:
+                if (isinstance(report, dict) and report.get("teamId") == rival and str(report.get("leagueId")) == league
+                        and isinstance(report.get("stadiumPitchBonus"), (int, float)) and entry.get("t", 0) >= found[0]):
+                    found = (entry.get("t", 0), report["stadiumPitchBonus"])
+    return found[1]
+
+
+def last_tactic(league: int, team: int) -> dict | None:
+    """The tactic of the club's last official match, as kept in the repo's ``logs/*/jogos`` (owner, 2026-11-03: to
+    vary it against a human); None without a log."""
+    import json
+    from osmbot import logs
+
+    repo = logs.repo_folder()
+    if repo is None:
+        return None
+    found = (0, None)
+    for path in (repo / "logs").glob("*/jogos/*.jsonl"):
+        try:
+            lines = path.read_text(encoding="utf-8").splitlines()
+        except OSError:
+            continue
+        for line in lines:
+            if '"tatica"' not in line or f'"teamId":{team},' not in line.replace(" ", ""):
+                continue
+            try:
+                entry = json.loads(line)
+            except ValueError:
+                continue
+            tactic = entry.get("tatica")
+            if (isinstance(tactic, dict) and tactic.get("teamId") == team and tactic.get("leagueId") == league
+                    and entry.get("tipo") in ("liga", "taça") and entry.get("t", 0) >= found[0]):
+                found = (entry.get("t", 0), tactic)
+    return found[1]
 
 
 def _reports_on(client, base: str, rival: int) -> list[dict]:
@@ -282,8 +361,8 @@ def club_extra(client, team: dict, base: str, players: list[dict], slot, market:
         rating = _cached(("strength_guess", league, rival, week), FIXTURES_FOR,  # [S] his eleven unknown: best 4-3-3
                          lambda: team_rating(_list(client, f"{league}/teams/{rival}/players"), GUESS_FORMATION))
         home = not match.get("neutral")
-        theirs = match_strength(rating, home=home and match["side"] == "A") if rating else None
-        ours = match_strength(strength, home=home and match["side"] == "H") if strength else None
+        theirs = match_strength(rating, home=home and match["side"] == "A", home_pct=rival_pitch(client, base, rival)) if rating else None
+        ours = match_strength(strength, home=home and match["side"] == "H", home_pct=own_pitch(client, base)) if strength else None
         return {"opponent": match["opponent"], "important": important_match(theirs, ours, match["danger"]),
                 "difficulty": theirs / ours if theirs and ours else None}
 
@@ -300,7 +379,9 @@ def club_extra(client, team: dict, base: str, players: list[dict], slot, market:
            POSITIONS_STEP: position_warnings(players, tactic)}  # who is out of position, on the hover
     why[TACTIC_STEP], tactic_tips, known = tactic_check(tactic, strictness, mine, theirs, players, away, spare,
                                                         (upcoming or {}).get("forwards"), bool((upcoming or {}).get("counter")),
-                                                        bool(upcoming) and not upcoming.get("human"))
+                                                        bool(upcoming) and not upcoming.get("human"),
+                                                        _cached(("last_tactic", team["leagueId"], team["id"], week), FIXTURES_FOR,
+                                                                lambda: last_tactic(team["leagueId"], team["id"])))
     steps = [(step[0], known, step[2]) if kind == TACTIC_STEP else step for (kind, _), step in zip(CHECKLIST, steps)]
     steps = [(name, False, RULE) if why.get(kind) and done_ else (name, done_, extra)
              for (kind, _), (name, done_, extra) in zip(CHECKLIST, steps)]

@@ -31,14 +31,16 @@ def next_matches(matches: list[dict], teams: list[dict], team_id: int, week: int
 
 
 def decisive_match(upcoming: dict | None, boosts: list[dict], strength: float | None) -> str | None:
-    """The reminder of the camp and the secret training (owner, 2026-11-02; THEORY.md 21): next match against a human
-    manager, a direct rival or in the cup, with one of them not marked yet, and only when he is at least as strong on the
-    day or is known to be boosted (owner, 2026-11-02: "não pode sugerir esses 2 sempre"). Only a reminder: buying them
-    is the owner's."""
-    if not upcoming or not upcoming.get("human") or not (upcoming.get("danger") or upcoming.get("cup")):
+    """The reminder of the camp and the secret training (owner, 2026-11-03; THEORY.md 21), only when one of them is
+    not marked yet and: he is known to be boosted (his camp in the analyst's report, or his secret training, which
+    goes with a camp), or it is 1st against 2nd in the league, or it is a cup match and he is stronger on the day.
+    Only a reminder: buying them is the owner's."""
+    if not upcoming:
         return None
     mine, theirs = upcoming.get("match") or (strength, upcoming.get("strength"))
-    if mine and theirs and mine > theirs and not upcoming.get("boosted"):
+    top = not upcoming.get("cup") and {upcoming.get("rank"), upcoming.get("my_rank")} == {1, 2}
+    cup = upcoming.get("cup") and mine and theirs and theirs > mine
+    if not (upcoming.get("boosted") or top or cup):
         return None
     missing = [b["name"] for b in boosts if not b.get("on") and not b.get("blocked")]
     if not missing:
@@ -53,7 +55,7 @@ def _upcoming(match: dict, teams: list[dict], team_id: int) -> dict:
     mine, theirs = places.get(team_id, {}).get("ranking"), places.get(opponent, {})
     rank = theirs.get("ranking")
     danger = bool(mine and rank and abs(rank - mine) <= DIRECT_RIVAL)
-    return {"opponent": theirs.get("name", "?"), "opponent_id": opponent, "rank": rank, "side": side, "danger": danger,
+    return {"opponent": theirs.get("name", "?"), "opponent_id": opponent, "rank": rank, "my_rank": mine, "side": side, "danger": danger,
             "cup": match["matchType"] == CUP_MATCH, "human": bool(theirs.get("userId")), "referee_id": match.get("refereeId"),
             "neutral": bool(match.get("isPlayedOnNeutralGround"))}
 

@@ -2,9 +2,24 @@
 
 Entradas mais recentes primeiro. Cada sessão: o que se fez · o que ficou por fazer · próximo passo.
 
+## 2026-11-03 — Vendas, projeto clash, jogo decisivo (DESKTOP-KAM70RR)
+
+- **Dist 0.16.1** refeito aqui depois do pull (ver entrada da versão).
+- **Vendas fracas:** 2 em 24 h; os anúncios são quase todos caros (> 80 M, mediana 13 h) e Bélgica/Espanha/Azerbaijão quase sem vendas para todos. O bot não vende sozinho: só relista (D-085).
+- **Casa entre humanos (DISCOVERY §3, [H]):** 21 jogos humano × humano a ±10 %: casa 1,24, fora 1,52 pts/jogo; humano contra CPU igual em casa e fora; só CPU × CPU mostra casa. Proposto tirar a casa nos jogos do dono: **à espera do dono.**
+- **Treino secreto nunca sozinho** (THEORY §21): provoca o estágio do adversário.
+- **D-089:** aviso de jogo decisivo só com o adversário reforçado, 1.º contra 2.º, ou taça com ele mais forte. `board/info.decisive_match`, `_upcoming` com `my_rank`; testes ajustados; 549 testes. SV Ried contra Grazer AK: aviso desaparece (leitura real).
+- **Táticas contra humanos (DISCOVERY §3):** 22 jogos; só o Grazer AK nos bateu claramente. Fontes novas procuradas: nada medido (guias de opinião); OSM Next Level pago, não lido. Estilo de jogo pelos 266 relatórios do analista pela liga toda: alas +0,23, bola longa −0,54.
+- **D-090 (pedido do dono, ponto 1):** casa pelo relvado (`theory/tactics.pitch_pct`, `clubinfo.own_pitch`/`rival_pitch`/`logged_pitch`); ponto 2 (analista pela liga toda) já existia desde 2026-10-28. 550 testes; leitura real: SV Ried em casa +4 %, Grazer +6 % nos registos.
+- **Porque é previsível (respondido):** a regra é fixa e o analista dele vê-a; o bot nunca olhava para a tática dele. Dono: opção b agora, a depois.
+- **D-091 (opção b):** `theory/tactics.varied`/`same_as`, nota no passo "Tática" (`lineup.tactic_check(last=...)`, `clubinfo.last_tactic` pelos `logs/*/jogos`). Leitura real: Betis e SV Ried (humanos) com a nota; Qarabag (CPU) sem. **Próximo:** opção a, medir tática contra tática nos relatórios da liga toda.
+- **Versão 0.16.2 (pedido do dono):** `pyproject`, `__init__`, `CHANGELOG`, `dist/release-notes-v0.16.2.md`; 552 testes; dist Windows refeito, os da 0.16.1 apagados.
+- **Fora do projeto:** recuperado o projeto Clash Royale (`Desktop\clash\RECUPERADO.md`) a partir do `history.jsonl`.
+
 ## 2026-11-03 — Versão 0.16.1 (PT-LA-02-0095-N)
 
 - **Versão 0.16.1 (pedido do dono):** D-087 (médico por ordem), D-088 (onze provável com 11, pelo lugar). `pyproject.toml`, `__init__`, `CHANGELOG.md`, `README.md`, `dist/release-notes-v0.16.1.md`; 549 testes; `build_portable.py --zip --installer` → `dist/windows/` 0.16.1, os da 0.16.0 apagados. Commit e `gh release create v0.16.1` entregues ao dono (só Windows).
+- **Dist 0.16.1 no DESKTOP-KAM70RR (pedido do dono, depois do pull):** 549 testes; `build_portable.py --zip --installer` → `dist/windows/` 0.16.1 (206 / 148 MB); os da 0.15.3 apagados; `dist/release-notes-v0.16.1.md` refeito aqui (o `dist/` não está no git).
 
 ## 2026-11-03 — Campo do onze provável (PT-LA-02-0095-N)
 

@@ -6,7 +6,7 @@ from collections import Counter
 from typing import Iterable
 
 from osmbot.theory.fitness import MATCH_DROP, YELLOW_BELOW
-from osmbot.theory.tactics import ATTACK, DEFENSE, MIDFIELD, PLANS, Band, Formation, choose_formation, defensive, instructions
+from osmbot.theory.tactics import ATTACK, DEFENSE, MIDFIELD, PLANS, Band, Formation, choose_formation, defensive, instructions, same_as, varied
 
 MAIN_STAT = {1: "statAtt", 2: "statOvr", 3: "statDef", 4: "statDef"}  # the rating that counts for each position
 ELEVEN = range(1, 12)
@@ -389,7 +389,8 @@ def _tackling(strictness: int | None, mine: float | None, opponent: float | None
 
 def tactic_check(tactic: dict | None, strictness: int | None, mine: float | None, opponent: float | None,
                  players: list[dict] | None = None, away: bool = False, spare: bool = False,
-                 forwards: int | None = None, counter: bool = False, cpu: bool = False) -> tuple[list[str], list[str], bool]:
+                 forwards: int | None = None, counter: bool = False, cpu: bool = False,
+                 last: dict | None = None) -> tuple[list[str], list[str], bool]:
     """The "Tática" step (owner, 2026-10-28, D-073; THEORY.md 2 and 21): the instructions, the sliders and the tackling
     set in the game against the rule for the formation that is set. Returns (warnings, notes, known): a warning per
     field out of the rule, "Pressão: 45, devia ser 60–80 (~75)"; notes with what the formation the "Onze" step asks for
@@ -417,6 +418,12 @@ def tactic_check(tactic: dict | None, strictness: int | None, mine: float | None
     if accepted and style is not None and style not in accepted:
         wanted = " ou ".join(TACKLING[s] for s in sorted(accepted))
         warnings.append(f"Desarme: {TACKLING.get(style, style)}, devia ser {wanted} (árbitro {REFEREES[strictness]})")
+    if rule and not cpu and last and same_as(tactic, last):  # owner, 2026-11-03: do not be predictable (THEORY.md 2)
+        change = varied(rule, last)
+        if change:
+            names = {key: (label, n) for label, key, _, n in FIELDS}
+            notes.append("Contra humano, igual ao último jogo: varia dentro da regra")
+            notes += [f"{names[k][0]}: {v if names[k][1] is None else names[k][1].get(v, v)}" for k, v in change.items()]
     other = _suggested(tactic, players, mine, opponent, away, spare)
     if other and (better := instructions(other[1], other[2], **context)):
         notes.append(f"Se mudares para {other[0]}:")

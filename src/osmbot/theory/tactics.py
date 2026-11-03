@@ -33,6 +33,12 @@ class Tackling(str, Enum):
 HOME_PCT = 5  # [S] home advantage measured in 272 matches (THEORY.md section 1); the pitch's own share is unknown
 
 
+def pitch_pct(level: int | None) -> float:
+    """The home advantage of a stadium's pitch (DISCOVERY.md section 3: levels 0-3 give +0/2/4/6 %); unknown: the
+    measured average ``HOME_PCT`` (owner, 2026-11-03)."""
+    return 2 * level if isinstance(level, int) and 0 <= level <= 3 else HOME_PCT
+
+
 def match_strength(rating: float, *, boost_pct: float = 0, home: bool = False, home_pct: float = HOME_PCT) -> float:
     """The strength that counts for the formation (THEORY.md section 1, owner 2026-10-14): the team rating plus the
     game's match boosts (daily logins, camp, secret training; added up as the game shows them), times the home
@@ -145,6 +151,37 @@ def instructions(formation: int, detail: str | None, *, away: bool = False, clea
         return Instructions(of(LONG_BALL), of(DEEP), of(HELP_DEFENCE), of(ATTACK_ONLY), of(True), of(False),
                             Band(80, 100, 85), high, high)
     return None
+
+
+VARY_BY = 10  # owner, 2026-11-03 (option b): against a human, each slider ~10 away from the last match, inside its band
+SLIDERS = (("pressing", "pressing"), ("mentality", "mentality"), ("tempo", "tempo"))
+
+
+def varied(rule: Instructions, last: dict) -> dict:
+    """Against a human, a tactic inside the rule but unlike the last match's (owner, 2026-11-03: "não devia ser
+    previsível"; THEORY.md 2): the other style of play the rule allows, and each slider ``VARY_BY`` away from the last
+    value, inside its band. Returns the fields with their new value; empty when the rule leaves no room."""
+    out = {}
+    plans = sorted(rule.plan - {last.get("overallMatchTactics")})
+    if plans and len(rule.plan) > 1:
+        out["overallMatchTactics"] = plans[0]
+    for key, field in SLIDERS:
+        band, value = getattr(rule, field), last.get(key)
+        if not isinstance(value, int):
+            continue
+        down, up = value - VARY_BY, value + VARY_BY
+        choice = down if down >= band.low and (value >= band.aim or up > band.high) else up if up <= band.high else None
+        if choice is not None:
+            out[key] = choice
+    return out
+
+
+def same_as(tactic: dict, last: dict, close: int = VARY_BY // 2) -> bool:
+    """The tactic set now is the last match's again: same formation and style of play, every slider within ``close``."""
+    if (tactic.get("formation"), tactic.get("formationDetail"), tactic.get("overallMatchTactics")) !=             (last.get("formation"), last.get("formationDetail"), last.get("overallMatchTactics")):
+        return False
+    return all(isinstance(tactic.get(k), int) and isinstance(last.get(k), int) and abs(tactic[k] - last[k]) <= close
+               for k, _ in SLIDERS)
 
 
 def defensive(starters: list[dict]) -> bool:

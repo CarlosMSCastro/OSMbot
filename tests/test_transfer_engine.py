@@ -226,12 +226,13 @@ def test_the_decisive_match_reminder():
     boosts = [{"name": "estágio", "on": False, "blocked": ""}, {"name": "treino secreto", "on": True, "blocked": ""}]
     match = {"opponent": "Sabah", "human": True, "cup": True, "danger": False, "strength": 104, "match": (107, 109)}
     assert decisive_match(match, boosts, 107) == "Jogo decisivo contra Sabah (força 107 × 104): falta estágio"
-    assert decisive_match({**match, "human": False}, boosts, 107) is None  # the CPU
-    assert decisive_match({**match, "cup": False}, boosts, 107) is None  # a normal match
+    assert decisive_match({**match, "human": False}, boosts, 107)  # owner, 2026-11-03: a stronger CPU in the cup too
+    assert decisive_match({**match, "match": (112, 104)}, boosts, 107) is None  # the cup, but he is weaker
     assert decisive_match(match, [{**b, "on": True} for b in boosts], 107) is None  # all marked
-    stronger = {**match, "match": (112, 104)}  # owner, 2026-11-02: not always
-    assert decisive_match(stronger, boosts, 107) is None
-    assert decisive_match({**stronger, "boosted": True}, boosts, 107)  # his camp or secret training is known
+    league = {**match, "cup": False, "danger": True, "rank": 6, "my_rank": 5}  # owner, 2026-11-03: SV Ried, 5th v 6th
+    assert decisive_match(league, boosts, 107) is None
+    assert decisive_match({**league, "rank": 1, "my_rank": 2, "match": (120, 100)}, boosts, 107)  # 2nd v 1st
+    assert decisive_match({**league, "boosted": True}, boosts, 107)  # his camp or secret training is known
 
 
 def test_the_empty_places_of_the_eleven_are_warned_with_the_position_the_formation_wants():

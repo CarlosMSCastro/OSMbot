@@ -4,6 +4,17 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-PT/1.1.0/); 
 
 Este ficheiro é o **histórico de versões, para quem lê o repo**. O diário interno de cada sessão de trabalho está em [`docs/WORKLOG.md`](docs/WORKLOG.md).
 
+## [0.16.2] — 2026-11-03
+
+Menos previsível contra humanos, a casa pelo relvado de cada clube e o aviso de jogo decisivo só quando pesa.
+
+### Adicionado
+- **Variar a tática contra humanos:** com a tática igual à do último jogo, o passo "Tática" sugere outra dentro da regra: o outro estilo de jogo (ex.: passe ↔ alas) e cada barra uns 10 pontos ao lado. O analista dele deixa de ver sempre o mesmo. Só sugestão.
+
+### Alterado
+- **Vantagem de casa:** deixa de ser 5 % para todos. Conta o relvado de quem joga em casa: o teu pelo estádio (+0/2/4/6 %), o do adversário pelo relatório do analista (o desta jornada ou o último guardado). Sem nenhum, 5 %.
+- **Aviso de jogo decisivo:** só aparece quando se sabe que o adversário está reforçado (estágio ou treino secreto), em 1.º contra 2.º, ou na taça contra quem é mais forte no dia. Já não aparece só por ser um rival a 2 lugares.
+
 ## [0.16.1] — 2026-11-03
 
 Onze provável do adversário sempre com 11 e com cada jogador no seu lugar, e o médico por ordem.
