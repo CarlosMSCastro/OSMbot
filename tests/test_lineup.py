@@ -73,10 +73,22 @@ def warnings_of(tactic, strictness=3, mine=104, opponent=None, **kw):
     return tactic_check(tactic, strictness, mine, opponent, **kw)[0]
 
 
+def test_careful_only_far_stronger_against_the_computer_with_a_very_strict_referee():  # owner, 2026-11-02
+    tactic = {**OWNERS_433, "style": 1}
+    careful = "Desarme: Normal, devia ser Cuidadoso (árbitro muito rigoroso)"
+    assert careful in tactic_check(tactic, 1, 131, 100, cpu=True)[0]
+    assert not any("Desarme" in w for w in tactic_check({**tactic, "style": 0}, 1, 131, 100, cpu=True)[0])
+    assert not any("Desarme" in w for w in tactic_check(tactic, 1, 130, 100, cpu=True)[0])  # not more than 30 %
+    assert not any("Desarme" in w for w in tactic_check(tactic, 1, 131, 100)[0])  # a human
+    assert not any("Desarme" in w for w in tactic_check(tactic, 2, 131, 100, cpu=True)[0])  # only very strict
+
+
 def test_the_tackling_must_match_the_next_referee():  # in the "Tática" step since D-073
     tactic = {**OWNERS_433, "style": 1}
     assert warnings_of(tactic) == ["Desarme: Normal, devia ser Agressivo (árbitro normal)"]
     assert warnings_of(tactic, 1) == []  # very strict: Normal
+    assert warnings_of(tactic, 2) == []  # strict: Normal since the red cards (owner, 2026-11-02)
+    assert warnings_of({**tactic, "style": 2}, 2) == ["Desarme: Agressivo, devia ser Normal (árbitro rigoroso)"]
     assert warnings_of({**tactic, "style": 3}, 4) == []  # lenient: Aggressive or Extreme
     assert warnings_of({**tactic, "style": 2}, 5) == []  # very lenient: Aggressive or Extreme (owner, 2026-10-14)
     assert warnings_of(tactic, 5) == ["Desarme: Normal, devia ser Agressivo ou Extremo (árbitro muito brando)"]

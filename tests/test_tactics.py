@@ -97,11 +97,18 @@ def test_defensive_forwards():
     assert not defensive([{"specificPosition": 8, "statDef": 39}, {"specificPosition": 4, "statDef": 50}])
 
 
+def test_an_opponent_on_a_secret_training_is_taken_to_have_both_boosts():  # owner, 2026-11-02
+    from osmbot.game.clubinfo import hidden_boost
+
+    assert hidden_boost({"SecretBoostPercentage": 15, "CampBoostPercentage": 15}) == 30
+    assert hidden_boost({}) == 0
+
+
 @pytest.mark.parametrize(
     "referee, expected",
     [
         (Referee.VERY_STRICT, Tackling.NORMAL),
-        (Referee.STRICT, Tackling.AGGRESSIVE),
+        (Referee.STRICT, Tackling.NORMAL),
         (Referee.NORMAL, Tackling.AGGRESSIVE),
         (Referee.LENIENT, Tackling.AGGRESSIVE),
         (Referee.VERY_LENIENT, Tackling.EXTREME),

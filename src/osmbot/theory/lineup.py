@@ -17,7 +17,8 @@ POSITION_WORDS = {1: ("um avançado", "do ataque"), 2: ("um médio", "do meio-ca
                   4: ("um guarda-redes", "da baliza")}
 TACKLING = {0: "Cuidadoso", 1: "Normal", 2: "Agressivo", 3: "Extremo"}  # the tactics' `style` (game's TacticStyleOfPlay)
 REFEREES = {1: "muito rigoroso", 2: "rigoroso", 3: "normal", 4: "brando", 5: "muito brando"}  # `strictness`
-ACCEPTED = {1: {1}, 2: {2}, 3: {2}, 4: {2, 3}, 5: {2, 3}}  # strictness -> tackling the owner accepts (sections 3, 21; very lenient: also Aggressive, 2026-10-14)
+FAR_STRONGER = 0.30  # against the CPU with a very strict referee: Careful above this edge (owner, 2026-11-02, THEORY.md 3)
+ACCEPTED = {1: {1}, 2: {1}, 3: {2}, 4: {2, 3}, 5: {2, 3}}  # strictness -> tackling the owner accepts (sections 3, 21; very lenient: also Aggressive, 2026-10-14)
 # `specificPosition` (game's PlayerSpecificPosition: 1 CAM, 2 CM, 3 CB, 4 ST, 5 CDM, 6 GK, 7 LM, 8 LF, 9 LB, 10 RM,
 # 11 RF, 12 RB) as the owner says them
 SPECIFIC = {1: "MO", 2: "MC", 3: "DC", 4: "PL", 5: "MDC", 6: "GR", 7: "ME", 8: "EE", 9: "DE", 10: "MD", 11: "ED", 12: "DD"}
@@ -378,15 +379,23 @@ def _rule(value, names: dict | None) -> str:
     return " ou ".join(names.get(c, f"código {c}") for c in sorted(value)).capitalize()
 
 
+def _tackling(strictness: int | None, mine: float | None, opponent: float | None, cpu: bool) -> set[int]:
+    """The tackling accepted for the referee (THEORY.md 3): Careful only with a very strict one, against the computer
+    and more than ``FAR_STRONGER`` stronger, where a red card can only cost (owner, 2026-11-02)."""
+    if strictness == 1 and cpu and mine and opponent and mine > opponent * (1 + FAR_STRONGER):
+        return {0}
+    return ACCEPTED.get(strictness, set())
+
+
 def tactic_check(tactic: dict | None, strictness: int | None, mine: float | None, opponent: float | None,
                  players: list[dict] | None = None, away: bool = False, spare: bool = False,
-                 forwards: int | None = None, counter: bool = False) -> tuple[list[str], list[str], bool]:
+                 forwards: int | None = None, counter: bool = False, cpu: bool = False) -> tuple[list[str], list[str], bool]:
     """The "Tática" step (owner, 2026-10-28, D-073; THEORY.md 2 and 21): the instructions, the sliders and the tackling
     set in the game against the rule for the formation that is set. Returns (warnings, notes, known): a warning per
     field out of the rule, "Pressão: 45, devia ser 60–80 (~75)"; notes with what the formation the "Onze" step asks for
     would take ("Se mudares para 5-2-3:" and a line per field); known False when section 2 has no rule for the
     formation set (the step stays grey). ``forwards``: how many his eleven has, after the analysis; ``counter``: he
-    plays counter-attack, after the analysis."""
+    plays counter-attack, after the analysis; ``cpu``: he is the computer (the tackling, ``_tackling``)."""
     if not tactic:
         return [], [], False
     starters = [p for p in players or [] if p.get("lineup") in ELEVEN]
@@ -404,8 +413,9 @@ def tactic_check(tactic: dict | None, strictness: int | None, mine: float | None
     else:
         notes.append(f"Sem regra para o {formation_name(tactic)}")
     style = tactic.get("style")
-    if strictness in ACCEPTED and style is not None and style not in ACCEPTED[strictness]:
-        wanted = " ou ".join(TACKLING[s] for s in sorted(ACCEPTED[strictness]))
+    accepted = _tackling(strictness, mine, opponent, cpu)
+    if accepted and style is not None and style not in accepted:
+        wanted = " ou ".join(TACKLING[s] for s in sorted(accepted))
         warnings.append(f"Desarme: {TACKLING.get(style, style)}, devia ser {wanted} (árbitro {REFEREES[strictness]})")
     other = _suggested(tactic, players, mine, opponent, away, spare)
     if other and (better := instructions(other[1], other[2], **context)):

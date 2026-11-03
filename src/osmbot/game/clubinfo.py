@@ -144,11 +144,18 @@ def _boost(client, path: str, key: tuple) -> int:
     return _cached(key, FIXTURES_FOR, read)
 
 
+def hidden_boost(settings: dict) -> float:
+    """What an opponent on a secret training is taken to have (owner, 2026-11-02, THEORY.md 1): the secret training and
+    the camp, which cannot be seen. [S] the camp is a guess: better than thinking ourselves 33 % stronger when 9 % weaker."""
+    return (settings.get("SecretBoostPercentage") or 0) + (settings.get("CampBoostPercentage") or 0)
+
+
 def _match_strengths(client, team: dict, league: str, teams: list[dict], week: int, upcoming: dict | None,
-                     strength: float | None, done: dict) -> tuple[float | None, float | None]:
+                     strength: float | None, done: dict, hidden: bool = False) -> tuple[float | None, float | None]:
     """Both sides' strength for the formation rule (THEORY.md section 1): team rating, match boosts (own daily logins,
     camp and secret training when marked; the opponent's daily logins once analysed and only with a human manager,
-    as the site shows them) and the home advantage (not on neutral ground)."""
+    as the site shows them, or ``hidden_boost`` when he is on a secret training) and the home advantage (not on
+    neutral ground)."""
     from osmbot.theory.tactics import match_strength
 
     if not strength or not upcoming or not upcoming.get("strength"):
@@ -161,6 +168,8 @@ def _match_strengths(client, team: dict, league: str, teams: list[dict], week: i
     user = next((t.get("userId") for t in teams if t["id"] == rival), None)
     theirs = _boost(client, f"user/dailylogin/{user}/matchboost", ("matchboost", user, week)) \
         if user and done.get(ANALYSIS_STEP) else 0
+    if hidden:
+        theirs += hidden_boost(settings)
     home = not upcoming.get("neutral")
     return (match_strength(strength, boost_pct=own, home=home and upcoming.get("side") == "H"),
             match_strength(upcoming["strength"], boost_pct=theirs, home=home and upcoming.get("side") == "A"))
@@ -251,7 +260,7 @@ def club_extra(client, team: dict, base: str, players: list[dict], slot, market:
              for (kind, _), step in zip(CHECKLIST, steps)]
     referees = _cached(("referees", league), FIXTURES_FOR, lambda: _list(client, f"{league}/referees"))
     strictness = next((r.get("strictness") for r in referees if upcoming and r["id"] == upcoming.get("referee_id")), None)
-    mine, theirs = _match_strengths(client, team, league, teams, week, upcoming, strength, done)
+    mine, theirs = _match_strengths(client, team, league, teams, week, upcoming, strength, done, hidden)
     if upcoming:  # for the reminder of a decisive match: what is known of the day (THEORY.md 21)
         upcoming["match"], upcoming["boosted"] = (mine, theirs), hidden or upcoming["camp"]
 
@@ -277,7 +286,8 @@ def club_extra(client, team: dict, base: str, players: list[dict], slot, market:
            + tactic_warnings(tactic, mine, theirs, players, away, spare),
            POSITIONS_STEP: position_warnings(players, tactic)}  # who is out of position, on the hover
     why[TACTIC_STEP], tactic_tips, known = tactic_check(tactic, strictness, mine, theirs, players, away, spare,
-                                                        (upcoming or {}).get("forwards"), bool((upcoming or {}).get("counter")))
+                                                        (upcoming or {}).get("forwards"), bool((upcoming or {}).get("counter")),
+                                                        bool(upcoming) and not upcoming.get("human"))
     steps = [(step[0], known, step[2]) if kind == TACTIC_STEP else step for (kind, _), step in zip(CHECKLIST, steps)]
     steps = [(name, False, RULE) if why.get(kind) and done_ else (name, done_, extra)
              for (kind, _), (name, done_, extra) in zip(CHECKLIST, steps)]
@@ -292,7 +302,7 @@ def club_extra(client, team: dict, base: str, players: list[dict], slot, market:
         camp = {g["name"]: g["value"] for g in _settings(client, team["leagueId"])}.get("CampBoostPercentage")
         reasons[dict(CHECKLIST)[ANALYSIS_STEP]] = ["O adversário está em treino secreto: o jogo não deixa analisar",
                                     "A força dele é estimada (onze e tática não se veem)"] + (
-            [f"Se fez estágio, tem mais {camp} % que não se vê"] if camp else [])
+            [f"Conta-se como se tivesse feito estágio (+{camp} %), suposição: não se vê"] if camp else [])
     boosts = [{"kind": key, "name": name, "on": done.get(kind, False),  # marked for the next match (owner, 2026-10-14)
                "blocked": "" if (by_type.get(kind) or {}).get("enabled", True) else by_type[kind].get("disabledText") or "?"}
               for kind, key, name in BOOSTS]

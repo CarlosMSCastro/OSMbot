@@ -9,6 +9,9 @@ Entradas mais recentes primeiro. Cada sessão: o que se fez · o que ficou por f
 - **Correção:** `451` (fechada hoje, "fica a regra") está contaminada, tal como `523fora`, `tabela` e `vs523`: comparam sobretudo humanos com CPU. Os números estão certos, a conclusão não fica provada.
 - **Por decidir pelo dono:** separar humano e CPU nas verificações semanais; rever o "adversário do amigável indiferente" (`THEORY.md` §6). **Próximo:** esta decisão; depois Outros, ponto 1.
 - **Feito no código (D-083), por empacotar:** cantos com recém-chegados; aviso de jogo decisivo só quando pesa; no campo do hover, MCO à frente e MCD atrás, com esses nomes, e losango no 4-4-2 B. Lê a `specificPosition` do jogador, por isso quem joga fora da posição não se desloca.
+- **Vermelhos medidos (`DISCOVERY.md` §3):** 12 em 41 jogos com árbitro rigoroso ou muito rigoroso, 0 em 61 com os outros. **Decidido pelo dono (D-084):** rigoroso → Normal; muito rigoroso com mais de 30 % contra o computador → Cuidadoso. Feito no aviso, por empacotar.
+- **Taça, Qarabag 2-3 Sabah (J17, humano, campo neutro):** o jogo deu 716 contra 779; a janela via 140 contra 105, porque soma os nossos bónus e não os dele (treino secreto e estágio escondidos). **Decidido pelo dono:** com o adversário em treino secreto, somam-se o treino secreto e o estágio à força dele (`THEORY.md` §1).
+- **Versão 0.15.3 (pedido do dono):** D-084 e esta correção. `pyproject.toml`, `__init__`, `CHANGELOG.md`, `README.md` (estado), `dist/release-notes-v0.15.3.md`; `build_portable.py --zip --installer` → `dist/windows/` 0.15.3; os da 0.15.2 apagados.
 - **Versão 0.15.2 (pedido do dono):** `pyproject.toml`, `__init__`, `CHANGELOG.md`, `README.md` (estado), `dist/release-notes-v0.15.2.md`; 529 testes; `build_portable.py --zip --installer` → `dist/windows/` 0.15.2 (553 / 206 / 148 MB); os da 0.15.1 apagados. Falta o dono instalar nos PCs.
 
 ## 2026-11-02 — `dist/windows` 0.15.1 (PT-LA-02-0095-N)

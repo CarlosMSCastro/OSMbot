@@ -4,6 +4,16 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-PT/1.1.0/); 
 
 Este ficheiro é o **histórico de versões, para quem lê o repo**. O diário interno de cada sessão de trabalho está em [`docs/WORKLOG.md`](docs/WORKLOG.md).
 
+## [0.15.3] — 2026-11-02
+
+Menos vermelhos com árbitros rigorosos, e a força certa contra quem está em treino secreto.
+
+### Alterado
+- **Desarme:** com árbitro rigoroso, o certo passa a ser Normal em vez de Agressivo. Com árbitro muito rigoroso continua Normal, ou Cuidadoso contra o computador com mais de 30 % de força.
+
+### Corrigido
+- **Adversário em treino secreto:** a força dele passa a contar o treino secreto e o estágio, para a comparação não dar uma vantagem que não existe. O estágio é uma suposição, e a janela diz isso.
+
 ## [0.15.2] — 2026-11-02
 
 Reforços recém-chegados nos cantos, aviso de jogo decisivo só quando pesa, e o meio-campo certo no campo.

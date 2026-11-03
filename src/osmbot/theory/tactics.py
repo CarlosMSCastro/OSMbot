@@ -156,12 +156,12 @@ def defensive(starters: list[dict]) -> bool:
 def choose_tackling(referee: Referee, *, risk_extreme: bool = False) -> Tackling:
     """Highest tackling the referee tolerates.
 
-    Very strict -> Normal; anything looser -> Aggressive; very lenient -> Extreme.
-    ``risk_extreme`` is the owner's occasional gamble: with a merely lenient
-    referee, go Extreme when he needs the win against a similar squad.
-    Careful is never used.
+    Very strict and strict -> Normal (strict: owner, 2026-11-02, the red cards); anything looser
+    -> Aggressive; very lenient -> Extreme. ``risk_extreme`` is the owner's occasional gamble:
+    with a merely lenient referee, go Extreme when he needs the win against a similar squad.
+    Careful only in ``lineup.tactic_check``: very strict, the computer, far stronger.
     """
-    if referee is Referee.VERY_STRICT:
+    if referee in (Referee.VERY_STRICT, Referee.STRICT):
         return Tackling.NORMAL
     if referee is Referee.VERY_LENIENT:
         return Tackling.EXTREME

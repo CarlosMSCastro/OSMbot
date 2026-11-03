@@ -42,7 +42,7 @@ Rotina pedida pelo dono (2026-10-28): ver de tempos a tempos se alguma regra do 
 | 4-4-2 B / 3 defesas quando falta um lado (D-072): pontos por jogo | `jogos/` |
 | 4-4-2 B do autor contra contra-ataque (D-079): pontos por jogo, quando houver jogos | `jogos/` |
 | 4 amigáveis por jogo e o ganho de cada um (§6) | `amigaveis/` |
-| Desarme pelo árbitro (§3): cartões e resultado por rigor | `jogos/` |
+| Desarme pelo árbitro (§3, D-084): vermelhos e pontos por jogo em Normal com árbitro rigoroso, contra os 6 vermelhos em 15 jogos em Agressivo; Cuidadoso com árbitro muito rigoroso | `jogos/` |
 | 4-3-3 contra contra-ataque e o que resulta contra cada estilo, na liga toda (com os relatórios do analista) | `analista/` + `jogos/` |
 | In Form: bom negócio? (preço face ao valor, rapidez de venda; o bónus desaparece depois da compra?) (OSMPro Atualizações 2) | `transferencias/` (`raridade`, desde a versão a seguir à 0.14.8) + `jogos/` |
 | Trainingcamp Terror: o ganho cresce a cada amigável? (§6; só quando o evento aparecer) | `amigaveis/` |

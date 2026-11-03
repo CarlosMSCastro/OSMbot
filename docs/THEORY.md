@@ -37,7 +37,7 @@ Implementado em `choose_formation(my_rating, opp_rating, *, stronger_pct=0)`: ad
 - **Sem MCO nem MCD em forma** (raro: o dono costuma ter um dos dois): o bot avisa e sugere arranjar um: **mercado** (SALE da posição, §7.6), **olheiro**, ou a carta **"mudar posição"** do inventário (troca de posição universal, §7). **Só sugestão:** comprar, mandar o olheiro e usar itens são escritas (regra 5). Até lá pede uma formação **só com MC no meio** (dono, 2026-10-29): **1.º o 5-2-3 A** (2 MC; se houver as 5 defesas como abaixo e EE e ED em forma; tier A do autor, instruções no §2); **senão o 4-2-4** (2 MC; sem instruções nem dados nossos, o autor "não recomendo em situação alguma", barras [S] no §2).
 - **5 defesas** (contra um adversário mais forte, §1): só se pedem com **pelo menos 7 defesas no plantel** (5 titulares + 2 no banco) e, desses, **5 em forma nas posições certas: 3 DC, 1 DE e 1 DD**; os cansados ou a poupar podem ficar no banco (dono, 2026-10-29). Com menos, ficam as formações de 4 ou 3 defesas que o plantel consegue jogar, com a nota "Sem 5 defesas contra um mais forte: …". Entre as 5 defesas, só se pede a que tem os outros lugares cobertos (p. ex. o 5-2-3 precisa de EE e ED em forma; o 5-3-2 de um MCO). **[S]** Claramente mais forte sem poder jogar o 5-2-3: serve qualquer 5 defesas que o plantel consiga jogar (nota "5-4-1 aceite: sem EE em forma (…)").
 
-**"Mais forte" conta os bónus do jogo e a casa (dono, 2026-10-14; `match_strength`):** força = rating da equipa × (1 + bónus %) × 1,05 para quem joga em casa.
+**"Mais forte" conta os bónus do jogo e a casa (dono, 2026-10-14; `match_strength`):** força = rating da equipa × (1 + bónus %) × 1,05 para quem joga em casa. **Adversário em treino secreto (dono, 2026-11-02):** somam-se-lhe o treino secreto e o estágio. **[S]** O estágio não se vê e pode não existir; a janela diz que é suposição. Porquê: taça de 2026-11-02, a janela via 140 contra 105 e o jogo deu 716 contra 779.
 - **Bónus:** os de cada lado somam-se, como o jogo os mostra no círculo ao lado do emblema ("+3 %"). Do dono: sequência de logins (`matchBoost`) + estágio (`CampBoostPercentage`, 25 %) e treino secreto (`SecretBoostPercentage`, 2 %) quando marcados. Do adversário: só os logins, depois da análise e só com treinador humano (como o site); o estágio e o treino secreto dele não se veem.
 - **Quanto vale o estágio (dono, 2026-10-24; fechada a 2026-10-25: "não muda nada a nossa teoria").** O dono estranhou que o estágio desse 4-3-3 A fora contra o 1.º com o plantel muito mais forte. Os registos (`DISCOVERY.md` §3, 12 jogos) mostram que o estágio ajuda (8 V, 3 E, 1 D), mas não chegam para dizer quanto: não provam os 25 % e a força do jogo não o inclui. A regra fica como está (o código soma os 25 %) até haver mais jogos com estágio só de um lado; o dono decide a formação nesses jogos.
 - **Onze do adversário com um buraco (dono, 2026-10-24):** depois da análise, se o adversário tem **menos de 11 titulares** (um lugar vazio), a força dele é a dos **seus melhores num 4-3-3**, como antes da análise no §16 (pode preencher o lugar antes do jogo). Antes, o buraco fazia o bot tratá-lo como "sem análise" e pedir o 4-3-3 A contra um clube muito mais forte.
@@ -105,15 +105,17 @@ Desarme: *Cuidadoso · Normal · Agressivo · Extremo*.
 
 | Árbitro | Desarme |
 |---|---|
-| Muito Rigoroso | Normal |
-| Rigoroso, Normal, Brando | Agressivo *(regra base; ver "Contexto" abaixo)* |
+| Muito Rigoroso | Normal; **Cuidadoso** contra o computador com mais de 30 % de força |
+| Rigoroso | Normal *(dono, 2026-11-02: era Agressivo)* |
+| Normal, Brando | Agressivo *(regra base; ver "Contexto" abaixo)* |
 | Muito Brando | Extremo |
 
 - **Aposta do dono:** com árbitro **Brando**, às vezes arrisca **Extremo** quando **precisa de ganhar** e os plantéis são parecidos. A agressividade parece ajudar a equipa a jogar melhor, mas é um risco. Implementado como `risk_extreme=True`, decidido por quem chama.
 - **Contexto (2.ª ronda):** a tabela acima é só a regra base. Num **jogo tranquilo na véspera de um jogo duro**, o dono **não arrisca levar vermelhos** (fica abaixo do máximo). Num **jogo difícil**, talvez use Agressivo. Ou seja, a escolha real depende do jogo seguinte e da dificuldade, não só do árbitro. `choose_tackling` só implementa a regra base; o dono gere isto sozinho.
-- *Cuidadoso* nunca é usado.
+- *Cuidadoso* só no caso da tabela (dono, 2026-11-02): com essa vantagem ganha-se quase sempre, e um vermelho só pode custar. **[S]** Os 30 % e a amostra (0 vermelhos em 9 jogos) são curtos.
+- **Porquê (dono, 2026-11-02):** 12 vermelhos em 41 jogos com árbitros rigorosos, 0 em 61 com os outros, e nenhum ganho visível do Agressivo sobre o Normal (`DISCOVERY.md` §3). **A medir:** verificação por acrescentar em `VERIFICACAO.md`.
 - **No jogo (verificado no código do site, 2026-10-13):** o desarme é o campo `style` da tática (0 Cuidadoso, 1 Normal, 2 Agressivo, 3 Extremo); o árbitro do próximo jogo já vem no calendário (`refereeId`) com o seu `strictness` (1 muito rigoroso … 5 muito brando, `DISCOVERY.md`).
-- **O que o aviso aceita como certo** (dono, 2026-10-13, §21): muito rigoroso → Normal; rigoroso e normal → Agressivo; brando e muito brando → Agressivo **ou** Extremo (muito brando: dono, 2026-10-14, "pode ser agressivo, não precisa ser extremo"; antes só Extremo).
+- **O que o aviso aceita como certo** (dono, 2026-10-13, §21): muito rigoroso → Normal (Cuidadoso no caso da tabela; aí o Normal fica a amarelo); rigoroso → Normal (2026-11-02); normal → Agressivo; brando e muito brando → Agressivo **ou** Extremo (muito brando: dono, 2026-10-14, "pode ser agressivo, não precisa ser extremo"; antes só Extremo).
 
 ## 4. Especialistas (só entre os **titulares**)
 
