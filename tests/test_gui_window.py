@@ -235,6 +235,24 @@ def test_hovers_have_the_first_line_as_a_title_and_one_line_stays_plain():
     assert "Fora da regra</div>" in tip_html([(None, "Akanni 51 entra antes de Ndicka 107", None)], "Fora da regra")
 
 
+def test_a_hovers_title_is_on_its_own_line_as_qt_draws_it():
+    from PySide6.QtGui import QTextDocument
+
+    from osmbot.gui.window import tip_html, tip_text
+
+    QApplication.instance() or QApplication([])
+
+    def drawn(html: str) -> list[str]:
+        document = QTextDocument()
+        document.setHtml(html)
+        return document.toPlainText().split("\n")
+
+    # owner, 2026-11-03: "AdvogadoAlexander-Arnold" in the lawyer's ring
+    assert drawn(tip_text("Advogado\nNome\n1 jogo · não dá")) == ["Advogado", "Nome", "1 jogo · não dá"]
+    assert drawn(tip_text("Vendas\n\nX")) == ["Vendas", "", "X"]
+    assert drawn(tip_html([(None, "a", None)], "Título"))[:2] == ["Título", "a"]
+
+
 def test_the_right_column_opens_from_the_tab_over_the_clubs_and_can_be_pinned(window):
     from osmbot.gui.window import BOARD
     from osmbot.i18n import get_pref

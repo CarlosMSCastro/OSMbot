@@ -1,1 +1,3 @@
 {"t":1793534148,"evento":"pôr","tipo":"lawyer","clube":"leagues/222034673/teams/3","semana":12,"jogador":975890492,"nome":"S. Gómez","antes":{"fora":2,"lesao":0,"suspensao":26}}
+{"t":1793715337,"evento":"levantar","tipo":"doctor","clube":"leagues/248015013/teams/8","semana":17,"caso":11082641,"jogador":877246514,"nome":"Andersen","antes":{"fora":3,"lesao":15,"suspensao":0},"depois":{"fora":2,"lesao":15,"suspensao":0}}
+{"t":1793715339,"evento":"pôr","tipo":"doctor","clube":"leagues/248015013/teams/8","semana":17,"jogador":877246514,"nome":"Andersen","antes":{"fora":3,"lesao":15,"suspensao":0}}

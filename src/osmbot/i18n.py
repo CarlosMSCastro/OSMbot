@@ -137,7 +137,7 @@ WORDS = {
     # what the bot is doing
     "à espera": "waiting", "por levantar": "to collect", "acaba em": "ends in", "não dá": "not allowed", "estádio": "stadium", "ler o jogo": "reading the game", "médico e advogado": "doctor and lawyer", "inventário": "inventory", "Treinador universal": "Universal trainer", "livre": "free", "Treino secreto": "Secret training", "Estágio": "Training camp", "Marcado para o próximo jogo": "Booked for the next match", "Não marcado": "Not booked", "Sem jogo nesta jornada": "No match this round",
     "patrocinadores": "sponsors", "pré-jogo": "pre-match", "recolher e pôr treinos": "collecting and starting trainings",
-    "recompensas": "rewards", "poupança": "savings",
+    "recompensas": "rewards", "poupança": "savings", "relistar": "relisting", "troca": "sub",
 }
 
 _PART = {"campo": "pitch", "treinos": "training", "capacidade": "capacity"}
@@ -194,6 +194,18 @@ _ROLE = {"Capitão": "Captain", "Penáltis": "Penalties", "Livres": "Free kicks"
 _SIDE = {"CASA": "HOME", "FORA": "AWAY", "NEUTRO": "NEUTRAL"}
 _CUP_SHORT = {"pré-elim.": "prelim.", "32 avos": "R64", "16 avos": "R32", "oitavos": "R16", "quartos": "QF", "meias": "SF"}
 PATTERNS = [(re.compile(pattern), replace) for pattern, replace in (
+    # relisting (D-085): before the generic "à venda há" line
+    (r"(Relistado|Relistaria): (.+) \((.+)\) de (.+) para (.+) \(\+(\d+)%\)(?:, estava à venda há (.+))?$",
+     lambda m: f"{'Relisted' if m[1] == 'Relistado' else 'Would relist'}: {m[2]} ({m[3]}) from {m[4]} to {m[5]} (+{m[6]}%)"
+               + (f", listed for {_days(m[7])}" if m[7] else "")),
+    (r"! Relistar: (.+) \((.+)\) saiu da lista e o jogo não o deixou voltar \((\d+)\); pô-lo à venda à mão",
+     lambda m: f"! Relisting: {m[1]} ({m[2]}) came off the list and the game would not take him back ({m[3]}); list him by hand"),
+    (r"! Relistar: o jogo recusou tirar (.+) \((.+), (\d+)\); volto a tentar amanhã",
+     lambda m: f"! Relisting: the game refused to take off {m[1]} ({m[2]}, {m[3]}); trying again tomorrow"),
+    (r"Relistar: (.+) \((.+)\) não saiu da lista \((\d+)\); volto a tentar",
+     lambda m: f"Relisting: {m[1]} ({m[2]}) did not come off the list ({m[3]}); trying again"),
+    (r"Relistar: (\d+) falha\(s\); volto a tentar", lambda m: f"Relisting: {m[1]} failure(s); trying again"),
+    (r"Relistar: erro \((.+)\); volto a tentar", lambda m: f"Relisting: error ({m[1]}); trying again"),
     # pre-match warnings (THEORY.md section 21)
     (r"^(.+) (\d+) entra antes de (.+) (\d+)$", lambda m: f"{m[1]} {m[2]} comes on before {m[3]} {m[4]}"),
     (r"^(.+) (\d+) no banco, (.+) (\d+) a jogar$", lambda m: f"{m[1]} {m[2]} on the bench, {m[3]} {m[4]} playing"),
@@ -263,6 +275,10 @@ PATTERNS = [(re.compile(pattern), replace) for pattern, replace in (
     (r"(\d+) jogos? · à espera", lambda m: f"{m[1]} game{'s' if m[1] != '1' else ''} · waiting"),
     (r"⚠ Moral baixa: (.+)", lambda m: f"⚠ Low morale: {m[1]}"),
     (r"^([\d-]+) · média (\d+)$", lambda m: f"{m[1]} · average {m[2]}"),
+    (r"^Onze dele · ([\d-]+) · média (\d+)$", lambda m: f"His eleven · {m[1]} · average {m[2]}"),
+    (r"^Provável: J(\d+)(?: \((.+) poupou\))? · ([\d-]+) · média (\d+)(?: · falta (\d+))?$",
+     lambda m: f"Likely: R{m[1]}" + (f" ({m[2].replace('J', 'R')} rested)" if m[2] else "") + f" · {m[3]} · average {m[4]}"
+               + (f" · {m[5]} missing" if m[5] else "")),
     (r"^(\d+) M parados a (\d+) jornadas do fim: (.+) por (\d+) M reforça (.+)$",
      lambda m: f"{m[1]} M idle with {m[2]} rounds left: {m[3]} for {m[4]} M upgrades {m[5]}"),
     (r"^Jogo decisivo contra (.+?)( \(força .+\))?: falta (.+)$",

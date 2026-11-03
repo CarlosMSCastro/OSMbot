@@ -4,6 +4,22 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-PT/1.1.0/); 
 
 Este ficheiro é o **histórico de versões, para quem lê o repo**. O diário interno de cada sessão de trabalho está em [`docs/WORKLOG.md`](docs/WORKLOG.md).
 
+## [0.16.0] — 2026-11-03
+
+Os jogadores que sobem de preço à venda voltam à lista ao preço novo, e o onze provável do adversário no círculo da força.
+
+### Adicionado
+- **Relistar ao preço novo:** quando um jogador à venda sobe de valor e o preço certo (o máximo, ou 75 % dele acima de 150 M) fica pelo menos 2 % acima do anúncio, o bot tira-o da lista e põe-no de novo a esse preço. É de graça. Se o jogo não o deixar voltar à lista, o registo avisa para o pores à venda à mão.
+- **Onze do adversário no campo:** ao passar o rato no círculo da força do adversário aparece o onze dele no campo: antes da análise, o provável (o do último jogo, ou de um anterior se nesse poupou jogadores; quem saiu ou está fora é trocado pelo melhor livre na posição, marcado "troca"); depois da análise, o real.
+
+### Alterado
+- **Força do adversário antes da análise:** passa a ser a média do onze provável, igual à do campo. Os melhores dele num 4-3-3 ficam só para quando ainda não há jogos.
+- **Aviso "à venda há muito tempo":** só com mais do triplo do tempo normal para o preço e pelo menos 24 h na lista (antes, o dobro, que apanhava 1 em cada 5 vendas normais).
+
+### Corrigido
+- **Balões:** o título já não se cola à primeira linha (ex.: "AdvogadoNome").
+- **Campo:** dois médios ao centro, um à frente do outro (como num 4-2-4), ficam lado a lado em vez de um por cima do outro.
+
 ## [0.15.3] — 2026-11-02
 
 Menos vermelhos com árbitros rigorosos, e a força certa contra quem está em treino secreto.

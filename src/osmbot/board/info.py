@@ -213,7 +213,8 @@ def purchases(new_members: list[int], transfers: list[dict], team_id: int) -> li
 
 
 SALE_BANDS = (5e6, 15e6, 50e6, 100e6)  # the price bands of the "parado na lista" warning (THEORY.md 7.5)
-STALE_FACTOR = 2  # warned past twice the band's median time
+STALE_FACTOR = 3  # warned past three times the band's median time (owner, 2026-11-03; was 2)
+STALE_MIN_FOR = 24 * 3600  # ... and never before 24 h on the list (a 5 h median would warn at 15 h)
 STALE_MIN_SALES = 3  # a band with fewer sales does not warn
 
 
@@ -222,7 +223,8 @@ def _band(price: float) -> int:
 
 
 def stale_listings(listed: dict[int, dict], history: list[tuple[float, float]], now: float) -> list[dict]:
-    """The owner's players on the list for more than twice the usual time at their price (owner, 2026-10-22).
+    """The owner's players on the list for more than three times the usual time at their price and at least 24 h
+    (owner, 2026-10-22; 2026-11-03).
     ``listed``: {player id: {"name", "price", "since"}}; ``history``: (price, seconds it took) of the sales logged.
     Returns [{"name", "for", "normal"}] (seconds), longest first."""
     times: dict[int, list[float]] = {}
@@ -235,7 +237,7 @@ def stale_listings(listed: dict[int, dict], history: list[tuple[float, float]], 
             continue
         half = len(took) // 2
         normal = took[half] if len(took) % 2 else (took[half - 1] + took[half]) / 2
-        if now - item["since"] > STALE_FACTOR * normal:
+        if now - item["since"] > max(STALE_FACTOR * normal, STALE_MIN_FOR):
             stale.append({"name": item.get("name", "?"), "for": now - item["since"], "normal": normal})
     return sorted(stale, key=lambda s: -s["for"])
 
@@ -287,6 +289,83 @@ def opponent_rating(players: list[dict], guess: int) -> int | None:
     see, owner 2026-10-25: his squad already says he is stronger) or with a hole in it (a player sold, injured or not
     yet put back, owner 2026-10-24), an estimate: his best in the ``guess`` formation (THEORY.md section 1)."""
     return team_rating(players) if eleven_seen(players) else team_rating(players, guess)
+
+
+LIKELY_LOOKBACK = 5  # the opponent's last official matches looked at for his likely eleven (owner, 2026-11-03)
+RESTED_BELOW = 0.95  # an eleven more than 5 % below the best of them was resting players (owner, 2026-11-03)
+_POSITION_ORDER = (4, 3, 2, 1)  # GR, DEF, MED, ATA: the order of the game's lineup numbers
+
+
+def _formation_shape(formation) -> dict[int, int] | None:
+    digits = [int(d) for d in re.findall(r"\d", str(formation or ""))[:3]]
+    return {4: 1, 3: digits[0], 2: digits[1], 1: digits[2]} if len(digits) == 3 and sum(digits) == 10 else None
+
+
+def _filled_eleven(rows: list[dict], squad: dict[int, dict], formation) -> list[dict]:
+    """One match's starters as they would play now: a starter who left the club or is out (injured, suspended) is
+    replaced by the club's best free player for the place, marked ``sub``. The place of one who left comes from the
+    match's formation (the game does not keep his position)."""
+    rows = sorted(rows, key=lambda r: r.get("lineup") or 0)
+    eleven, open_numbers = [], []
+    for row in rows:
+        player = squad.get(row.get("playerId"))
+        if player and not player.get("unavailable"):
+            eleven.append({**player, "lineup": row["lineup"], "sub": False})
+        else:
+            open_numbers.append((row["lineup"], player.get("position") if player else None))
+    numbers = {row.get("lineup") for row in rows}  # a starter the game kept no row for (seen 2026-11-03): a gap too
+    open_numbers = sorted(open_numbers + [(n, None) for n in range(1, ELEVEN + 1) if n not in numbers])
+    shape = _formation_shape(formation)
+    taken = {p["id"] for p in eleven}
+    needed = []
+    for number, position in open_numbers:  # his own place when he is still at the club (injured), else the formation's
+        if position is None and shape:
+            have = {pos: sum(1 for p in eleven if p.get("position") == pos) + needed.count(pos) for pos in shape}
+            position = next((pos for pos in _POSITION_ORDER if have[pos] < shape[pos]), None)
+        if position is not None:
+            needed.append(position)
+            free = sorted((p for p in squad.values() if p.get("position") == position and p["id"] not in taken
+                           and not p.get("unavailable")), key=rating_of, reverse=True)
+            if free:
+                taken.add(free[0]["id"])
+                eleven.append({**free[0], "lineup": number, "sub": True})
+    return sorted(eleven, key=lambda p: p["lineup"])
+
+
+def rating_of(player: dict) -> int:
+    return player.get(MAIN_STAT.get(player.get("position"), "statOvr")) or 0
+
+
+def likely_eleven(squad: list[dict], grades: list[dict], matches: list[dict], team_id: int) -> dict | None:
+    """Another club's likely eleven before the analysis (owner, 2026-11-03; THEORY.md section 1): the starters of
+    his last official match, unless they were more than 5 % below the best eleven of his last 5 (he was resting
+    players, maybe for us): then the match before, and so on. Starters who left or are out are replaced
+    (``_filled_eleven``). ``grades``: his ``playergrades`` rows (``lineup`` 1–11 = starter); ``matches``: the
+    league's ``matches/filter``. Returns {"week", "skipped" (weeks passed over), "players", "average"} or None."""
+    by_id = {p["id"]: p for p in squad}
+    official = {}
+    for match in matches:
+        if team_id in (match.get("homeTeamId"), match.get("awayTeamId")) and match.get("matchData"):
+            side = "home" if match["homeTeamId"] == team_id else "away"
+            official[match["weekNr"]] = match["matchData"].get(f"{side}Formation")
+    starters: dict[int, list[dict]] = {}
+    for row in grades:
+        if 1 <= (row.get("lineup") or 0) <= ELEVEN and row.get("weekNr") in official:
+            starters.setdefault(row["weekNr"], []).append(row)
+    elevens = []
+    for week in sorted(starters, reverse=True)[:LIKELY_LOOKBACK]:
+        players = _filled_eleven(starters[week], by_id, official[week])
+        if players:
+            elevens.append((week, players, sum(map(rating_of, players)) / len(players)))
+    if not elevens:
+        return None
+    best = max(average for _, _, average in elevens)
+    skipped = []
+    for week, players, average in elevens:  # newest first
+        if average >= RESTED_BELOW * best:
+            return {"week": week, "skipped": skipped, "players": players, "average": average}
+        skipped.append(week)
+    return None  # not reached: the best one always passes
 
 
 def league_summary(standings: list[dict], teams: list[dict], matches: list[dict], team_id: int, week: int,

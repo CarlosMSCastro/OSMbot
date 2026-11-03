@@ -720,7 +720,7 @@ def tip_text(text: str) -> str:
     if len(lines) < 2:
         return escape(text or "")
     body = "<br>".join(f"<span style='color:#c9ccef'>{escape(line)}</span>" if line else "" for line in lines[1:])
-    return TIP_TITLE.format(escape(lines[0])) + body
+    return TIP_TITLE.format(escape(lines[0])) + f"<div>{body}</div>"  # in its own block: Qt glued loose text to the title
 
 
 def tip_html(rows: list[tuple[str | None, str, str | None]], title: str | None = None) -> str:
@@ -1286,7 +1286,8 @@ class Pitch(QWidget):
         painter.setFont(font)
         tired = player.get("fitness") is not None
         painter.setPen(QColor(COLOURS[YELLOW]) if tired else QColor(255, 255, 255, 170))
-        painter.drawText(below.translated(0, 13), Qt.AlignCenter, player["place"] + (f" · {player['fitness']}%" if tired else ""))
+        painter.drawText(below.translated(0, 13), Qt.AlignCenter, player["place"] + (f" · {tr('troca')}" if player.get("sub") else "")
+                         + (f" · {player['fitness']}%" if tired else ""))
 
     def paintEvent(self, _event) -> None:
         if not self.view:
@@ -1447,6 +1448,7 @@ class MatchStripe(QFrame):
         self.warn.setVisible(bool(match["danger"]))
         self.text.setText(tr(match["text"]))
         self.value.show_value(match.get("value"))
+        self.value.show_eleven(match.get("eleven"))
         self.text.setToolTip(tip_pairs(match.get("tip")))
         self.left.setText(f"{tr('em')} <b style='font-size:15pt'>{match['left']}</b>" if match["left"] else "")
 

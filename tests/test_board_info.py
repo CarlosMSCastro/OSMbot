@@ -175,14 +175,16 @@ def test_a_sale_says_the_profit_since_the_purchase():
     assert describe("Clube", state)[0].endswith("demorou 1h00; lucro +8 M em 1 dia e 1h00")
 
 
-def test_a_player_on_the_list_twice_the_usual_time_for_his_price_is_warned():
+def test_a_player_on_the_list_three_times_the_usual_time_and_a_day_is_warned():
     from osmbot.board.info import sale_time, stale_listings
 
     hour = 3600
     history = [(3e6, 4 * hour), (4e6, 5 * hour), (2e6, 6 * hour), (70e6, 40 * hour), (80e6, 50 * hour)]
     listed = {1: {"name": "Barato", "price": 3e6, "since": 0}, 2: {"name": "Novo", "price": 4e6, "since": 9 * hour},
               3: {"name": "Caro", "price": 90e6, "since": 0}, 4: {"name": "Sem hora", "price": 1e6, "since": None}}
-    assert stale_listings(listed, history, now=11 * hour) == [{"name": "Barato", "for": 11 * hour, "normal": 5 * hour}]
+    assert stale_listings(listed, history, now=25 * hour) == [{"name": "Barato", "for": 25 * hour, "normal": 5 * hour}]
+    # "Novo": 16 h on the list, past 3 x 5 h but not yet 24 h; at 14 h "Barato" is under 3 x 5 h
+    assert stale_listings(listed, history, now=14 * hour) == []
     # the 50-100 M band has only 2 sales: no warning there yet
     line = "2026-10-17 19:24:06  Venda: Chalobah (FC Van) vendido por 91,26 M (75% do máximo ≈ 121,04 M); " \
            "à venda desde 16/10 11:59, vendido às 17/10 19:23, demorou 1 dia e 7h24; lucro +30 M em 2 dias e 0h10"
@@ -218,3 +220,57 @@ def test_season_fixtures_go_by_round_with_the_cup_the_rests_and_the_scores():
     assert (season[0]["score"], season[0]["result"], season[0]["logo"], season[0]["key"]) == ("2-1", "W", "n", "b")
     assert (season[1]["score"], season[1]["result"], season[1]["cup"], season[1]["side"]) == ("1-1", "L", "final", "A")
     assert season[3]["next"] and "score" not in season[3]
+
+
+def _club(base: int, ratings: dict[int, list[int]]) -> list[dict]:
+    """A squad: per position (4 GR, 3 DEF, 2 MED, 1 ATA) players with these main ratings, ids from ``base``."""
+    stat = {1: "statAtt", 2: "statOvr", 3: "statDef", 4: "statDef"}
+    squad, pid = [], base
+    for pos, values in ratings.items():
+        for value in values:
+            squad.append({"id": pid, "name": f"P{pid}", "position": pos, stat[pos]: value})
+            pid += 1
+    return squad
+
+
+def _grades(week: int, ids: list[int]) -> list[dict]:
+    return [{"weekNr": week, "playerId": pid, "lineup": n} for n, pid in enumerate(ids, 1)]
+
+
+def test_the_likely_eleven_is_the_last_match_unless_he_was_resting_players():
+    from osmbot.board.info import likely_eleven
+
+    # 1 GR, 5 DEF, 5 MED, 4 ATA: the first of each (100) are his best, the rest 60
+    squad = _club(1, {4: [100], 3: [100, 100, 100, 100, 60], 2: [100, 100, 100, 60, 60], 1: [100, 100, 100, 60]})
+    best = [1, 2, 3, 4, 5, 7, 8, 9, 12, 13, 14]  # a 4-3-3 of the 100s
+    rested = [1, 2, 3, 6, 5, 10, 11, 9, 15, 13, 14]  # 4 of them out: average ~85 against 100
+    matches = [{"homeTeamId": 7, "awayTeamId": 8, "weekNr": w, "matchData": {"homeFormation": 433}} for w in (1, 2)]
+    grades = _grades(1, best) + _grades(2, rested)
+    likely = likely_eleven(squad, grades, matches, 7)
+    assert likely["week"] == 1 and likely["skipped"] == [2] and likely["average"] == 100
+    assert [p["id"] for p in likely["players"]] == best
+    # a friendly (no official match that week) does not count
+    assert likely_eleven(squad, _grades(3, rested), matches, 7) is None
+
+
+def test_a_starter_who_left_or_is_out_gives_his_place_to_the_best_free_one():
+    from osmbot.board.info import likely_eleven
+
+    squad = _club(1, {4: [90], 3: [90, 90, 90, 90, 70], 2: [90, 90, 90, 80], 1: [90, 90, 90]})
+    squad[1]["unavailable"] = 2  # a defender injured
+    eleven = [1, 2, 3, 4, 5, 7, 8, 99, 11, 12, 13]  # 99 (a midfielder) was sold
+    matches = [{"homeTeamId": 8, "awayTeamId": 7, "weekNr": 4, "matchData": {"awayFormation": "433"}}]
+    likely = likely_eleven(squad, _grades(4, eleven), matches, 7)
+    subs = {p["lineup"]: p["id"] for p in likely["players"] if p["sub"]}
+    assert subs == {2: 6, 8: 9}  # the 70 defender for the injured one, the free 90 midfielder for the one sold
+    assert len(likely["players"]) == 11 and 2 not in {p["id"] for p in likely["players"]}
+
+
+def test_a_starter_with_no_row_is_filled_by_the_formation():
+    from osmbot.board.info import likely_eleven
+
+    squad = _club(1, {4: [90], 3: [90, 90, 90, 90], 2: [90, 90, 90, 90, 90, 70], 1: [90, 90]})
+    rows = [r for r in _grades(5, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12]) if r["lineup"] != 6]  # no row for no. 6
+    matches = [{"homeTeamId": 7, "awayTeamId": 8, "weekNr": 5, "matchData": {"homeFormation": 451}}]
+    likely = likely_eleven(squad, rows, matches, 7)
+    assert len(likely["players"]) == 11 and [p["id"] for p in likely["players"] if p["sub"]] == [6]  # no. 6 is free again: the best midfielder left

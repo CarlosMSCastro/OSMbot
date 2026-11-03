@@ -453,3 +453,25 @@ def test_the_mco_and_the_mcd_stand_apart_from_the_midfield():  # owner, 2026-11-
     assert sorted(midfield(2, 1, 2)) == [(0.25, 0, "MC"), (0.5, 1, "MCO"), (0.75, 0, "MC")]  # 4-3-3 A
     assert sorted(midfield(2, 5, 2)) == [(0.25, 0, "MC"), (0.5, -1, "MCD"), (0.75, 0, "MC")]  # 4-3-3 B
     assert sorted(midfield(2, 5, 2, 1)) == [(0.25, 0, "MC"), (0.5, -1, "MCD"), (0.5, 1, "MCO"), (0.75, 0, "MC")]  # diamond
+
+
+def test_the_opponents_eleven_says_which_match_it_is_and_what_is_missing():
+    from osmbot.gui.view import rival_eleven_view
+
+    players = [{"name": f"P{n}", "lineup": n, "position": 4 if n == 1 else 3 if n <= 5 else 2 if n <= 8 else 1,
+                "statDef": 80, "statOvr": 80, "statAtt": 80, "sub": n == 9} for n in range(1, 11)]
+    view = rival_eleven_view({"players": players, "estimate": True, "week": 12, "skipped": [13]})
+    assert view["title"] == "Provável: J12 (J13 poupou) · 4-3-2 · média 80 · falta 1"
+    assert view["lines"][0][0]["sub"] and not view["lines"][0][1].get("sub")
+    assert rival_eleven_view({"players": players, "estimate": False})["title"].startswith("Onze dele · ")
+    assert rival_eleven_view(None) is None
+
+
+def test_two_midfielders_one_step_apart_in_the_middle_stand_side_by_side():
+    from osmbot.gui.view import pitch_spots
+
+    two = [{"place": "MC"}, {"place": "MCO"}]  # a 4-2-4 (owner, 2026-11-03: on top of each other)
+    (x1, d1, _), (x2, d2, _) = sorted(pitch_spots(two), key=lambda s: s[0])
+    assert x2 - x1 >= 0.3 and (d1, d2) == (0, 1)
+    diamond = [{"place": "MCD"}, {"place": "MC"}, {"place": "MC"}, {"place": "MCO"}]  # untouched
+    assert sorted((round(x, 2), d) for x, d, _ in pitch_spots(diamond)) == [(0.25, 0), (0.5, -1), (0.5, 1), (0.75, 0)]

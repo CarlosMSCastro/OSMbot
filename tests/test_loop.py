@@ -384,6 +384,7 @@ def test_every_task_runs_on_every_pass_not_only_the_first(mode):
              ("stadium", "sponsors", "rewards", "prematch", "medical", "savings", "inventory")}
     tasks.update({name: counted(name) for name in ("transfers", "matches", "xp", "reports", "events", "ads")})
     tasks["boost"] = counted("boost", 0)
+    tasks["relist"] = counted("relist", 0)
     tasks["event_wake"] = counted("event_wake")
     extra = {"board": lambda payload: None} if mode == "window" else {"use_screen": False}
     with pytest.raises(SystemExit):
@@ -396,7 +397,7 @@ def test_every_task_runs_on_every_pass_not_only_the_first(mode):
 
 
 _NO_EXTRAS = dict(ads=None, stadium=None, sponsors=None, rewards=None, medical=None, transfers=None, savings=None,
-                  events=None, inventory=None, matches=None, xp=None, reports=None, boost=None, event_wake=None)
+                  events=None, inventory=None, matches=None, xp=None, reports=None, boost=None, relist=None, event_wake=None)
 
 
 def test_a_time_that_goes_by_during_the_pass_wakes_the_bot_at_once_not_never():

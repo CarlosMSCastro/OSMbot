@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import time
 
-from osmbot.board.info import (cup_phase, eleven_seen, league_round, league_summary, next_match, next_matches,
+from osmbot.board.info import (cup_phase, eleven_seen, league_round, likely_eleven, league_summary, next_match, next_matches,
                                opponent_rating, season_fixtures, squad_value, stale_listings, team_rating, value_table)
 from osmbot.game import market as market_watch, sales
 from osmbot.game.transfers import saved_transfers
@@ -236,15 +236,23 @@ def club_extra(client, team: dict, base: str, players: list[dict], slot, market:
         rival = upcoming["opponent_id"]  # analysis an estimate, read again as soon as it is done (owner, 2026-10-25)
         upcoming["value"] = squad_value(values, rival)
 
-        def rival_strength() -> tuple[int | None, bool, int | None, bool, bool]:
-            squad_of = _list(client, f"{league}/teams/{rival}/players")
+        def rival_strength() -> tuple[int | None, bool, int | None, bool, bool, dict | None]:
+            squad_of = [{**p, "name": p.get("name") or p.get("fullName", "?")} for p in _list(client, f"{league}/teams/{rival}/players")]
             seen = eleven_seen(squad_of)  # his forwards, once the analysis shows his eleven (THEORY.md 2)
             forwards = sum(1 for p in squad_of if 1 <= (p.get("lineup") or 0) <= 11 and p.get("position") == 1) if seen else None
-            return (opponent_rating(squad_of, GUESS_FORMATION), not seen, forwards,
-                    bool(seen) and plays_counter(client, base, rival), bool(seen) and uses_camp(client, base, rival))
+            strength = opponent_rating(squad_of, GUESS_FORMATION)
+            if seen:  # his real eleven, on hover of the circle (owner, 2026-11-03)
+                eleven = {"players": [p for p in squad_of if 1 <= (p.get("lineup") or 0) <= 11], "estimate": False}
+            else:  # before the analysis: his likely eleven, and the circle is its average (owner, 2026-11-03: "tem que
+                likely = likely_eleven(squad_of, _list(client, f"{league}/teams/{rival}/playergrades/"), matches, rival)
+                eleven = {**likely, "estimate": True} if likely else None  # bater certo os 2"); none: the 4-3-3 guess
+                strength = round(likely["average"]) if likely else strength
+            return (strength, not seen, forwards, bool(seen) and plays_counter(client, base, rival),
+                    bool(seen) and uses_camp(client, base, rival), eleven)
 
-        upcoming["strength"], upcoming["estimate"], upcoming["forwards"], upcoming["counter"], upcoming["camp"] = _cached(
-            ("strength", league, rival, week, bool(done.get(ANALYSIS_STEP))), FIXTURES_FOR, rival_strength)
+        (upcoming["strength"], upcoming["estimate"], upcoming["forwards"], upcoming["counter"], upcoming["camp"],
+         upcoming["eleven"]) = _cached(("strength", league, rival, week, bool(done.get(ANALYSIS_STEP))), FIXTURES_FOR,
+                                       rival_strength)
     by_type = {s["type"]: s for s in prep.get("steps") or []}
     rival = (upcoming or {}).get("opponent_id")
     analyst = None  # only the analyst sent to the next opponent: one going round the league is not his analysis

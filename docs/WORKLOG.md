@@ -2,6 +2,31 @@
 
 Entradas mais recentes primeiro. Cada sessão: o que se fez · o que ficou por fazer · próximo passo.
 
+## 2026-11-03 — Versão 0.16.0 (PT-LA-02-0095-N)
+
+- **Versão 0.16.0 (pedido do dono):** D-085 (relistar), D-086 (onze provável), aviso "parado na lista" ao triplo, balões e campo. `pyproject.toml`, `__init__`, `CHANGELOG.md`, `README.md` (estado), `DISCOVERY.md` §7 (listar/retirar feito), `dist/release-notes-v0.16.0.md`; 544 testes; `build_portable.py --zip --installer` → `dist/windows/` 0.16.0 (553 / 206 / 148 MB), versão confirmada e `status` a correr no portátil; os da 0.15.3 apagados. Commit e `gh release create v0.16.0` entregues ao dono (só Windows).
+- **Este PC** corre `Documents\osmbot-portable` (versão anterior): o relistar e o onze só entram depois de instalar a 0.16.0.
+
+## 2026-11-03 — Balões e onze provável do adversário (PT-LA-02-0095-N)
+
+- **Balões:** o título colava-se à 1.ª linha em todos os balões de texto ("AdvogadoAlexander-Arnold"; `tip_text`). Corrigido e coberto por um teste que desenha com o Qt; a janela inteira com dados reais (247 textos) verificada sem quebras perdidas.
+- **Onze provável (D-086):** `board/info.likely_eleven` + `gui/view.rival_eleven_view`; o círculo do adversário abre o campo com o onze provável (antes da análise) ou o real (depois), e a força estimada é a média desse onze. Visto com os 4 adversários reais (um a poupar na J13 → J12).
+- **Campo:** dois jogadores da mesma linha, um passo à frente ou atrás e na mesma coluna (MC e MCO num 4-2-4), ficam lado a lado (`view.pitch_spots`); o losango não muda. O "troca" deixou de estragar a profundidade do MCO/MCD. 544 testes a passar.
+
+## 2026-11-03 — Aviso "parado na lista" ao triplo (PT-LA-02-0095-N)
+
+- **Medido** (237 vendas): 20 % das vendas normais passavam do dobro da mediana do escalão; ao triplo com mínimo de 24 h, 5 % (`DISCOVERY.md`). O "relistar recomeça o relógio" passou a hipótese improvável (a venda é sorteio por passagem, §6c).
+- **Mudado com OK do dono:** aviso só acima de **3 × a mediana e 24 h** (`board/info.py`, THEORY §7.5); teste atualizado; 531 testes a passar.
+- **Relistar testado (OK do dono):** `DELETE transferplayers/{anúncio}` + `PUT players/sell` {playerId, price}, ambos 200, de graça; um jogador do KV Mechelen de 38,36 M (90 %) para 42,63 M (100 %). Detalhe em `DISCOVERY.md`.
+- **Relistar automático (D-085):** `transfers/relist.py` (regra pura, 2 %) + `game/relist.py` (DELETE + PUT, de 30 em 30 min por clube; se o jogo não deixar voltar, aviso "!" para pôr à mão) ligado ao ciclo depois do inventário; linhas em inglês na janela; 538 testes a passar. Ainda não corrido no bot real: a próxima passagem do bot ativo é a primeira.
+- **Próximo:** ver as linhas "Relistado:" no registo e, depois, o tempo até vender dos relistados (a hora do anúncio recomeça).
+
+## 2026-11-03 — `dist/windows` 0.15.3 (PT-LA-02-0095-N)
+
+- **Pull revisto** (0.15.2 e 0.15.3 feitas em casa): 531 testes a passar.
+- **`dist/windows` reconstruído:** portátil 553 MB, zip 206 MB, instalador 148 MB; `__version__` 0.15.3 na pasta; `status` corre com o `OSMbot-consola.exe`. Apagados os builds e as notas da 0.15.1; notas novas em `dist/release-notes-v0.15.3.md` (juntam 0.15.2 e 0.15.3).
+- **Próximo:** o dono publica a release (regra 9).
+
 ## 2026-11-02 — Medição em bruto: humano contra CPU (DESKTOP-KAM70RR)
 
 - **Revisão do pull:** só docs e registos; `dist/windows` 0.15.1 igual ao código, 527 testes. Falta confirmar a versão no PC do trabalho.

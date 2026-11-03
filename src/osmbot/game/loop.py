@@ -46,6 +46,8 @@ from osmbot.game.prematch import run_prematch
 from osmbot.game.rewards import run_rewards
 from osmbot.game.sponsors import run_sponsors
 from osmbot.game.savings import run_savings
+from osmbot.game.relist import run_relist
+from osmbot.game import relist as relist_module
 from osmbot.game import wallet as ledger
 from osmbot.game.stadium import run_event_stadium_boost, run_stadium
 from osmbot.game.trainings import COUNTS, pending_finish_times, run_claim, run_event_boost, run_event_end_boost, run_train
@@ -372,6 +374,7 @@ def run_active(dry_run: bool = False, *, claim=run_claim, train=run_train, finis
                matches=lambda: log_rounds(log=_log), xp=lambda: log_xp(log=_log),
                reports=lambda: save_reports(log=_log), boost=lambda confirm: run_event_boost(confirm) + run_event_end_boost(confirm)
                + run_event_stadium_boost(confirm, log=_log),
+               relist=lambda confirm: run_relist(confirm),
                event_wake=lambda now: events_module.training_wake(now),
                snapshot=None, use_screen: bool | None = None,
                sleep=time.sleep, clock=time.time, rng=random, board=None) -> None:
@@ -406,6 +409,7 @@ def run_active(dry_run: bool = False, *, claim=run_claim, train=run_train, finis
     medical_module.COUNTS.update(doctor=0, lawyer=0, collected=0)
     inventory_module.COUNTS.update(universal=0, bags=0, sessions=0)
     savings_module.COUNTS["deposits"] = 0
+    relist_module.COUNTS["relisted"] = 0
     machine = machine_name()
     if board:
         screen = None
@@ -448,7 +452,8 @@ def run_active(dry_run: bool = False, *, claim=run_claim, train=run_train, finis
     def counts() -> tuple:
         return (COUNTS["claimed"], COUNTS["started"], stadium_module.COUNTS["upgrades"], sponsors_module.COUNTS["signed"],
                 *rewards_module.COUNTS.values(), *prematch_module.COUNTS.values(),
-                *medical_module.COUNTS.values(), *inventory_module.COUNTS.values(), savings_module.COUNTS["deposits"])
+                *medical_module.COUNTS.values(), *inventory_module.COUNTS.values(), savings_module.COUNTS["deposits"],
+                relist_module.COUNTS["relisted"])
 
     awake = not dry_run and keep_awake(True)  # the PC must not sleep while the bot works (owner, 2026-10-14)
     try:
@@ -574,6 +579,19 @@ def run_active(dry_run: bool = False, *, claim=run_claim, train=run_train, finis
                         raise
                     except Exception as error:
                         _log(f"Inventário: erro ({error}); volto a tentar")
+                    if changed(before):
+                        refresh_board()
+                if relist:
+                    _now("relistar")
+                    before = counts()
+                    try:  # an extra: a player whose right price rose 2 % on the list goes back at it (D-085)
+                        relist_failed = _quiet(relist, not dry_run)
+                        if relist_failed:
+                            _log(f"Relistar: {relist_failed} falha(s); volto a tentar")
+                    except OSError:
+                        raise
+                    except Exception as error:
+                        _log(f"Relistar: erro ({error}); volto a tentar")
                     if changed(before):
                         refresh_board()
                 if transfers:
