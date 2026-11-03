@@ -1,3 +1,6 @@
 {"t":1793562978,"evento":"levantar","tipo":"lawyer","clube":"leagues/222034673/teams/3","semana":12,"caso":12751768,"jogador":975890492,"nome":"S. Gómez","antes":{"fora":2,"lesao":0,"suspensao":26},"depois":{"fora":1,"lesao":0,"suspensao":26}}
 {"t":1793656098,"evento":"pôr","tipo":"lawyer","clube":"leagues/215028346/teams/9","semana":13,"jogador":925469314,"nome":"Alexander-Arnold","antes":{"fora":3,"lesao":27,"suspensao":24}}
 {"t":1793657543,"evento":"pôr","tipo":"doctor","clube":"leagues/248015013/teams/8","semana":17,"jogador":877246514,"nome":"Andersen","antes":{"fora":4,"lesao":15,"suspensao":0}}
+{"t":1793684966,"evento":"levantar","tipo":"lawyer","clube":"leagues/215028346/teams/9","semana":13,"caso":11671933,"jogador":925469314,"nome":"Alexander-Arnold","antes":{"fora":3,"lesao":27,"suspensao":24},"depois":{"fora":1,"lesao":27,"suspensao":24}}
+{"t":1793686477,"evento":"levantar","tipo":"doctor","clube":"leagues/248015013/teams/8","semana":17,"caso":11082398,"jogador":877246514,"nome":"Andersen","antes":{"fora":4,"lesao":15,"suspensao":0},"depois":{"fora":3,"lesao":15,"suspensao":0}}
+{"t":1793686479,"evento":"pôr","tipo":"doctor","clube":"leagues/248015013/teams/8","semana":17,"jogador":877246514,"nome":"Andersen","antes":{"fora":4,"lesao":15,"suspensao":0}}
