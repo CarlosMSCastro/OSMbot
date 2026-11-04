@@ -123,8 +123,8 @@ def instructions(formation: int, detail: str | None, *, away: bool = False, clea
     high = Band(60, 80, 75)
     five = dict(defense=of(DEEP), midfield=of(HELP_DEFENCE), marking=of(False), offside=of(False),
                 mentality=Band(0, 20, 15) if clearly_weaker else Band(20, 40, 35), tempo=Band(60, 80, 75))
-    if formation == 433:  # against a human: passing against his counter-attack, wings otherwise (D-092)
-        plan = (of(PASSING) if his == COUNTER else of(WINGS)) if human and his is not None else of(PASSING, WINGS)
+    if formation == 433:  # against a human: passing against his counter-attack or shooting, wings otherwise (D-092/093)
+        plan = (of(PASSING) if his in (COUNTER, SHOOT) else of(WINGS)) if human and his is not None else of(PASSING, WINGS)
         return Instructions(plan, of(DEEP), midfield, attack, of(False),
                             of(True) if clearly_stronger else of(True, False), high, high, high)
     if formation == 532:

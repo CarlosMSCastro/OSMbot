@@ -151,11 +151,13 @@ def test_his_style_is_the_most_frequent_of_his_last_reports():
 
 
 def test_against_a_human_the_433_style_follows_his():
-    from osmbot.theory.tactics import COUNTER, PASSING, WINGS, instructions
+    from osmbot.theory.tactics import COUNTER, LONG_BALL, PASSING, SHOOT, WINGS, instructions
 
     assert instructions(433, "A").plan == {PASSING, WINGS}  # nothing known: either
     assert instructions(433, "A", human=True).plan == {PASSING, WINGS}
     assert instructions(433, "A", human=True, his=COUNTER).plan == {PASSING}  # his counter-attack
+    assert instructions(433, "A", human=True, his=SHOOT).plan == {PASSING}  # his shooting from distance (D-093)
+    assert instructions(433, "A", human=True, his=LONG_BALL).plan == {WINGS}
     assert instructions(433, "A", human=True, his=WINGS).plan == {WINGS}  # any other style
     assert instructions(433, "A", his=COUNTER).plan == {PASSING, WINGS}  # the computer: no change (D-092)
 
