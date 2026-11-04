@@ -206,6 +206,54 @@ def rival_pitch(client, base: str, rival: int) -> float:
     return float(bonus) if bonus is not None else HOME_PCT
 
 
+def logged_reports(league: str, rival: int) -> list[dict]:
+    """The analyst's reports on ``rival`` kept in the repo's logs (any PC), newest first, one per round."""
+    import json
+    from osmbot import logs
+
+    repo = logs.repo_folder()
+    if repo is None:
+        return []
+    found = {}
+    for path in list((repo / "logs").glob("*/analista/*.jsonl")) + list((repo / "logs").glob("*/jogos/*.jsonl")):
+        try:
+            lines = path.read_text(encoding="utf-8").splitlines()
+        except OSError:
+            continue
+        for line in lines:
+            if f'"teamId":{rival},' not in line.replace(" ", ""):
+                continue
+            try:
+                entry = json.loads(line)
+            except ValueError:
+                continue
+            reports = [entry["relatorio"]] if "relatorio" in entry else entry.get("analise") or []
+            for report in reports if isinstance(reports, list) else [reports]:
+                if isinstance(report, dict) and report.get("teamId") == rival and str(report.get("leagueId")) == league:
+                    week, t = report.get("weekNr"), entry.get("t", 0)
+                    if week not in found or t >= found[week][0]:
+                        found[week] = (t, report)
+    return [report for _, report in sorted(found.values(), key=lambda pair: -pair[0])]
+
+
+def his_style(client, base: str, rival: int) -> tuple[int, str] | None:
+    """His style of play for the 4-3-3's (D-092): this round's report, or the most frequent of his last reports kept
+    in the logs (owner, 2026-11-04: "usar os últimos relatórios"); with where it came from. None without a report."""
+    from osmbot.theory.tactics import REPORTS_LOOKED, his_plan
+
+    now = next((r["overallMatchTactics"] for r in _reports_on(client, base, rival)
+                if isinstance(r.get("overallMatchTactics"), int)), None)
+    if now is not None:
+        return now, "relatório desta jornada"
+    league = base.rsplit("/teams/", 1)[0].rsplit("/", 1)[-1]
+    plans = [r["overallMatchTactics"] for r in logged_reports(league, rival) if isinstance(r.get("overallMatchTactics"), int)]
+    plan = his_plan(plans)
+    if plan is None:
+        return None
+    count = min(len(plans), REPORTS_LOOKED)
+    return plan, "último relatório" if count == 1 else f"últimos {count} relatórios"
+
+
 def logged_pitch(league: str, rival: int) -> float | None:
     """The last pitch bonus of ``rival`` in the analyst's reports kept in the repo's logs (any PC); None without."""
     import json
@@ -232,35 +280,6 @@ def logged_pitch(league: str, rival: int) -> float | None:
                 if (isinstance(report, dict) and report.get("teamId") == rival and str(report.get("leagueId")) == league
                         and isinstance(report.get("stadiumPitchBonus"), (int, float)) and entry.get("t", 0) >= found[0]):
                     found = (entry.get("t", 0), report["stadiumPitchBonus"])
-    return found[1]
-
-
-def last_tactic(league: int, team: int) -> dict | None:
-    """The tactic of the club's last official match, as kept in the repo's ``logs/*/jogos`` (owner, 2026-11-03: to
-    vary it against a human); None without a log."""
-    import json
-    from osmbot import logs
-
-    repo = logs.repo_folder()
-    if repo is None:
-        return None
-    found = (0, None)
-    for path in (repo / "logs").glob("*/jogos/*.jsonl"):
-        try:
-            lines = path.read_text(encoding="utf-8").splitlines()
-        except OSError:
-            continue
-        for line in lines:
-            if '"tatica"' not in line or f'"teamId":{team},' not in line.replace(" ", ""):
-                continue
-            try:
-                entry = json.loads(line)
-            except ValueError:
-                continue
-            tactic = entry.get("tatica")
-            if (isinstance(tactic, dict) and tactic.get("teamId") == team and tactic.get("leagueId") == league
-                    and entry.get("tipo") in ("liga", "taça") and entry.get("t", 0) >= found[0]):
-                found = (entry.get("t", 0), tactic)
     return found[1]
 
 
@@ -380,8 +399,9 @@ def club_extra(client, team: dict, base: str, players: list[dict], slot, market:
     why[TACTIC_STEP], tactic_tips, known = tactic_check(tactic, strictness, mine, theirs, players, away, spare,
                                                         (upcoming or {}).get("forwards"), bool((upcoming or {}).get("counter")),
                                                         bool(upcoming) and not upcoming.get("human"),
-                                                        _cached(("last_tactic", team["leagueId"], team["id"], week), FIXTURES_FOR,
-                                                                lambda: last_tactic(team["leagueId"], team["id"])))
+                                                        _cached(("his_style", base, rival, week, bool(done.get(ANALYSIS_STEP))), VALUES_FOR,
+                                                                lambda: his_style(client, base, rival))
+                                                        if upcoming and upcoming.get("human") else None)
     steps = [(step[0], known, step[2]) if kind == TACTIC_STEP else step for (kind, _), step in zip(CHECKLIST, steps)]
     steps = [(name, False, RULE) if why.get(kind) and done_ else (name, done_, extra)
              for (kind, _), (name, done_, extra) in zip(CHECKLIST, steps)]

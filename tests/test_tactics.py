@@ -140,26 +140,69 @@ def test_the_pitch_gives_the_home_advantage():
     assert pitch_pct(None) == HOME_PCT  # unknown: the measured average
 
 
-def test_against_a_human_the_tactic_varies_inside_the_rule():
-    from osmbot.theory.tactics import PASSING, WINGS, instructions, same_as, varied
+def test_his_style_is_the_most_frequent_of_his_last_reports():
+    from osmbot.theory.tactics import COUNTER, PASSING, WINGS, his_plan
 
-    rule = instructions(433, "A")
-    last = {"formation": 433, "formationDetail": "A", "overallMatchTactics": PASSING, "pressing": 72, "mentality": 70,
-            "tempo": 79}
-    change = varied(rule, last)
-    assert change["overallMatchTactics"] == WINGS
-    assert (change["pressing"], change["mentality"], change["tempo"]) == (62, 80, 69)  # ~10 away, toward the aim side, inside 60-80
-    assert varied(rule, {**last, "pressing": 62})["pressing"] == 72  # under the aim: up
-    assert same_as({**last, "pressing": 75}, last) and not same_as({**last, "overallMatchTactics": WINGS}, last)
+    assert his_plan([]) is None
+    assert his_plan([WINGS]) == WINGS
+    assert his_plan([COUNTER, WINGS, WINGS]) == WINGS  # newest first: the most frequent wins
+    assert his_plan([COUNTER, WINGS]) == COUNTER  # a tie: the newest
+    assert his_plan([PASSING] + [WINGS] * 3 + [COUNTER] * 4) == WINGS  # only the last 5 count
 
 
-def test_the_tactic_step_asks_to_vary_only_against_a_human():
+def test_against_a_human_the_433_style_follows_his():
+    from osmbot.theory.tactics import COUNTER, PASSING, WINGS, instructions
+
+    assert instructions(433, "A").plan == {PASSING, WINGS}  # nothing known: either
+    assert instructions(433, "A", human=True).plan == {PASSING, WINGS}
+    assert instructions(433, "A", human=True, his=COUNTER).plan == {PASSING}  # his counter-attack
+    assert instructions(433, "A", human=True, his=WINGS).plan == {WINGS}  # any other style
+    assert instructions(433, "A", his=COUNTER).plan == {PASSING, WINGS}  # the computer: no change (D-092)
+
+
+def test_the_tactic_step_says_his_style_and_where_it_was_read():
     from osmbot.theory.lineup import tactic_check
+    from osmbot.theory.tactics import COUNTER, WINGS
 
     tactic = {"formation": 433, "formationDetail": "A", "overallMatchTactics": 1, "defense": 0, "midfield": 0,
               "attack": 2, "marking": False, "offsideTrap": True, "pressing": 72, "mentality": 70, "tempo": 79}
-    _, notes, _ = tactic_check(tactic, 3, 100, 100, last=dict(tactic))
-    assert notes[0] == "Contra humano, igual ao último jogo: varia dentro da regra"
-    assert "Estilo de jogo: Jogar pelas alas" in notes and "Pressão: 62" in notes
-    assert not any("varia" in n for n in tactic_check(tactic, 3, 100, 100, cpu=True, last=dict(tactic))[1])
-    assert not any("varia" in n for n in tactic_check({**tactic, "pressing": 62}, 3, 100, 100, last=dict(tactic))[1])
+    warnings, notes, _ = tactic_check(tactic, 3, 100, 100, his=(WINGS, "últimos 3 relatórios"))
+    assert "Estilo de jogo: Jogo de passe, devia ser Jogar pelas alas" in warnings
+    assert notes[0] == "Estilo de jogo dele: Jogar pelas alas (últimos 3 relatórios)"
+    warnings, notes, _ = tactic_check(tactic, 3, 100, 100, his=(COUNTER, "relatório desta jornada"))
+    assert not any(w.startswith("Estilo de jogo") for w in warnings)  # passing against his counter-attack
+    assert tactic_check(tactic, 3, 100, 100) == ([], [], True)  # nothing known: no note
+    assert tactic_check(tactic, 3, 100, 100, cpu=True, his=(WINGS, "x")) == ([], [], True)  # the computer
+
+
+def test_his_style_comes_from_this_rounds_report_or_his_last_ones(monkeypatch):
+    from osmbot.game import clubinfo
+
+    class Client:
+        def __init__(self, body):
+            self.body = body
+
+        def get(self, path):
+            return 200, self.body
+
+    logged = [{"overallMatchTactics": 3}, {"overallMatchTactics": 2}, {"overallMatchTactics": 2}]
+    monkeypatch.setattr(clubinfo, "logged_reports", lambda league, rival: logged if (league, rival) == ("1", 7) else [])
+    assert clubinfo.his_style(Client([{"teamId": 7, "overallMatchTactics": 3}]), "leagues/1/teams/2", 7) == (3, "relatório desta jornada")
+    assert clubinfo.his_style(Client([]), "leagues/1/teams/2", 7) == (2, "últimos 3 relatórios")
+    assert clubinfo.his_style(Client([]), "leagues/1/teams/2", 8) is None
+
+
+def test_the_logged_reports_are_one_per_round_newest_first(tmp_path, monkeypatch):
+    import json
+    from osmbot import logs
+    from osmbot.game import clubinfo
+
+    folder = tmp_path / "logs" / "PC" / "analista"
+    folder.mkdir(parents=True)
+    rows = [{"t": 1, "relatorio": {"leagueId": 1, "teamId": 7, "weekNr": 3, "overallMatchTactics": 3}},
+            {"t": 2, "relatorio": {"leagueId": 1, "teamId": 7, "weekNr": 3, "overallMatchTactics": 2}},  # same round, later
+            {"t": 3, "relatorio": {"leagueId": 1, "teamId": 7, "weekNr": 4, "overallMatchTactics": 1}},
+            {"t": 4, "relatorio": {"leagueId": 2, "teamId": 7, "weekNr": 5, "overallMatchTactics": 0}}]  # another league
+    (folder / "2026-11.jsonl").write_text("\n".join(json.dumps(r, separators=(",", ":")) for r in rows), encoding="utf-8")
+    monkeypatch.setattr(logs, "repo_folder", lambda: tmp_path)
+    assert [r["overallMatchTactics"] for r in clubinfo.logged_reports("1", 7)] == [1, 2]

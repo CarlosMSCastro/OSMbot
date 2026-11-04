@@ -6,7 +6,7 @@ from collections import Counter
 from typing import Iterable
 
 from osmbot.theory.fitness import MATCH_DROP, YELLOW_BELOW
-from osmbot.theory.tactics import ATTACK, DEFENSE, MIDFIELD, PLANS, Band, Formation, choose_formation, defensive, instructions, same_as, varied
+from osmbot.theory.tactics import ATTACK, DEFENSE, MIDFIELD, PLANS, Band, Formation, choose_formation, defensive, instructions
 
 MAIN_STAT = {1: "statAtt", 2: "statOvr", 3: "statDef", 4: "statDef"}  # the rating that counts for each position
 ELEVEN = range(1, 12)
@@ -390,19 +390,21 @@ def _tackling(strictness: int | None, mine: float | None, opponent: float | None
 def tactic_check(tactic: dict | None, strictness: int | None, mine: float | None, opponent: float | None,
                  players: list[dict] | None = None, away: bool = False, spare: bool = False,
                  forwards: int | None = None, counter: bool = False, cpu: bool = False,
-                 last: dict | None = None) -> tuple[list[str], list[str], bool]:
+                 his: tuple[int, str] | None = None) -> tuple[list[str], list[str], bool]:
     """The "Tática" step (owner, 2026-10-28, D-073; THEORY.md 2 and 21): the instructions, the sliders and the tackling
     set in the game against the rule for the formation that is set. Returns (warnings, notes, known): a warning per
     field out of the rule, "Pressão: 45, devia ser 60–80 (~75)"; notes with what the formation the "Onze" step asks for
     would take ("Se mudares para 5-2-3:" and a line per field); known False when section 2 has no rule for the
     formation set (the step stays grey). ``forwards``: how many his eleven has, after the analysis; ``counter``: he
-    plays counter-attack, after the analysis; ``cpu``: he is the computer (the tackling, ``_tackling``)."""
+    plays counter-attack, after the analysis; ``cpu``: he is the computer (the tackling, ``_tackling``); ``his``: his
+    style of play and where it was read ("relatório desta jornada", "últimos 3 relatórios"), against a human (D-092)."""
     if not tactic:
         return [], [], False
     starters = [p for p in players or [] if p.get("lineup") in ELEVEN]
     context = dict(away=away, clearly_stronger=_clearly_stronger(mine, opponent),
                    clearly_weaker=_clearly_stronger(opponent, mine), forwards=forwards,
-                   defensive_forwards=defensive(starters), counter=counter)
+                   defensive_forwards=defensive(starters), counter=counter, human=not cpu,
+                   his=his[0] if his else None)
     rule = instructions(tactic.get("formation"), tactic.get("formationDetail"), **context)
     warnings, notes = [], []
     if rule:
@@ -418,12 +420,8 @@ def tactic_check(tactic: dict | None, strictness: int | None, mine: float | None
     if accepted and style is not None and style not in accepted:
         wanted = " ou ".join(TACKLING[s] for s in sorted(accepted))
         warnings.append(f"Desarme: {TACKLING.get(style, style)}, devia ser {wanted} (árbitro {REFEREES[strictness]})")
-    if rule and not cpu and last and same_as(tactic, last):  # owner, 2026-11-03: do not be predictable (THEORY.md 2)
-        change = varied(rule, last)
-        if change:
-            names = {key: (label, n) for label, key, _, n in FIELDS}
-            notes.append("Contra humano, igual ao último jogo: varia dentro da regra")
-            notes += [f"{names[k][0]}: {v if names[k][1] is None else names[k][1].get(v, v)}" for k, v in change.items()]
+    if rule and not cpu and his and tactic.get("formation") == 433:  # why passing or wings (D-092)
+        notes.append(f"Estilo de jogo dele: {PLANS.get(his[0], his[0])} ({his[1]})")
     other = _suggested(tactic, players, mine, opponent, away, spare)
     if other and (better := instructions(other[1], other[2], **context)):
         notes.append(f"Se mudares para {other[0]}:")

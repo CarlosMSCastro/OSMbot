@@ -107,12 +107,14 @@ DEFENSIVE_FORWARD = {8: 40, 11: 40, 4: 20}  # wingers ~40 of defence, a striker 
 
 def instructions(formation: int, detail: str | None, *, away: bool = False, clearly_stronger: bool = False,
                  clearly_weaker: bool = False, forwards: int | None = None,
-                 defensive_forwards: bool = False, counter: bool = False) -> Instructions | None:
+                 defensive_forwards: bool = False, counter: bool = False, human: bool = False,
+                 his: int | None = None) -> Instructions | None:
     """The instructions and sliders of THEORY.md section 2 (owner, 2026-10-28, D-073: "tudo como o autor"), or None
     for a formation it has no rule for. ``clearly_stronger``/``clearly_weaker``: more than 12 % apart in match
     strength (section 1); ``forwards``: how many his eleven has, once the analysis shows it (None before);
     ``defensive_forwards``: all of ours defend well enough to support the midfield; ``counter``: the analysis shows
-    him in counter-attack (the 4-4-2 B's other line, D-079)."""
+    him in counter-attack (the 4-4-2 B's other line, D-079); ``human``: he is a manager, not the computer; ``his``: his
+    style of play from the analyst's reports (``his_plan``): against a human the 4-3-3's follows it (D-092)."""
     def of(*codes):
         return frozenset(codes)
 
@@ -121,8 +123,9 @@ def instructions(formation: int, detail: str | None, *, away: bool = False, clea
     high = Band(60, 80, 75)
     five = dict(defense=of(DEEP), midfield=of(HELP_DEFENCE), marking=of(False), offside=of(False),
                 mentality=Band(0, 20, 15) if clearly_weaker else Band(20, 40, 35), tempo=Band(60, 80, 75))
-    if formation == 433:
-        return Instructions(of(PASSING, WINGS), of(DEEP), midfield, attack, of(False),
+    if formation == 433:  # against a human: passing against his counter-attack, wings otherwise (D-092)
+        plan = (of(PASSING) if his == COUNTER else of(WINGS)) if human and his is not None else of(PASSING, WINGS)
+        return Instructions(plan, of(DEEP), midfield, attack, of(False),
                             of(True) if clearly_stronger else of(True, False), high, high, high)
     if formation == 532:
         return Instructions(of(COUNTER), attack=of(ATTACK_ONLY), pressing=Band(20, 40, 30), **five)
@@ -153,35 +156,16 @@ def instructions(formation: int, detail: str | None, *, away: bool = False, clea
     return None
 
 
-VARY_BY = 10  # owner, 2026-11-03 (option b): against a human, each slider ~10 away from the last match, inside its band
-SLIDERS = (("pressing", "pressing"), ("mentality", "mentality"), ("tempo", "tempo"))
+REPORTS_LOOKED = 5  # [S] owner, 2026-11-04: "usar os últimos relatórios" when this round's is not there yet (D-092)
 
 
-def varied(rule: Instructions, last: dict) -> dict:
-    """Against a human, a tactic inside the rule but unlike the last match's (owner, 2026-11-03: "não devia ser
-    previsível"; THEORY.md 2): the other style of play the rule allows, and each slider ``VARY_BY`` away from the last
-    value, inside its band. Returns the fields with their new value; empty when the rule leaves no room."""
-    out = {}
-    plans = sorted(rule.plan - {last.get("overallMatchTactics")})
-    if plans and len(rule.plan) > 1:
-        out["overallMatchTactics"] = plans[0]
-    for key, field in SLIDERS:
-        band, value = getattr(rule, field), last.get(key)
-        if not isinstance(value, int):
-            continue
-        down, up = value - VARY_BY, value + VARY_BY
-        choice = down if down >= band.low and (value >= band.aim or up > band.high) else up if up <= band.high else None
-        if choice is not None:
-            out[key] = choice
-    return out
-
-
-def same_as(tactic: dict, last: dict, close: int = VARY_BY // 2) -> bool:
-    """The tactic set now is the last match's again: same formation and style of play, every slider within ``close``."""
-    if (tactic.get("formation"), tactic.get("formationDetail"), tactic.get("overallMatchTactics")) !=             (last.get("formation"), last.get("formationDetail"), last.get("overallMatchTactics")):
-        return False
-    return all(isinstance(tactic.get(k), int) and isinstance(last.get(k), int) and abs(tactic[k] - last[k]) <= close
-               for k, _ in SLIDERS)
+def his_plan(plans: list[int]) -> int | None:
+    """His style of play from his last analyst's reports (``plans`` newest first): the most frequent of the last
+    ``REPORTS_LOOKED``, a tie going to the newest. None without any."""
+    recent = plans[:REPORTS_LOOKED]
+    if not recent:
+        return None
+    return max(recent, key=lambda plan: (recent.count(plan), -recent.index(plan)))
 
 
 def defensive(starters: list[dict]) -> bool:

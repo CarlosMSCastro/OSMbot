@@ -2,6 +2,19 @@
 
 Entradas mais recentes primeiro. Cada sessão: o que se fez · o que ficou por fazer · próximo passo.
 
+## 2026-11-04 — Tática pelo adversário humano (PT-LA-02-0095-N)
+
+- **Dist 0.16.2** refeito aqui depois do pull; os da 0.16.1 apagados.
+- **Variação de D-091 vista nos registos:** ainda nenhum jogo com a 0.16.2. Simulada em 31 jogos contra humanos: aparecia em 19 (tática repetida); as barras iam e voltavam entre dois valores. Contra o Barcelona sugeria alas, que contra contra-ataque é o pior.
+- **Erro meu corrigido na conversa:** li o código 2 do estilo de jogo como contra-ataque (é alas) e atribuí ao Barcelona o 5-3-2 do Betis de 13/10.
+- **Medido (DISCOVERY §3):** os humanos jogam a formação do relatório do analista em 94 % (76 de 81); CPU 69 %. O Barcelona só sai do 4-3-3 A quando é mais fraco (5-3-2 contra o Betis).
+- **D-092 (dono: "QUERO A TUA SUGESTAO"):** contra um humano analisado, 4-3-3 com passe se ele joga em contra-ataque, alas nos outros casos; a variação só antes da análise. `theory/tactics.instructions(human=)`, `lineup.tactic_check`; 554 testes.
+- **Sugestão dada para o Betis:** hoje contra o Real Madrid (122 contra ~100, casa) 4-3-3 A alas, médios a ajudar, avançados a atacar, fora de jogo sim, 75/78/75; amanhã final da taça contra o Barcelona (122 contra 116, neutro) passe se o relatório mostrar 5-3-2, fora de jogo não, 72/70/75.
+- **Estimativa de força medida (DISCOVERY §3):** onze provável erra 0,4 contra CPU, 1,6 (por baixo) contra humanos nos jogos do dono; banda do §1 igual em 62 de 63. Nada a corrigir.
+- **Variação de D-091 tirada; sem análise, os últimos relatórios (dono):** `tactics.his_plan` (mais frequente dos últimos 5, empate ao mais recente), `clubinfo.logged_reports`/`his_style`, nota "Estilo de jogo dele: … (origem)"; `last_tactic`, `varied`, `same_as` apagados. 555 testes. Leitura real: Betis contra Real Madrid pede alas ("últimos 5 relatórios").
+- **Versão 0.16.3 (pedido do dono):** `pyproject`, `__init__`, `CHANGELOG`, `README` (estado estava em 0.16.1), `dist/release-notes-v0.16.3.md`; 555 testes; dist Windows refeito neste PC (zip 206 MB, instalador 148 MB, `status` da versão portátil testado), os da 0.16.2 apagados. Commit e `gh release create v0.16.3` entregues ao dono.
+- **Próximo:** medir D-092 (pontos contra humanos com a sugestão seguida, por estilo dele); a mentalidade pela diferença de força no 4-3-3 (autor: mais forte → mais alto) não está no código; porque 3 jogos contra humanos ficaram sem análise registada.
+
 ## 2026-11-03 — Vendas, projeto clash, jogo decisivo (DESKTOP-KAM70RR)
 
 - **Dist 0.16.1** refeito aqui depois do pull (ver entrada da versão).

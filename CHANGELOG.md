@@ -4,6 +4,16 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-PT/1.1.0/); 
 
 Este ficheiro é o **histórico de versões, para quem lê o repo**. O diário interno de cada sessão de trabalho está em [`docs/WORKLOG.md`](docs/WORKLOG.md).
 
+## [0.16.3] — 2026-11-04
+
+A tática contra humanos passa a seguir a do adversário, em vez de variar à sorte.
+
+### Alterado
+- **Estilo de jogo do 4-3-3 contra humanos:** pelo estilo dele, lido no relatório do analista: **passe** se ele joga em contra-ataque, **alas** nos outros casos. Sem análise desta jornada, conta o estilo mais frequente nos últimos 5 relatórios guardados dele. O passo "Tática" diz de onde veio ("Estilo de jogo dele: Jogar pelas alas (últimos 5 relatórios)"). Contra o computador não muda (passe ou alas). Medido: os humanos jogam a formação do relatório em 94 % dos jogos.
+
+### Removido
+- **Variar a tática contra humanos** (da 0.16.2): sugeria à sorte o outro estilo e as barras ~10 ao lado, e podia dar o pior (alas contra contra-ataque). Nada nos registos mostra os humanos a adaptarem-se à nossa tática.
+
 ## [0.16.2] — 2026-11-03
 
 Menos previsível contra humanos, a casa pelo relvado de cada clube e o aviso de jogo decisivo só quando pesa.
