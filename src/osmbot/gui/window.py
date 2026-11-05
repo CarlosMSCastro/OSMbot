@@ -1598,7 +1598,7 @@ class ClubCard(QFrame):
         self.value = self._row(0, "Valor plantel")
         self.sponsors = self._row(1, "Patrocinadores")
         self.alerts = QVBoxLayout()  # a free transfer-list slot, under the sponsors (owner, 2026-10-10), then one label
-        self.alerts.setSpacing(2)  # per stale player, each with its own hover (owner, 2026-10-22)
+        self.alerts.setSpacing(2)
         self.alerts.setContentsMargins(0, 0, 0, 0)
         self.facts.addLayout(self.alerts, 2, 0, 1, 4)
         club.addSpacing(6)

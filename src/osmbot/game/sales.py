@@ -7,7 +7,7 @@ import time
 from datetime import datetime
 from pathlib import Path
 
-from osmbot.board.info import purchases, sale_time, settle_sales, track_sales
+from osmbot.board.info import purchases, settle_sales, track_sales
 from osmbot.game.dashboard import money, span
 
 SALES_FILE = Path.home() / ".osmbot" / "sales.json"
@@ -79,28 +79,3 @@ def update(club_key: str, listed: dict[int, dict], squad: set[int], club: str = 
     for line in describe(club, state):
         log(line)
     return state["sales"]
-
-
-HISTORY_FOR = 3600  # seconds the sale times read from the logs are kept before reading them again
-_history: dict = {}
-
-
-def sale_times(now: float | None = None) -> list[tuple[float, float]]:
-    """(price, seconds it took) of every sale in the repo's logs, all PCs, each sale once (THEORY.md 7.5: the
-    "parado na lista" warning). Read again once an hour; empty without the repo."""
-    from osmbot.logs import repo_folder
-
-    now = now or time.time()
-    if _history and now - _history["at"] < HISTORY_FOR:
-        return _history["times"]
-    found: dict = {}
-    repo = repo_folder()
-    for path in sorted((repo / "logs").glob("*/20*.log")) if repo else []:
-        try:
-            for line in path.read_text(encoding="utf-8", errors="replace").splitlines():
-                if "Venda: " in line and (sale := sale_time(line)):
-                    found.setdefault(sale[0], sale[1:])
-        except OSError:
-            continue
-    _history.update(at=now, times=list(found.values()))
-    return _history["times"]

@@ -194,7 +194,7 @@ _ROLE = {"Capitão": "Captain", "Penáltis": "Penalties", "Livres": "Free kicks"
 _SIDE = {"CASA": "HOME", "FORA": "AWAY", "NEUTRO": "NEUTRAL"}
 _CUP_SHORT = {"pré-elim.": "prelim.", "32 avos": "R64", "16 avos": "R32", "oitavos": "R16", "quartos": "QF", "meias": "SF"}
 PATTERNS = [(re.compile(pattern), replace) for pattern, replace in (
-    # relisting (D-085): before the generic "à venda há" line
+    # relisting (D-085)
     (r"(Relistado|Relistaria): (.+) \((.+)\) de (.+) para (.+) \(\+(\d+)%\)(?:, estava à venda há (.+))?$",
      lambda m: f"{'Relisted' if m[1] == 'Relistado' else 'Would relist'}: {m[2]} ({m[3]}) from {m[4]} to {m[5]} (+{m[6]}%)"
                + (f", listed for {_days(m[7])}" if m[7] else "")),
@@ -260,10 +260,6 @@ PATTERNS = [(re.compile(pattern), replace) for pattern, replace in (
      lambda m: f"{m[1]} free slot{'s' if m[1] != '1' else ''} on the transfer list"),
     (r"(.+) (\d+)%: se jogar contra o (.+), chega a ~(\d+)% contra o (.+)",
      lambda m: f"{m[1]} {m[2]}%: if he plays {m[3]}, he faces {m[5]} at ~{m[4]}%"),
-    (r"(.+) à venda há (.+) \(normal ~(.+) a este preço\)",
-     lambda m: f"{m[1]} on the list for {_days(m[2])} (usually ~{_days(m[3])} at this price)"),
-    (r"(.+) à venda há (.+)", lambda m: f"{m[1]} on the list for {_days(m[2])}"),
-    (r"Normal a este preço: ~(.+)", lambda m: f"Usual at this price: ~{_days(m[1])}"),  # the stale line's hover
     (r"(.+) vendido · (.+)", lambda m: f"{m[1]} sold · {m[2]}"),
     (r"(.+)/ronda", lambda m: f"{m[1]}/round"),
     (r"PRÉ-JOGO · (.+)", lambda m: f"PRE-MATCH · {m[1]}"),

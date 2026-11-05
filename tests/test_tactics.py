@@ -162,7 +162,7 @@ def test_against_a_human_the_433_style_follows_his():
     assert instructions(433, "A", his=COUNTER).plan == {PASSING, WINGS}  # the computer: no change (D-092)
 
 
-def test_the_tactic_step_says_his_style_and_where_it_was_read():
+def test_the_tactic_step_follows_his_style_without_a_note():
     from osmbot.theory.lineup import tactic_check
     from osmbot.theory.tactics import COUNTER, WINGS
 
@@ -170,9 +170,10 @@ def test_the_tactic_step_says_his_style_and_where_it_was_read():
               "attack": 2, "marking": False, "offsideTrap": True, "pressing": 72, "mentality": 70, "tempo": 79}
     warnings, notes, _ = tactic_check(tactic, 3, 100, 100, his=(WINGS, "últimos 3 relatórios"))
     assert "Estilo de jogo: Jogo de passe, devia ser Jogar pelas alas" in warnings
-    assert notes[0] == "Estilo de jogo dele: Jogar pelas alas (últimos 3 relatórios)"
+    assert not notes  # no note on his style: only the warning when ours must change (owner, 2026-11-05)
     warnings, notes, _ = tactic_check(tactic, 3, 100, 100, his=(COUNTER, "relatório desta jornada"))
     assert not any(w.startswith("Estilo de jogo") for w in warnings)  # passing against his counter-attack
+    assert not notes
     assert tactic_check(tactic, 3, 100, 100) == ([], [], True)  # nothing known: no note
     assert tactic_check(tactic, 3, 100, 100, cpu=True, his=(WINGS, "x")) == ([], [], True)  # the computer
 

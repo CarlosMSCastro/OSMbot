@@ -2,6 +2,15 @@
 
 Entradas mais recentes primeiro. Cada sessão: o que se fez · o que ficou por fazer · próximo passo.
 
+## 2026-11-05 — Versão 0.16.4: menos avisos (DESKTOP-KAM70RR)
+
+- **Dist 0.16.3 no DESKTOP-KAM70RR (depois do pull):** 555 testes; portátil 553 MB, zip 206 MB, instalador 148 MB; os da 0.16.2 apagados em `dist/windows/`; notas `dist/release-notes-v0.16.3.md` refeitas a partir do `CHANGELOG`.
+- **Nota do estilo dele retirada (dono, 2026-11-05):** "Estilo de jogo dele: X" não servia para nada; o passo "Tática" só avisa quando o nosso estilo tem de mudar (o aviso que já existia). `THEORY.md` §2.
+- **Aviso "à venda há" retirado (dono, 2026-11-05):** código (`board/info.py` `stale_listings`/`sale_time`, `game/sales.py` `sale_times`, `clubinfo`, `gui/view`, `i18n`) e testes; `THEORY.md` §7.5. Ideia do dono de rodar os suplentes pela lista discutida e posta de parte (tirar da lista deita fora o tempo esperado). 554 testes. Nota: o `pip install -e .` mexeu em `src/osmbot.egg-info/`.
+- **Evento "agora" vs "próximo" (dono):** o Stadium Blitz acabou a 4/11 às 23:00 (o `eventnotifications` do jogo bate certo); à meia-noite a barra mostrava bem "Próximo evento". Nada a corrigir.
+- **Estádio do Betis (só leitura):** capacidade 2→3 em 8 ciclos (5 feitos + 1 a correr); época acaba a 6/11 (jornada 43 de 43). O dono acabou a obra a correr com boss coins e começou a seguinte; a última deve acabar a 6/11 ~12:40, com o bot do trabalho a recolher. **Por ver:** se o clube tem mais ~24 h depois do último jogo antes de a época virar (o dono acha que sim; nos registos não está).
+- **Versão 0.16.4 (pedido do dono):** `pyproject`, `__init__`, `CHANGELOG`, `README`, `dist/release-notes-v0.16.4.md`; dist Windows refeito, os da 0.16.3 apagados. Commit e `gh release create v0.16.4` entregues ao dono.
+
 ## 2026-11-04 — Tática pelo adversário humano (PT-LA-02-0095-N)
 
 - **Dist 0.16.2** refeito aqui depois do pull; os da 0.16.1 apagados.

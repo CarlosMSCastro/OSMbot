@@ -420,8 +420,6 @@ def tactic_check(tactic: dict | None, strictness: int | None, mine: float | None
     if accepted and style is not None and style not in accepted:
         wanted = " ou ".join(TACKLING[s] for s in sorted(accepted))
         warnings.append(f"Desarme: {TACKLING.get(style, style)}, devia ser {wanted} (árbitro {REFEREES[strictness]})")
-    if rule and not cpu and his and tactic.get("formation") == 433:  # why passing or wings (D-092)
-        notes.append(f"Estilo de jogo dele: {PLANS.get(his[0], his[0])} ({his[1]})")
     other = _suggested(tactic, players, mine, opponent, away, spare)
     if other and (better := instructions(other[1], other[2], **context)):
         notes.append(f"Se mudares para {other[0]}:")

@@ -4,6 +4,14 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-PT/1.1.0/); 
 
 Este ficheiro é o **histórico de versões, para quem lê o repo**. O diário interno de cada sessão de trabalho está em [`docs/WORKLOG.md`](docs/WORKLOG.md).
 
+## [0.16.4] — 2026-11-05
+
+Menos texto no cartão: saem duas linhas que não pediam nenhuma ação.
+
+### Removido
+- **"Estilo de jogo dele" no passo "Tática":** a tática continua a seguir o estilo do adversário, mas o passo só avisa quando o teu estilo tem de mudar.
+- **Aviso "à venda há…"** no cartão do clube: não pedia nenhuma ação. Com a regra de vender sempre ao máximo, os jogadores acabam por vender (nas 244 vendas registadas, a mais lenta demorou ~7 dias, sem baixar o preço).
+
 ## [0.16.3] — 2026-11-04
 
 A tática contra humanos passa a seguir a do adversário, em vez de variar à sorte.

@@ -55,13 +55,9 @@ def test_league_cup_and_squad_value_and_one_money_line_with_the_sales():
     assert view["sales"] == ["✓ Jogador 7 vendido · +166,66 M"]
     assert view["alert"] == "1 vaga livre na lista de transferências"
     assert club_view(club(free_slots=0), NOW)["alert"] == ""
-    stale_view = club_view(club(stale=[{"name": "Kovacic", "for": 95 * 3600, "normal": 46 * 3600}]), NOW)
-    stale = stale_view["alerts"]
-    assert stale_view["alerts_tips"] == ["", "Normal a este preço: ~1 dia e 22h00"]  # each line's hover (owner, 2026-10-22)
     rest = club_view(club(rest=[{"name": "Kane", "fitness": 83, "then": 79, "first": "Elche", "second": "Real Madrid"}]), NOW)
     assert rest["rest"] == ["Kane 83%: se jogar contra o Elche, chega a ~79% contra o Real Madrid"]
-    assert stale == ["1 vaga livre na lista de transferências",  # one under the other (owner, 2026-10-22)
-                     "Kovacic à venda há 3 dias e 23h00"]
+    assert view["alerts"] == ["1 vaga livre na lista de transferências"]  # no "à venda há" (owner, 2026-11-05)
     out = club_view(club(cup=("eliminado nos oitavos-de-final", "out"), value=None), NOW)
     assert out["facts"][1][2] == GREY and out["squad"]["total"] == "—"
 

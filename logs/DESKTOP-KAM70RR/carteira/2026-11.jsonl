@@ -192,3 +192,25 @@
 {"t":1793769627,"saldo":3387,"antes":3386,"diferenca":1,"partes":{"vídeos da loja":1}}
 {"t":1793769762,"saldo":3389,"antes":3387,"diferenca":2,"partes":{"vídeos da loja":2}}
 {"t":1793771717,"saldo":3390,"antes":3389,"diferenca":1,"partes":{"vídeos da loja":1}}
+{"t":1793826424,"saldo":3341,"antes":3390,"diferenca":-49,"partes":{"fora do bot":-49}}
+{"t":1793826512,"saldo":3302,"antes":3341,"diferenca":-39,"partes":{"estádio":-39}}
+{"t":1793826541,"saldo":3298,"antes":3302,"diferenca":-4,"partes":{"amigáveis":-4}}
+{"t":1793828186,"saldo":3300,"antes":3298,"diferenca":2,"partes":{"vídeos da loja":2}}
+{"t":1793828366,"saldo":3302,"antes":3300,"diferenca":2,"partes":{"vídeos da loja":2}}
+{"t":1793828549,"saldo":3304,"antes":3302,"diferenca":2,"partes":{"vídeos da loja":2}}
+{"t":1793828695,"saldo":3307,"antes":3304,"diferenca":3,"partes":{"vídeos da loja":3}}
+{"t":1793831522,"saldo":3171,"antes":3307,"diferenca":-136,"partes":{"treinos acabados":-136}}
+{"t":1793831708,"saldo":3172,"antes":3171,"diferenca":1,"partes":{"vídeos da loja":1}}
+{"t":1793831811,"saldo":3173,"antes":3172,"diferenca":1,"partes":{"vídeos da loja":1}}
+{"t":1793831880,"saldo":3174,"antes":3173,"diferenca":1,"partes":{"vídeos da loja":1}}
+{"t":1793831949,"saldo":3175,"antes":3174,"diferenca":1,"partes":{"vídeos da loja":1}}
+{"t":1793832146,"saldo":3176,"antes":3175,"diferenca":1,"partes":{"vídeos da loja":1}}
+{"t":1793832326,"saldo":3179,"antes":3176,"diferenca":3,"partes":{"vídeos da loja":3}}
+{"t":1793832348,"saldo":3180,"antes":3179,"diferenca":1,"partes":{"vídeos da loja":1}}
+{"t":1793835368,"saldo":3181,"antes":3180,"diferenca":1,"partes":{"vídeos da loja":1}}
+{"t":1793835566,"saldo":3183,"antes":3181,"diferenca":2,"partes":{"vídeos da loja":2}}
+{"t":1793835627,"saldo":3184,"antes":3183,"diferenca":1,"partes":{"vídeos da loja":1}}
+{"t":1793835929,"saldo":3187,"antes":3184,"diferenca":3,"partes":{"vídeos da loja":3}}
+{"t":1793836080,"saldo":3189,"antes":3187,"diferenca":2,"partes":{"vídeos da loja":2}}
+{"t":1793836981,"saldo":3192,"antes":3189,"diferenca":3,"partes":{"fora do bot":3}}
+{"t":1793838752,"saldo":3191,"antes":3192,"diferenca":-1,"partes":{"fora do bot":-1}}

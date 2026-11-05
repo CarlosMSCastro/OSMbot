@@ -214,49 +214,6 @@ def purchases(new_members: list[int], transfers: list[dict], team_id: int) -> li
     return bought
 
 
-SALE_BANDS = (5e6, 15e6, 50e6, 100e6)  # the price bands of the "parado na lista" warning (THEORY.md 7.5)
-STALE_FACTOR = 3  # warned past three times the band's median time (owner, 2026-11-03; was 2)
-STALE_MIN_FOR = 24 * 3600  # ... and never before 24 h on the list (a 5 h median would warn at 15 h)
-STALE_MIN_SALES = 3  # a band with fewer sales does not warn
-
-
-def _band(price: float) -> int:
-    return sum(1 for limit in SALE_BANDS if price >= limit)
-
-
-def stale_listings(listed: dict[int, dict], history: list[tuple[float, float]], now: float) -> list[dict]:
-    """The owner's players on the list for more than three times the usual time at their price and at least 24 h
-    (owner, 2026-10-22; 2026-11-03).
-    ``listed``: {player id: {"name", "price", "since"}}; ``history``: (price, seconds it took) of the sales logged.
-    Returns [{"name", "for", "normal"}] (seconds), longest first."""
-    times: dict[int, list[float]] = {}
-    for price, took in history:
-        times.setdefault(_band(price), []).append(took)
-    stale = []
-    for item in listed.values():
-        took = sorted(times.get(_band(item.get("price") or 0)) or [])
-        if len(took) < STALE_MIN_SALES or item.get("since") is None:
-            continue
-        half = len(took) // 2
-        normal = took[half] if len(took) % 2 else (took[half - 1] + took[half]) / 2
-        if now - item["since"] > max(STALE_FACTOR * normal, STALE_MIN_FOR):
-            stale.append({"name": item.get("name", "?"), "for": now - item["since"], "normal": normal})
-    return sorted(stale, key=lambda s: -s["for"])
-
-
-_SALE_LINE = re.compile(r"Venda: (.+?) \((.+?)\) vendido por ([\d,]+) (M|k)\b.*?, vendido (?:às|até) ([^,;]+)"
-                        r", demorou (?:(\d+) dias? e )?(\d+)h(\d+)")
-
-
-def sale_time(line: str) -> tuple[tuple[str, str, str], float, float] | None:
-    """A "Venda:" line of the log as (who, club, when sold), price, seconds it took; None without the time."""
-    found = _SALE_LINE.search(line)
-    if not found:
-        return None
-    name, club, amount, unit, sold, days, hours, minutes = found.groups()
-    price = float(amount.replace(",", ".")) * (1e6 if unit == "M" else 1e3)
-    return (name, club, sold), price, ((int(days or 0) * 24 + int(hours)) * 60 + int(minutes)) * 60
-
 ELEVEN = 11
 MAIN_STAT = {1: "statAtt", 2: "statOvr", 3: "statDef", 4: "statDef"}  # the number in bold for each position
 

@@ -175,23 +175,6 @@ def test_a_sale_says_the_profit_since_the_purchase():
     assert describe("Clube", state)[0].endswith("demorou 1h00; lucro +8 M em 1 dia e 1h00")
 
 
-def test_a_player_on_the_list_three_times_the_usual_time_and_a_day_is_warned():
-    from osmbot.board.info import sale_time, stale_listings
-
-    hour = 3600
-    history = [(3e6, 4 * hour), (4e6, 5 * hour), (2e6, 6 * hour), (70e6, 40 * hour), (80e6, 50 * hour)]
-    listed = {1: {"name": "Barato", "price": 3e6, "since": 0}, 2: {"name": "Novo", "price": 4e6, "since": 9 * hour},
-              3: {"name": "Caro", "price": 90e6, "since": 0}, 4: {"name": "Sem hora", "price": 1e6, "since": None}}
-    assert stale_listings(listed, history, now=25 * hour) == [{"name": "Barato", "for": 25 * hour, "normal": 5 * hour}]
-    # "Novo": 16 h on the list, past 3 x 5 h but not yet 24 h; at 14 h "Barato" is under 3 x 5 h
-    assert stale_listings(listed, history, now=14 * hour) == []
-    # the 50-100 M band has only 2 sales: no warning there yet
-    line = "2026-10-17 19:24:06  Venda: Chalobah (FC Van) vendido por 91,26 M (75% do máximo ≈ 121,04 M); " \
-           "à venda desde 16/10 11:59, vendido às 17/10 19:23, demorou 1 dia e 7h24; lucro +30 M em 2 dias e 0h10"
-    assert sale_time(line) == (("Chalobah", "FC Van", "17/10 19:23"), 91.26e6, (31 * 60 + 24) * 60)
-    assert sale_time("Venda: X (C) vendido por 450 k; à venda desde 1/1 10:00, vendido às 1/1 12:00, demorou 2h00")[1:] == (450e3, 7200)
-    assert sale_time("Venda: Guirassy (FC Van) vendido por 54,65 M; à venda desde antes de o bot começar a seguir, vendido até 12/10 09:13") is None
-
 
 def test_league_round_counts_the_club_s_league_matches_not_the_cup_days():
     from osmbot.board.info import league_round

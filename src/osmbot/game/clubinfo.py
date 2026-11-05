@@ -10,7 +10,7 @@ from __future__ import annotations
 import time
 
 from osmbot.board.info import (cup_phase, eleven_seen, formation_slots, formation_title, league_round, likely_eleven, league_summary, next_match, next_matches,
-                               opponent_rating, season_fixtures, squad_value, stale_listings, team_rating, value_table)
+                               opponent_rating, season_fixtures, squad_value, team_rating, value_table)
 from osmbot.game import market as market_watch, sales
 from osmbot.game.transfers import saved_transfers
 from osmbot.game.specialists import captain_note, check
@@ -312,7 +312,6 @@ def club_extra(client, team: dict, base: str, players: list[dict], slot, market:
     sold = sales.update(f"{league}/{team['id']}", listed, squad, team.get("name", "?"),
                         transfers=lambda: _list(client, f"{league}/transfers") + saved_transfers(team["leagueId"]),
                         team_id=team["id"])
-    stale = stale_listings(listed, sales.sale_times(), time.time())  # "parado na lista" (THEORY.md 7.5)
     owner = next((t.get("userId") for t in teams if t["id"] == team["id"]), None)
     try:  # the engine records (D-034): never in the way of the card
         market_watch.watch(client, got[0][1]["id"], got[0][1].get("name", ""), market, owner)
@@ -437,7 +436,7 @@ def club_extra(client, team: dict, base: str, players: list[dict], slot, market:
         "value": squad_value(values, team["id"]), "strength": strength,
         "value_table": value_table(values, {t["id"]: t["name"] for t in teams}, team["id"]),
         "table": league_summary(standings, teams, matches, team["id"], week, team.get("goal")),
-        "free_slots": free, "sales": sold, "stale": stale, "rest": rest,
+        "free_slots": free, "sales": sold, "rest": rest,
         "prep": {"pct": prep.get("completionPercentage"), "steps": steps, "why": reasons, "boosts": boosts},
         "injured": _people(injured, doctor, timer_minutes(client, team["leagueId"], "DoctorTreatmentTimer")),
         "suspended": _people(suspended, lawyer, timer_minutes(client, team["leagueId"], "LawyerCaseTimer")),
