@@ -2,7 +2,7 @@
 
 Entradas mais recentes primeiro. Cada sessão: o que se fez · o que ficou por fazer · próximo passo.
 
-## 2026-11-05/06 — 0.16.4, 0.17.0, 0.17.1 e 0.18.0: armadilha fora, janela Dados, fim de época (DESKTOP-KAM70RR)
+## 2026-11-05/06 — 0.16.4, 0.17.0, 0.17.1, 0.18.0 e 0.18.1: armadilha fora, janela Dados, fim de época (DESKTOP-KAM70RR)
 
 - **Dist 0.16.3 no DESKTOP-KAM70RR (depois do pull):** 555 testes; portátil 553 MB, zip 206 MB, instalador 148 MB; os da 0.16.2 apagados em `dist/windows/`; notas `dist/release-notes-v0.16.3.md` refeitas a partir do `CHANGELOG`.
 - **Nota do estilo dele retirada (dono, 2026-11-05):** "Estilo de jogo dele: X" não servia para nada; o passo "Tática" só avisa quando o nosso estilo tem de mudar (o aviso que já existia). `THEORY.md` §2.
@@ -23,6 +23,7 @@ Entradas mais recentes primeiro. Cada sessão: o que se fez · o que ficou por f
 - **Betis campeão e vencedor da taça** (111 pontos contra 109 do Barcelona; 40 vitórias em 41 jogos registados, a única derrota o 0-2 com o Barcelona com 5-3-2). Últimos 5 jogos mais apertados (2-1, 2-1, 5-2, 2-1, 1-0) fora do 4-3-3 A, com 5 jogos não se separa da rotação de fim de época; ver na época nova.
 - **Fim de época no cartão (D-097):** maquetas em `tmp/prints_fim_epoca/` (A faixa, B coluna do pré-jogo, C bilhete grande); o dono escolheu a B. O recorte do bilhete a partir do print ficou mau ("mais brio"); as imagens originais estão no CSS público do site (`osm-style.css`): `wc_ticket.png`, `eos_trophy_league/cup(_empty).png` (DISCOVERY). `GET user/tickets` lido (só leitura): o bilhete do Betis expira a 13/11 20:09, uma semana depois; a época vira ~23 h depois do último jogo. Construído: `club_ticket`, `season_end_view`, `ticket_reminder`, `SeasonEnd`; 568 testes.
 - **Versão 0.18.0 (pedido do dono):** `pyproject`, `__init__`, `CHANGELOG`, `README`, `dist/release-notes-v0.18.0.md`; dist Windows 0.18.0, os da 0.17.1 apagados. Commit e `gh release create v0.18.0` entregues ao dono. **Por ver:** o cartão a sério no fim desta época (o Betis vira em ~22 h) e, na época nova, a linha do bilhete.
+- **0.18.1 (dono: "aparece tudo, desaparece tudo"):** o `SeasonEnd` era refeito a cada redesenho (1 s) e piscava; agora só quando o conteúdo muda, e os passos do pré-jogo ficam escondidos sem serem preenchidos. Teste novo; 569 testes; dist Windows 0.18.1, os da 0.18.0 apagados.
 - **Por fazer:** medir D-094 daqui a umas semanas (golos sofridos e pontos por jogo sem a armadilha).
 
 ## 2026-11-04 — Tática pelo adversário humano (PT-LA-02-0095-N)

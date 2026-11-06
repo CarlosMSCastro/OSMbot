@@ -310,3 +310,17 @@ def test_the_data_window_reads_the_logs_and_follows_the_filters(window, monkeypa
     data.clear()
     assert len(data.kept) == 6 and data.chips[0].property("on") == "false"
     data.close()
+
+
+def test_the_end_of_the_season_is_built_once_not_every_second(window):
+    from osmbot.gui.window import ClubCard, QLabel
+
+    end = {"rows": [{"icon": "league", "title": "Campeão da liga", "note": "1.º · 111 pontos"}],
+           "ticket": {"title": "Taça dos Vencedores", "expires": "expira a 13/11 às 20:09"}}
+    card = ClubCard()
+    card.season_end.show_end(end)
+    first = card.season_end.findChildren(QLabel)
+    card.season_end.show_end(dict(end))  # the next second: the same content
+    assert card.season_end.findChildren(QLabel) == first and len(first) == 8
+    card.season_end.show_end(None)
+    assert card.season_end.isHidden()

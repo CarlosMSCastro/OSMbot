@@ -4,6 +4,13 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-PT/1.1.0/); 
 
 Este ficheiro é o **histórico de versões, para quem lê o repo**. O diário interno de cada sessão de trabalho está em [`docs/WORKLOG.md`](docs/WORKLOG.md).
 
+## [0.18.1] — 2026-11-06
+
+O bloco "Fim de época" deixa de piscar.
+
+### Corrigido
+- **"Fim de época" a piscar:** o cartão é redesenhado a cada segundo (por causa das contagens) e o bloco dos troféus e do bilhete era refeito de cada vez, por isso aparecia e desaparecia. Agora só é refeito quando muda alguma coisa.
+
 ## [0.18.0] — 2026-11-06
 
 O fim da época aparece no cartão do clube: os troféus e o bilhete para a Taça dos Vencedores.

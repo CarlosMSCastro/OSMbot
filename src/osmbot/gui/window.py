@@ -1559,8 +1559,14 @@ class SeasonEnd(QWidget):
         self.column = QVBoxLayout(self)
         self.column.setContentsMargins(0, 2, 0, 0)
         self.column.setSpacing(8)
+        self.shown: dict | None = None
 
     def show_end(self, end: dict | None) -> None:
+        """Built again only when it changes: the card is redrawn every second (the countdowns), and a block built
+        again each time blinks (owner, 2026-11-06: "aparece tudo, desaparece tudo")."""
+        if end == self.shown:
+            return
+        self.shown = end
         clear_layout(self.column)
         self.setVisible(bool(end))
         if not end:
@@ -1818,10 +1824,13 @@ class ClubCard(QFrame):
         self.universal_cell.show_care(club["universal"], self.timer, self.full)
         end = club.get("season_end")
         self.prep_title.setText(tr("FIM DE ÉPOCA") if end else tr(club["prep_title"]))
-        self._show_prep(club["prep"]["steps"])
-        self.boosts.show_boosts(club["prep"].get("boosts") or [])
-        self.prep.setVisible(not end)
-        self.boosts.setVisible(not end and bool(club["prep"].get("boosts")))
+        if end:  # the steps and boosts hidden, not filled and hidden again every second (it blinked)
+            self.prep.hide()
+            self.boosts.hide()
+        else:
+            self.prep.show()
+            self._show_prep(club["prep"]["steps"])
+            self.boosts.show_boosts(club["prep"].get("boosts") or [])
         self.season_end.show_end(end)
         self._show_trainings(club["trainings"])
         self.badge.show_value(club.get("value_badge"))
