@@ -111,7 +111,7 @@ def collect(client) -> dict:
     from osmbot.game.clubinfo import max_listed, session_minutes, timer_minutes
 
     started = time.time()  # when the reading began: the board keeps the newest one (bot's or window's)
-    (_, account), (_, wallet) = get_many(client, ["user/accounts", "user/bosscoinwallet"])
+    (_, account), (_, wallet), (_, tickets) = get_many(client, ["user/accounts", "user/bosscoinwallet", "user/tickets"])
     leagues = {c["team"]["name"]: c.get("league") or {} for c in (account.get("teamSlots") or {}).values() if c and c.get("team")}
 
     def read_club(team: dict, base: str) -> dict:
@@ -216,6 +216,9 @@ def collect(client) -> dict:
         account_part = pool.submit(read_account)
         clubs = list(pool.map(lambda item: read_club(*item), teams))
         ads, daily = account_part.result()
+    slots = [key for key, c in sorted((account.get("teamSlots") or {}).items()) if c and c.get("team")]
+    for key, club in zip(slots, clubs):
+        club["ticket"] = club_ticket(tickets, key, club["name"], started)
     try:
         from osmbot.game.inventory import inventory_items
 
@@ -237,6 +240,16 @@ def collect(client) -> dict:
         pass
     return {"coins": wallet.get("amount"), "clubs": clubs, "ads": ads, "daily": daily, "read_at": started,
             "events": calendar_events(started), "calendar": calendar_months(), "inventory": inventory}
+
+
+def club_ticket(tickets, slot, name: str, now: float) -> dict | None:
+    """The Winners Cup ticket a club won and has not used (``user/tickets``, DISCOVERY.md, 2026-11-06): the one given
+    on its team slot (or with its name), not claimed and not expired; ``{"expires": timestamp}``."""
+    for ticket in tickets if isinstance(tickets, list) else []:
+        mine = str(ticket.get("rewardedOnTeamSlotIndex")) == str(slot) or (ticket.get("team") or {}).get("name") == name
+        if mine and not ticket.get("claimedAt") and (ticket.get("expiresAt") or 0) > now:
+            return {"expires": ticket["expiresAt"]}
+    return None
 
 
 def _universal(club: dict) -> list[dict]:

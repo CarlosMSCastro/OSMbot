@@ -1533,9 +1533,87 @@ TRAINING_WIDTH = 104  # one column of the trainings and of the doctor/lawyer
 MAC = sys.platform == "darwin"
 
 
+TROPHIES = {key: ASSETS / f"eos_trophy_{key}.png" for key in ("league", "league_empty", "cup", "cup_empty")}
+TICKET_FILE = ASSETS / "wc_ticket.png"  # the game's Winners Cup ticket (D-033, D-097)
+
+
+def sharp(path: Path, width: int = 0, height: int = 0) -> QPixmap:
+    """A bundled picture at a size, sharp on a high-DPI screen too (empty when the file is missing)."""
+    pixmap = QPixmap(str(path))
+    if pixmap.isNull():
+        return pixmap
+    ratio = QApplication.instance().devicePixelRatio() if QApplication.instance() else 1.0
+    scaled = (pixmap.scaledToWidth(round(width * ratio), Qt.SmoothTransformation) if width
+              else pixmap.scaledToHeight(round(height * ratio), Qt.SmoothTransformation))
+    scaled.setDevicePixelRatio(ratio)
+    return scaled
+
+
+class SeasonEnd(QWidget):
+    """The end of the season in place of the pre-match steps (owner, 2026-11-06, D-097): the trophies (the game's
+    images, empty when not won) and the Winners Cup ticket with when it expires."""
+
+    def __init__(self, width: int):
+        super().__init__()
+        self.inner = width
+        self.column = QVBoxLayout(self)
+        self.column.setContentsMargins(0, 2, 0, 0)
+        self.column.setSpacing(8)
+
+    def show_end(self, end: dict | None) -> None:
+        clear_layout(self.column)
+        self.setVisible(bool(end))
+        if not end:
+            return
+        for row in end["rows"]:
+            line = QHBoxLayout()
+            line.setSpacing(10)
+            cup = QLabel()
+            cup.setFixedWidth(30)
+            cup.setAlignment(Qt.AlignCenter)
+            cup.setPixmap(sharp(TROPHIES[row["icon"]], height=40))
+            line.addWidget(cup)
+            words = QVBoxLayout()
+            words.setSpacing(0)
+            title = text_label(10, True)
+            title.setText(tr(row["title"]))
+            words.addWidget(title)
+            if row["note"]:
+                note = text_label(8, colour=GREY)
+                note.setText(escape_text(tr(row["note"])))
+                words.addWidget(note)
+            line.addLayout(words, 1)
+            self.column.addLayout(line)
+        ticket = end.get("ticket")
+        if ticket:
+            self.column.addSpacing(10)
+            picture = QLabel()
+            picture.setAlignment(Qt.AlignCenter)
+            picture.setPixmap(sharp(TICKET_FILE, width=self.inner))
+            self.column.addWidget(picture)
+            for text, size, bold, colour in (("Bilhete para a", 8, False, GREY), (ticket["title"], 11, True, YELLOW),
+                                             (ticket["expires"], 9, False, None), ("participar: no jogo", 8, False, GREY)):
+                label = text_label(size, bold, colour)
+                label.setAlignment(Qt.AlignCenter)
+                label.setText(escape_text(tr(text)))
+                self.column.addWidget(label)
+
+
+def clear_layout(layout) -> None:
+    """Empties a layout and the ones inside it, its widgets gone at once."""
+    while layout.count():
+        item = layout.takeAt(0)
+        if item.widget():
+            item.widget().setParent(None)
+            item.widget().deleteLater()
+        elif item.layout():
+            clear_layout(item.layout())
+
+
 class ClubCard(QFrame):
     """One club (D-030), three columns: the club (name, match, value, money, sponsors, stadium) · the trainings as
-    rings · the pre-match checklist with the tired, injured and suspended players under it."""
+    rings · the pre-match checklist with the tired, injured and suspended players under it; at the end of the season
+    the trophies and the Winners Cup ticket in place of the checklist (D-097)."""
 
     LABEL_WIDTH = 104
 
@@ -1652,6 +1730,9 @@ class ClubCard(QFrame):
         prep.addSpacing(7)  # a step's gap less half of the 4 px the boost rows are taller
         self.boosts = BoostList(size=10, spacing=9)  # secret training and training camp, after the steps (owner, 2026-10-14)
         prep.addWidget(self.boosts)
+        self.season_end = SeasonEnd(235 - 36)  # the column's width less its margins
+        self.season_end.hide()
+        prep.addWidget(self.season_end)
         prep.addSpacing(8)
         self.tired = text_label(9, colour=YELLOW)
         self.tired.setWordWrap(True)
@@ -1735,9 +1816,13 @@ class ClubCard(QFrame):
         for cell, ring in zip(self.care_cells, club["care"]):
             cell.show_care(ring, self.timer, self.full)
         self.universal_cell.show_care(club["universal"], self.timer, self.full)
-        self.prep_title.setText(tr(club["prep_title"]))
+        end = club.get("season_end")
+        self.prep_title.setText(tr("FIM DE ÉPOCA") if end else tr(club["prep_title"]))
         self._show_prep(club["prep"]["steps"])
         self.boosts.show_boosts(club["prep"].get("boosts") or [])
+        self.prep.setVisible(not end)
+        self.boosts.setVisible(not end and bool(club["prep"].get("boosts")))
+        self.season_end.show_end(end)
         self._show_trainings(club["trainings"])
         self.badge.show_value(club.get("value_badge"))
         self.badge.show_eleven(club.get("eleven"))

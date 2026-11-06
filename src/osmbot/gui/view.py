@@ -373,6 +373,44 @@ def fixtures_view(fixtures: list[dict], round_text: str) -> dict | None:
     return {"title": f"Época · {round_text}" if round_text else "Época", "cells": cells, "strip": strip}
 
 
+def ticket_text(ticket: dict | None, now: float) -> str:
+    """When the Winners Cup ticket expires: "expira a 13/11 às 20:09" (not when the season turns, DISCOVERY.md)."""
+    if not ticket or ticket["expires"] <= now:
+        return ""
+    return f"expira a {datetime.fromtimestamp(ticket['expires']):%d/%m às %H:%M}"
+
+
+def ticket_reminder(club: dict, now: float) -> list[str]:
+    """The ticket once the new season has begun (the pre-match column is back): a line under the steps."""
+    expires = ticket_text(club.get("ticket"), now)
+    if not expires or season_end_view(club, now):
+        return []
+    return [f"Bilhete para a Taça dos Vencedores: {expires} (participar no jogo)"]
+
+
+def season_end_view(club: dict, now: float) -> dict | None:
+    """The end of the season (owner, 2026-11-06, D-097): once every league round is played and the club is out of the
+    cup or has won it, the pre-match column shows the season's trophies (the game's images, full when won, empty
+    when not) and the Winners Cup ticket with when it expires. None while the season goes on."""
+    played, total = club.get("round") or (None, None)
+    cup, state = club.get("cup") or ("—", "none")
+    if not total or played < total or state == "in" or club.get("next"):
+        return None
+    ranking = club.get("ranking")
+    points = next((row[2] for row in (club.get("table") or {}).get("rows") or [] if row[3]), None)
+    note = f"{ranking}.º · {points} pontos" if points is not None else (f"{ranking}.º" if ranking else "")
+    rows = [{"icon": "league" if ranking == 1 else "league_empty",
+             "title": "Campeão da liga" if ranking == 1 else "Liga", "note": note}]
+    if state == "won":
+        final = next((f for f in reversed(club.get("fixtures") or []) if f.get("kind") == "taça" and f.get("score")), None)
+        rows.append({"icon": "cup", "title": "Vencedor da taça",
+                     "note": f"final {final['score']} vs {final['opponent']}" if final else ""})
+    elif state == "out":
+        rows.append({"icon": "cup_empty", "title": "Taça", "note": cup[:1].upper() + cup[1:]})
+    expires = ticket_text(club.get("ticket"), now)
+    return {"rows": rows, "ticket": {"title": "Taça dos Vencedores", "expires": expires} if expires else None}
+
+
 def club_view(club: dict, now: float, shortened: dict | None = None) -> dict:
     """One club's card (D-026): header, Liga · Taça · Valor do plantel, money and sales, sponsors, stadium,
     pre-match checklist, trainings, tired starters, injured and suspended players."""
@@ -473,7 +511,8 @@ def club_view(club: dict, now: float, shortened: dict | None = None) -> dict:
             "tired": tired_text, "tired_tip": tired_tip,
             "morale": " · ".join(f"{p['name']} {p['morale']}" for p in club.get("low_morale") or []), "rest": [  # THEORY.md 16: rest him before the important one
                 f"{p['name']} {p['fitness']}%: se jogar contra o {p['first']}, chega a ~{p['then']}% contra o {p['second']}"
-                for p in club.get("rest") or []], "reminders": club.get("reminders") or [], "sale": sale_view(club), "eleven": eleven_view(club.get("eleven"), slots=club.get("places")), "value_badge": rating_badge(club.get("strength")), "table_tip": table_tip,
+                for p in club.get("rest") or []], "reminders": (club.get("reminders") or []) + ticket_reminder(club, now), "sale": sale_view(club),
+            "season_end": season_end_view(club, now), "eleven": eleven_view(club.get("eleven"), slots=club.get("places")), "value_badge": rating_badge(club.get("strength")), "table_tip": table_tip,
             "injured": _people(club.get("injured") or [], "no médico", now),
             "suspended": _people(club.get("suspended") or [], "no advogado", now),
             "stadium_rings": stadium_rings(club.get("stadium"), now),

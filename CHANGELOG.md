@@ -4,6 +4,15 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-PT/1.1.0/); 
 
 Este ficheiro é o **histórico de versões, para quem lê o repo**. O diário interno de cada sessão de trabalho está em [`docs/WORKLOG.md`](docs/WORKLOG.md).
 
+## [0.18.0] — 2026-11-06
+
+O fim da época aparece no cartão do clube: os troféus e o bilhete para a Taça dos Vencedores.
+
+### Adicionado
+- **Fim de época no cartão:** quando um clube joga a última jornada e já não tem jogos da taça, a coluna do pré-jogo passa a **"Fim de época"**. Mostra os troféus com as imagens do jogo (campeão da liga, com os pontos; vencedor da taça, com o resultado da final; o troféu vazio quando não ganhou, com a posição ou a fase em que saiu) e, se o clube ganhou um, o **bilhete para a Taça dos Vencedores** com a imagem do jogo e o dia e a hora em que expira. Participar faz-se no jogo; o bot não toca no bilhete.
+- **Bilhete na época nova:** depois de a época virar, enquanto o bilhete não expira, fica uma linha no cartão a lembrar ("Bilhete para a Taça dos Vencedores: expira a …").
+- O bot lê os bilhetes do jogo (`user/tickets`, só leitura) a cada leitura do quadro.
+
 ## [0.17.1] — 2026-11-06
 
 A janela Ver → Dados refeita: mais simples, contada em vitórias, com toda a informação à distância de um clique.

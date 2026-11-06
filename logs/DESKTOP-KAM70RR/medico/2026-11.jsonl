@@ -5,3 +5,4 @@
 {"t":1793686477,"evento":"levantar","tipo":"doctor","clube":"leagues/248015013/teams/8","semana":17,"caso":11082398,"jogador":877246514,"nome":"Andersen","antes":{"fora":4,"lesao":15,"suspensao":0},"depois":{"fora":3,"lesao":15,"suspensao":0}}
 {"t":1793686479,"evento":"pôr","tipo":"doctor","clube":"leagues/248015013/teams/8","semana":17,"jogador":877246514,"nome":"Andersen","antes":{"fora":4,"lesao":15,"suspensao":0}}
 {"t":1793744191,"evento":"levantar","tipo":"doctor","clube":"leagues/248015013/teams/8","semana":18,"caso":11082785,"jogador":877246514,"nome":"Andersen","antes":{"fora":1,"lesao":15,"suspensao":0},"depois":{"fora":0,"lesao":0,"suspensao":0}}
+{"t":1793996902,"evento":"pôr","tipo":"doctor","clube":"leagues/246031208/teams/1","semana":43,"jogador":956155683,"nome":"Díaz","antes":{"fora":6,"lesao":21,"suspensao":0}}

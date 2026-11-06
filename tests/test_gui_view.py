@@ -489,3 +489,51 @@ def test_with_the_formation_each_player_stands_and_is_named_by_his_place():
     # a 4-5-1 A: the MCD in the middle, behind, the four others where they were
     mids = [{"place": p} for p in ("ME", "MC", "MCD", "MC", "MD")]
     assert sorted((round(x, 3), d) for x, d, _ in pitch_spots(mids)) == [(0.125, 0), (0.375, 0), (0.5, -1), (0.625, 0), (0.875, 0)]
+
+
+def test_the_end_of_the_season_shows_the_trophies_and_the_winners_cup_ticket():
+    from datetime import datetime
+
+    from osmbot.gui.view import season_end_view
+
+    expires = datetime(2026, 11, 13, 20, 9).timestamp()
+    entry = {"week": 1, "round": None, "cup": "", "next": False, "played": True, "key": "b", "logo": None, "side": "H",
+             "neutral": False, "result": "W"}
+    final = {**entry, "week": 2, "kind": "taça", "cup": "Final", "score": "2-1", "opponent": "Clube B"}
+    ended = club(next=None, match=None, ranking=1, round=(38, 38), cup=("vencedor", "won"), ticket={"expires": expires},
+                 table={"rows": [(1, "Clube A", 111, True, 38, 90), (2, "Clube B", 109, False, 38, 70)]},
+                 fixtures=[{**entry, "round": 1, "kind": "liga", "score": "3-0", "opponent": "Clube C"}, final])
+    view = club_view(ended, NOW)
+    assert view["season_end"] == {
+        "rows": [{"icon": "league", "title": "Campeão da liga", "note": "1.º · 111 pontos"},
+                 {"icon": "cup", "title": "Vencedor da taça", "note": "final 2-1 vs Clube B"}],
+        "ticket": {"title": "Taça dos Vencedores", "expires": "expira a 13/11 às 20:09"}}
+    assert not any("Bilhete" in line for line in view["reminders"])  # the column says it
+    third = season_end_view(club(next=None, round=(38, 38), cup=("eliminado nos oitavos-de-final", "out")), NOW)
+    assert third["rows"] == [{"icon": "league_empty", "title": "Liga", "note": "3.º"},
+                             {"icon": "cup_empty", "title": "Taça", "note": "Eliminado nos oitavos-de-final"}]
+    assert third["ticket"] is None
+    assert season_end_view(club(round=(37, 38)), NOW) is None  # the season goes on
+    assert season_end_view(club(next=None, round=(38, 38), cup=("final", "in")), NOW) is None  # the cup final is still to come
+    assert season_end_view(club(next=None, round=(38, 38), cup=("vencedor", "won"), ticket={"expires": NOW - 1}), NOW)["ticket"] is None
+
+
+def test_the_ticket_is_a_reminder_once_the_new_season_has_begun():
+    from datetime import datetime
+
+    expires = datetime(2026, 11, 13, 20, 9).timestamp()
+    view = club_view(club(round=(1, 38), ticket={"expires": expires}), NOW)
+    assert view["season_end"] is None
+    assert view["reminders"][-1] == "Bilhete para a Taça dos Vencedores: expira a 13/11 às 20:09 (participar no jogo)"
+
+
+def test_a_club_s_ticket_is_the_one_on_its_slot_not_used_and_not_expired():
+    from osmbot.game.dashboard import club_ticket
+
+    tickets = [{"rewardedOnTeamSlotIndex": 1, "team": {"name": "Outro"}, "claimedAt": None, "expiresAt": NOW + 10},
+               {"rewardedOnTeamSlotIndex": 0, "team": {"name": "Clube A"}, "claimedAt": None, "expiresAt": NOW + 99}]
+    assert club_ticket(tickets, "0", "Clube A", NOW) == {"expires": NOW + 99}
+    assert club_ticket(tickets, "2", "Clube C", NOW) is None
+    assert club_ticket([{**tickets[1], "claimedAt": NOW}], "0", "Clube A", NOW) is None
+    assert club_ticket([{**tickets[1], "expiresAt": NOW - 1}], "0", "Clube A", NOW) is None
+    assert club_ticket({"error": "x"}, "0", "Clube A", NOW) is None
