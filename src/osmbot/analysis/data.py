@@ -14,7 +14,8 @@ else the nearest analyst's report on that club in the same league (``managerName
 
 The odds by strength: for each row, the share of wins, draws and losses among the ``NEIGHBOURS`` rows of all clubs
 closest to it in strength ratio (``forca`` of the game, home and away apart). "EV" is points won minus the points
-those odds gave (3 × win + draw).
+those odds gave (3 × win + draw). The window counts in wins (``tally``, ``verdict``): won 45 of 55 where the odds
+gave 36 is "9 a mais" (owner, 2026-11-06, D-096: "+0,xx" read as nothing).
 """
 from __future__ import annotations
 
@@ -220,8 +221,10 @@ TACTIC_FIELDS = (("formacao", "Formação"), ("plano", "Estilo de jogo"), ("desa
 OWN_FIELDS = (("mentalidade", "Mentalidade"), ("pressao", "Pressão"), ("tempo", "Temporização"),
               ("avancados", "Avançados"), ("medios", "Médios"), ("defesa", "Defesa"))
 ANY = "Qualquer"
-STRENGTH_BANDS = {"Qualquer": (-1000, 1000), "Muito mais forte (> 12 %)": (12, 1000), "Mais forte (5–12 %)": (5, 12),
-                  "Parecida (± 5 %)": (-5, 5), "Mais fraco (5–12 %)": (-12, -5), "Muito mais fraco (> 12 %)": (-1000, -12)}
+STRENGTH_BANDS = {"Qualquer": (-1000, 1000), "vs muito mais forte": (-1000, -12), "vs mais forte": (-12, -5),
+                  "vs parecido": (-5, 5), "vs mais fraco": (5, 12), "vs muito mais fraco": (12, 1000)}
+"""The rival's strength against this side's (owner, 2026-11-06: "vs muito mais forte, mais forte, etc."): the rival
+much stronger means this side more than 12 % weaker."""
 PERIODS = {"Tudo": None, "Últimos 7 dias": 7, "Últimos 30 dias": 30, "Últimos 90 dias": 90}
 
 
@@ -297,31 +300,53 @@ def summary(kept: list[Row]) -> dict:
             "edge": mean(r.edge for r in kept)}
 
 
-def patterns(kept: list[Row], own: bool = False, minimum: int = 1) -> list[tuple[str, str, int, float, float]]:
-    """For each tactic field of the side, each value it took in the kept rows: (field, value, matches, points per
-    match, EV), best EV first. ``own``: also the sliders and lines (the owner's matches only)."""
-    fields = TACTIC_FIELDS + (OWN_FIELDS if own else ())
-    out = []
-    for key, name in fields:
-        groups: dict[str, list[Row]] = {}
-        for r in kept:
-            value = r.tactic.get(key)
-            if value:
-                groups.setdefault(value, []).append(r)
-        for value, group in groups.items():
-            if len(group) >= minimum:
-                out.append((name, value, len(group), mean(r.points for r in group),
-                            mean(r.points - r.expected for r in group)))
-    return sorted(out, key=lambda p: -p[4])
+def difficulty(row: Row) -> str:
+    """The row's band of ``STRENGTH_BANDS`` (the rival's strength against this side's)."""
+    for name, (low, high) in list(STRENGTH_BANDS.items())[1:]:
+        if (low < row.edge <= high) if high < 1000 else row.edge > low:
+            return name
+    return "vs muito mais forte"
 
 
-def matchups(kept: list[Row], minimum: int = 1) -> list[tuple[str, str, int, float]]:
-    """Formation (and style when known) against the rival's, with matches and EV, best EV first."""
-    groups: dict[tuple[str, str], list[Row]] = {}
+def tally(kept: list[Row]) -> dict:
+    """Wins, draws and losses, and how many of each the odds by strength gave (the "normal")."""
+    return {"n": len(kept), "wins": sum(r.points == 3 for r in kept), "draws": sum(r.points == 1 for r in kept),
+            "losses": sum(r.points == 0 for r in kept), "normal": tuple(sum(r.odds[i] for r in kept) for i in range(3))}
+
+
+def verdict(t: dict) -> tuple[str, int]:
+    """Wins against the normal, in words: ("9 a mais", 1), ("2 a menos", -1) or ("o esperado", 0) when under one."""
+    gap = t["wins"] - t["normal"][0]
+    if abs(gap) < 1:
+        return "o esperado", 0
+    return f"{round(abs(gap))} a {'mais' if gap > 0 else 'menos'}", 1 if gap > 0 else -1
+
+
+ORDERED = {"mentalidade", "pressao", "tempo"}  # the sliders' bands read best in their own order
+
+
+def split(kept: list[Row], key: str) -> list[tuple[str, list[Row]]]:
+    """The kept rows by one thing: a field of this side's tactic, ``rival:<field>`` for the rival's, ``dificuldade``,
+    ``treinador`` (the rival human or the computer) or ``onde`` (home, away, neutral). Most matches first, except the
+    sliders and the difficulty (in their own order)."""
+    groups: dict[str, list[Row]] = {}
     for r in kept:
-        mine = " · ".join(v for v in (r.tactic.get("formacao"), r.tactic.get("plano")) if v)
-        theirs = " · ".join(v for v in (r.rival_tactic.get("formacao"), r.rival_tactic.get("plano")) if v)
-        if mine and theirs:
-            groups.setdefault((mine, theirs), []).append(r)
-    return sorted(((a, b, len(g), mean(r.points - r.expected for r in g)) for (a, b), g in groups.items()
-                   if len(g) >= minimum), key=lambda x: (-x[2], -x[3]))
+        if key == "dificuldade":
+            value = difficulty(r)
+        elif key == "treinador":
+            value = None if r.rival_human is None else "Humano" if r.rival_human else "Computador"
+        elif key == "onde":
+            value = "Campo neutro" if r.neutral else "Em casa" if r.home else "Fora"
+        elif key.startswith("rival:"):
+            value = r.rival_tactic.get(key[6:])
+        else:
+            value = r.tactic.get(key)
+        if value:
+            groups.setdefault(value, []).append(r)
+    found = list(groups.items())
+    if key == "dificuldade":
+        order = list(STRENGTH_BANDS)
+        return sorted(found, key=lambda g: order.index(g[0]))
+    if key.split(":")[-1] in ORDERED:
+        return sorted(found)
+    return sorted(found, key=lambda g: (-len(g[1]), g[0]))

@@ -2,7 +2,7 @@
 
 Entradas mais recentes primeiro. Cada sessão: o que se fez · o que ficou por fazer · próximo passo.
 
-## 2026-11-05/06 — 0.16.4 e 0.17.0: armadilha fora, janela Dados (DESKTOP-KAM70RR)
+## 2026-11-05/06 — 0.16.4, 0.17.0 e 0.17.1: armadilha fora, janela Dados (DESKTOP-KAM70RR)
 
 - **Dist 0.16.3 no DESKTOP-KAM70RR (depois do pull):** 555 testes; portátil 553 MB, zip 206 MB, instalador 148 MB; os da 0.16.2 apagados em `dist/windows/`; notas `dist/release-notes-v0.16.3.md` refeitas a partir do `CHANGELOG`.
 - **Nota do estilo dele retirada (dono, 2026-11-05):** "Estilo de jogo dele: X" não servia para nada; o passo "Tática" só avisa quando o nosso estilo tem de mudar (o aviso que já existia). `THEORY.md` §2.
@@ -18,6 +18,8 @@ Entradas mais recentes primeiro. Cada sessão: o que se fez · o que ficou por f
 - **Janela "Dados" construída (D-095, dono: "bora"):** `analysis/data.py` (linhas por lado, tática conhecida, treinador, odds pelos 80 vizinhos de força, filtros, resumo, padrões, confrontos), `gui/data_window.py`, Ver → Dados; 564 testes; lê 1 726 linhas em ~0,4 s. Pedido original: Ver → Dados, mesmo aspeto; tática A contra B com tudo como filtros (formação, estilo, desarme, marcação, armadilha; barras e instruções por linha só nos nossos jogos); por omissão todos os clubes; filtros liga, treinador/CPU de cada lado, período; barra vitória/empate/derrota pela força + EV da tática (pontos acima do esperado), com o número de jogos sempre ao lado; golos, remates e posse, força média dos plantéis, lista dos jogos. Estimativa: 2–3 h + dist.
 - **Dist refeito com a janela Dados e o registo dos treinadores:** `dist/windows/` ainda com o número 0.16.4 (553 / 206 / 148 MB); `analysis/` e `gui/data_window.py` confirmados dentro do portátil.
 - **Versão 0.17.0 (pedido do dono):** `pyproject`, `__init__`, `CHANGELOG`, `README`, `dist/release-notes-v0.17.0.md`; 564 testes; dist Windows 0.17.0 (206 / 148 MB), os da 0.16.4 apagados. Commit e `gh release create v0.17.0` entregues ao dono.
+- **Janela Dados refeita (D-096):** o dono achou-a confusa. Maquetas em `tmp/prints_dados/` (ignorado pelo git): painel, destaques, um gráfico por campo, frente a frente, barra lateral; o "+0,xx" não se percebia, nem explicado; trocado por vitórias contra o normal pela força ("45 de 55, normal 36, 9 a mais"). Escolhido o print 8 (um cartão por campo), com o fundo. Construído: separadores A minha tática / O adversário / Jogos, clique numa linha abre os números, pastilhas clube/período/dificuldade/adversário/+ Filtro. 565 testes. **Por fazer:** o dono ver a janela a sério (Ver → Dados) e dizer o que muda.
+- **Versão 0.17.1 (pedido do dono):** `pyproject`, `__init__`, `CHANGELOG`, `README` (estado; saiu a menção ao aviso "à venda há", retirado na 0.16.4), `dist/release-notes-v0.17.1.md`; dist Windows 0.17.1, os da 0.17.0 apagados. Commit e `gh release create v0.17.1` entregues ao dono.
 - **Por fazer:** medir D-094 daqui a umas semanas (golos sofridos e pontos por jogo sem a armadilha).
 
 ## 2026-11-04 — Tática pelo adversário humano (PT-LA-02-0095-N)

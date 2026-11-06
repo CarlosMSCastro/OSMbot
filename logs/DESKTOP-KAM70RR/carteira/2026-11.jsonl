@@ -284,3 +284,11 @@
 {"t":1793945319,"saldo":3327,"antes":3331,"diferenca":-4,"partes":{"amigáveis":-4}}
 {"t":1793945357,"saldo":3328,"antes":3327,"diferenca":1,"partes":{"vídeos da loja":1}}
 {"t":1793945562,"saldo":3329,"antes":3328,"diferenca":1,"partes":{"vídeos da loja":1}}
+{"t":1793991254,"saldo":3410,"antes":3329,"diferenca":81,"partes":{"fora do bot":81}}
+{"t":1793991275,"saldo":3406,"antes":3410,"diferenca":-4,"partes":{"amigáveis":-4}}
+{"t":1793991422,"saldo":3408,"antes":3406,"diferenca":2,"partes":{"vídeos da loja":2}}
+{"t":1793991602,"saldo":3411,"antes":3408,"diferenca":3,"partes":{"vídeos da loja":3}}
+{"t":1793991782,"saldo":3414,"antes":3411,"diferenca":3,"partes":{"vídeos da loja":3}}
+{"t":1793991952,"saldo":3415,"antes":3414,"diferenca":1,"partes":{"vídeos da loja":1}}
+{"t":1793994960,"saldo":3416,"antes":3415,"diferenca":1,"partes":{"vídeos da loja":1}}
+{"t":1793996102,"saldo":3455,"antes":3416,"diferenca":39,"partes":{"fora do bot":39}}

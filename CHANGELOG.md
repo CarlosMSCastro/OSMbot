@@ -4,6 +4,18 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-PT/1.1.0/); 
 
 Este ficheiro é o **histórico de versões, para quem lê o repo**. O diário interno de cada sessão de trabalho está em [`docs/WORKLOG.md`](docs/WORKLOG.md).
 
+## [0.17.1] — 2026-11-06
+
+A janela Ver → Dados refeita: mais simples, contada em vitórias, com toda a informação à distância de um clique.
+
+### Alterado
+- **Ver → Dados, contada em vitórias:** sai o EV ("+0,xx") e o lado A contra lado B. Cada linha diz agora "ganhaste 45 de 55, normal 36, 9 a mais": o normal é quantas vitórias a força das duas equipas dava. Barra verde = vitórias, traço branco = o normal; esbatido com menos de 15 jogos. Por omissão mostra os teus clubes, com uma frase de resumo no topo.
+- **Um cartão por campo:** separador **A minha tática** (formação, estilo de jogo, desarme, marcação, fora de jogo, mentalidade, pressão, temporização, instruções por linha, casa ou fora) e **O adversário** (dificuldade, treinador humano ou computador, e a formação, estilo, desarme, marcação e fora de jogo dele). Cada cartão mostra os 5 valores com mais jogos; "mais N" mostra o resto. **Um clique numa linha** abre os números dessa escolha: vitórias, empates e derrotas contra o normal, golos, remates, posse, força das equipas, média do onze e adversários humanos. O separador **Jogos** lista os jogos.
+- **Filtros em pastilhas:** clube, período, **dificuldade** (vs muito mais forte, vs mais forte, vs parecido, vs mais fraco, vs muito mais fraco), **adversário** (humano ou computador, um dos teus clubes ou outros, e a tática dele) e "+ Filtro" (liga, liga ou taça, casa ou fora, e a tua tática). A pastilha acende e diz o que está escolhido; "Limpar" volta ao início. Mantém o fundo do estádio.
+
+### Removido
+- As tabelas "Padrões" e "Confrontos": os cartões e o filtro do adversário mostram o mesmo.
+
 ## [0.17.0] — 2026-11-06
 
 Uma janela nova para estudar os jogos registados, e o 4-3-3 deixa de usar a armadilha do fora de jogo.

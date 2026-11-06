@@ -298,11 +298,15 @@ def test_the_data_window_reads_the_logs_and_follows_the_filters(window, monkeypa
     (folder / "2026-11.jsonl").write_text("\n".join(json.dumps(x) for x in lines), encoding="utf-8")
     monkeypatch.setattr("osmbot.logs.repo_folder", lambda: tmp_path)
     data = data_window.DataWindow()
-    assert data.games.text() == "12 jogos"  # both sides of 6 matches
-    box = data.side_a.boxes["armadilha"]
-    box.setCurrentIndex(box.findData("Sim"))
+    assert len(data.kept) == 6  # the owner's clubs by default: one side of 6 matches
+    assert "3 de 6" in data.headline.text()
+    data.set_filter("own", "armadilha", "Sim")
     data.refresh()
-    assert data.games.text() == "3 jogos" and data.patterns.rowCount() > 0 and data.matches.rowCount() == 3
+    assert len(data.kept) == 3 and data.matches.rowCount() == 3 and "3 de 3" in data.headline.text()
+    assert data.chips[-1].property("on") == "true"
+    data.set_filter("own", "quem", "Todos os clubes")
+    data.refresh()
+    assert len(data.kept) == 3  # still the trap: only the owner's side has one
     data.clear()
-    assert data.games.text() == "12 jogos"
+    assert len(data.kept) == 6 and data.chips[0].property("on") == "false"
     data.close()

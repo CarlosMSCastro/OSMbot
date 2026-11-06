@@ -70,18 +70,34 @@ def test_filters_keep_the_rows_of_both_sides_wanted():
     assert len(data.keep(rows, league="88")) == 2
     assert [r.match for r in data.keep(rows, {"quem": "C1"}, ground="Casa", league="77")] == ["77_1_5", "77_2_6"]
     assert [r.club for r in data.keep(rows, {"quem": "C2"}, ground="Fora", league="77")] == ["C2", "C2"]
-    assert [r.edge > 12 for r in data.keep(rows, strength="Muito mais forte (> 12 %)")] == [True, True]
+    assert [r.edge > 12 for r in data.keep(rows, strength="vs muito mais fraco")] == [True, True]
     assert [r.match for r in data.keep(rows, period="Últimos 7 dias", now=9000 + 86400 * 7 - 1)] == ["88_3_5"] * 2
     assert data.keep(rows, {"treinador": "Humano"}, {"treinador": "Humano"}) == []  # the others' managers unknown
 
 
-def test_summary_patterns_and_matchups():
+def test_summary_tally_verdict_and_split():
     games = [match(i, 120, 100, "2-0" if i % 2 else "0-1", mine="casa", tatica={**OWN, "offsideTrap": bool(i % 2)})
              for i in range(6)]
     kept = data.keep(data.rows(games), {"quem": "Os meus clubes"})
     s = data.summary(kept)
     assert s["n"] == 6 and s["real"] == (0.5, 0.0, 0.5) and s["points"] == 1.5 and abs(s["ev"]) < 1e-9
-    trap = {value: (n, points) for name, value, n, points, _ in data.patterns(kept, own=True) if name == "Fora de jogo"}
-    assert trap == {"Sim": (3, 3), "Não": (3, 0)}
-    assert data.matchups(kept) == [("4-3-3 A · Pelas alas", "4-3-3 A", 6, s["ev"])]
+    t = data.tally(kept)
+    assert (t["n"], t["wins"], t["draws"], t["losses"]) == (6, 3, 0, 3) and abs(t["normal"][0] - 3) < 1e-9
+    assert data.verdict(t) == ("o esperado", 0)
+    assert data.verdict({"wins": 45, "normal": (36.0, 0, 0)}) == ("9 a mais", 1)
+    assert data.verdict({"wins": 10, "normal": (12.4, 0, 0)}) == ("2 a menos", -1)
+    trap = {value: data.tally(group)["wins"] for value, group in data.split(kept, "armadilha")}
+    assert trap == {"Sim": 3, "Não": 0}
+    assert [v for v, _ in data.split(kept, "rival:formacao")] == ["4-3-3 A"]
+    assert [v for v, _ in data.split(kept, "dificuldade")] == ["vs muito mais fraco"]  # 20 % stronger than the rival
+    assert [v for v, _ in data.split(kept, "onde")] == ["Em casa"]
+    assert data.split(kept, "treinador") == []  # the rivals' managers unknown
     assert data.summary([]) == {"n": 0}
+
+
+def test_difficulty_bands_follow_the_rival_s_strength():
+    rows = data.rows([match(1, 100, 130, "0-1"), match(2, 100, 104, "1-1"), match(3, 100, 108, "1-1")])
+    home = {r.match: data.difficulty(r) for r in rows if r.home}
+    away = {r.match: data.difficulty(r) for r in rows if not r.home}
+    assert home == {"77_1_5": "vs muito mais forte", "77_2_5": "vs parecido", "77_3_5": "vs mais forte"}
+    assert away["77_1_5"] == "vs muito mais fraco" and away["77_3_5"] == "vs mais fraco"
