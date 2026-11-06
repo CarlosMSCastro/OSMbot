@@ -35,7 +35,8 @@ class FakeGame:
                  "refereeId": 8, "winnerTeamId": 0},
                 {"id": "9_9_18", "weekNr": 18, "matchType": 2, "homeTeamId": 1, "awayTeamId": 3, "homeGoals": 2, "awayGoals": 0},
                 {"id": "9_1_19", "weekNr": 19, "matchType": 0, "homeTeamId": 1, "awayTeamId": 3, "homeGoals": None, "awayGoals": None}],
-            f"{L}/teams": [{"id": t, "name": f"T{t}", "ranking": t, "previousRanking": t + 1} for t in (1, 2, 3, 4)],
+            f"{L}/teams": [{"id": t, "name": f"T{t}", "ranking": t, "previousRanking": t + 1, "userId": 50 if t in (1, 3) else 0}
+                           for t in (1, 2, 3, 4)],
             f"{L}/referees": [{"id": 7, "name": "R7", "strictness": 3}, {"id": 8, "name": "R8", "strictness": 5}],
             f"{L}/teams/1/teamtactics": {"formation": 433, "style": 2},
             f"{L}/matches/1/events/18": EVENTS,
@@ -63,6 +64,7 @@ def test_a_round_is_logged_once_with_the_owner_s_tactics_from_before_the_match(m
     assert mine["resultado"] == "0-3" and mine["arbitro"] == {"id": 7, "nome": "R7", "rigor": 3}
     assert mine["tatica"] == {"formation": 442} and mine["tatica_lida"] == "antes do jogo" and mine["analise"] == [{"formation": 352}]
     assert mine["fora"]["meu"] and not mine["casa"]["meu"] and mine["fora"]["lugar_antes"] == 2
+    assert mine["fora"]["treinador"] is True and mine["casa"]["treinador"] is False  # a human manager in that round
     assert "fitness" in mine["fora"]["jogadores"][0] and "fitness" not in mine["casa"]["jogadores"][0]
     assert mine["casa"]["media_11"] == round(sum(range(81, 92)) / 11, 1)
     assert "tatica" not in rows[1][1]  # nobody of the owner's: no tactics
@@ -95,6 +97,7 @@ def test_the_season_so_far_is_logged_once_with_results_and_referees(monkeypatch)
     game, pauses = FakeGame(week=19), []
     assert matchlog.log_history(game, 9, {1: {"id": 1}}, said.append, sleep=pauses.append) == 2  # weeks before 19, no friendlies
     assert all(r["historico"] for r in rows) and rows[0]["arbitro"]["rigor"] == 3 and "jogadores" not in rows[0]["casa"]
+    assert rows[0]["casa"]["treinador"] is None  # read later: the club may have changed hands
     assert rows[0]["estatisticas"]["fora"]["forca"] == 750 and [p["id"] for p in rows[0]["onze"]["fora"]] == list(range(10, 22))
     assert f"{L}/teams/1/playergrades/" in game.reads and pauses  # the whole season in one read per club, spaced out
     assert "eventos" not in rows[1]  # no events and no matchData: the result only

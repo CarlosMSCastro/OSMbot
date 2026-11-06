@@ -131,3 +131,37 @@ def test_corners_compare_one_man_on_both_set_pieces_with_another_midfielder():
     result = theory.corners_not_free_kicks(old + new + placed + ignored)
     assert result.sample == 21 and result.verdict == theory.AGREES  # one man 2.73 (11), another midfielder 3.00 (10)
     assert theory.corners_not_free_kicks(old).verdict == theory.SHORT
+
+
+def test_offside_433_compares_the_owner_s_stronger_4_3_3_with_and_without_the_trap():
+    off = [match(i, 120, 100, "2-0", mine="casa", tatica={"offsideTrap": False}) for i in range(15)]
+    on = [match(100 + i, 120, 100, "1-1", mine="casa", tatica={"offsideTrap": True}) for i in range(15)]
+    result = theory.offside_433(off + on)
+    assert result.verdict == theory.AGREES and "sem armadilha 3.00" in result.measured and "com ela 1.00" in result.measured
+    assert theory.offside_433(off).verdict == theory.SHORT
+    weaker = [match(200 + i, 90, 100, "0-1", mine="casa", tatica={"offsideTrap": False}) for i in range(15)]
+    assert theory.offside_433(weaker + on).verdict == theory.SHORT  # only when stronger
+
+
+def test_against_five_and_own_home_wait_for_matches():
+    five = [match(i, 120, 100, "1-1", mine="casa", formation=("433A", "523A")) for i in range(10)]
+    rest = [match(50 + i, 120, 100, "0-2" if i % 2 else "2-0", mine="fora" if i % 2 else "casa") for i in range(30)]
+    result = theory.against_five(five + rest)
+    assert result.verdict == theory.READY and "contra 5 defesas 1.00" in result.measured
+    assert theory.against_five(rest).verdict == theory.SHORT
+    home = [match(100 + i, 110, 100, "1-0", mine="casa") for i in range(15)]
+    away = [match(200 + i, 100, 110, "1-1", mine="fora") for i in range(15)]
+    result = theory.own_home(home + away + [match(300, 140, 100, "0-1", mine="casa")])  # 40 % stronger: left out
+    assert result.verdict == theory.READY and result.sample == 30 and "casa 3.00" in result.measured
+    assert theory.own_home(home).verdict == theory.SHORT  # no away matches
+
+
+def test_extreme_tackling_joins_each_report_to_the_next_round_s_match():
+    game = match(1, 100, 100, "2-0", formation=("433A", "352A"), week=5)
+    game["jogo"], game["arbitro"] = "77_1_5", {"rigor": 4}
+    report = {"relatorio": {"leagueId": 77, "teamId": 1, "weekNr": 4, "formation": 433, "formationDetail": "A", "style": 3}}
+    other = {"relatorio": {"leagueId": 77, "teamId": 2, "weekNr": 4, "formation": 433, "formationDetail": "A", "style": 1}}
+    assert len(theory.joined_reports([game], [report, other])) == 1  # the away side played a 3-5-2, not the 4-3-3
+    result = theory.extreme_tackling([game], [report], minimum=1)
+    assert result.verdict == theory.READY and "extremo 3.00" in result.measured and "árbitro 4.0" in result.measured
+    assert theory.extreme_tackling([game], []).verdict == theory.SHORT

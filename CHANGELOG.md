@@ -4,6 +4,18 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-PT/1.1.0/); 
 
 Este ficheiro é o **histórico de versões, para quem lê o repo**. O diário interno de cada sessão de trabalho está em [`docs/WORKLOG.md`](docs/WORKLOG.md).
 
+## [0.17.0] — 2026-11-06
+
+Uma janela nova para estudar os jogos registados, e o 4-3-3 deixa de usar a armadilha do fora de jogo.
+
+### Adicionado
+- **Ver → Dados:** janela no aspeto do quadro para estudar os jogos registados. Lado A contra lado B (o adversário), cada um com filtros: quem (todos, os teus clubes, os outros ou um clube), treinador humano ou computador, formação, estilo de jogo, desarme, marcação e fora de jogo; no lado A também mentalidade, pressão, temporização e instruções por linha (só nos teus jogos). Filtros comuns: liga, período, liga ou taça, casa ou fora, diferença de força. Mostra a barra vitória/empate/derrota esperada pela força dos dois plantéis contra a que aconteceu, o **EV** (pontos por jogo acima do esperado), golos, remates, posse, força do jogo e média do onze dos dois lados, e três tabelas: padrões, confrontos e jogos. Mostra sempre quantos jogos há por trás de cada número. Só lê os registos deste PC; nunca fala com o jogo.
+- **Treinador de cada clube nos registos:** cada jogo da jornada guarda se cada lado tinha treinador humano, para separar treinador contra treinador, contra o computador, etc.
+- **Verificação semanal** com 4 medições novas: `armadilha` (a regra nova), `vs5def` (contra 5 defesas), `casanossa` (os teus clubes em casa e fora) e `extremo` (desarme extremo nos outros clubes, pelos relatórios do analista).
+
+### Alterado
+- **4-3-3 sem fora de jogo, sempre:** o passo "Tática" avisa "Fora de jogo: Sim, devia ser Não". Nos registos, sendo claramente mais fortes: sem a armadilha 31 vitórias em 31; com ela 3 empates em 19, os únicos jogos não ganhos. As outras formações não mudam.
+
 ## [0.16.4] — 2026-11-05
 
 Menos texto no cartão: saem duas linhas que não pediam nenhuma ação.

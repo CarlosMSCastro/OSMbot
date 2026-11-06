@@ -340,13 +340,91 @@ def manager_xp(lines: list[dict], minimum: int = 10) -> Result:
                   AGREES if len(losses) >= minimum else SHORT)
 
 
+def offside_433(matches: list[dict], minimum: int = 15) -> Result:
+    """D-094 (owner, 2026-11-05): the 4-3-3 never with the offside trap. The owner's 4-3-3 league matches where he was
+    stronger, points per match and goals against without the trap and with it (the trap's side stops growing now)."""
+    pairs = [(m, s) for m, s in _own(matches) if (m.get("tatica") or {}).get("offsideTrap") is not None
+             and (m["estatisticas"][s].get("formacao") or "").startswith("433") and _edge(m, s) > 0]
+    off = [(m, s) for m, s in pairs if not m["tatica"]["offsideTrap"]]
+    on = [(m, s) for m, s in pairs if m["tatica"]["offsideTrap"]]
+    against = lambda group: mean(_goals(m)[1 if s == "casa" else 0] for m, s in group) if group else 0.0
+    measured = (f"mais forte, 4-3-3: sem armadilha {_ppg(off):.2f} pts/jogo, {against(off):.2f} sofridos ({len(off)}); "
+                f"com ela {_ppg(on):.2f}, {against(on):.2f} ({len(on)})")
+    verdict = SHORT if min(len(off), len(on)) < minimum else AGREES if _ppg(off) >= _ppg(on) else DISAGREES
+    return Result("armadilha", "4-3-3 sem fora de jogo (D-094)", measured, len(pairs), verdict)
+
+
+def against_five(matches: list[dict], minimum: int = 10) -> Result:
+    """Lead, to measure (owner, 2026-11-06): the owner's clubs, stronger, against 5 defenders and against the rest
+    (6 matches against the 5-2-3 / 5-4-1 were below what their strength gave when first seen)."""
+    stronger = [(m, s) for m, s in _own(matches) if _edge(m, s) > 0]
+    rival = lambda m, s: (m["estatisticas"]["fora" if s == "casa" else "casa"].get("formacao") or "")
+    five = [(m, s) for m, s in stronger if rival(m, s).startswith("5")]
+    rest = [(m, s) for m, s in stronger if not rival(m, s).startswith("5")]
+    edge = lambda group: mean(_edge(m, s) for m, s in group) if group else 0.0
+    measured = (f"mais forte: contra 5 defesas {_ppg(five):.2f} pts/jogo, força {edge(five):+.0f} % ({len(five)}); "
+                f"contra as outras {_ppg(rest):.2f}, força {edge(rest):+.0f} % ({len(rest)})")
+    return Result("vs5def", "Contra 5 defesas rendemos menos? (pista)", measured, len(five),
+                  READY if len(five) >= minimum else SHORT)
+
+
+def own_home(matches: list[dict], minimum: int = 15) -> Result:
+    """Lead, to measure (owner, 2026-11-06): the owner's clubs at home and away with a like edge (0 to 25 % stronger;
+    when first seen: home +0.16 above what strength gave, away +0.35)."""
+    band = [(m, s) for m, s in _own(matches) if 0 < _edge(m, s) <= 25]
+    home = [(m, s) for m, s in band if s == "casa"]
+    away = [(m, s) for m, s in band if s == "fora"]
+    edge = lambda group: mean(_edge(m, s) for m, s in group) if group else 0.0
+    measured = (f"0–25 % mais forte: casa {_ppg(home):.2f} pts/jogo, força {edge(home):+.0f} % ({len(home)}); "
+                f"fora {_ppg(away):.2f}, força {edge(away):+.0f} % ({len(away)})")
+    return Result("casanossa", "Os teus clubes rendem menos em casa? (pista)", measured, len(home) + len(away),
+                  READY if min(len(home), len(away)) >= minimum else SHORT)
+
+
+def joined_reports(matches: list[dict], reports: Iterable[dict]) -> list[tuple[dict, str, dict]]:
+    """Each analyst's report on another club (``logs/*/analista``) with that club's league match of the next round
+    (the report's ``weekNr`` is the round before the match's ``semana``), when it played the reported formation."""
+    sides = {}
+    for m in _league(matches):
+        league = str(m.get("jogo", "")).split("_")[0]
+        for side in ("casa", "fora"):
+            sides[(league, (m.get(side) or {}).get("id"), m.get("semana"))] = (m, side)
+    joined = {}
+    for line in reports:
+        r = line.get("relatorio") or {}
+        key = (str(r.get("leagueId")), r.get("teamId"), (r.get("weekNr") or 0) + 1)
+        if key in sides:
+            m, side = sides[key]
+            reported = f"{r.get('formation')}{r.get('formationDetail') or ''}"
+            if not m[side].get("meu") and m["estatisticas"][side].get("formacao") == reported:
+                joined[key] = (m, side, r)
+    return list(joined.values())
+
+
+def extreme_tackling(matches: list[dict], reports: Iterable[dict] = (), minimum: int = 30) -> Result:
+    """Lead, to measure (owner, 2026-11-06): the other clubs of the leagues in Extreme tackling (the analyst's report)
+    did better than their strength gave (+0.51 points, 18 matches). Points per match with strengths within 15 %,
+    Extreme against the rest, with the referees' mean strictness (THEORY.md section 3 sets tackling by the referee)."""
+    rows = [(m, s, r) for m, s, r in joined_reports(matches, reports) if abs(_edge(m, s)) <= 15]
+    extreme = [(m, s) for m, s, r in rows if r.get("style") == 3]
+    rest = [(m, s) for m, s, r in rows if r.get("style") in (0, 1, 2)]
+    strict = lambda group: mean((m.get("arbitro") or {}).get("rigor") or 3 for m, _ in group) if group else 0.0
+    measured = (f"forças a ±15 %: extremo {_ppg(extreme):.2f} pts/jogo, árbitro {strict(extreme):.1f} ({len(extreme)}); "
+                f"os outros {_ppg(rest):.2f}, árbitro {strict(rest):.1f} ({len(rest)})")
+    return Result("extremo", "Desarme extremo rende mais? (pista, liga toda)", measured, len(extreme),
+                  READY if len(extreme) >= minimum else SHORT)
+
+
 CHECKS: list[Callable[[list[dict]], Result]] = [home_advantage, clearly_stronger, away_433, fatigue,
                                                 away_523, against_stronger, counter_formations, against_523,
-                                                tempo_against_stronger, tempo_by_strength, counter_attack, corners_not_free_kicks]
+                                                tempo_against_stronger, tempo_by_strength, counter_attack, corners_not_free_kicks,
+                                                offside_433, against_five, own_home]
 
 
-def run(records: Iterable[dict], friendlies: Iterable[dict] = (), xp: Iterable[dict] = ()) -> list[Result]:
-    """Every check: the match records (``logs/*/jogos``), the friendlies' (``logs/*/amigaveis``) and the manager's
-    XP (``logs/*/xp``)."""
+def run(records: Iterable[dict], friendlies: Iterable[dict] = (), xp: Iterable[dict] = (),
+        reports: Iterable[dict] = ()) -> list[Result]:
+    """Every check: the match records (``logs/*/jogos``), the friendlies' (``logs/*/amigaveis``), the manager's
+    XP (``logs/*/xp``) and the analyst's reports on other clubs (``logs/*/analista``)."""
     matches = unique_matches(records)
-    return [check(matches) for check in CHECKS] + [friendly_specialists(list(friendlies)), manager_xp(list(xp))]
+    return ([check(matches) for check in CHECKS] + [extreme_tackling(matches, list(reports))]
+            + [friendly_specialists(list(friendlies)), manager_xp(list(xp))])

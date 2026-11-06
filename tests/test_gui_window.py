@@ -91,7 +91,7 @@ def test_atualizar_comes_first_in_ver_and_works_while_the_bot_works(window, monk
 
     view = next(menu.menu() for menu in window.menuBar().actions() if menu.text() == "Ver")
     names = [action.text() for action in view.actions() if not action.isSeparator()]
-    assert names[0] == "Atualizar" and len(names) == 5
+    assert names[0] == "Atualizar" and names[1] == "Dados" and len(names) == 6  # Ver → Dados (2026-11-06)
     session = tmp_path / "session.json"
     session.write_text("{}", encoding="utf-8")
     monkeypatch.setattr(browser, "STATE_FILE", session)
@@ -280,3 +280,29 @@ def test_the_board_opens_maximized_unless_it_was_left_otherwise(window):
     set_pref("maximized", False)
     window.go(BOARD)
     assert not window.windowState() & __import__("PySide6.QtCore").QtCore.Qt.WindowMaximized
+
+
+def test_the_data_window_reads_the_logs_and_follows_the_filters(window, monkeypatch, tmp_path):
+    import json
+
+    from osmbot.gui import data_window
+
+    folder = tmp_path / "logs" / "PC" / "jogos"
+    folder.mkdir(parents=True)
+    line = lambda n, result, trap: {
+        "jogo": f"77_{n}_5", "t": 1000 + n, "tipo": "liga", "semana": 5, "resultado": result, "campo_neutro": False,
+        "casa": {"id": 1, "nome": "Clube A", "meu": True, "media_11": 80}, "fora": {"id": 2, "nome": "Clube B", "meu": False},
+        "estatisticas": {"casa": {"forca": 120, "formacao": "433A"}, "fora": {"forca": 100, "formacao": "442A"}},
+        "tatica": {"overallMatchTactics": 2, "style": 2, "marking": False, "offsideTrap": trap}}
+    lines = [line(i, "2-0" if i % 2 else "1-1", bool(i % 2)) for i in range(6)]
+    (folder / "2026-11.jsonl").write_text("\n".join(json.dumps(x) for x in lines), encoding="utf-8")
+    monkeypatch.setattr("osmbot.logs.repo_folder", lambda: tmp_path)
+    data = data_window.DataWindow()
+    assert data.games.text() == "12 jogos"  # both sides of 6 matches
+    box = data.side_a.boxes["armadilha"]
+    box.setCurrentIndex(box.findData("Sim"))
+    data.refresh()
+    assert data.games.text() == "3 jogos" and data.patterns.rowCount() > 0 and data.matches.rowCount() == 3
+    data.clear()
+    assert data.games.text() == "12 jogos"
+    data.close()

@@ -2,7 +2,7 @@
 
 After each round of a league, one line per league or cup match in ``logs/<machine>/jogos/``: the result, the
 referee and his strictness, both clubs' places, squad value and best-eleven rating, and every player's grade and
-goals in that match (``lastPlayerGrade``, ``goalsLastMatch``). The owner's matches carry more: his tactics as they
+goals in that match (``lastPlayerGrade``, ``goalsLastMatch``), and whether each club had a human manager. The owner's matches carry more: his tactics as they
 were just before the match and, when the analyst's report could be read, the opponent's (other clubs' tactics are
 refused by the game, 403). Reads: ``matches/filter``, ``teams``, ``referees``, each club's ``players``,
 ``teamtactics`` and ``spyresults`` (v1.1; DISCOVERY.md section 3). State in ``~/.osmbot/jogos.json``.
@@ -89,8 +89,11 @@ def squad(players: list[dict], mine: bool) -> dict:
 def match_line(match: dict, names: dict, ranks: dict, referees: dict, squads: dict, mine: set[int]) -> dict:
     """One match as logged (pure)."""
     referee = referees.get(match.get("refereeId")) or {}
+    # "treinador": a human manager in that round (``userId`` of ``teams``, 0 = the game's), read right after the
+    # round (owner, 2026-11-06); None in the season's history, read later (the club may have changed hands)
     side = lambda team: {"id": team, "nome": names.get(team), "lugar": ranks.get(team, {}).get("ranking"),
                          "lugar_antes": ranks.get(team, {}).get("previousRanking"), "meu": team in mine,
+                         "treinador": bool(ranks[team].get("userId")) if team in ranks else None,
                          **(squads.get(team) or {})}
     return {"jogo": match["id"], "semana": match["weekNr"], "tipo": TYPES.get(match["matchType"], f"tipo {match['matchType']}"),
             "resultado": f"{match['homeGoals']}-{match['awayGoals']}", "vencedor": match.get("winnerTeamId"),

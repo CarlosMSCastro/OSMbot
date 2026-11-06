@@ -86,7 +86,7 @@ def ordinal(number: str) -> str:
 WORDS = {
     # menus, buttons, start screen, status
     "Bot": "Bot", "Iniciar": "Start", "Parar": "Stop", "Login": "Login", "Sair": "Quit", "Ver": "View",
-    "Atualizar": "Refresh", "Avisos e erros": "Warnings and errors", "Pasta dos logs": "Logs folder",
+    "Atualizar": "Refresh", "Dados": "Data", "Avisos e erros": "Warnings and errors", "Pasta dos logs": "Logs folder",
     "Capturas das falhas": "Failure screenshots", "Ajuda": "Help", "Sobre o OSMbot": "About OSMbot",
     "Idioma / Language": "Idioma / Language", "Abrir": "Open",
     "A carregar o jogo…": "Loading the game…", "A parar…": "Stopping…", "A ler o jogo…": "Reading the game…",

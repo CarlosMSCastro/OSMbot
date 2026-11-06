@@ -101,9 +101,10 @@ def test_the_tactics_step_judges_the_formation_set():
     old = {**OWNERS_433, "attack": 1, "midfield": 1, "pressing": 45}  # the 4-3-3 of THEORY.md 2 before D-073
     assert warnings_of(old, opponent=100) == ["Médios: Manter posições, devia ser Ajudar a defesa",
                                              "Avançados: Apoiar meio-campo, devia ser Atacar apenas", "Pressão: 45, devia ser 60–80 (~75)"]
-    # clearly stronger: the offside trap on; against an equal one either
+    # the offside trap never in the 4-3-3, however strong (D-094)
     assert warnings_of(OWNERS_433, mine=104, opponent=100) == []
-    assert warnings_of(OWNERS_433, mine=113, opponent=100) == ["Fora de jogo: Não, devia ser Sim"]
+    assert warnings_of(OWNERS_433, mine=113, opponent=100) == []
+    assert warnings_of({**OWNERS_433, "offsideTrap": True}, mine=113, opponent=100) == ["Fora de jogo: Sim, devia ser Não"]
     # his eleven with one forward (a 4-5-1): midfielders neutral
     assert warnings_of(OWNERS_433, opponent=100, forwards=1) == ["Médios: Ajudar a defesa, devia ser Manter posições"]
     # forwards who defend well may support the midfield

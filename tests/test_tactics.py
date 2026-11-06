@@ -47,8 +47,8 @@ def test_formations_with_no_rule():
 
 def test_the_433_as_the_author():  # D-073
     rule = instructions(433, "A")
-    assert rule.attack == {2} and rule.midfield == {0} and rule.offside == {True, False} and rule.plan == {1, 2}
-    assert instructions(433, "A", clearly_stronger=True).offside == {True}
+    assert rule.attack == {2} and rule.midfield == {0} and rule.offside == {False} and rule.plan == {1, 2}
+    assert instructions(433, "A", clearly_stronger=True).offside == {False}  # never the trap (D-094)
     assert instructions(433, "A", forwards=1).midfield == {1}
     assert instructions(433, "A", defensive_forwards=True).attack == {1, 2}
 
@@ -167,7 +167,7 @@ def test_the_tactic_step_follows_his_style_without_a_note():
     from osmbot.theory.tactics import COUNTER, WINGS
 
     tactic = {"formation": 433, "formationDetail": "A", "overallMatchTactics": 1, "defense": 0, "midfield": 0,
-              "attack": 2, "marking": False, "offsideTrap": True, "pressing": 72, "mentality": 70, "tempo": 79}
+              "attack": 2, "marking": False, "offsideTrap": False, "pressing": 72, "mentality": 70, "tempo": 79}
     warnings, notes, _ = tactic_check(tactic, 3, 100, 100, his=(WINGS, "últimos 3 relatórios"))
     assert "Estilo de jogo: Jogo de passe, devia ser Jogar pelas alas" in warnings
     assert not notes  # no note on his style: only the warning when ours must change (owner, 2026-11-05)

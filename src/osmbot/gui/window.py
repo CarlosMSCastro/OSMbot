@@ -3,6 +3,7 @@
 It opens small, on the start screen (Abrir · Login · Sair). "Abrir" shows a loading sign, runs ``run_active`` in a
 background thread that sends the board here, and grows to the full board once the game has been read. Iniciar,
 Parar and Login are in the menu "Bot" and in the tray icon; the warnings and errors in Ver → Avisos e erros.
+Ver → Dados opens the study of the logged matches (``gui/data_window.py``; reads ``logs/`` only).
 The window also reads the board itself (GETs only) every 3 min and on Ver → Atualizar, bot busy or not (D-027).
 While the bot works, closing the window (X) only hides it; the tray icon (the logo with a green dot when working,
 grey when stopped) opens it again or quits. No Windows notifications (owner, 2026-10-08).
@@ -2299,6 +2300,7 @@ class MainWindow(QMainWindow):
         self.login_action = QAction(tr("Login"), self, triggered=self.do_login)
         self.notices_action = QAction(tr("Avisos e erros"), self, triggered=self.show_notices)
         self.reload_action = QAction(tr("Atualizar"), self, triggered=lambda: self.read_game(fresh=True))
+        self.data_action = QAction(tr("Dados"), self, triggered=self.show_data)
         self.logs_action = QAction(tr("Pasta dos logs"), self, triggered=self.open_logs)
         self.failures_action = QAction(tr("Capturas das falhas"), self, triggered=self.open_failures)
         self.quit_action = QAction(tr("Sair"), self, triggered=self.quit_app)
@@ -2309,6 +2311,7 @@ class MainWindow(QMainWindow):
         bot.addAction(self.quit_action)
         view = self.menuBar().addMenu(tr("Ver"))
         view.addAction(self.reload_action)
+        view.addAction(self.data_action)
         self.pin_action = QAction(tr("Fixar a coluna da direita"), self, checkable=True, checked=self.side_pinned,
                                   triggered=self.pin_side)
         view.addAction(self.pin_action)
@@ -2668,6 +2671,25 @@ class MainWindow(QMainWindow):
         return None, None
 
     # ---- window, tray, quitting -----------------------------------------------------------------------------
+    def show_data(self) -> None:
+        """Ver → Dados (owner, 2026-11-06): the logged matches, read again each time the window opens."""
+        from osmbot.gui.data_window import DataWindow
+
+        old = getattr(self, "data_window", None)
+        if old is not None and old.isVisible():
+            old.raise_()
+            old.activateWindow()
+            return
+        if old is not None:
+            old.deleteLater()
+        QApplication.setOverrideCursor(Qt.WaitCursor)
+        try:
+            self.data_window = DataWindow(self)
+        finally:
+            QApplication.restoreOverrideCursor()
+        self.data_window.show()
+        dark_title_bar(self.data_window)
+
     def show_notices(self) -> None:
         self.notices_window.show()
         self.notices_window.raise_()

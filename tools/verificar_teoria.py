@@ -1,4 +1,4 @@
-"""Check the theory against the bot's records in logs/ (matches, friendlies, the manager's XP; docs/VERIFICACAO.md). Read-only:
+"""Check the theory against the bot's records in logs/ (matches, friendlies, the manager's XP, the analyst's reports; docs/VERIFICACAO.md). Read-only:
 never talks to the game.
 
     python tools/verificar_teoria.py
@@ -29,7 +29,7 @@ def records(kind: str = "jogos") -> list[dict]:
 
 
 def main() -> None:
-    results = run(records(), records("amigaveis"), records("xp"))
+    results = run(records(), records("amigaveis"), records("xp"), records("analista"))
     print("| Verificação | Regra | Registos | Jogos | Veredicto |")
     print("|---|---|---|---|---|")
     for r in results:
