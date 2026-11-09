@@ -537,3 +537,13 @@ def test_a_club_s_ticket_is_the_one_on_its_slot_not_used_and_not_expired():
     assert club_ticket([{**tickets[1], "claimedAt": NOW}], "0", "Clube A", NOW) is None
     assert club_ticket([{**tickets[1], "expiresAt": NOW - 1}], "0", "Clube A", NOW) is None
     assert club_ticket({"error": "x"}, "0", "Clube A", NOW) is None
+
+
+def test_the_winners_cup_card_says_group_and_play_off_with_its_emblem():
+    wc = club_view(club(winners=True, group="C", ranking=4, cup=("fase de grupos", "none"),
+                        next={"opponent": "Clube B", "rank": 3, "side": "A", "danger": False, "cup": True}), NOW)
+    assert wc["competition"] == "winners" and wc["header"] == "4.º Grupo C"
+    assert [name for name, _, _ in wc["facts"]][:2] == ["Grupo", "Playoff"]
+    assert wc["match"]["tag"] == "FORA · PLAYOFF"
+    normal = club_view(club(), NOW)
+    assert normal["competition"] is None and [name for name, _, _ in normal["facts"]][:2] == ["Liga", "Taça"]

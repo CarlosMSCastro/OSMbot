@@ -171,13 +171,14 @@ def test_the_formation_is_4_3_3_a_and_5_defenders_only_against_a_stronger_analys
     assert tactic_warnings({**five, "formation": 523}, 109, 107) == ["Formação 5-2-3: devia ser 4-3-3 A"]
     assert tactic_warnings({**five, "formation": 433}, 100, 101) == [
         "Formação 4-3-3 A: devia ser de 5 defesas (adversário mais forte)"]
-    # clearly weaker (> 12 %, D-074): only the 5-2-3, home or away (owner, 2026-10-26)
+    # clearly weaker (> 12 %, D-074): the 5-2-3 (owner, 2026-10-26) or the 5-4-1 (D-098), home or away
     assert tactic_warnings(five, 100, 108) == []  # 8 %: any 5 defenders
     assert tactic_warnings({**five, "formation": 523}, 100, 113) == []
+    assert tactic_warnings({**five, "formation": 541, "formationDetail": "B"}, 100, 113, away=True) == []
     assert tactic_warnings({**five, "formation": 523}, 100, 113, away=True) == []
-    assert tactic_warnings(five, 100, 113) == ["Formação 5-3-2: devia ser 5-2-3 (adversário claramente mais forte)"]
+    assert tactic_warnings(five, 100, 113) == ["Formação 5-3-2: devia ser 5-2-3 ou 5-4-1 (adversário claramente mais forte)"]
     assert tactic_warnings({**five, "formation": 433, "formationDetail": "B"}, 100, 113, away=True) == [
-        "Formação 4-3-3 B: devia ser 5-2-3 (adversário claramente mais forte)"]
+        "Formação 4-3-3 B: devia ser 5-2-3 ou 5-4-1 (adversário claramente mais forte)"]
     assert tactic_notes({**five, "formation": 433, "formationDetail": "B"}, [], 100, 108) == []
 
 
@@ -309,11 +310,9 @@ def test_five_defenders_only_with_seven_in_the_squad_and_three_fit_centre_backs(
     # a 5 at the back the squad cannot play: the ones it can
     assert tactic_warnings(five, 100, 103, squad(Wirtz=None, Ødegaard=None)) == [
         "Formação 5-3-2 sem MO no plantel: serve 5-2-3 ou 5-4-1"]
-    # clearly stronger and no wingers for the 5-2-3 [S]: any 5 at the back the squad can play
+    # clearly stronger: the 5-4-1 is in the rule itself (D-098), no note needed
     t541 = {**a433, "formation": 541}
-    assert tactic_warnings(t541, 100, 113, squad(Doku=70)) == [] and tactic_notes(t541, squad(Doku=70), 100, 113) == [
-        "5-4-1 aceite: sem EE em forma (Doku 70 %)"]
-
+    assert tactic_warnings(t541, 100, 113, squad(Doku=70)) == [] and tactic_notes(t541, squad(Doku=70), 100, 113) == []
 
 def test_the_4_2_4_has_instructions():
     t424 = {**OWNERS_433, "formation": 424, "overallMatchTactics": 0, "marking": True, "pressing": 85}
@@ -339,8 +338,8 @@ def test_the_warnings_are_translated():
         assert tr("Messi (ED) a jogar a PL") == "Messi (RW) playing as ST"
         assert tr("Formação 4-3-3 A: devia ser de 5 defesas (adversário mais forte)") == \
             "Formation 4-3-3 A: should have 5 defenders (stronger opponent)"
-        assert tr("Formação 5-3-2: devia ser 5-2-3 (adversário claramente mais forte)") == \
-            "Formation 5-3-2: should be 5-2-3 (clearly stronger opponent)"
+        assert tr("Formação 5-3-2: devia ser 5-2-3 ou 5-4-1 (adversário claramente mais forte)") == \
+            "Formation 5-3-2: should be 5-2-3 or 5-4-1 (clearly stronger opponent)"
         assert tr("4-3-3 B aceite: em casa a regra é o 4-3-3 A") == "4-3-3 B accepted: at home the rule is the 4-3-3 A"
         assert tr("Formação 5-2-3: devia ser 4-3-3 A") == "Formation 5-2-3: should be 4-3-3 A"
         assert tr("5-2-3 A aceite: sem MO no plantel; sem MDC em forma (Rice fora)") ==             "5-2-3 A accepted: no CAM in the squad; no fit CDM (Rice out)"

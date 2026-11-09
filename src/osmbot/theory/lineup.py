@@ -260,7 +260,8 @@ def _names(choices: list[tuple]) -> str:
     return " ou ".join(dict.fromkeys(c[0] for c in choices))
 
 
-CLEARLY_STRONGER = 0.12  # more than 12 % stronger (match strength; measured in 572 matches, D-074): the 4-3-3 A away, the offside trap, only the 5-2-3
+CLEARLY_STRONGER = 0.12  # more than 12 % stronger (match strength; measured in 572 matches, D-074): the 4-3-3 A away, the offside trap, only the 5-2-3 or the 5-4-1
+CLEARLY_WEAKER_FIVE = (523, 541)  # 5 at the back against a clearly stronger opponent (D-070; the 5-4-1 too, D-098)
 
 
 def _clearly_stronger(mine: float | None, opponent: float | None) -> bool:
@@ -282,7 +283,7 @@ def _plan(tactic: dict | None, players: list[dict] | None, mine: float | None, o
           away: bool = False, spare: bool = False) -> tuple[list[str], list[str], tuple[str, int, str | None] | None]:
     """The "Onze" step on the formation (THEORY.md section 1): (warnings, notes on what is right on purpose, the
     formation to switch to when the one set is out of the rule). Only formations the squad can play are asked for
-    (owner, 2026-10-29): 5 defenders against a stronger opponent (only the 5-2-3 against a clearly stronger one), else
+    (owner, 2026-10-29): 5 defenders against a stronger opponent (only the 5-2-3 or the 5-4-1 against a clearly stronger one), else
     the 4-3-3 A at home (the B too) and the B away, and when the squad cannot play those, ``INSTEAD``."""
     if not tactic:
         return [], [], None
@@ -305,12 +306,12 @@ def _plan(tactic: dict | None, players: list[dict] | None, mine: float | None, o
     if mine and opponent and choose_formation(mine, opponent) == Formation.F532:
         rule = [(name, formation, None) for name, formation in FIVE]
         fives = [c for c in rule if not _lacks(c[1], None, players, spare)]
-        if _clearly_stronger(opponent, mine):  # clearly weaker: only the 5-2-3 (owner, 2026-10-26)
-            only = [c for c in fives if c[1] == 523]
+        if _clearly_stronger(opponent, mine):  # clearly weaker: the 5-2-3 or the 5-4-1 (owner, D-070, D-098)
+            only = [c for c in fives if c[1] in CLEARLY_WEAKER_FIVE]
             if only:
-                return judge(only, only, "5-2-3 (adversário claramente mais forte)")
-            if fives:  # [S] the 5-2-3 cannot be played: any 5 defenders the squad can
-                why = "; ".join(_lacks(523, None, players, spare).values())
+                return judge(only, only, "5-2-3 ou 5-4-1 (adversário claramente mais forte)")
+            if fives:  # [S] neither can be played: any 5 defenders the squad can
+                why = "; ".join({**_lacks(541, None, players, spare), **_lacks(523, None, players, spare)}.values())
                 return judge(fives, rule, "de 5 defesas (adversário claramente mais forte)", f"{current} aceite: {why}")
         elif fives:
             return judge(fives, rule, "de 5 defesas (adversário mais forte)")

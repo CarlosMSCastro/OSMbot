@@ -67,11 +67,14 @@ def league_round(matches: list[dict], team_id: int, week: int) -> tuple[int, int
     return (sum(1 for m in mine if m["weekNr"] <= week), len(mine)) if mine else None
 
 
-def season_fixtures(matches: list[dict], teams: list[dict], rounds: list[dict], team_id: int, week: int) -> list[dict]:
+def season_fixtures(matches: list[dict], teams: list[dict], rounds: list[dict], team_id: int, week: int,
+                    still_in: bool = False) -> list[dict]:
     """The club's season by round (owner, 2026-10-28: the hover of "J15/38", no dates): every week with a league or
     cup match in the league, the club's match in it or a rest ("folga": a cup day once out, or the round it sits out).
     Each: week, J (the league round, None in the cup), kind ("liga", "taça", "folga"), the cup round's name, the
-    opponent's name, logo and key, (H)ome/(A)way, and once played the score (the club's goals first) and W/D/L."""
+    opponent's name, logo and key, (H)ome/(A)way, and once played the score (the club's goals first) and W/D/L.
+    ``still_in``: the club can still play the cup's coming rounds, so a coming cup week without its match is "por
+    sortear" (not drawn yet), not a rest (the Winners Cup's play-off during the groups, owner 2026-11-09)."""
     official = [m for m in matches if m["matchType"] in (LEAGUE_MATCH, CUP_MATCH)]
     mine = {m["weekNr"]: m for m in official if team_id in (m["homeTeamId"], m["awayTeamId"])}
     by_id = {t["id"]: t for t in teams}
@@ -82,6 +85,9 @@ def season_fixtures(matches: list[dict], teams: list[dict], rounds: list[dict], 
         entry = {"week": number, "round": None, "kind": "folga", "cup": "", "next": number == following,
                  "played": number <= week}
         match = mine.get(number)
+        if not match and still_in and number > week and number in cup_names:
+            entry.update(kind="taça", cup=cup_names[number], opponent="por sortear", key=None, logo=None, side="",
+                         neutral=False)
         if match:
             opponent, side = _side(match, team_id)
             other = by_id.get(opponent, {})
@@ -103,10 +109,38 @@ def season_fixtures(matches: list[dict], teams: list[dict], rounds: list[dict], 
     return season
 
 
-def cup_phase(rounds: list[dict], matches: list[dict], team_id: int, week: int) -> tuple[str, str]:
+def _tie_winner(legs: list[dict], team_id: int) -> int:
+    """Who went through a round: the match's winner with one leg; with two legs (the Winners Cup's play-off,
+    DISCOVERY.md 2026-11-09), the most goals over both, and the last leg's winner when level or when the goals are
+    not there [S] (away goals or penalties: the game says it in the last leg's ``winnerTeamId``, not yet seen)."""
+    last = legs[-1]
+    if len(legs) == 1:
+        return last.get("winnerTeamId") or 0
+    ours = theirs = 0
+    for m in legs:
+        if m.get("homeGoals") is None or m.get("awayGoals") is None:
+            return last.get("winnerTeamId") or 0
+        home = m["homeTeamId"] == team_id
+        ours += m["homeGoals"] if home else m["awayGoals"]
+        theirs += m["awayGoals"] if home else m["homeGoals"]
+    if ours != theirs:
+        rival = last["awayTeamId"] if last["homeTeamId"] == team_id else last["homeTeamId"]
+        return team_id if ours > theirs else rival
+    return last.get("winnerTeamId") or 0
+
+
+def cup_phase(rounds: list[dict], matches: list[dict], team_id: int, week: int,
+              groups: bool = False) -> tuple[str, str]:
     """(text, state): the round the club plays next ("quartos-de-final"), "eliminado nos oitavos-de-final",
-    "vencedor", or "—" when the club is not in the cup. state: "in", "out", "won" or "none"."""
+    "vencedor", or "—" when the club is not in the cup. state: "in", "out", "won" or "none". A round of two legs
+    (two weeks with the same round) is decided after the second. ``groups``: the cup rounds are a play-off after a
+    group stage (the Winners Cup, owner 2026-11-09): "fase de grupos" until the play-off begins, and "eliminado na
+    fase de grupos" once it has begun without the club."""
     names = {r["weekNr"]: CUP_NAMES.get(r["name"], r["name"]) for r in rounds}
+    legs_of: dict = {}
+    for r in rounds:
+        legs_of.setdefault((r.get("roundNr"), r["name"]), []).append(r["weekNr"])
+    last_leg = {w: max(weeks) for weeks in legs_of.values() for w in weeks}
     cup = sorted((m for m in matches if m["matchType"] == CUP_MATCH and team_id in (m["homeTeamId"], m["awayTeamId"])),
                  key=lambda m: m["weekNr"])
     ahead = [m for m in cup if m["weekNr"] > week]
@@ -114,10 +148,17 @@ def cup_phase(rounds: list[dict], matches: list[dict], team_id: int, week: int) 
         return names.get(ahead[0]["weekNr"], "?"), "in"
     played = [m for m in cup if m["weekNr"] <= week]
     if not played:
+        if groups and rounds:
+            return ("eliminado na fase de grupos", "out") if week >= min(r["weekNr"] for r in rounds) else (
+                "fase de grupos", "none")
         future = sorted(r["weekNr"] for r in rounds if r["weekNr"] > week)
         return (names[future[0]], "in") if future and rounds else ("—", "none")
     last = played[-1]
-    if last["winnerTeamId"] != team_id:
+    end = last_leg.get(last["weekNr"], last["weekNr"])
+    if end > last["weekNr"]:  # the first leg played, the second to come
+        return names.get(last["weekNr"], "?"), "in"
+    legs = [m for m in played if last_leg.get(m["weekNr"], m["weekNr"]) == end]
+    if _tie_winner(legs, team_id) != team_id:
         return f"eliminado nos {names.get(last['weekNr'], '?')}", "out"
     if rounds and last["weekNr"] == max(r["weekNr"] for r in rounds):
         return "vencedor", "won"
@@ -360,21 +401,23 @@ def likely_eleven(squad: list[dict], grades: list[dict], matches: list[dict], te
 
 
 def league_summary(standings: list[dict], teams: list[dict], matches: list[dict], team_id: int, week: int,
-                   goal: int | None) -> dict | None:
+                   goal: int | None, group: str | None = None) -> dict | None:
     """The hover on the club's place (owner, 2026-10-13; THEORY.md section 19): the top 3 with their points (the top 2
     and the club when it is below 3rd), the season's goal, and whether the title is mathematically won. Rows:
-    (place, name, points, mine, games played, goal difference), the columns of the game's table (owner, 2026-10-15)."""
+    (place, name, points, mine, games played, goal difference), the columns of the game's table (owner, 2026-10-15).
+    ``group``: the club's group (the Winners Cup, ``poule``): only that group, all of it, and never "champion"."""
     points = {row["teamId"]: row.get("points") or 0 for row in standings}
     record = {row["teamId"]: ((row.get("won") or 0) + (row.get("drew") or 0) + (row.get("lost") or 0),
                               (row.get("goalsFor") or 0) - (row.get("goalsAgainst") or 0)) for row in standings}
-    table = sorted((t for t in teams if t.get("ranking")), key=lambda t: t["ranking"])
+    table = sorted((t for t in teams if t.get("ranking") and (group is None or t.get("poule") == group)),
+                   key=lambda t: t["ranking"])
     if not points or not table:
         return None
     mine = next((t for t in table if t["id"] == team_id), None)
-    shown = table[:3] if not mine or mine["ranking"] <= 3 else table[:2] + [mine]
+    shown = table if group else table[:3] if not mine or mine["ranking"] <= 3 else table[:2] + [mine]
     rows = [(t["ranking"], t["name"], points.get(t["id"], 0), t["id"] == team_id, *record.get(t["id"], (0, 0))) for t in shown]
     champion = False
-    if mine and mine["ranking"] == 1 and len(table) > 1:
+    if mine and mine["ranking"] == 1 and len(table) > 1 and not group:
         second = table[1]["id"]
         left = sum(1 for m in matches if m.get("matchType") == LEAGUE_MATCH and m["weekNr"] > week
                    and second in (m["homeTeamId"], m["awayTeamId"]))

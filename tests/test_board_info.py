@@ -282,3 +282,48 @@ def test_against_the_computer_the_likely_eleven_is_always_his_last_match():
     matches = [{"homeTeamId": 7, "awayTeamId": 8, "weekNr": w, "matchData": {"homeFormation": 433}} for w in (1, 2)]
     likely = likely_eleven(squad, _grades(1, best) + _grades(2, rested), matches, 7, human=False)
     assert likely["week"] == 2 and likely["skipped"] == []  # the computer does not rest players for us
+
+
+# The Winners Cup's play-off (2026-11-09): two legs a round, then a one-leg final, after a group stage
+WC_ROUNDS = [{"weekNr": 7, "roundNr": 1, "name": "Round of 16"}, {"weekNr": 8, "roundNr": 1, "name": "Round of 16"},
+             {"weekNr": 9, "roundNr": 2, "name": "Quarter-finals"}, {"weekNr": 10, "roundNr": 2, "name": "Quarter-finals"},
+             {"weekNr": 13, "roundNr": 4, "name": "Final"}]
+
+
+def leg(week, home, away, goals, winner=0):
+    return {**match(week, home, away, 1, winner), "homeGoals": goals[0], "awayGoals": goals[1]}
+
+
+def test_two_legs_are_decided_after_the_second():
+    first = leg(7, 1, 5, (0, 1), winner=5)  # lost the first leg
+    assert cup_phase(WC_ROUNDS, [first], 1, 7, groups=True) == ("oitavos-de-final", "in")  # not out yet
+    assert cup_phase(WC_ROUNDS, [first, leg(8, 5, 1, (0, 2), winner=1)], 1, 8, groups=True) == ("quartos-de-final", "in")
+    assert cup_phase(WC_ROUNDS, [first, leg(8, 5, 1, (1, 1))], 1, 8, groups=True) == ("eliminado nos oitavos-de-final", "out")
+    level = [first, leg(8, 5, 1, (0, 1), winner=1)]  # 1-1 over both: the last leg's winner [S]
+    assert cup_phase(WC_ROUNDS, level, 1, 8, groups=True) == ("quartos-de-final", "in")
+
+
+def test_the_group_stage_comes_before_the_play_off():
+    assert cup_phase(WC_ROUNDS, [], 1, 3, groups=True) == ("fase de grupos", "none")
+    assert cup_phase(WC_ROUNDS, [], 1, 6, groups=True) == ("fase de grupos", "none")  # not drawn yet
+    assert cup_phase(WC_ROUNDS, [], 1, 7, groups=True) == ("eliminado na fase de grupos", "out")
+    assert cup_phase(WC_ROUNDS, [leg(8, 1, 5, (None, None))], 1, 6, groups=True) == ("oitavos-de-final", "in")
+
+
+def test_the_group_table_has_only_the_group():
+    from osmbot.board.info import league_summary
+    teams = [{"id": 1, "name": "Nós", "ranking": 4, "poule": "C"}, {"id": 2, "name": "A", "ranking": 1, "poule": "C"},
+             {"id": 3, "name": "B", "ranking": 1, "poule": "D"}, {"id": 4, "name": "C", "ranking": 2, "poule": "C"},
+             {"id": 5, "name": "D", "ranking": 3, "poule": "C"}]
+    standings = [{"teamId": t["id"], "points": 0} for t in teams]
+    summary = league_summary(standings, teams, [], 1, 1, 6, group="C")
+    assert [row[1] for row in summary["rows"]] == ["A", "C", "D", "Nós"] and not summary["champion"]
+
+
+def test_coming_play_off_weeks_are_not_drawn_yet_rather_than_a_rest():
+    from osmbot.board.info import season_fixtures
+    matches = [match(6, 1, 2), match(7, 3, 4, 1)]  # the play-off's matches exist, without the club yet
+    cells = season_fixtures(matches, TEAMS, WC_ROUNDS, 1, 5, still_in=True)
+    assert [(c["kind"], c["cup"], c.get("opponent")) for c in cells] == [
+        ("liga", "", "?"), ("taça", "oitavos-de-final", "por sortear")]
+    assert season_fixtures(matches, TEAMS, WC_ROUNDS, 1, 5)[1]["kind"] == "folga"  # out of it: a rest, as before

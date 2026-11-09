@@ -268,7 +268,9 @@ def table_view(club: dict) -> tuple[str, dict | None]:
     and the season's goal under it (THEORY.md section 19), with the green tick when the club is at or above it and the
     yellow mark when below; no mark before the league's first round (owner, 2026-10-15)."""
     table = club.get("table") or {}
-    header = "Campeões" if table.get("champion") else f"{club.get('ranking') or '?'}.º Campeonato"
+    header = "Campeões" if table.get("champion") else (
+        f"{club.get('ranking') or '?'}.º Grupo {club['group']}" if club.get("group")  # the Winners Cup's group
+        else f"{club.get('ranking') or '?'}.º Campeonato")
     rows = [([str(place), name, str(rest[0]) if rest else "", (f"{rest[1]:+d}" if rest[1] else "0") if len(rest) > 1 else "", str(points)], mine)
             for place, name, points, mine, *rest in table.get("rows") or []]
     if not rows:
@@ -348,7 +350,7 @@ def sponsor_view(sponsors: dict | None) -> dict:
     return {"text": f"⚠ {text}", "colour": YELLOW, "tip": f"{empty} vaga{plural} vazia{plural} nos patrocinadores"}
 
 
-def fixtures_view(fixtures: list[dict], round_text: str) -> dict | None:
+def fixtures_view(fixtures: list[dict], round_text: str, cup_name: str = "Taça") -> dict | None:
     """The hover of "J15/38" (owner, 2026-10-28): the club's season as the events' calendar, a box per round (no
     dates): "J15 · CASA" (or the cup round), the opponent with his logo, the score in green/yellow/red once played;
     the cup in orange, the rests grey, the next match with a white edge."""
@@ -364,7 +366,7 @@ def fixtures_view(fixtures: list[dict], round_text: str) -> dict | None:
         else:
             where = "NEUTRO" if f.get("neutral") else sides.get(f["side"], "")
             cup = f["cup"].replace("-de-final", "").replace("meias-finais", "meias").replace("pré-eliminatória", "pré-elim.")
-            cell["top"] = " · ".join(part for part in (f"J{f['round']}" if f["round"] else f"Taça {cup}".strip(), where) if part)
+            cell["top"] = " · ".join(part for part in (f"J{f['round']}" if f["round"] else f"{cup_name} {cup}".strip(), where) if part)
             cell.update(name=f["opponent"], key=f.get("key"), logo=f.get("logo"))
             if f.get("score"):
                 cell.update(score=f["score"], colour={"W": GREEN, "D": YELLOW, "L": RED}[f["result"]])
@@ -396,9 +398,18 @@ def season_end_view(club: dict, now: float) -> dict | None:
     cup, state = club.get("cup") or ("—", "none")
     if not total or played < total or state == "in" or club.get("next"):
         return None
+    if club.get("winners") and state == "none":  # groups over, the play-off not drawn yet
+        return None
     ranking = club.get("ranking")
     points = next((row[2] for row in (club.get("table") or {}).get("rows") or [] if row[3]), None)
     note = f"{ranking}.º · {points} pontos" if points is not None else (f"{ranking}.º" if ranking else "")
+    if club.get("winners"):  # the Winners Cup: the group, then the play-off; no ticket (owner, 2026-11-09)
+        rows = [{"icon": "league_empty", "title": f"Grupo {club.get('group') or ''}".strip(), "note": note}]
+        if state == "won":
+            rows.append({"icon": "cup", "title": "Vencedor da Taça dos Vencedores", "note": ""})
+        else:
+            rows.append({"icon": "cup_empty", "title": "Playoff", "note": cup[:1].upper() + cup[1:]})
+        return {"rows": rows, "ticket": None}
     rows = [{"icon": "league" if ranking == 1 else "league_empty",
              "title": "Campeão da liga" if ranking == 1 else "Liga", "note": note}]
     if state == "won":
@@ -415,6 +426,7 @@ def club_view(club: dict, now: float, shortened: dict | None = None) -> dict:
     """One club's card (D-026): header, Liga · Taça · Valor do plantel, money and sales, sponsors, stadium,
     pre-match checklist, trainings, tired starters, injured and suspended players."""
     shortened = shortened or {}
+    cup_word = "Playoff" if club.get("winners") else "Taça"  # the Winners Cup has no cup: a play-off (owner, 2026-11-09)
     subtitle: list[tuple[str, str | None]] = []
     nxt = club.get("next")
     rank = f" ({nxt['rank']}.º)" if nxt and nxt.get("rank") else ""
@@ -422,14 +434,14 @@ def club_view(club: dict, now: float, shortened: dict | None = None) -> dict:
     if nxt:
         if nxt["danger"]:
             subtitle.append(("⚠ confronto direto · ", YELLOW))
-        subtitle.append((f"vs {nxt['opponent']}{rank} ({nxt['side']})" + (" · taça" if nxt["cup"] else "") + when,
+        subtitle.append((f"vs {nxt['opponent']}{rank} ({nxt['side']})" + (f" · {cup_word.lower()}" if nxt["cup"] else "") + when,
                          YELLOW if nxt["danger"] else None))
     else:
         subtitle.append((f"{club.get('league') or ''}{when}".strip(" ·"), GREY))
 
     cup, state = club.get("cup") or ("—", "none")
-    facts = [("Liga", f"{club.get('ranking') or '?'}.º", None),
-             ("Taça", cup, {"out": GREY, "won": GREEN, "none": GREY}.get(state))]
+    facts = [("Grupo" if club.get("group") else "Liga", f"{club.get('ranking') or '?'}.º", None),
+             (cup_word, cup, {"out": GREY, "won": GREEN, "none": GREY}.get(state))]
 
     free = club.get("free_slots") or 0
     alert = f"{free} vaga{'s' if free > 1 else ''} livre{'s' if free > 1 else ''} na lista de transferências" if free else ""
@@ -493,7 +505,7 @@ def club_view(club: dict, now: float, shortened: dict | None = None) -> dict:
                                                                               nxt.get("estimate", False) and not eleven),
                  "eleven": eleven,
                  "tip": opponent_tip(nxt["opponent"], nxt.get("value")),
-                 "tag": ("CASA" if nxt["side"] == "H" else "FORA") + (" · TAÇA" if nxt["cup"] else ""), "danger": nxt["danger"], "left": span(club["match"] - now) if club.get("match") else ""}
+                 "tag": ("CASA" if nxt["side"] == "H" else "FORA") + (f" · {cup_word.upper()}" if nxt["cup"] else ""), "danger": nxt["danger"], "left": span(club["match"] - now) if club.get("match") else ""}
     header, table_tip = table_view(club)  # and the cup on a line of its own (owner, 2026-10-09)
     played, season = club.get("round") or (None, None)
     round_text = f"J{played}/{season}" if season else ""  # league matches played, by the place (owner, 2026-10-28)
@@ -503,7 +515,8 @@ def club_view(club: dict, now: float, shortened: dict | None = None) -> dict:
     tired_text, tired_tip = tired_view(club)
 
     return {"name": club["name"], "logo": club.get("logo"), "logo_key": club.get("logo_key") or club["name"],
-            "subtitle": subtitle, "facts": facts, "alert": alert, "alerts": alerts, "alerts_tips": alerts_tips, "header": header, "round": round_text, "fixtures": fixtures_view(club.get("fixtures") or [], round_text), "cup_line": cup_line, "match": match, "prep_title": prep_title,
+            "competition": "winners" if club.get("winners") else None,  # its emblem by the name (owner, 2026-11-09)
+            "subtitle": subtitle, "facts": facts, "alert": alert, "alerts": alerts, "alerts_tips": alerts_tips, "header": header, "round": round_text, "fixtures": fixtures_view(club.get("fixtures") or [], round_text, cup_word), "cup_line": cup_line, "match": match, "prep_title": prep_title,
             "money": _money(total), "sales": sales, "sponsors": sponsor_row, "squad": squad_view(club.get("value"), club.get("value_table")),
             "stadium": {"still": still, "moving": moving},
             "prep": {"steps": steps, "boosts": boosts},

@@ -1535,6 +1535,7 @@ MAC = sys.platform == "darwin"
 
 TROPHIES = {key: ASSETS / f"eos_trophy_{key}.png" for key in ("league", "league_empty", "cup", "cup_empty")}
 TICKET_FILE = ASSETS / "wc_ticket.png"  # the game's Winners Cup ticket (D-033, D-097)
+COMPETITIONS = {"winners": (ASSETS / "winners_cup.png", "Taça dos Vencedores")}  # the emblem by the club's name
 
 
 def sharp(path: Path, width: int = 0, height: int = 0) -> QPixmap:
@@ -1650,6 +1651,12 @@ class ClubCard(QFrame):
         self.sale = SaleArrow()
         self.money = text_label(15, True)
         self.badge = ValueBadge()
+        self.competition = QLabel()  # the Winners Cup's emblem, to tell that club apart (owner, 2026-11-09)
+        self.competition.setFixedSize(26, 26)
+        self.competition.setStyleSheet("background: transparent;")
+        self.competition.hide()
+        self.competition_key = None
+        name_row.addWidget(self.competition, 0, Qt.AlignVCenter)
         name_row.addWidget(self.name, 1)
         name_row.addWidget(self.badge, 0, Qt.AlignVCenter)
         name_row.addWidget(self.sale, 0, Qt.AlignVCenter)
@@ -1763,6 +1770,20 @@ class ClubCard(QFrame):
         self.facts.addWidget(value, index, 1, 1, 3)
         return value
 
+    def show_competition(self, key: str | None) -> None:
+        """The competition's emblem before the name, only when it is not a normal league (set once per change)."""
+        if key == self.competition_key:
+            return
+        self.competition_key = key
+        path, name = COMPETITIONS.get(key, (None, ""))
+        picture = QPixmap(str(path)) if path else QPixmap()
+        if picture.isNull():
+            self.competition.hide()
+            return
+        self.competition.setPixmap(picture.scaled(26, 26, Qt.KeepAspectRatio, Qt.SmoothTransformation))
+        self.competition.setToolTip(tr(name))
+        self.competition.show()
+
     def set_logo(self, pixmap: QPixmap | None, colour: str | None = None) -> None:
         self.match.set_colour(colour)
         self.set_colour(colour)
@@ -1833,6 +1854,7 @@ class ClubCard(QFrame):
             self.boosts.show_boosts(club["prep"].get("boosts") or [])
         self.season_end.show_end(end)
         self._show_trainings(club["trainings"])
+        self.show_competition(club.get("competition"))
         self.badge.show_value(club.get("value_badge"))
         self.badge.show_eleven(club.get("eleven"))
         self.tired.setVisible(bool(club["tired"] or club.get("morale") or club["rest"] or club.get("reminders")))

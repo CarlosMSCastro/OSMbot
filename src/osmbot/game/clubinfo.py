@@ -34,6 +34,7 @@ CHECKLIST = [(7, "Amigável"), (5, "Análise"), (0, "Onze"), (TACTIC_STEP, "Tát
              (4, "Especialistas"), (6, "4 treinos")]  # matchpreparation step types, in the card's order
 BOOSTS = [(8, "secret", "Treino secreto"), (9, "camp", "Estágio")]  # matchpreparation steps bought with boss coins: shown under the checklist
 ANALYSIS_STEP = 5
+WINNERS_CUP = 3  # the league's ``mode`` in the Winners Cup (``LeagueMode.WinnersLeague``, DISCOVERY.md)
 FRIENDLY_STEP = 7
 _cache: dict[tuple, tuple[float, object]] = {}
 
@@ -142,6 +143,15 @@ def _boost(client, path: str, key: tuple) -> int:
         status, answer = client.get(path)
         return (answer.get("matchBoost") or 0) if status == 200 and isinstance(answer, dict) else 0
     return _cached(key, FIXTURES_FOR, read)
+
+
+def secret_training(step: dict | None) -> bool:
+    """Whether the analysis step is off because the opponent is on a secret training ("The opponent is on a secret
+    training", DISCOVERY.md, 2026-10-29). The game also turns it off with no match this round ("You don't have a match
+    scheduled this matchday.", e.g. a pre-season day): that is not a secret training (Real Betis, 2026-11-09)."""
+    if not step or step.get("enabled", True):
+        return False
+    return "secret" in (step.get("disabledText") or "").lower()
 
 
 def hidden_boost(settings: dict) -> float:
@@ -362,7 +372,7 @@ def club_extra(client, team: dict, base: str, players: list[dict], slot, market:
         timer = _timer(entry)
         if entry.get("weekNr") == week and timer and entry.get("instructionTeamId") in (None, rival):
             analyst = timer["finishedTimestamp"]
-    hidden = not (by_type.get(ANALYSIS_STEP) or {}).get("enabled", True)  # the opponent's secret training (2026-10-29)
+    hidden = secret_training(by_type.get(ANALYSIS_STEP))  # the opponent's secret training (2026-10-29)
     steps = [(name, done.get(kind, False), (HIDDEN if hidden else analyst) if kind == ANALYSIS_STEP and not done.get(kind) else None)
              for kind, name in CHECKLIST]
     friendlies = friendlies_played(matches, team["id"], week)  # owner, 2026-10-11: "Amigáveis (1)" … "(4)", green from the 1st
@@ -428,14 +438,19 @@ def club_extra(client, team: dict, base: str, players: list[dict], slot, market:
     lawyer = _list(client, f"{base}/lawyercases") if suspended else []
     logo = next((a.get("path") for a in team.get("assets") or [] if a.get("type") == 4), None)
     standings = _cached(("standings", league), FIXTURES_FOR, lambda: _list(client, f"{league}/standings"))
+    winners = got[0][1].get("mode") == WINNERS_CUP  # groups, then a play-off (DISCOVERY.md, 2026-11-08)
+    group = team.get("poule") if winners else None
+    cup = cup_phase(rounds, matches, team["id"], week, groups=winners)
     return {
         "team_id": team["id"], "week": week, "logo": logo, "logo_key": team.get("baseId") or str(team["id"]),
+        "winners": winners, "group": group,
         "next": upcoming, "places": places(tactic),  # the formation's places, for the buying card
-        "cup": cup_phase(rounds, matches, team["id"], week), "round": league_round(matches, team["id"], week),
-        "fixtures": season_fixtures(matches, teams, rounds, team["id"], week),
+        "cup": cup, "round": league_round(matches, team["id"], week),
+        "fixtures": season_fixtures(matches, teams, rounds, team["id"], week,
+                                    still_in=cup[1] == "in" or (winners and cup[1] == "none")),
         "value": squad_value(values, team["id"]), "strength": strength,
         "value_table": value_table(values, {t["id"]: t["name"] for t in teams}, team["id"]),
-        "table": league_summary(standings, teams, matches, team["id"], week, team.get("goal")),
+        "table": league_summary(standings, teams, matches, team["id"], week, team.get("goal"), group),
         "free_slots": free, "sales": sold, "rest": rest,
         "prep": {"pct": prep.get("completionPercentage"), "steps": steps, "why": reasons, "boosts": boosts},
         "injured": _people(injured, doctor, timer_minutes(client, team["leagueId"], "DoctorTreatmentTimer")),

@@ -8,3 +8,5 @@
 {"t":1793996902,"evento":"pôr","tipo":"doctor","clube":"leagues/246031208/teams/1","semana":43,"jogador":956155683,"nome":"Díaz","antes":{"fora":6,"lesao":21,"suspensao":0}}
 {"t":1794025762,"evento":"levantar","tipo":"doctor","clube":"leagues/246031208/teams/1","semana":43,"caso":11844150,"jogador":956155683,"nome":"Díaz","antes":{"fora":6,"lesao":21,"suspensao":0},"depois":{"fora":5,"lesao":21,"suspensao":0}}
 {"t":1794025764,"evento":"pôr","tipo":"doctor","clube":"leagues/246031208/teams/1","semana":43,"jogador":956155683,"nome":"Díaz","antes":{"fora":5,"lesao":21,"suspensao":0}}
+{"t":1794059305,"evento":"levantar","tipo":"doctor","clube":"leagues/246031208/teams/1","semana":43,"caso":11844877,"jogador":956155683,"nome":"Díaz","antes":{"fora":5,"lesao":21,"suspensao":0},"depois":{"fora":4,"lesao":21,"suspensao":0}}
+{"t":1794059307,"evento":"pôr","tipo":"doctor","clube":"leagues/246031208/teams/1","semana":43,"jogador":956155683,"nome":"Díaz","antes":{"fora":4,"lesao":21,"suspensao":0}}

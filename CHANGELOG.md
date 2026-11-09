@@ -4,6 +4,20 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-PT/1.1.0/); 
 
 Este ficheiro é o **histórico de versões, para quem lê o repo**. O diário interno de cada sessão de trabalho está em [`docs/WORKLOG.md`](docs/WORKLOG.md).
 
+## [0.18.2] — 2026-11-09
+
+A Taça dos Vencedores no cartão, o 5-4-1 contra um adversário claramente mais forte e um falso "treino secreto" corrigido.
+
+### Adicionado
+- **Taça dos Vencedores no cartão:** o emblema da taça (a imagem do jogo) antes do nome do clube; o lugar no grupo ("4.º Grupo C", com a tabela só do grupo ao passar o rato) em vez do lugar no campeonato; **"Playoff"** em vez de "Taça" ("fase de grupos" até ao playoff, depois a ronda ou "eliminado na fase de grupos"); "· PLAYOFF" na faixa do jogo; no calendário, as jornadas do playoff ainda por sortear em vez de "folga"; no fim, o grupo e o playoff (sem bilhete).
+
+### Alterado
+- **Contra um adversário claramente mais forte** (mais de 12 %) servem o **5-2-3 e o 5-4-1** (antes só o 5-2-3); o 5-3-2 e o 4-3-3 continuam a amarelo.
+
+### Corrigido
+- **Falso "treino secreto":** quando o jogo não deixa analisar por não haver jogo nesta jornada (p. ex. na pré-época), o cartão dizia que o adversário estava em treino secreto e contava-lhe um estágio (+25 %). Agora só quando o jogo diz que é treino secreto.
+- **Eliminatórias a duas mãos:** a ronda só fica decidida depois da 2.ª mão (pelos golos das duas); antes, perder a 1.ª mão aparecia como "eliminado".
+
 ## [0.18.1] — 2026-11-06
 
 O bloco "Fim de época" deixa de piscar.

@@ -2,6 +2,18 @@
 
 Entradas mais recentes primeiro. Cada sessão: o que se fez · o que ficou por fazer · próximo passo.
 
+## 2026-11-08/09 — Taça dos Vencedores, histórico de pontos, Qarabag × Sabah, D-098 (DESKTOP-KAM70RR)
+
+- **Taça dos Vencedores (Betis):** o dono carregou em "Participar" (escrita feita por ele). Estados do bilhete, formação da taça (32 clubes humanos, grupos de 4 a duas voltas, sem domínio mundial) e o que passa (plantel e poupança sim, saldo não) em `DISCOVERY.md`. O bot já trata do clube como dos outros.
+- **Pontos por época:** `GET /api/v1.1/user/history` (Armário de troféus) dá as 47 épocas com o `skillRating` de cada uma; a mesma liga dá cada vez menos à medida que a conta sobe (~35 000 em 2023, ~5 000 agora); Taça dos Vencedores quase 0 desde 2024. Pesquisa web: nada oficial. `DISCOVERY.md`.
+- **Qarabag × Sabah (jornada 24, fora, a 3 pontos do 1.º, humano de nível 10):** análise de força, condição e desarme (árbitro muito rigoroso: Agressivo sem ganho medido nesses árbitros, vermelhos ~1 em 5 em todos os desarmes). Pedri castigado deixou o lugar 8 vazio; o dono vai pôr o Güler a MC com a troca de posição.
+- **Erro corrigido (`clubinfo.secret_training`):** a análise desligada por "não há jogo nesta jornada" (pré-época) contava como treino secreto do adversário e somava-lhe um estágio (+25 %); só conta com "The opponent is on a secret training". Teste novo.
+- **D-098 (dono):** contra um adversário claramente mais forte servem o 5-2-3 e o 5-4-1 (`theory/lineup.CLEARLY_WEAKER_FIVE`, `i18n`, testes, `THEORY.md` §1). 570 testes.
+- **Betis × Liverpool (12/11, fora):** plano 5-4-1 B com o Doué a PL (troca de posição de 40 coins; a 2.ª custa mais), Cherki e Pavlovic no meio; ~4 % mais fraco pela estimativa. Ideia por decidir pelo dono: deixar o Doué a PL o grupo todo e jogar o 4-4-2 B em casa (sem ED).
+- **Cartão da Taça dos Vencedores (pedido do dono: "não tem taça", "meter o logo"):** com `mode` 3 o cartão diz "4.º Grupo C" (tabela só do grupo, nunca "Campeões"), "Playoff" em vez de "Taça" ("fase de grupos" até ao playoff, "eliminado na fase de grupos" depois), "· PLAYOFF" na faixa do jogo, as jornadas do playoff por sortear no calendário em vez de "folga", e o emblema do jogo (`gui/assets/winners_cup.png`, 180×180, do servidor de imagens do jogo) antes do nome, com o nome ao passar o rato. Fim de época da taça: grupo e playoff, sem bilhete. **Duas mãos:** `board/info.cup_phase` só decide a ronda depois da 2.ª mão (golos das duas; empatados, o `winnerTeamId` da 2.ª [S]); antes, perder a 1.ª mão dava "eliminado". `i18n` e testes; 575 testes.
+- **Versão 0.18.2 (pedido do dono):** `pyproject`, `__init__`, `CHANGELOG`, `README`, `dist/release-notes-v0.18.2.md`; 575 testes; dist Windows 0.18.2 (553 / 206 / 148 MB, emblema e correções confirmados no portátil), os da 0.18.1 apagados. Commit e `gh release create v0.18.2` entregues ao dono.
+- **Por fazer:** confirmar o onze do Qarabag (Güler no lugar 8) e a análise do Sabah antes do jogo; a janela só apanha as correções na próxima versão instalada.
+
 ## 2026-11-05/06 — 0.16.4, 0.17.0, 0.17.1, 0.18.0 e 0.18.1: armadilha fora, janela Dados, fim de época (DESKTOP-KAM70RR)
 
 - **Dist 0.16.3 no DESKTOP-KAM70RR (depois do pull):** 555 testes; portátil 553 MB, zip 206 MB, instalador 148 MB; os da 0.16.2 apagados em `dist/windows/`; notas `dist/release-notes-v0.16.3.md` refeitas a partir do `CHANGELOG`.
