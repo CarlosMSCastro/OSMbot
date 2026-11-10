@@ -14,7 +14,7 @@ from osmbot.board.info import (cup_phase, eleven_seen, formation_slots, formatio
 from osmbot.game import market as market_watch, sales
 from osmbot.game.transfers import saved_transfers
 from osmbot.game.specialists import captain_note, check
-from osmbot.theory.lineup import age_warnings, bench_notes, centre_notes, listed_starters, bench_warnings, empty_places, places, position_warnings, tactic_check, tactic_notes, tactic_warnings
+from osmbot.theory.lineup import age_warnings, bench_notes, centre_notes, formation_name, listed_starters, bench_warnings, empty_places, places, position_warnings, tactic_check, tactic_notes, tactic_warnings
 from osmbot.medical.policy import open_cases
 from osmbot.prematch.policy import friendlies_played
 from osmbot.theory.fitness import important_match, rest_warnings, spare_for
@@ -161,11 +161,12 @@ def hidden_boost(settings: dict) -> float:
 
 
 def _match_strengths(client, team: dict, league: str, teams: list[dict], week: int, upcoming: dict | None,
-                     strength: float | None, done: dict, hidden: bool = False) -> tuple[float | None, float | None]:
+                     strength: float | None, done: dict, hidden: bool = False,
+                     his_camp: bool = False) -> tuple[float | None, float | None]:
     """Both sides' strength for the formation rule (THEORY.md section 1): team rating, match boosts (own daily logins,
     camp and secret training when marked; the opponent's daily logins once analysed and only with a human manager,
-    as the site shows them, or ``hidden_boost`` when he is on a secret training) and the home advantage (not on
-    neutral ground)."""
+    as the site shows them, or ``hidden_boost`` when he is on a secret training; his camp when he went on one in his
+    last official match against us, D-100) and the home advantage (not on neutral ground)."""
     from osmbot.theory.tactics import match_strength
 
     if not strength or not upcoming or not upcoming.get("strength"):
@@ -180,6 +181,8 @@ def _match_strengths(client, team: dict, league: str, teams: list[dict], week: i
         if user and done.get(ANALYSIS_STEP) else 0
     if hidden:
         theirs += hidden_boost(settings)
+    elif his_camp:
+        theirs += settings.get("CampBoostPercentage") or 0
     home, base = not upcoming.get("neutral"), f"{league}/teams/{team['id']}"
     return (match_strength(strength, boost_pct=own, home=home and upcoming.get("side") == "H", home_pct=own_pitch(client, base)),
             match_strength(upcoming["strength"], boost_pct=theirs, home=home and upcoming.get("side") == "A",
@@ -262,6 +265,39 @@ def his_style(client, base: str, rival: int) -> tuple[int, str] | None:
         return None
     count = min(len(plans), REPORTS_LOOKED)
     return plan, "último relatório" if count == 1 else f"últimos {count} relatórios"
+
+
+def logged_against(league: str | int, me: int, rival: int) -> dict | None:
+    """His last official match against us in the repo's match records (any PC; D-100, ``tactics.against_us``)."""
+    import json
+    from osmbot import logs
+    from osmbot.theory.tactics import against_us
+
+    repo = logs.repo_folder()
+    if repo is None:
+        return None
+    records = []
+    for path in (repo / "logs").glob("*/jogos/*.jsonl"):
+        try:
+            lines = path.read_text(encoding="utf-8").splitlines()
+        except OSError:
+            continue
+        for line in lines:
+            if f'"{league}_' in line:
+                try:
+                    records.append(json.loads(line))
+                except ValueError:
+                    continue
+    return against_us(records, league, me, rival)
+
+
+def vs_us_note(vs_us: dict | None) -> str | None:
+    """Where the rule took what he plays from (D-100): "Contra nós jogou 5-2-3 com estágio (liga, semana 24)"."""
+    if not vs_us:
+        return None
+    shape = formation_name({"formation": vs_us["formation"], "formationDetail": vs_us.get("detail")})
+    camp = " com estágio" if vs_us.get("camp") else ""
+    return f"Contra nós jogou {shape}{camp} ({vs_us.get('type')}, semana {vs_us.get('week')})"
 
 
 def logged_pitch(league: str, rival: int) -> float | None:
@@ -380,7 +416,11 @@ def club_extra(client, team: dict, base: str, players: list[dict], slot, market:
              for (kind, _), step in zip(CHECKLIST, steps)]
     referees = _cached(("referees", league), FIXTURES_FOR, lambda: _list(client, f"{league}/referees"))
     strictness = next((r.get("strictness") for r in referees if upcoming and r["id"] == upcoming.get("referee_id")), None)
-    mine, theirs = _match_strengths(client, team, league, teams, week, upcoming, strength, done, hidden)
+    vs_us = (_cached(("against_us", team["leagueId"], team["id"], rival), VALUES_FOR,  # what he played against us (D-100)
+                     lambda: logged_against(team["leagueId"], team["id"], rival))
+             if upcoming and upcoming.get("human") else None)
+    mine, theirs = _match_strengths(client, team, league, teams, week, upcoming, strength, done, hidden,
+                                    bool((vs_us or {}).get("camp")))
     if upcoming:  # for the reminder of a decisive match: what is known of the day (THEORY.md 21)
         upcoming["match"], upcoming["boosted"] = (mine, theirs), hidden or upcoming["camp"]
 
@@ -403,19 +443,20 @@ def club_extra(client, team: dict, base: str, players: list[dict], slot, market:
     why = {SPECIALISTS_STEP: check(players, current),
            BENCH_STEP: bench_warnings(players, spare),  # THEORY.md section 21: yellow with the reason on hover
            ELEVEN_STEP: empty_places(players, tactic) + listed_starters(players, listed)
-           + tactic_warnings(tactic, mine, theirs, players, away, spare),
+           + tactic_warnings(tactic, mine, theirs, players, away, spare, vs_us),
            POSITIONS_STEP: position_warnings(players, tactic)}  # who is out of position, on the hover
     why[TACTIC_STEP], tactic_tips, known = tactic_check(tactic, strictness, mine, theirs, players, away, spare,
                                                         (upcoming or {}).get("forwards"), bool((upcoming or {}).get("counter")),
                                                         bool(upcoming) and not upcoming.get("human"),
                                                         _cached(("his_style", base, rival, week, bool(done.get(ANALYSIS_STEP))), VALUES_FOR,
                                                                 lambda: his_style(client, base, rival))
-                                                        if upcoming and upcoming.get("human") else None)
+                                                        if upcoming and upcoming.get("human") else None, vs_us)
     steps = [(step[0], known, step[2]) if kind == TACTIC_STEP else step for (kind, _), step in zip(CHECKLIST, steps)]
     steps = [(name, False, RULE) if why.get(kind) and done_ else (name, done_, extra)
              for (kind, _), (name, done_, extra) in zip(CHECKLIST, steps)]
     reasons = {name: why[kind] for (kind, _), (name, _, _) in zip(CHECKLIST, steps) if why.get(kind)}
-    notes = {ELEVEN_STEP: age_warnings(players) + centre_notes(players, tactic) + tactic_notes(tactic, players, mine, theirs, away, spare),  # within the
+    notes = {ELEVEN_STEP: ([vs_us_note(vs_us)] if vs_us else []) + age_warnings(players) + centre_notes(players, tactic)
+             + tactic_notes(tactic, players, mine, theirs, away, spare, vs_us),  # within the
              BENCH_STEP: bench_notes(players, pair[1]["opponent"] if spare else None), TACTIC_STEP: tactic_tips,
              SPECIALISTS_STEP: captain_note(players, current)}  # rule: the step keeps its colour
     for (kind, _), (name, _, _) in zip(CHECKLIST, steps):

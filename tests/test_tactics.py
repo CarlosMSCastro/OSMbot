@@ -209,3 +209,23 @@ def test_the_logged_reports_are_one_per_round_newest_first(tmp_path, monkeypatch
     (folder / "2026-11.jsonl").write_text("\n".join(json.dumps(r, separators=(",", ":")) for r in rows), encoding="utf-8")
     monkeypatch.setattr(logs, "repo_folder", lambda: tmp_path)
     assert [r["overallMatchTactics"] for r in clubinfo.logged_reports("1", 7)] == [1, 2]
+
+
+def test_his_last_official_match_against_us():
+    from osmbot.theory.tactics import against_us
+
+    def match(jogo, t, tipo, home, away, home_shape, away_shape, camp=False):
+        return {"jogo": jogo, "t": t, "tipo": tipo, "semana": int(jogo.split("_")[-1]),
+                "casa": {"id": home}, "fora": {"id": away},
+                "estatisticas": {"casa": {"formacao": home_shape, "estagio": camp and home == 1},
+                                 "fora": {"formacao": away_shape, "estagio": camp and away == 1}}}
+
+    records = [match("9_1_12", 10, "liga", 8, 1, "433A", "523A", camp=True),
+               match("9_2_17", 20, "taça", 1, 8, "523A", "433A", camp=True),
+               match("9_1_24", 30, "liga", 1, 8, "541B", "433A"),
+               match("9_3_25", 40, "liga", 1, 5, "433B", "451A"),  # against another club
+               match("7_1_30", 50, "liga", 1, 8, "352A", "433A"),  # another league
+               {**match("9_1_26", 60, "amigável", 1, 8, "343A", "433A")}]  # a friendly does not count
+    assert against_us(records, 9, 8, 1) == {"formation": 541, "detail": "B", "camp": False, "week": 24, "type": "liga"}
+    assert against_us(records[:2], "9", 8, 1) == {"formation": 523, "detail": "A", "camp": True, "week": 17, "type": "taça"}
+    assert against_us(records, 9, 8, 2) is None

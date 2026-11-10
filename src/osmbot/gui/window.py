@@ -1628,6 +1628,8 @@ class ClubCard(QFrame):
         super().__init__()
         self.setObjectName("card")
         self.colour = ""
+        self.hovered = None  # the window's "read this club again" (set by the window)
+        self.club_name = ""
         self.timer = ACCENT  # running timers: the club's colour half faded once the logo is in
         self.full = COLOURS[GREEN]  # full rings: the club's colour a little stronger (owner, 2026-10-15)
         row = QHBoxLayout(self)
@@ -1739,6 +1741,7 @@ class ClubCard(QFrame):
         prep.addWidget(self.prep_title)
         prep.addSpacing(4)
         self.prep = StepList(vertical=True, size=10, spacing=9)  # one row per step: icon and text (owner, 2026-10-10)
+        self.prep.installEventFilter(self)  # hovered: this club read again (owner, 2026-11-09)
         prep.addWidget(self.prep)
         prep.addSpacing(7)  # a step's gap less half of the 4 px the boost rows are taller
         self.boosts = BoostList(size=10, spacing=9)  # secret training and training camp, after the steps (owner, 2026-10-14)
@@ -1802,7 +1805,15 @@ class ClubCard(QFrame):
                            f"stop:0.25 {CARD}, stop:1 {CARD}); border: 1px solid {border}; "
                            f"border-top: 3px solid {colour}; border-radius: 14px; }}")
 
+    def eventFilter(self, watched, event) -> bool:
+        """The mouse onto the pre-match steps or a transfer-list line: ask for this club to be read again (the window
+        keeps 10 s between two readings of a club, owner 2026-11-09)."""
+        if event.type() == QEvent.Enter and self.hovered and self.club_name:
+            self.hovered(self.club_name)
+        return False
+
     def show_club(self, club: dict) -> None:
+        self.club_name = club["name"]
         self.name.setText(club["name"])
         self.header.setText(tr(club["header"]))
         self.header.setToolTip(tip_grid(club.get("table_tip"), self.colour))  # as the game's table (owner, 2026-10-15)
@@ -1814,6 +1825,7 @@ class ClubCard(QFrame):
         while self.alerts.count() < len(club["alerts"]):
             label = text_label(10, True, YELLOW)
             label.setWordWrap(True)
+            label.installEventFilter(self)  # the free transfer-list slots: hovered, read again
             self.alerts.addWidget(label)
         for index, (line, tip) in enumerate(zip(club["alerts"], club["alerts_tips"])):
             label = self.alerts.itemAt(index).widget()
@@ -2106,6 +2118,7 @@ class Bridge(QObject):
     board = Signal(object)
     finished = Signal(str)
     read = Signal(object)
+    club = Signal(object)  # one club read again (its card hovered)
     login = Signal(str)
     logo = Signal(str)
 
@@ -2144,6 +2157,7 @@ def newest(snapshot: dict | None, other: dict | None) -> dict | None:
     return snapshot if snapshot.get("read_at", 0) >= other.get("read_at", 0) else other
 
 
+CLUB_READ_GAP = 10  # seconds between two readings of one club on its own (its card hovered)
 LAUNCHER_SIZE = QSize(520, 290)
 BOARD_SIZE = QSize(1400, 800)
 START, LOADING, BOARD = 0, 1, 2
@@ -2171,6 +2185,7 @@ class MainWindow(QMainWindow):
         self.bridge.board.connect(self.on_board)
         self.bridge.finished.connect(self.on_finished)
         self.bridge.read.connect(self.on_read)
+        self.bridge.club.connect(self.on_club)
         self.bridge.login.connect(self.on_login)
         self.bridge.logo.connect(lambda _key: self.render())
         self.logos: dict[str, tuple[QPixmap, str] | None] = {}  # club key -> (logo, stripe colour); None while fetching
@@ -2178,6 +2193,7 @@ class MainWindow(QMainWindow):
         self.worker: threading.Thread | None = None
         self.busy = ""  # "login" while the login runs
         self.reading = False  # the window reads the board on its own, bot working or not (D-027)
+        self.club_reads: dict[str, float] = {}  # when each club was last read on its own (its card hovered)
         self.quitting = False
         self.stopping = False
         self.started_at: float | None = None
@@ -2665,6 +2681,38 @@ class MainWindow(QMainWindow):
 
         threading.Thread(target=work, name="osmbot-read", daemon=True).start()
 
+    def read_club(self, name: str) -> None:
+        """One club read again, GETs only, when its pre-match steps or transfer-list line are hovered (owner,
+        2026-11-09: "corrijo no jogo e demora muito a atualizar"): at most once every ``CLUB_READ_GAP`` seconds a club,
+        never during a full reading or the login."""
+        from osmbot.game.browser import STATE_FILE
+
+        now = time.time()
+        if self.reading or self.busy or not STATE_FILE.exists() or now - self.club_reads.get(name, 0) < CLUB_READ_GAP:
+            return
+        self.club_reads[name] = now
+
+        def work() -> None:
+            from osmbot.game.client import OsmClient
+            from osmbot.game.dashboard import collect
+
+            try:
+                self.bridge.club.emit(collect(OsmClient(), only=name))
+            except BaseException:
+                self.bridge.club.emit({})  # the next full reading puts it right
+
+        threading.Thread(target=work, name="osmbot-read-club", daemon=True).start()
+
+    def on_club(self, result: dict) -> None:
+        from osmbot.gui.view import merge_club
+
+        snapshot = self.payload.get("snapshot")
+        for club in result.get("clubs") or []:
+            snapshot = merge_club(snapshot, club)
+        if snapshot is not self.payload.get("snapshot"):
+            self.payload = {**self.payload, "snapshot": snapshot}
+            self.render()
+
     def on_read(self, result: dict) -> None:
         self.reading = False
         if "snapshot" in result:
@@ -2749,6 +2797,7 @@ class MainWindow(QMainWindow):
                 panel.deleteLater()
             self.panels = [ClubCard() for _ in clubs]
             for index, panel in enumerate(self.panels):
+                panel.hovered = self.read_club
                 self.clubs_column.addWidget(panel, 1)  # one per row (D-030)
         for panel, club in zip(self.panels, clubs):
             panel.set_logo(*self._logo(club))  # first: the timers take the club's colour

@@ -444,3 +444,37 @@ def test_a_starter_for_sale_is_a_warning_at_any_time():
     assert listed_starters(players, {1: {}, 2: {}}) == ["A: Titular à venda"]
     assert listed_starters(players, {2: {}}) == []  # on the bench: not a starter
     assert listed_starters(players, {}) == []
+
+
+SABAH = {"formation": 523, "detail": "A", "camp": True, "week": 24, "type": "liga"}  # his last match against us (D-100)
+
+
+def test_against_a_human_who_played_the_5_2_3_against_us_the_5_3_2():
+    five = {"formation": 532, "formationDetail": "A", "style": 2}
+    a = {**five, "formation": 433}
+    # neither clearly stronger, home or away: the 5-3-2 (owner, 2026-11-10)
+    assert tactic_warnings(a, 816, 820, away=True, vs_us=SABAH) == ["Formação 4-3-3 A: devia ser 5-3-2 (contra nós jogou 5-2-3)"]
+    assert tactic_warnings(a, 108, 100, vs_us=SABAH) == ["Formação 4-3-3 A: devia ser 5-3-2 (contra nós jogou 5-2-3)"]
+    assert tactic_warnings(five, 108, 100, vs_us=SABAH) == []
+    assert tactic_warnings({**five, "formation": 523}, 100, 105, vs_us=SABAH) == [
+        "Formação 5-2-3: devia ser 5-3-2 (contra nós jogou 5-2-3)"]
+    # we clearly stronger: the 4-3-3 stays; he clearly stronger: the 5-2-3 or the 5-4-1 (D-098)
+    assert tactic_warnings(a, 113, 100, vs_us=SABAH) == []
+    assert tactic_warnings(five, 100, 113, vs_us=SABAH) == [
+        "Formação 5-3-2: devia ser 5-2-3 ou 5-4-1 (adversário claramente mais forte)"]
+    # another formation against us, or none: the rule as before
+    assert tactic_warnings(a, 108, 100, vs_us={**SABAH, "formation": 433}) == []
+    # a squad that cannot play the 5-3-2 (no MO): the rule as before
+    assert not any("contra nós" in w for w in tactic_warnings(a, 108, 100, players=squad(Wirtz=None, Ødegaard=None),
+                                                             vs_us=SABAH))
+
+
+def test_his_5_defenders_against_us_count_as_counter_attack_for_the_4_3_3():
+    wings = {**OWNERS_433, "overallMatchTactics": 2}
+    # the report said wings; against us he played the 5-2-3: passing (D-092 with D-100), when we keep the 4-3-3
+    assert warnings_of(wings, mine=113, opponent=100, his=(2, "relatório desta jornada")) == []
+    assert warnings_of(wings, mine=113, opponent=100, his=(2, "relatório desta jornada"), vs_us=SABAH) == [
+        "Estilo de jogo: Jogar pelas alas, devia ser Jogo de passe"]
+    # the 4-3-3 when neither is clearly stronger: "Se mudares para 5-3-2:"
+    notes = tactic_check(OWNERS_433, 3, 816, 820, away=True, vs_us=SABAH)[1]
+    assert notes[0] == "Se mudares para 5-3-2:" and "Estilo de jogo: Contra-ataque" in notes

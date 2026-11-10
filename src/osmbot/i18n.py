@@ -218,6 +218,11 @@ PATTERNS = [(re.compile(pattern), replace) for pattern, replace in (
      lambda m: f"Formation {m[1]}: should have 5 defenders (stronger opponent)"),
     (r"^Formação (.+?): devia ser 5-2-3 ou 5-4-1 \(adversário claramente mais forte\)$",
      lambda m: f"Formation {m[1]}: should be 5-2-3 or 5-4-1 (clearly stronger opponent)"),
+    (r"^Formação (.+?): devia ser 5-3-2 \(contra nós jogou 5-2-3\)$",
+     lambda m: f"Formation {m[1]}: should be 5-3-2 (he played 5-2-3 against us)"),
+    (r"^Contra nós jogou (\d-\d-\d(?: [AB])?)( com estágio)? \((liga|taça), semana (\d+)\)$",
+     lambda m: f"Against us he played {m[1]}{' with a training camp' if m[2] else ''} "
+               f"({'league' if m[3] == 'liga' else 'cup'}, week {m[4]})"),
     (r"^Formação (.+?): devia ser (.+) \(fora de casa\)$",
      lambda m: f"Formation {m[1]}: should be {m[2].replace(' ou ', ' or ')} (away from home)"),
     (r"^Formação (.+?): devia ser (.+), mas ((?:sem|só) .+)$",

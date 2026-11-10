@@ -168,6 +168,27 @@ def his_plan(plans: list[int]) -> int | None:
     return max(recent, key=lambda plan: (recent.count(plan), -recent.index(plan)))
 
 
+def against_us(records, league: str | int, me: int, rival: int) -> dict | None:
+    """His last official match (league or cup) against our club in this league, from the match records
+    (``logs/*/jogos``): what a human who already met us is taken to play (THEORY.md 1, D-100), not the analyst's
+    report. {"formation": 523, "detail": "A", "camp": True, "week": 24, "type": "liga"}; None without one."""
+    best = None
+    for m in records:
+        if m.get("tipo") not in ("liga", "taça") or not str(m.get("jogo", "")).startswith(f"{league}_"):
+            continue
+        sides = {(m.get(s) or {}).get("id"): s for s in ("casa", "fora")}
+        if set(sides) != {me, rival}:
+            continue
+        stats = ((m.get("estatisticas") or {}).get(sides[rival])) or {}
+        shape = str(stats.get("formacao") or "")
+        if len(shape) < 3 or not shape[:3].isdigit():
+            continue
+        if best is None or (m.get("t") or 0) > best[0]:
+            best = (m.get("t") or 0, {"formation": int(shape[:3]), "detail": shape[3:] or None,
+                                      "camp": bool(stats.get("estagio")), "week": m.get("semana"), "type": m["tipo"]})
+    return best[1] if best else None
+
+
 def defensive(starters: list[dict]) -> bool:
     """All our forwards defend enough to support the midfield (``DEFENSIVE_FORWARD``); False with none."""
     forwards = [p for p in starters if p.get("specificPosition") in DEFENSIVE_FORWARD]

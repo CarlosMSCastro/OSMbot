@@ -105,8 +105,9 @@ def session_length(session_id, left: float, now_length: float, normal: float) ->
     return _session_lengths[session_id]
 
 
-def collect(client) -> dict:
-    """One snapshot of everything the board shows (GET requests only, several at a time)."""
+def collect(client, only: str | None = None) -> dict:
+    """One snapshot of everything the board shows (GET requests only, several at a time). ``only``: just that club
+    (the card's pre-match or transfer-list line hovered, owner 2026-11-09): {"clubs": [club], "read_at"}, nothing else."""
 
     from osmbot.game.clubinfo import max_listed, session_minutes, timer_minutes
 
@@ -212,6 +213,13 @@ def collect(client) -> dict:
 
     teams = [(team, f"leagues/{team['leagueId']}/teams/{team['id']}") for team in
              (c["team"] for _, c in sorted((account.get("teamSlots") or {}).items()) if c and c.get("team"))]
+    if only is not None:  # one club, as fresh as a full reading of it, without the account's parts
+        slot = next((key for key, c in sorted((account.get("teamSlots") or {}).items())
+                     if c and (c.get("team") or {}).get("name") == only), None)
+        found = [read_club(team, base) for team, base in teams if team["name"] == only]
+        for club in found:
+            club["ticket"] = club_ticket(tickets, slot, club["name"], started)
+        return {"clubs": found, "read_at": started}
     with ThreadPoolExecutor(max_workers=CLUBS_AT_ONCE + 1) as pool:  # clubs and account side by side: a few seconds
         account_part = pool.submit(read_account)
         clubs = list(pool.map(lambda item: read_club(*item), teams))

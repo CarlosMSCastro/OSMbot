@@ -68,3 +68,11 @@ def test_the_season_s_calendar_in_english():
             "MD29/38", "Season · MD29/38", "MD15 · HOME", "Cup R16 · NEUTRAL", "Cup final · AWAY", "rest"]
     finally:
         i18n.set_language("pt")
+
+
+def test_what_he_played_against_us_in_english(english):  # D-100
+    assert tr("Formação 4-3-3 A: devia ser 5-3-2 (contra nós jogou 5-2-3)") == \
+        "Formation 4-3-3 A: should be 5-3-2 (he played 5-2-3 against us)"
+    assert tr("Contra nós jogou 5-2-3 com estágio (liga, semana 24)") == \
+        "Against us he played 5-2-3 with a training camp (league, week 24)"
+    assert tr("Contra nós jogou 4-3-3 A (taça, semana 17)") == "Against us he played 4-3-3 A (cup, week 17)"

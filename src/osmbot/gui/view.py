@@ -375,6 +375,15 @@ def fixtures_view(fixtures: list[dict], round_text: str, cup_name: str = "Taça"
     return {"title": f"Época · {round_text}" if round_text else "Época", "cells": cells, "strip": strip}
 
 
+def merge_club(snapshot: dict | None, club: dict) -> dict | None:
+    """The board with one club read again (the card hovered, owner 2026-11-09): that club replaced, by name, the rest
+    as it was (and the reading's time kept, so a newer full reading by the bot still wins)."""
+    if not snapshot or not club:
+        return snapshot
+    clubs = [club if c.get("name") == club.get("name") else c for c in snapshot.get("clubs") or []]
+    return {**snapshot, "clubs": clubs}
+
+
 def ticket_text(ticket: dict | None, now: float) -> str:
     """When the Winners Cup ticket expires: "expira a 13/11 às 20:09" (not when the season turns, DISCOVERY.md)."""
     if not ticket or ticket["expires"] <= now:

@@ -547,3 +547,12 @@ def test_the_winners_cup_card_says_group_and_play_off_with_its_emblem():
     assert wc["match"]["tag"] == "FORA · PLAYOFF"
     normal = club_view(club(), NOW)
     assert normal["competition"] is None and [name for name, _, _ in normal["facts"]][:2] == ["Liga", "Taça"]
+
+
+def test_one_club_read_again_replaces_only_that_club():
+    from osmbot.gui.view import merge_club
+    board = {"read_at": 5, "coins": 10, "clubs": [{"name": "A", "slots": (2, 4)}, {"name": "B", "slots": (1, 4)}]}
+    merged = merge_club(board, {"name": "A", "slots": (4, 4)})
+    assert merged["clubs"] == [{"name": "A", "slots": (4, 4)}, {"name": "B", "slots": (1, 4)}]
+    assert merged["read_at"] == 5 and merged["coins"] == 10 and board["clubs"][0]["slots"] == (2, 4)
+    assert merge_club(None, {"name": "A"}) is None

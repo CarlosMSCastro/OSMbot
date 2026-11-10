@@ -2,6 +2,13 @@
 
 Entradas mais recentes primeiro. Cada sessão: o que se fez · o que ficou por fazer · próximo passo.
 
+## 2026-11-10 — Qarabag 1-2 Sabah, título perdido; D-100 (DESKTOP-KAM70RR)
+
+- **Qarabag 1-2 Sabah (liga, semana 24, fora):** força do jogo 816/781 (com a casa dele ~igual), estágio dos dois lados, remates 7-11. A frase do comentador ("o adversário foi a um Training Camp") é genérica: nós também fizemos. Classificação pelos registos: Sabah 63, Qarabag 57; o título foi decidido nos 2 jogos da liga contra ele.
+- **O que o Sabah fez:** 4-3-3 sem estágio nos outros 20 jogos; **5-2-3 com estágio só contra nós** (semanas 12, 17 taça, 24: 3 derrotas). O relatório do analista dizia 4-3-3 sem estágio. Nos registos de toda a liga, 4-3-3 contra 5-2-3 com forças a ±10 %: 1 V, 2 E, 3 D (6 jogos); o ponto 4 da revisão OSMPROworld fechou com só 16 jogos destes. Erro meu: dei a conclusão geral como certa para este caso.
+- **D-100 (dono): contra um humano conta o que jogou contra nós; contra o 5-2-3 dele, o 5-3-2** (`tactics.against_us`, `lineup._plan`/`tactic_check` com `vs_us`, `clubinfo.logged_against`/`vs_us_note`, estágio dele na força; `i18n`; testes; `THEORY.md` §1). Visto nos registos reais: para o jogo de hoje o cartão teria dito "Formação 4-3-3 A: devia ser 5-3-2 (contra nós jogou 5-2-3)". 581 testes.
+- **Por fazer:** medir 5-3-2 contra 5-2-3 quando houver jogos (`vs523` só conta o lado mais forte; alargar se o dono quiser). A janela só apanha a mudança depois de reiniciar o bot a partir do código.
+
 ## 2026-11-08/09 — Taça dos Vencedores, histórico de pontos, Qarabag × Sabah, D-098 (DESKTOP-KAM70RR)
 
 - **Taça dos Vencedores (Betis):** o dono carregou em "Participar" (escrita feita por ele). Estados do bilhete, formação da taça (32 clubes humanos, grupos de 4 a duas voltas, sem domínio mundial) e o que passa (plantel e poupança sim, saldo não) em `DISCOVERY.md`. O bot já trata do clube como dos outros.
@@ -12,6 +19,8 @@ Entradas mais recentes primeiro. Cada sessão: o que se fez · o que ficou por f
 - **Betis × Liverpool (12/11, fora):** plano 5-4-1 B com o Doué a PL (troca de posição de 40 coins; a 2.ª custa mais), Cherki e Pavlovic no meio; ~4 % mais fraco pela estimativa. Ideia por decidir pelo dono: deixar o Doué a PL o grupo todo e jogar o 4-4-2 B em casa (sem ED).
 - **Cartão da Taça dos Vencedores (pedido do dono: "não tem taça", "meter o logo"):** com `mode` 3 o cartão diz "4.º Grupo C" (tabela só do grupo, nunca "Campeões"), "Playoff" em vez de "Taça" ("fase de grupos" até ao playoff, "eliminado na fase de grupos" depois), "· PLAYOFF" na faixa do jogo, as jornadas do playoff por sortear no calendário em vez de "folga", e o emblema do jogo (`gui/assets/winners_cup.png`, 180×180, do servidor de imagens do jogo) antes do nome, com o nome ao passar o rato. Fim de época da taça: grupo e playoff, sem bilhete. **Duas mãos:** `board/info.cup_phase` só decide a ronda depois da 2.ª mão (golos das duas; empatados, o `winnerTeamId` da 2.ª [S]); antes, perder a 1.ª mão dava "eliminado". `i18n` e testes; 575 testes.
 - **Versão 0.18.2 (pedido do dono):** `pyproject`, `__init__`, `CHANGELOG`, `README`, `dist/release-notes-v0.18.2.md`; 575 testes; dist Windows 0.18.2 (553 / 206 / 148 MB, emblema e correções confirmados no portátil), os da 0.18.1 apagados. Commit e `gh release create v0.18.2` entregues ao dono.
+- **Trabalhar a partir do código (dono):** nos PCs dele, `git pull` + `Start-Process .venv\Scripts\osmbot.exe`; versão com dist só quando pedir; entrego as mensagens de commit.
+- **D-099 (dono): passar o rato no pré-jogo ou numa linha de vagas relê esse clube** (`dashboard.collect(only=)`, `view.merge_club`, `ClubCard.eventFilter`, `read_club`, 10 s por clube). Medido: ~19 pedidos e 0,7 s com a janela aberta (48 e 3,3 s a frio). 576 testes.
 - **Por fazer:** confirmar o onze do Qarabag (Güler no lugar 8) e a análise do Sabah antes do jogo; a janela só apanha as correções na próxima versão instalada.
 
 ## 2026-11-05/06 — 0.16.4, 0.17.0, 0.17.1, 0.18.0 e 0.18.1: armadilha fora, janela Dados, fim de época (DESKTOP-KAM70RR)

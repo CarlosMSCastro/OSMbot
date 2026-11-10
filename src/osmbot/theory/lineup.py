@@ -6,7 +6,8 @@ from collections import Counter
 from typing import Iterable
 
 from osmbot.theory.fitness import MATCH_DROP, YELLOW_BELOW
-from osmbot.theory.tactics import ATTACK, DEFENSE, MIDFIELD, PLANS, Band, Formation, choose_formation, defensive, instructions
+from osmbot.theory.tactics import (ATTACK, COUNTER, DEFENSE, MIDFIELD, PLANS, Band, Formation, choose_formation, defensive,
+                                   instructions)
 
 MAIN_STAT = {1: "statAtt", 2: "statOvr", 3: "statDef", 4: "statDef"}  # the rating that counts for each position
 ELEVEN = range(1, 12)
@@ -261,6 +262,7 @@ def _names(choices: list[tuple]) -> str:
 
 
 CLEARLY_STRONGER = 0.12  # more than 12 % stronger (match strength; measured in 572 matches, D-074): the 4-3-3 A away, the offside trap, only the 5-2-3 or the 5-4-1
+HIS_523 = 523  # a human who played the 5-2-3 against us: the 5-3-2, the author's answer (D-100)
 CLEARLY_WEAKER_FIVE = (523, 541)  # 5 at the back against a clearly stronger opponent (D-070; the 5-4-1 too, D-098)
 
 
@@ -280,11 +282,14 @@ def _wanted(mine: float | None, opponent: float | None, away: bool) -> list[str]
 
 
 def _plan(tactic: dict | None, players: list[dict] | None, mine: float | None, opponent: float | None,
-          away: bool = False, spare: bool = False) -> tuple[list[str], list[str], tuple[str, int, str | None] | None]:
+          away: bool = False, spare: bool = False,
+          vs_us: dict | None = None) -> tuple[list[str], list[str], tuple[str, int, str | None] | None]:
     """The "Onze" step on the formation (THEORY.md section 1): (warnings, notes on what is right on purpose, the
     formation to switch to when the one set is out of the rule). Only formations the squad can play are asked for
     (owner, 2026-10-29): 5 defenders against a stronger opponent (only the 5-2-3 or the 5-4-1 against a clearly stronger one), else
-    the 4-3-3 A at home (the B too) and the B away, and when the squad cannot play those, ``INSTEAD``."""
+    the 4-3-3 A at home (the B too) and the B away, and when the squad cannot play those, ``INSTEAD``. ``vs_us``: a
+    human's last official match against us (``tactics.against_us``): against his 5-2-3, the 5-3-2 when neither side is
+    clearly stronger (owner, 2026-11-10, D-100)."""
     if not tactic:
         return [], [], None
     current, code = formation_name(tactic), tactic.get("formation")
@@ -302,6 +307,10 @@ def _plan(tactic: dict | None, players: list[dict] | None, mine: float | None, o
             return [f"Formação {current} {'; '.join(own.values())}: serve {_names(choices)}"], [], choices[0][:3]
         return [f"Formação {current}: devia ser {wanted}"], [], choices[0][:3]
 
+    if ((vs_us or {}).get("formation") == HIS_523 and not _clearly_stronger(mine, opponent)
+            and not _clearly_stronger(opponent, mine) and not _lacks(532, None, players, spare)):
+        answer = [("5-3-2", 532, None)]
+        return judge(answer, answer, "5-3-2 (contra nós jogou 5-2-3)")
     fallback = []
     if mine and opponent and choose_formation(mine, opponent) == Formation.F532:
         rule = [(name, formation, None) for name, formation in FIVE]
@@ -344,26 +353,27 @@ def _plan(tactic: dict | None, players: list[dict] | None, mine: float | None, o
 
 
 def tactic_notes(tactic: dict | None, players: list[dict] | None, mine: float | None, opponent: float | None,
-                 away: bool = False, spare: bool = False) -> list[str]:
+                 away: bool = False, spare: bool = False, vs_us: dict | None = None) -> list[str]:
     """What the tactics do differently from the rule, on purpose and within it (the step stays green): the 4-3-3 B
     for want of an MO, the 4-4-2 B (or 5-3-2, 3-5-2) for want of wingers, the 3-4-3 (or 3-5-2) for want of full-backs,
     the 5-2-3 A or 4-2-4 for want of both an MO and an MDC, the 4-3-3 A away when clearly stronger, the 4-3-3 B at home
     (THEORY.md section 1)."""
-    return _plan(tactic, players, mine, opponent, away, spare)[1]
+    return _plan(tactic, players, mine, opponent, away, spare, vs_us)[1]
 
 
 def tactic_warnings(tactic: dict | None, mine: float | None, opponent: float | None,
-                    players: list[dict] | None = None, away: bool = False, spare: bool = False) -> list[str]:
+                    players: list[dict] | None = None, away: bool = False, spare: bool = False,
+                    vs_us: dict | None = None) -> list[str]:
     """What is out of the rule in the formation (the tackling went to the "Tática" step, ``tactic_check``): see
     ``_plan``. ``opponent``: before the analysis an estimate (THEORY.md section 1); None when unknown."""
-    return _plan(tactic, players, mine, opponent, away, spare)[0]
+    return _plan(tactic, players, mine, opponent, away, spare, vs_us)[0]
 
 
 def _suggested(tactic: dict, players: list[dict] | None, mine: float | None, opponent: float | None, away: bool,
-               spare: bool) -> tuple[str, int, str | None] | None:
+               spare: bool, vs_us: dict | None = None) -> tuple[str, int, str | None] | None:
     """The formation the "Onze" step asks for when the one set is out of the rule (``tactic_warnings``): its name,
     code and detail, for the "Tática" step to say what the instructions would be; None when it is right."""
-    return _plan(tactic, players, mine, opponent, away, spare)[2]
+    return _plan(tactic, players, mine, opponent, away, spare, vs_us)[2]
 
 
 FIELDS = (("Estilo de jogo", "overallMatchTactics", "plan", PLANS), ("Defesa", "defense", "defense", DEFENSE),
@@ -391,16 +401,19 @@ def _tackling(strictness: int | None, mine: float | None, opponent: float | None
 def tactic_check(tactic: dict | None, strictness: int | None, mine: float | None, opponent: float | None,
                  players: list[dict] | None = None, away: bool = False, spare: bool = False,
                  forwards: int | None = None, counter: bool = False, cpu: bool = False,
-                 his: tuple[int, str] | None = None) -> tuple[list[str], list[str], bool]:
+                 his: tuple[int, str] | None = None, vs_us: dict | None = None) -> tuple[list[str], list[str], bool]:
     """The "Tática" step (owner, 2026-10-28, D-073; THEORY.md 2 and 21): the instructions, the sliders and the tackling
     set in the game against the rule for the formation that is set. Returns (warnings, notes, known): a warning per
     field out of the rule, "Pressão: 45, devia ser 60–80 (~75)"; notes with what the formation the "Onze" step asks for
     would take ("Se mudares para 5-2-3:" and a line per field); known False when section 2 has no rule for the
     formation set (the step stays grey). ``forwards``: how many his eleven has, after the analysis; ``counter``: he
     plays counter-attack, after the analysis; ``cpu``: he is the computer (the tackling, ``_tackling``); ``his``: his
-    style of play and where it was read ("relatório desta jornada", "últimos 3 relatórios"), against a human (D-092)."""
+    style of play and where it was read ("relatório desta jornada", "últimos 3 relatórios"), against a human (D-092);
+    ``vs_us``: his last official match against us (D-100): with 5 defenders there, he counts as in counter-attack."""
     if not tactic:
         return [], [], False
+    if (vs_us or {}).get("formation", 0) // 100 == 5:  # what he played against us, not the report (D-100)
+        his, counter = (COUNTER, "contra nós"), True
     starters = [p for p in players or [] if p.get("lineup") in ELEVEN]
     context = dict(away=away, clearly_stronger=_clearly_stronger(mine, opponent),
                    clearly_weaker=_clearly_stronger(opponent, mine), forwards=forwards,
@@ -421,7 +434,7 @@ def tactic_check(tactic: dict | None, strictness: int | None, mine: float | None
     if accepted and style is not None and style not in accepted:
         wanted = " ou ".join(TACKLING[s] for s in sorted(accepted))
         warnings.append(f"Desarme: {TACKLING.get(style, style)}, devia ser {wanted} (árbitro {REFEREES[strictness]})")
-    other = _suggested(tactic, players, mine, opponent, away, spare)
+    other = _suggested(tactic, players, mine, opponent, away, spare, vs_us)
     if other and (better := instructions(other[1], other[2], **context)):
         notes.append(f"Se mudares para {other[0]}:")
         notes += [f"{label}: {_rule(getattr(better, field), names)}" for label, _, field, names in FIELDS]
