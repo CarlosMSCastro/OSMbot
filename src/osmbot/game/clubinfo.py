@@ -443,9 +443,9 @@ def club_extra(client, team: dict, base: str, players: list[dict], slot, market:
     why = {SPECIALISTS_STEP: check(players, current),
            BENCH_STEP: bench_warnings(players, spare),  # THEORY.md section 21: yellow with the reason on hover
            ELEVEN_STEP: empty_places(players, tactic) + listed_starters(players, listed)
-           + tactic_warnings(tactic, mine, theirs, players, away, spare, vs_us),
+           + tactic_warnings(tactic, mine, theirs, players, away, vs_us),
            POSITIONS_STEP: position_warnings(players, tactic)}  # who is out of position, on the hover
-    why[TACTIC_STEP], tactic_tips, known = tactic_check(tactic, strictness, mine, theirs, players, away, spare,
+    why[TACTIC_STEP], tactic_tips, known = tactic_check(tactic, strictness, mine, theirs, players, away,
                                                         (upcoming or {}).get("forwards"), bool((upcoming or {}).get("counter")),
                                                         bool(upcoming) and not upcoming.get("human"),
                                                         _cached(("his_style", base, rival, week, bool(done.get(ANALYSIS_STEP))), VALUES_FOR,
@@ -456,7 +456,7 @@ def club_extra(client, team: dict, base: str, players: list[dict], slot, market:
              for (kind, _), (name, done_, extra) in zip(CHECKLIST, steps)]
     reasons = {name: why[kind] for (kind, _), (name, _, _) in zip(CHECKLIST, steps) if why.get(kind)}
     notes = {ELEVEN_STEP: ([vs_us_note(vs_us)] if vs_us else []) + age_warnings(players) + centre_notes(players, tactic)
-             + tactic_notes(tactic, players, mine, theirs, away, spare, vs_us),  # within the
+             + tactic_notes(tactic, players, mine, theirs, away, vs_us),  # within the
              BENCH_STEP: bench_notes(players, pair[1]["opponent"] if spare else None), TACTIC_STEP: tactic_tips,
              SPECIALISTS_STEP: captain_note(players, current)}  # rule: the step keeps its colour
     for (kind, _), (name, _, _) in zip(CHECKLIST, steps):

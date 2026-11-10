@@ -243,13 +243,13 @@ def test_without_fit_full_backs_3_defenders_serve_and_the_4_3_3_is_told_so():
     assert tactic_notes(t343, squad(Cucurella=None), 108, 100) == ["3-4-3 aceite: sem DE no plantel"]
 
 
-def test_resting_for_the_important_match_counts_as_tired():
+def test_resting_for_the_important_match_never_makes_a_formation_impossible():
+    # SV Ried, 2026-11-10: the only RB at 83 % "a poupar" left no 4-defender formation, while the 4-4-2 B played him
+    # (owner: resting does not decide the formation, D-101)
     resting = squad(Cucurella=82, James=83)
     t343 = {"formation": 343, "formationDetail": "A", "style": 2}
-    assert tactic_warnings(t343, 108, 100, resting) == ["Formação 3-4-3: devia ser 4-3-3 A"]  # not resting: the rule
-    assert tactic_warnings(t343, 108, 100, resting, spare=True) == []
-    assert tactic_notes(t343, resting, 108, 100, spare=True) == [
-        "3-4-3 aceite: sem DE em forma (Cucurella 82 % a poupar); sem DD em forma (James 83 % a poupar)"]
+    assert tactic_warnings(t343, 108, 100, resting) == ["Formação 3-4-3: devia ser 4-3-3 A"]
+    assert tactic_warnings({"formation": 433, "formationDetail": "A", "style": 2}, 108, 100, resting) == []
 
 
 def test_no_wingers_take_two_strikers_and_with_no_full_backs_either_only_the_3_5_2():

@@ -2,6 +2,14 @@
 
 Entradas mais recentes primeiro. Cada sessão: o que se fez · o que ficou por fazer · próximo passo.
 
+## 2026-11-10 (cont.) — Avisos do SV Ried (PT-LA-02-0095-N)
+
+- **Pedido do dono:** analisar os avisos do SV Ried (J19 em casa contra o Austria Vienna, humano, 121 contra 92 com a casa, +32 %; depois Rapid fora, Altach em casa, final da taça contra o Altach).
+- **Avisos no registo (10:32):** Díaz e P. Gueye a 76 %, "convém descansar". Certos; o dono tirou-os do onze e passou para 4-4-2 B.
+- **Falso aviso no passo Onze (visto com o código, só leitura):** com o "poupar para o Rapid" ligado, o Laimer (83 %, o **único DD**) conta como fora de forma; aí nenhuma formação de 4 defesas serve e o passo fica amarelo com "devia ser 4-3-3 A, mas…", sem nada que se possa fazer, quando o próprio 4-4-2 B joga com o Laimer. Sem o "poupar": verde, "4-4-2 B aceite: sem EE em forma (Díaz 76 %)".
+- **D-101 (dono: opção 1):** o "a poupar" deixa de decidir a formação (`theory/lineup` sem `spare` no `_plan`/`_lacks`, `clubinfo`, teste, `THEORY.md` §1 e §16). SV Ried relido: passo Onze verde, "4-4-2 B aceite: sem EE em forma (Díaz 76 %)". 581 testes, pyflakes limpo. A janela só apanha a mudança depois de reiniciar o bot a partir do código.
+- **Por decidir pelo dono:** (2) não poupar o único jogador de uma posição vigiada (DD, DE, EE, ED, MO, MDC); (3) o "poupar" só olha para os 2 jogos seguintes e não vê a final da taça.
+
 ## 2026-11-10 — Qarabag 1-2 Sabah, título perdido; D-100 (DESKTOP-KAM70RR)
 
 - **Qarabag 1-2 Sabah (liga, semana 24, fora):** força do jogo 816/781 (com a casa dele ~igual), estágio dos dois lados, remates 7-11. A frase do comentador ("o adversário foi a um Training Camp") é genérica: nós também fizemos. Classificação pelos registos: Sabah 63, Qarabag 57; o título foi decidido nos 2 jogos da liga contra ele.
