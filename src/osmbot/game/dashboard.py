@@ -219,6 +219,7 @@ def collect(client, only: str | None = None) -> dict:
         found = [read_club(team, base) for team, base in teams if team["name"] == only]
         for club in found:
             club["ticket"] = club_ticket(tickets, slot, club["name"], started)
+            club["read_at"] = started  # its own time: the board keeps the newest of each club (view.newest)
         return {"clubs": found, "read_at": started}
     with ThreadPoolExecutor(max_workers=CLUBS_AT_ONCE + 1) as pool:  # clubs and account side by side: a few seconds
         account_part = pool.submit(read_account)
@@ -227,6 +228,7 @@ def collect(client, only: str | None = None) -> dict:
     slots = [key for key, c in sorted((account.get("teamSlots") or {}).items()) if c and c.get("team")]
     for key, club in zip(slots, clubs):
         club["ticket"] = club_ticket(tickets, key, club["name"], started)
+        club["read_at"] = started
     try:
         from osmbot.game.inventory import inventory_items
 

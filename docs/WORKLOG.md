@@ -2,6 +2,13 @@
 
 Entradas mais recentes primeiro. Cada sessão: o que se fez · o que ficou por fazer · próximo passo.
 
+## 2026-11-11 — O clube relido ao passar o rato voltava atrás (DESKTOP-KAM70RR)
+
+- **Dono:** depois do pull do D-101, o pré-jogo do SV Ried ficava verde ao passar o rato e logo a seguir amarelo, com os valores antigos.
+- **Causa:** a releitura de um clube (D-099) ficava com a hora da leitura completa anterior; o bot reenvia a sua última leitura completa a cada redesenho e, sendo mais recente do que essa hora, ganhava e repunha o clube antigo.
+- **Correção:** cada clube leva a hora da sua leitura (`dashboard.collect`, `read_at` por clube); `gui/view.newest` escolhe clube a clube (saiu de `gui/window`). Teste novo; 582 testes. Só GETs para confirmar: leitura completa e de um clube iguais (SV Ried "3-4-3 aceite: sem DD em forma (Laimer fora)").
+- **Por fazer:** reiniciar o bot a partir do código e ver na janela.
+
 ## 2026-11-10 (cont.) — Avisos do SV Ried (PT-LA-02-0095-N)
 
 - **Pedido do dono:** analisar os avisos do SV Ried (J19 em casa contra o Austria Vienna, humano, 121 contra 92 com a casa, +32 %; depois Rapid fora, Altach em casa, final da taça contra o Altach).

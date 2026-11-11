@@ -556,3 +556,17 @@ def test_one_club_read_again_replaces_only_that_club():
     assert merged["clubs"] == [{"name": "A", "slots": (4, 4)}, {"name": "B", "slots": (1, 4)}]
     assert merged["read_at"] == 5 and merged["coins"] == 10 and board["clubs"][0]["slots"] == (2, 4)
     assert merge_club(None, {"name": "A"}) is None
+
+
+def test_a_club_read_again_on_its_own_outlives_an_older_full_reading():
+    """Owner, 2026-11-11: the hovered club turned green and at once back to yellow (the bot's older full reading won)."""
+    from osmbot.gui.view import merge_club, newest
+    window = {"read_at": 100, "clubs": [{"name": "A", "read_at": 100, "step": "old"}, {"name": "B", "read_at": 100}]}
+    hovered = merge_club(window, {"name": "A", "read_at": 300, "step": "new"})
+    bot = {"read_at": 200, "clubs": [{"name": "A", "read_at": 200, "step": "old"}, {"name": "B", "read_at": 200}]}
+    shown = newest(bot, hovered)
+    assert shown["read_at"] == 200 and [c["read_at"] for c in shown["clubs"]] == [300, 200]
+    assert shown["clubs"][0]["step"] == "new" and bot["clubs"][0]["step"] == "old"
+    later = {"read_at": 400, "clubs": [{"name": "A", "read_at": 400, "step": "newer"}, {"name": "B", "read_at": 400}]}
+    assert newest(later, shown) is later  # a full reading after the hover wins whole
+    assert newest(None, bot) is bot and newest(bot, None) is bot

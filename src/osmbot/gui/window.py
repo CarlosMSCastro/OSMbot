@@ -30,7 +30,7 @@ from PySide6.QtWidgets import (QAbstractItemView, QApplication, QFrame, QGridLay
 
 from osmbot import __version__
 from osmbot.i18n import LANGUAGES, get_pref, language, load_language, set_language, set_pref, tr
-from osmbot.gui.view import BLUE, GREEN, GREY, ORANGE, RED, YELLOW, board_view, mission_ready, pitch_spots
+from osmbot.gui.view import BLUE, GREEN, GREY, ORANGE, RED, YELLOW, board_view, mission_ready, newest, pitch_spots
 
 COLOURS = {GREEN: "#5cd17a", BLUE: "#7cc4ff", YELLOW: "#f5c542", GREY: "#8f95b8", RED: "#ff6b6b", ORANGE: "#ff9f43",
            None: "#eef0ff"}
@@ -2148,13 +2148,6 @@ class NoticesWindow(QWidget):
 READ_EVERY = 180  # s: the window reads the board on its own this often (owner, 2026-10-09)
 READ_HIDDEN_EVERY = 900  # s: the same while the window is hidden or minimised (owner, 2026-10-12: fewer requests)
 READ_ERROR = "Não consegui ler o jogo"
-
-
-def newest(snapshot: dict | None, other: dict | None) -> dict | None:
-    """The more recent of two readings of the game: the bot's and the window's own come in any order."""
-    if not snapshot or not other:
-        return snapshot or other
-    return snapshot if snapshot.get("read_at", 0) >= other.get("read_at", 0) else other
 
 
 CLUB_READ_GAP = 10  # seconds between two readings of one club on its own (its card hovered)

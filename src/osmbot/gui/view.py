@@ -375,6 +375,20 @@ def fixtures_view(fixtures: list[dict], round_text: str, cup_name: str = "Taça"
     return {"title": f"Época · {round_text}" if round_text else "Época", "cells": cells, "strip": strip}
 
 
+def newest(snapshot: dict | None, other: dict | None) -> dict | None:
+    """The more recent of two readings of the game (the bot's and the window's come in any order), club by club: a
+    club read again on its own (its card hovered) after the newer reading keeps that reading, or the bot's older
+    full one, shown again on every redraw, would put the hovered club back as it was (owner, 2026-11-11)."""
+    if not snapshot or not other:
+        return snapshot or other
+    base, older = (snapshot, other) if snapshot.get("read_at", 0) >= other.get("read_at", 0) else (other, snapshot)
+    fresher = {c.get("name"): c for c in older.get("clubs") or []}
+    clubs = [fresher[c.get("name")] if c.get("name") in fresher
+             and fresher[c.get("name")].get("read_at", 0) > c.get("read_at", base.get("read_at", 0)) else c
+             for c in base.get("clubs") or []]
+    return base if all(a is b for a, b in zip(clubs, base.get("clubs") or [])) else {**base, "clubs": clubs}
+
+
 def merge_club(snapshot: dict | None, club: dict) -> dict | None:
     """The board with one club read again (the card hovered, owner 2026-11-09): that club replaced, by name, the rest
     as it was (and the reading's time kept, so a newer full reading by the bot still wins)."""
