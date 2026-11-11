@@ -2,6 +2,15 @@
 
 Entradas mais recentes primeiro. Cada sessão: o que se fez · o que ficou por fazer · próximo passo.
 
+## 2026-11-11 (cont.) — Mercado da Taça dos Vencedores: Betis sem vendas
+
+- **Dono:** "não vendi ninguém" na Taça dos Vencedores. Análise só com os registos do motor (`transferencias/motor/258036629.jsonl`); números em `DISCOVERY.md` (mercado da Taça dos Vencedores).
+- **Causa:** ~80 anúncios (quase 95 acima de 100 M ao longo dos 2 dias) para ~13 compras por dia, que vão sobretudo para os baratos; acima de 100 M venderam 6. Os 4 do Betis (123–186 M) estão na faixa que quase não sai. Não é falha do bot nem do preço a 75 % (a 75 % entre 100 e 150 M: 0 de 13).
+- **Por decidir pelo dono:** manter, ou trocar por jogadores abaixo de ~100 M (os que vendem); esperar por um Transfer Madness.
+- **Plantel do Betis (lido só com GETs, 23 jogadores, 5-4-1 B):** nenhum jogador útil tem o máximo abaixo de 100 M (o mais barato, o Maguire, fica em 135 M, ou 101 M a 75 %). Sobram para o 5-4-1 B (7 DEF, 6 MED, 3 ATA, 2 GR) o Mbeumo, o Dembélé e o Maguire. O Dembélé (EE 108, fora do onze e do banco) não está à venda, e o de Jong (MC 114, banco, 186 M) está. Proposta: trocar o de Jong pelo Dembélé (112,7 M a 75 %). Faltas no plantel: nenhum ED, só um DE.
+- **"Encurtar o plantel" (dono: os adversários têm média por jogador mais alta):** os 32 clubes lidos (só GETs). A força segue o valor dos 11 melhores, não o número de jogadores: Betis 2 160 M nos 11 (5.º da taça), força 126; Liverpool 2 179 M, 127; Tottenham 2 494 M (18 jogadores), 130; Konyaspor 28 jogadores, 125. A média mais baixa do Betis (121 contra 147 M) vem dos 4 de enchimento (11,7 M); sem eles, 146 M. A margem está nos 626 M fora do onze (Haaland, de Jong, Díaz, Balde, Guéhi, Mbeumo, Dembélé, Maguire), não no enchimento (~29 M a vender).
+- **Erro meu, corrigido na conversa:** disse que não havia calendário de novembro. O bot leu-o do fórum a 26/10 (`~/.osmbot/eventos.json`, linha "Calendário de eventos de 2026-11" no registo) e bate com o que o jogo mostrou (Stadium Blitz 4, Extreme Progression 7–8, Extraordinary Scout 11). Próximo evento de vendas: **Transfer Rush, 18/11** (mais hipótese de venda, até 6 na lista).
+
 ## 2026-11-11 — O clube relido ao passar o rato voltava atrás (DESKTOP-KAM70RR)
 
 - **Dono:** depois do pull do D-101, o pré-jogo do SV Ried ficava verde ao passar o rato e logo a seguir amarelo, com os valores antigos.
