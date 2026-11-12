@@ -59,6 +59,13 @@ def test_the_5_defenders_style_follows_the_strength():
     assert instructions(523, "B").attack == {1} and instructions(541, "B").plan == {4}
 
 
+def test_the_541_b_midfield_helps_the_defence_against_his_433():  # THEORY.md 2: the midfield by his formation
+    assert instructions(541, "B").midfield == {1}  # before the analysis: the author's neutral
+    assert instructions(541, "B", his_formation=442).midfield == {1}
+    assert instructions(541, "B", his_formation=433).midfield == {0}
+    assert instructions(541, "A", his_formation=442).midfield == {0}
+
+
 def test_the_442_b_takes_the_author_s_line_only_against_counter_attack():  # D-079
     rule = instructions(442, "B", counter=True)
     assert rule.plan == {1} and rule.midfield == {2} and rule.attack == {2} and rule.offside == {False}

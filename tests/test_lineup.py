@@ -478,3 +478,12 @@ def test_his_5_defenders_against_us_count_as_counter_attack_for_the_4_3_3():
     # the 4-3-3 when neither is clearly stronger: "Se mudares para 5-3-2:"
     notes = tactic_check(OWNERS_433, 3, 816, 820, away=True, vs_us=SABAH)[1]
     assert notes[0] == "Se mudares para 5-3-2:" and "Estilo de jogo: Contra-ataque" in notes
+
+
+def test_the_541_b_midfield_follows_his_formation_after_the_analysis():  # THEORY.md 2
+    t541 = {**OWNERS_433, "formation": 541, "formationDetail": "B", "overallMatchTactics": 4, "midfield": 1,
+            "attack": 1, "mentality": 35, "pressing": 30}
+    assert not any(w.startswith("Médios") for w in warnings_of(t541, mine=100, opponent=102))
+    assert "Médios: Manter posições, devia ser Ajudar a defesa" in warnings_of(t541, mine=100, opponent=102, his_formation=433)
+    assert "Médios: Manter posições, devia ser Ajudar a defesa" in warnings_of(  # what he played against us counts (D-100)
+        t541, mine=100, opponent=102, his_formation=442, vs_us={"formation": 433, "detail": "A"})

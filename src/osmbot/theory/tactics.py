@@ -108,13 +108,15 @@ DEFENSIVE_FORWARD = {8: 40, 11: 40, 4: 20}  # wingers ~40 of defence, a striker 
 def instructions(formation: int, detail: str | None, *, away: bool = False, clearly_stronger: bool = False,
                  clearly_weaker: bool = False, forwards: int | None = None,
                  defensive_forwards: bool = False, counter: bool = False, human: bool = False,
-                 his: int | None = None) -> Instructions | None:
+                 his: int | None = None, his_formation: int | None = None) -> Instructions | None:
     """The instructions and sliders of THEORY.md section 2 (owner, 2026-10-28, D-073: "tudo como o autor"), or None
     for a formation it has no rule for. ``clearly_stronger``/``clearly_weaker``: more than 12 % apart in match
     strength (section 1); ``forwards``: how many his eleven has, once the analysis shows it (None before);
     ``defensive_forwards``: all of ours defend well enough to support the midfield; ``counter``: the analysis shows
     him in counter-attack (the 4-4-2 B's other line, D-079); ``human``: he is a manager, not the computer; ``his``: his
-    style of play from the analyst's reports (``his_plan``): against a human the 4-3-3's follows it (D-092)."""
+    style of play from the analyst's reports (``his_plan``): against a human the 4-3-3's follows it (D-092);
+    ``his_formation``: his formation once the analysis shows it (433, 442…; None before): against his 4-3-3 the 5-4-1 B's
+    midfield helps the defence (the author: "contra 4-3-3, médios a ajudar a defesa", THEORY.md 2)."""
     def of(*codes):
         return frozenset(codes)
 
@@ -134,7 +136,7 @@ def instructions(formation: int, detail: str | None, *, away: bool = False, clea
                             pressing=Band(20, 40, 35), **five)
     if formation == 541:
         return Instructions(of(SHOOT) if detail == "B" else of(COUNTER), attack=attack, pressing=Band(20, 40, 30),
-                            **{**five, "midfield": of(NEUTRAL) if detail == "B" else of(HELP_DEFENCE)})
+                            **{**five, "midfield": of(NEUTRAL) if detail == "B" and his_formation != 433 else of(HELP_DEFENCE)})
     if formation == 442 and detail == "B" and counter:  # the author's own, read on screen (9wEpMh4wUk4), D-079
         return Instructions(of(PASSING), of(DEEP), of(PRESS), of(ATTACK_ONLY), of(False), of(False),
                             Band(60, 80, 61), Band(40, 60, 49), Band(60, 80, 72))

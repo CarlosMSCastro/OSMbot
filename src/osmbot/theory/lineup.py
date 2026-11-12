@@ -398,7 +398,8 @@ def _tackling(strictness: int | None, mine: float | None, opponent: float | None
 def tactic_check(tactic: dict | None, strictness: int | None, mine: float | None, opponent: float | None,
                  players: list[dict] | None = None, away: bool = False,
                  forwards: int | None = None, counter: bool = False, cpu: bool = False,
-                 his: tuple[int, str] | None = None, vs_us: dict | None = None) -> tuple[list[str], list[str], bool]:
+                 his: tuple[int, str] | None = None, vs_us: dict | None = None,
+                 his_formation: int | None = None) -> tuple[list[str], list[str], bool]:
     """The "Tática" step (owner, 2026-10-28, D-073; THEORY.md 2 and 21): the instructions, the sliders and the tackling
     set in the game against the rule for the formation that is set. Returns (warnings, notes, known): a warning per
     field out of the rule, "Pressão: 45, devia ser 60–80 (~75)"; notes with what the formation the "Onze" step asks for
@@ -406,7 +407,8 @@ def tactic_check(tactic: dict | None, strictness: int | None, mine: float | None
     formation set (the step stays grey). ``forwards``: how many his eleven has, after the analysis; ``counter``: he
     plays counter-attack, after the analysis; ``cpu``: he is the computer (the tackling, ``_tackling``); ``his``: his
     style of play and where it was read ("relatório desta jornada", "últimos 3 relatórios"), against a human (D-092);
-    ``vs_us``: his last official match against us (D-100): with 5 defenders there, he counts as in counter-attack."""
+    ``vs_us``: his last official match against us (D-100): with 5 defenders there, he counts as in counter-attack, and
+    his formation there is his (``his_formation``: from the analysis, None before; THEORY.md 2, the midfield by it)."""
     if not tactic:
         return [], [], False
     if (vs_us or {}).get("formation", 0) // 100 == 5:  # what he played against us, not the report (D-100)
@@ -415,7 +417,8 @@ def tactic_check(tactic: dict | None, strictness: int | None, mine: float | None
     context = dict(away=away, clearly_stronger=_clearly_stronger(mine, opponent),
                    clearly_weaker=_clearly_stronger(opponent, mine), forwards=forwards,
                    defensive_forwards=defensive(starters), counter=counter, human=not cpu,
-                   his=his[0] if his else None)
+                   his=his[0] if his else None,
+                   his_formation=(vs_us or {}).get("formation") or his_formation)
     rule = instructions(tactic.get("formation"), tactic.get("formationDetail"), **context)
     warnings, notes = [], []
     if rule:

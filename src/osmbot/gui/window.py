@@ -2669,8 +2669,16 @@ class MainWindow(QMainWindow):
 
             try:
                 self.bridge.read.emit({"snapshot": collect(OsmClient())})
-            except BaseException as error:
-                self.bridge.read.emit({"error": f"{READ_ERROR} ({error})"})
+            except BaseException as error:  # where it broke, in the window and in the log, to find it next time
+                where = traceback.extract_tb(error.__traceback__)[-1] if error.__traceback__ else None
+                place = f" em {Path(where.filename).name}:{where.lineno}" if where else ""
+                self.bridge.read.emit({"error": f"{READ_ERROR} ({error}){place}"})
+                try:
+                    from osmbot.game.loop import _log
+
+                    _log(f"{READ_ERROR} ({error}){place}")
+                except Exception:
+                    pass
 
         threading.Thread(target=work, name="osmbot-read", daemon=True).start()
 

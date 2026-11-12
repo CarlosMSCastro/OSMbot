@@ -2,6 +2,15 @@
 
 Entradas mais recentes primeiro. Cada sessão: o que se fez · o que ficou por fazer · próximo passo.
 
+## 2026-11-11 (noite) — SV Ried × Altach (5-4-1), fim de época do Qarabag, Betis × Liverpool revisto
+
+- **SV Ried × Altach (casa):** o Altach jogou 5-4-1 B contra nós (semana 12, 1-1). Nos registos ninguém ganhou a um 5-4-1 (17 jogos oficiais, todas as formações). Pesquisa web: nada próprio do OSM (só 4-3-3 B + passe contra blocos baixos). Fica o 4-3-3 com passe. **Por decidir pelo dono:** o bot conta qualquer 5 defesas contra nós como contra-ataque (D-100), mas o 5-4-1 B é remate à vista (pela D-092 daria alas); verificação "contra o 5-4-1" na rotina semanal.
+- **D-102 (dono): 5-4-1 B contra o 4-3-3 dele, médios a ajudar a defesa** depois da análise (`tactics.instructions`/`lineup.tactic_check` com `his_formation`, formação do relatório no onze dele em `clubinfo`; testes; `THEORY.md` §2). 584 testes. A janela só apanha depois de reiniciar a partir do código.
+- **Imishli, plano de arranque (conversa):** J1 em casa com o Sabah (77 contra 62); reforçar DD, 2 MC, GR e 1 DC até ~68 (por milhão, GR e DEF dão mais pontos; acima de 70 o preço duplica); com estágio + treino secreto a regra pede 4-3-3 A, sem estágio 5-2-3 A.
+- **Qarabag, fim de época sem objetivos:** +1 271 (DISCOVERY): vale a pena acabar a época. O Azerbaijão **não** ficou feito no domínio mundial (2.º, objetivo 1.º, sem taça); save novo: FK Imishli (o nome do jogo acaba num espaço), objetivo 8.º, 8.º em força (62) de 12, acima de 4 clubes do computador (59–61).
+- **"Não consegui ler o jogo (string indices must be integers, not 'str')" na janela (2026-11-12 ~00:00, logo depois de entrar o FK Imishli):** não se reproduz fora da janela (leitura completa e só do clube, só GETs, sem erro). Já tinha aparecido a 2026-10-14 quando entrou o Qarabag ("Estádio: erro (…)"); **[H]** um pedido do clube acabado de entrar devolve outra coisa nos primeiros minutos. A janela passa a dizer o ficheiro e a linha ("… em dashboard.py:123") e a escrevê-lo no registo; `i18n`. 582 testes. **Por fazer:** se voltar, corrigir nesse sítio.
+- **Betis × Liverpool (12/11 16:10, fora, Taça dos Vencedores, grupo C), só GETs:** forças quase iguais (Betis 126–127, Liverpool id 11 125–127; com o relvado dele ~2 % mais fraco; antes ~4 %). Grupo: Gençlerbirligi 150 (claramente mais forte), Konyaspor 125; o 2.º lugar joga-se entre Betis, Liverpool e Konyaspor. Os relatórios de pré-época em `logs/PT-LA-02-0095-N/analista` são de **outro** Liverpool (id 19), não deste. O plantel deste: 4 PL, nenhum extremo, 7 DEF, 5 MED. Plano mantém-se: 5-4-1 B (remate à vista, 35/30/79, sem armadilha), Doué a PL; nos registos, 5-4-1 contra 4-3-3 com forças a ±12 %: 4 V, 1 E para o 5-4-1 (5 jogos). Treino secreto e estágio por decidir pelo dono; análise automática antes do jogo.
+
 ## 2026-11-11 (cont.) — Mercado da Taça dos Vencedores: Betis sem vendas
 
 - **Dono:** "não vendi ninguém" na Taça dos Vencedores. Análise só com os registos do motor (`transferencias/motor/258036629.jsonl`); números em `DISCOVERY.md` (mercado da Taça dos Vencedores).

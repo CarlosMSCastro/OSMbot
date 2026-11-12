@@ -353,6 +353,7 @@ PATTERNS = [(re.compile(pattern), replace) for pattern, replace in (
     (r"(.+): (\d+) falha\(s\); volto a tentar", lambda m: f"{_w(m[1])}: {m[2]} failure(s); retrying"),
     (r"Treinos: (\d+) falha\(s\) ao escrever; volto a ver em (.+)", lambda m: f"Trainings: {m[1]} failed write(s); checking again in {m[2]}"),
     (r"(.+) (.+) fica à espera \((\d+)\)", lambda m: f"{m[1]} {m[2]} waits ({m[3]})"),
+    (r"Não consegui ler o jogo \((.+)\) em (\S+)", lambda m: f"Could not read the game ({m[1]}) in {m[2]}"),
     (r"Não consegui ler o jogo \((.+)\)", lambda m: f"Could not read the game ({m[1]})"),
     (r"Loja: janela saltada", lambda m: "Shop: window skipped"),
     (r"(.+): sem boss coins para o amigável \((\d+)\); fica por fazer", lambda m: f"{m[1]}: not enough boss coins for the friendly ({m[2]}); not done"),

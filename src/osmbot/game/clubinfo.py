@@ -387,6 +387,7 @@ def club_extra(client, team: dict, base: str, players: list[dict], slot, market:
             if seen:  # his real eleven, on hover of the circle (owner, 2026-11-03)
                 report = next(iter(_reports_on(client, base, rival)), {})  # his formation, for the places on the pitch
                 eleven = {"players": [p for p in squad_of if 1 <= (p.get("lineup") or 0) <= 11], "estimate": False,
+                          "formation": report.get("formation"),  # his, for the midfield (THEORY.md 2)
                           "slots": formation_slots(report.get("formation"), report.get("formationDetail")),
                           "shape": formation_title(report.get("formation"), report.get("formationDetail"))}
             else:  # before the analysis: his likely eleven, and the circle is its average (owner, 2026-11-03: "tem que
@@ -450,7 +451,9 @@ def club_extra(client, team: dict, base: str, players: list[dict], slot, market:
                                                         bool(upcoming) and not upcoming.get("human"),
                                                         _cached(("his_style", base, rival, week, bool(done.get(ANALYSIS_STEP))), VALUES_FOR,
                                                                 lambda: his_style(client, base, rival))
-                                                        if upcoming and upcoming.get("human") else None, vs_us)
+                                                        if upcoming and upcoming.get("human") else None, vs_us,
+                                                        ((upcoming or {}).get("eleven") or {}).get("formation")
+                                                        if (upcoming or {}).get("eleven") and not upcoming["eleven"].get("estimate") else None)
     steps = [(step[0], known, step[2]) if kind == TACTIC_STEP else step for (kind, _), step in zip(CHECKLIST, steps)]
     steps = [(name, False, RULE) if why.get(kind) and done_ else (name, done_, extra)
              for (kind, _), (name, done_, extra) in zip(CHECKLIST, steps)]
