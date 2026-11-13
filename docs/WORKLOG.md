@@ -2,6 +2,18 @@
 
 Entradas mais recentes primeiro. Cada sessão: o que se fez · o que ficou por fazer · próximo passo.
 
+## 2026-11-13 — Betis × Konyaspor, final do SV Ried, estágio à última hora (DESKTOP-KAM70RR, só leitura)
+
+- **Betis × Konyaspor (13/11 16:10, casa):** o Konyaspor joga sempre 5-2-3 A em contra-ataque (3 relatórios + o 0-3 com o Gençlerbirligi, com estágio). Recomendado: **5-3-2 em contra-ataque** (D-100), ~133 contra 124 com a casa (~7 %); se ele fizer estágio e nós não, D-098 (5-2-3 ou 5-4-1). Por ver: DD vazio, um só DE, Gvardiol saiu lesionado aos 84' em Liverpool.
+- **SV Ried × Altach, final da taça (13/11 20:51, campo neutro, humano), lido com GETs:** 111 contra 102 (estimativa; no último jogo a força do jogo foi 744/795 a favor dele). Recomendado: **estágio + 4-3-3 A com passe**, desarme Normal (árbitro muito rigoroso), Džeko 113 no lugar do Havertz 101, tirar o Porro da lista (titular à venda; o Laimer, único DD, castigado). 5-2-3 com o estágio: não (nós claramente mais fortes, ele fecha-se em 5-4-1; 4-3-3 contra 5-2-3 claramente mais forte 2,71 pts em 7 jogos; contra o 5-4-1 só 1 jogo; 5-2-3 nesse caso nenhum). **Erro meu, corrigido pelo dono:** usei o Porro como argumento contra o 5-2-3, mas ele joga a DD nas duas formações.
+- **D-103 (em aberto): estágio à última hora** com luz no pré-jogo e o bot a ligá-lo a 5 min do jogo; registado no `THEORY.md` §6. **Próximo passo:** hoje ~20:46 o dono liga o estágio do SV Ried à mão com `osmbot inspect-writes` (observar o pedido e se o jogo o aceita a 5 min); amanhã (14/11) construir, depois de o dono responder: treino secreto automático ou só o custo; teto de gasto.
+
+## 2026-11-12 — Jogos do dia e o Gençlerbirligi (DESKTOP-KAM70RR, só leitura)
+
+- **Resultados (11–12/11):** Liverpool 0-1 Betis (5-4-1 B, força 908/935, Foden aos 78', Gvardiol lesionado aos 84'), SV Ried 2-1 Altach (4-3-3 A contra 5-4-1 B: **a 1.ª vitória registada contra um 5-4-1**, com força do jogo 744/795), Mechelen 2-0 Zulte e 4-0 Kortrijk, Ried 2-1 Rapid, Qarabag 4-0 Zira.
+- **Betis, próximo jogo:** Konyaspor em casa (13/11 16:10, humano, 124 contra 127; com a casa ~133 contra 124). Contra o Gençlerbirligi jogou 5-2-3 A com estágio. Pré-jogo (GETs): lugar 6 (DD) vazio, formação "devia ser 4-4-2 B, 5-3-2 ou 3-5-2", desarme Agressivo. Gençlerbirligi nas jornadas 3 (fora) e 4 (casa).
+- **Gençlerbirligi (1.º do grupo):** 11 jogadores a 150–154 (o melhor do Betis é 141), plantel 6,2 mil M contra 2,9 mil M; ganhou 3-0 em Konyaspor (força 969). Como lá chegou: não se sabe. O dono corrige: o bilhete só sai de ligas normais e o plantel não passa de uma liga especial para outra. Na taça o treino de um jogador de 115–145 rende ~2× a ~4× mais do que numa liga normal (registos do Betis). Conta grosseira: 11 jogadores de ~122 a 150 ≈ 31 000 de progresso; já com os treinos grátis (~9 por dia), faltam ~8 000 BC se for tudo na taça e ~20 000 BC se for numa liga normal, a 16 BC por treino acabado (fora o estágio e os amigáveis). Com os preços da loja (print do dono): ~70 € (8 000 BC) a ~155 € (20 000 BC), no mínimo. DISCOVERY.
+
 ## 2026-11-11 (noite) — SV Ried × Altach (5-4-1), fim de época do Qarabag, Betis × Liverpool revisto
 
 - **SV Ried × Altach (casa):** o Altach jogou 5-4-1 B contra nós (semana 12, 1-1). Nos registos ninguém ganhou a um 5-4-1 (17 jogos oficiais, todas as formações). Pesquisa web: nada próprio do OSM (só 4-3-3 B + passe contra blocos baixos). Fica o 4-3-3 com passe. **Por decidir pelo dono:** o bot conta qualquer 5 defesas contra nós como contra-ataque (D-100), mas o 5-4-1 B é remate à vista (pela D-092 daria alas); verificação "contra o 5-4-1" na rotina semanal.
