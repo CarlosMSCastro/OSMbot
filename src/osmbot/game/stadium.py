@@ -156,7 +156,7 @@ def run_stadium(confirm: bool) -> tuple[int, list[float]]:
     failures, wake = 0, []
     try:
         client = OsmClient()
-        for _, team, base in _teams(client):
+        for _, team, base in _teams(client, "estadio", writing=True):
             failed, times = upgrade_club(client, team, base, confirm)
             failures += failed
             wake += times
@@ -190,6 +190,11 @@ def _boost_running(client, team: dict, base: str, products: list[dict], room: in
     _, wallet = client.get("user/bosscoinwallet")
     if (wallet or {}).get("amount", 0) < product["value"]:
         return 0
+    from osmbot import settings
+    from osmbot.game import wallet as ledger
+
+    if ledger.cap_reached(product["value"], settings.spending_cap(), log):  # the client's daily ceiling (D-104)
+        return 0
     status, _ = client.request("PUT", f"{base}/stadiumparts/{part['id']}/boost", {"productId": product["id"]})
     time.sleep(PAUSE_BETWEEN_WRITES)
     label = f"{team['name']}: {PART_NAMES.get(part['stadiumPartType'], '?')}"
@@ -215,7 +220,7 @@ def run_event_stadium_boost(confirm: bool, log=print) -> int:
 
     try:
         client = OsmClient()
-        clubs = [(team, base) for _, team, base in _teams(client)
+        clubs = [(team, base) for _, team, base in _teams(client, "boost", writing=True)
                  if stadium_event(timer_minutes(client, team["leagueId"], "StadiumUpgrade"))]
         if not clubs:
             return 0

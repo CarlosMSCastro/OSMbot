@@ -32,6 +32,31 @@ def note(kind: str, amount: int) -> None:
             _pending[kind] = _pending.get(kind, 0) + amount
 
 
+SPENDING = ("amigáveis", "treinos acabados", "estádio")  # where the bot spends boss coins (and what a ceiling stops)
+_warned: dict = {}
+
+
+def spent_today(now: datetime | None = None) -> int:
+    """The boss coins the bot has spent today: the day's totals plus what is not in them yet (this PC only)."""
+    today = f"{(now or datetime.now()):%Y-%m-%d}"
+    state = _load()
+    totals = (state.get("totais") or {}) if state.get("dia") == today else {}
+    with _lock:
+        totals = add(totals, dict(_pending))
+    return -sum(min(0, amount) for kind, amount in totals.items() if kind in SPENDING)
+
+
+def cap_reached(price: int, cap: int | None, log=print, now: datetime | None = None) -> bool:
+    """True when spending ``price`` more would pass the owner's daily ceiling (D-104); says so once a day."""
+    if not cap or spent_today(now) + price <= cap:
+        return False
+    today = f"{(now or datetime.now()):%Y-%m-%d}"
+    if _warned.get("dia") != today:
+        _warned["dia"] = today
+        log(f"Teto de boss coins do dia ({cap}) atingido: o bot não gasta mais hoje")
+    return True
+
+
 def split(change: int, done: dict[str, int]) -> dict[str, int]:
     """The change of the balance as the bot's kinds plus what is left, "fora do bot" (pure)."""
     parts = {kind: amount for kind, amount in done.items() if amount}

@@ -24,7 +24,7 @@ from pathlib import Path
 from PySide6.QtCore import QEvent, QLockFile, QObject, QPoint, QPointF, QRectF, QSize, Qt, QTimer, Signal
 from PySide6.QtGui import (QAction, QColor, QCursor, QFont, QFontDatabase, QFontMetrics, QIcon, QImage, QPainter, QPainterPath, QPalette, QPen,
                            QPixmap, QRegion)
-from PySide6.QtWidgets import (QAbstractItemView, QApplication, QFrame, QGridLayout, QGroupBox, QHBoxLayout, QLabel,
+from PySide6.QtWidgets import (QAbstractItemView, QApplication, QCheckBox, QDialog, QFrame, QGraphicsColorizeEffect, QGridLayout, QGroupBox, QHBoxLayout, QLabel,
                                QMainWindow, QMenu, QMessageBox, QProxyStyle, QPushButton, QScrollArea, QSizePolicy, QStackedWidget, QStyle,
                                QSystemTrayIcon, QTableWidget, QTableWidgetItem, QToolTip, QVBoxLayout, QWidget)
 
@@ -1630,6 +1630,8 @@ class ClubCard(QFrame):
         self.colour = ""
         self.hovered = None  # the window's "read this club again" (set by the window)
         self.club_name = ""
+        self.key = None  # <leagueId>_<teamId>: how the client's switches name this club (D-104)
+        self.off = False  # the client turned the club off: the bot does not work on it
         self.timer = ACCENT  # running timers: the club's colour half faded once the logo is in
         self.full = COLOURS[GREEN]  # full rings: the club's colour a little stronger (owner, 2026-10-15)
         row = QHBoxLayout(self)
@@ -1812,9 +1814,26 @@ class ClubCard(QFrame):
             self.hovered(self.club_name)
         return False
 
+    def set_off(self, off: bool) -> None:
+        """A club the bot does not work on (Definições → Clubes e automações): the whole card goes grey, with
+        "desativado" after the name. It still reads and shows the club."""
+        changed = off != self.off
+        self.off = off
+        if changed or (off and self.graphicsEffect() is None):
+            if off:
+                effect = QGraphicsColorizeEffect(self)
+                effect.setColor(QColor("#9a9a9a"))
+                effect.setStrength(1.0)
+                self.setGraphicsEffect(effect)
+            else:
+                self.setGraphicsEffect(None)
+        if self.club_name:
+            self.name.setText(self.club_name + (f"  ·  {tr('desativado')}" if off else ""))
+
     def show_club(self, club: dict) -> None:
         self.club_name = club["name"]
-        self.name.setText(club["name"])
+        self.key = club.get("key")
+        self.name.setText(club["name"] + (f"  ·  {tr('desativado')}" if self.off else ""))
         self.header.setText(tr(club["header"]))
         self.header.setToolTip(tip_grid(club.get("table_tip"), self.colour))  # as the game's table (owner, 2026-10-15)
         self.round.show_round(club.get("round") or "", club.get("fixtures"))
@@ -2156,6 +2175,245 @@ BOARD_SIZE = QSize(1400, 800)
 START, LOADING, BOARD = 0, 1, 2
 
 
+class TickBox(QCheckBox):
+    """A switch drawn by hand: a rounded square, with a tick when it is on (grey when it cannot be changed)."""
+
+    def __init__(self):
+        super().__init__()
+        self.setCursor(Qt.PointingHandCursor)
+        self.setFixedSize(24, 24)
+
+    def paintEvent(self, event) -> None:
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.Antialiasing)
+        on, enabled = self.isChecked(), self.isEnabled()
+        fill = ("#3fa66a" if enabled else "#3b4a41") if on else ("#1b1f45" if enabled else "#232323")
+        border = fill if on else ("#8b8cf8" if enabled and self.underMouse() else "#5a5d80" if enabled else "#3a3a3a")
+        painter.setPen(QPen(QColor(border), 1.4))
+        painter.setBrush(QColor(fill))
+        painter.drawRoundedRect(QRectF(1.5, 1.5, 21, 21), 6, 6)
+        if on:
+            painter.setPen(QPen(QColor("#ffffff" if enabled else "#7d8a82"), 2.6, Qt.SolidLine, Qt.RoundCap, Qt.RoundJoin))
+            painter.drawPolyline([QPointF(6.5, 12.5), QPointF(10.5, 16.5), QPointF(17.5, 8)])
+
+
+class SettingsDialog(QDialog):
+    """A grid of switches, one column per club and one row per automation. The "Clube ativo" row comes first and,
+    when it is off, the club's other switches go grey (everything of that club is off); their choices are kept."""
+
+    def __init__(self, parent: QWidget, clubs: list[dict]):
+        super().__init__(parent)
+        from osmbot import settings
+
+        self.settings, self.clubs, self.columns = settings, clubs, {}
+        self.setWindowTitle(tr("Clubes e automações"))
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(20, 18, 20, 16)
+        layout.setSpacing(12)
+        title = QLabel(tr("Clubes e automações"))
+        title.setStyleSheet("font-size: 16px; font-weight: bold;")
+        layout.addWidget(title)
+        hint = QLabel(tr("Só muda o que o bot faz; a janela continua a mostrar todos os clubes. Aplica-se no próximo ciclo."))
+        hint.setWordWrap(True)
+        hint.setStyleSheet(f"color:{MUTED};")
+        layout.addWidget(hint)
+        body = QWidget()  # the cards scroll when the clubs do not fit the screen
+        body_layout = QVBoxLayout(body)
+        body_layout.setContentsMargins(0, 0, 0, 0)
+        body_layout.setSpacing(12)
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll.setFrameShape(QFrame.NoFrame)
+        scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        scroll.setWidget(body)
+        layout.addWidget(scroll, 1)
+        if not clubs:
+            body_layout.addWidget(QLabel(tr("Ainda não li os clubes. Usa Ver → Atualizar e volta aqui.")))
+        else:
+            card = QFrame()
+            card.setObjectName("calendar")
+            card.setStyleSheet("QFrame#calendar { background: #161b40; border: 1px solid rgba(139, 140, 248, 110); border-radius: 10px; }")
+            grid = QGridLayout(card)
+            grid.setContentsMargins(18, 14, 18, 14)
+            grid.setHorizontalSpacing(34)
+            grid.setVerticalSpacing(10)
+            self._build(grid)
+            body_layout.addWidget(card)
+        body_layout.addWidget(self._account_card())
+        body_layout.addStretch(1)
+        close = QPushButton(tr("Fechar"))
+        close.clicked.connect(self.accept)
+        row = QHBoxLayout()
+        row.addStretch(1)
+        row.addWidget(close)
+        layout.addLayout(row)
+        body.adjustSize()
+        bar = self.style().pixelMetric(QStyle.PM_ScrollBarExtent)
+        width = max(body.sizeHint().width(), body.minimumSizeHint().width()) + bar + 48  # it grows to fit: never a sideways scroll
+        screen = (parent.screen() if parent is not None else None) or QApplication.primaryScreen()
+        room = int(screen.availableGeometry().height() * 0.88) if screen else 700
+        self.setMinimumWidth(width)
+        self.resize(width, min(self.sizeHint().height() + 40, room))
+
+    def _build(self, grid: QGridLayout) -> None:
+        saved = self.settings.load()
+        self.heads = {}
+        for column, club in enumerate(self.clubs, start=1):
+            head = QWidget()
+            box = QVBoxLayout(head)
+            box.setContentsMargins(0, 0, 0, 0)
+            box.setSpacing(4)
+            pixmap, colour = self.parent()._logo(club) if hasattr(self.parent(), "_logo") and club.get("logo_key") else (None, None)
+            badge = QLabel()
+            badge.setAlignment(Qt.AlignCenter)
+            if pixmap is not None:
+                badge.setPixmap(pixmap.scaled(40, 40, Qt.KeepAspectRatio, Qt.SmoothTransformation))
+            box.addWidget(badge)
+            label = QLabel()
+            label.setAlignment(Qt.AlignCenter)
+            box.addWidget(label)
+            bar = QFrame()  # the club's colour, as on the card's stripe
+            bar.setFixedHeight(3)
+            bar.setStyleSheet(f"background:{colour or LINE}; border-radius: 1px;")
+            box.addWidget(bar)
+            grid.addWidget(head, 0, column)
+            self.heads[club["key"]] = label
+            self.columns[club["key"]] = []
+        rows = [(None, tr("Clube ativo (o bot trabalha nele)"))] + [(k, tr(label)) for k, label in self.settings.AUTOMATIONS.items()]
+        for index, (automation, label) in enumerate(rows):
+            row = 1 if index == 0 else index + 2  # row 2 is the line under the club switch
+            name = QLabel(label)
+            name.setStyleSheet("font-weight: bold;" if automation is None else "")
+            grid.addWidget(name, row, 0)
+            for column, club in enumerate(self.clubs, start=1):
+                key = club["key"]
+                box = TickBox()
+                box.setChecked(self.settings.active(saved, key) if automation is None
+                               else ((saved.get(key) or {}).get("automacoes") or {}).get(automation, True) is not False)
+                box.toggled.connect(lambda on, key=key, automation=automation: self._switch(key, automation, on))
+                grid.addWidget(box, row, column, Qt.AlignCenter)
+                if automation is not None:
+                    self.columns[key].append(box)
+            if automation is None:  # a line under the club switch, then the automations
+                line = QFrame()
+                line.setFixedHeight(1)
+                line.setStyleSheet(f"background:{LINE};")
+                grid.addWidget(line, row + 1, 0, 1, len(self.clubs) + 1)
+        for club in self.clubs:
+            self._refresh(club["key"], self.settings.active(saved, club["key"]))
+
+    def _account_card(self) -> QFrame:
+        """What belongs to the whole account, not to a club: the videos, the rewards, the items, and the day's ceiling of boss coins."""
+        from osmbot.game.wallet import spent_today
+
+        card = QFrame()
+        card.setObjectName("calendar")
+        card.setStyleSheet("QFrame#calendar { background: #161b40; border: 1px solid rgba(139, 140, 248, 110); border-radius: 10px; }")
+        grid = QGridLayout(card)
+        grid.setContentsMargins(18, 14, 18, 14)
+        grid.setHorizontalSpacing(34)
+        grid.setVerticalSpacing(10)
+        title = QLabel(tr("Conta (todos os clubes)"))
+        title.setStyleSheet("font-weight: bold;")
+        grid.addWidget(title, 0, 0, 1, 2)
+        account = self.settings.load_account()
+        for row, (automation, label) in enumerate(self.settings.ACCOUNT.items(), start=1):
+            grid.addWidget(QLabel(tr(label)), row, 0)
+            box = TickBox()
+            box.setChecked(self.settings.account_allowed(account, automation))
+            box.toggled.connect(lambda on, automation=automation: set_pref("conta", {**self.settings.load_account(), automation: on}))
+            grid.addWidget(box, row, 1, Qt.AlignCenter)
+        row = len(self.settings.ACCOUNT) + 1
+        line = QFrame()
+        line.setFixedHeight(1)
+        line.setStyleSheet(f"background:{LINE};")
+        grid.addWidget(line, row, 0, 1, 2)
+        grid.addWidget(QLabel(tr("Teto de boss coins por dia")), row + 1, 0, 1, 2)
+        what = QLabel(tr("Amigáveis, acabar treinos e estádio. O bot não gasta mais do que isto num dia."))
+        what.setWordWrap(True)
+        what.setStyleSheet(f"color:{MUTED};")
+        grid.addWidget(what, row + 2, 0, 1, 2)
+        grid.addLayout(self._cap_controls(account), row + 3, 0, 1, 2)
+        spent = QLabel(tr("Gasto hoje por este bot:") + f" {spent_today()}")
+        spent.setStyleSheet(f"color:{MUTED};")
+        grid.addWidget(spent, row + 4, 0, 1, 2)
+        return card
+
+    CAP_PRESETS = (0, 50, 100, 200, 500)  # the quick choices; the slider goes in between (0 = no ceiling)
+    CAP_MAX = 500
+
+    def _cap_controls(self, account: dict) -> QVBoxLayout:
+        """The ceiling as quick choices (chips) and a slider for anything in between, the two kept together."""
+        from PySide6.QtWidgets import QButtonGroup, QSlider
+
+        box = QVBoxLayout()
+        box.setSpacing(10)
+        chips, row = {}, QHBoxLayout()
+        row.setSpacing(8)
+        group = QButtonGroup(self)
+        group.setExclusive(False)
+        for value in self.CAP_PRESETS:
+            chip = QPushButton(tr("Sem teto") if value == 0 else str(value))
+            chip.setCheckable(True)
+            chip.setCursor(Qt.PointingHandCursor)
+            chip.setStyleSheet(f"QPushButton {{ background:#1b1f45; border:1px solid #5a5d80; border-radius:12px; padding:5px 14px; color:{TEXT}; }}"
+                               "QPushButton:hover { border-color:#8b8cf8; }"
+                               "QPushButton:checked { background:#3fa66a; border-color:#3fa66a; color:#ffffff; font-weight:bold; }")
+            chips[value] = chip
+            group.addButton(chip)
+            row.addWidget(chip)
+        row.addStretch(1)
+        box.addLayout(row)
+        slider_row = QHBoxLayout()
+        slider = QSlider(Qt.Horizontal)
+        slider.setRange(0, self.CAP_MAX)
+        slider.setSingleStep(10)
+        slider.setPageStep(50)
+        slider.setCursor(Qt.PointingHandCursor)
+        slider.setStyleSheet("QSlider::groove:horizontal { height:6px; border-radius:3px; background:#2a2f5a; }"
+                             "QSlider::sub-page:horizontal { height:6px; border-radius:3px; background:#3fa66a; }"
+                             "QSlider::handle:horizontal { width:18px; height:18px; margin:-6px 0; border-radius:9px; background:#eef0ff; }"
+                             "QSlider::handle:horizontal:hover { background:#b9baff; }")
+        shown = QLabel()
+        shown.setMinimumWidth(74)
+        shown.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
+        slider_row.addWidget(slider, 1)
+        slider_row.addWidget(shown)
+        box.addLayout(slider_row)
+
+        def show(value: int, save: bool = True) -> None:
+            slider.blockSignals(True)
+            slider.setValue(value)
+            slider.blockSignals(False)
+            for preset, chip in chips.items():
+                chip.setChecked(preset == value)
+            shown.setText(tr("sem teto") if value == 0 else f"{value} {tr('por dia')}")
+            if save:
+                set_pref("conta", {**self.settings.load_account(), self.settings.CAP: value})
+
+        for preset, chip in chips.items():
+            chip.clicked.connect(lambda _checked=False, preset=preset: show(preset))
+        slider.valueChanged.connect(lambda value: show(round(value / 10) * 10))
+        show(min(self.settings.spending_cap(account) or 0, self.CAP_MAX), save=False)
+        return box
+
+    def _refresh(self, key: str, active: bool) -> None:
+        for box in self.columns[key]:
+            box.setEnabled(active)
+        name = next((c["name"] for c in self.clubs if c["key"] == key), key)
+        self.heads[key].setText(f"<b>{escape_text(name)}</b>" + ("" if active else f"<br><span style='color:{MUTED}'>{tr('desativado')}</span>"))
+
+    def _switch(self, key: str, automation: str | None, on: bool) -> None:
+        saved = self.settings.load()
+        if automation is None:
+            set_pref("clubes", self.settings.with_club(saved, key, active=on))
+            self._refresh(key, on)
+            if hasattr(self.parent(), "refresh_off"):
+                self.parent().refresh_off()
+        else:
+            set_pref("clubes", self.settings.with_club(saved, key, automation=automation, on=on))
+
+
 class MainWindow(QMainWindow):
     """One window, three faces: the start screen (Abrir · Login · Sair), "loading" while the game is read, and the
     full board (it grows to it). Abrir starts the bot (owner, 2026-10-08); Iniciar/Parar/Login live in the menu
@@ -2405,10 +2663,20 @@ class MainWindow(QMainWindow):
         user32.SetWindowPos(window, 0, 0, 0, 0, 0, frame_changed)
 
     def pin_side(self, pinned: bool) -> None:
+        """Pinning grows the window by the column's width and unpinning shrinks it back, so the clubs keep their size
+        (owner, 2026-11-13); a maximized window has nowhere to grow and the cards give way, as before."""
+        width = self.width()
         self.side_pinned = pinned
         set_pref("side_pinned", pinned)
         self._place_side()
         self._fit_width()
+        if self.isMaximized() or self.isFullScreen():
+            return
+        screen = self.screen().availableGeometry()
+        wanted = width + (self.SIDE - SideTab.WIDTH) * (1 if pinned else -1)
+        self.resize(max(min(wanted, screen.width()), self.minimumWidth()), self.height())
+        if self.frameGeometry().right() > screen.right():  # it grew past the screen's edge: move it back in
+            self.move(max(screen.left(), screen.right() - self.frameGeometry().width() + 1), self.y())
 
     def changeEvent(self, event) -> None:
         """The window stays as it was left, maximized or not."""
@@ -2435,22 +2703,26 @@ class MainWindow(QMainWindow):
         bot.addSeparator()
         bot.addAction(self.quit_action)
         view = self.menuBar().addMenu(tr("Ver"))
-        view.addAction(self.reload_action)
-        view.addAction(self.data_action)
-        self.pin_action = QAction(tr("Fixar a coluna da direita"), self, checkable=True, checked=self.side_pinned,
-                                  triggered=self.pin_side)
-        view.addAction(self.pin_action)
+        for action in (self.reload_action, self.data_action):
+            view.addAction(action)
         view.addSeparator()
         for action in (self.notices_action, self.logs_action, self.failures_action):
             view.addAction(action)
-        languages = self.menuBar().addMenu("Idioma / Language")  # the same in both languages, so it is always found (D-031)
+        self.settings_action = QAction(tr("Clubes e automações…"), self, triggered=self.show_settings)
+        self.pin_action = QAction(tr("Fixar a coluna da direita"), self, checkable=True, checked=self.side_pinned,
+                                  triggered=self.pin_side)
+        settings_menu = self.menuBar().addMenu(tr("Definições"))
+        settings_menu.addAction(self.settings_action)
+        languages = settings_menu.addMenu("Idioma / Language")  # the same in both languages, so it is always found (D-031)
         self.language_actions = {}
         for code, name in LANGUAGES.items():
             action = QAction(name, self, checkable=True, triggered=lambda _checked=False, code=code: self.choose_language(code))
             action.setChecked(code == language())
             languages.addAction(action)
             self.language_actions[code] = action
-        self.menuBar().addMenu(tr("Ajuda")).addAction(QAction(tr("Sobre o OSMbot"), self, triggered=self.about))
+        settings_menu.addAction(self.pin_action)
+        settings_menu.addSeparator()
+        settings_menu.addAction(QAction(tr("Sobre o OSMbot"), self, triggered=self.about))
 
     def _build_tray(self) -> None:
         self.tray_icons = {working: tray_icon(self.logo, working) for working in (True, False)}
@@ -2800,10 +3072,23 @@ class MainWindow(QMainWindow):
             for index, panel in enumerate(self.panels):
                 panel.hovered = self.read_club
                 self.clubs_column.addWidget(panel, 1)  # one per row (D-030)
+        from osmbot import settings
+
+        switches = settings.load()
         for panel, club in zip(self.panels, clubs):
+            panel.set_off(bool(club.get("key")) and not settings.active(switches, club["key"]))
             panel.set_logo(*self._logo(club))  # first: the timers take the club's colour
             panel.show_club(club)
         QTimer.singleShot(0, self._fit_width)  # once the cards are laid out
+
+    def refresh_off(self) -> None:
+        """The cards of clubs the client turned off go grey (or back), at once when a switch is clicked."""
+        from osmbot import settings
+
+        switches = settings.load()
+        for panel in self.panels:
+            if panel.key:
+                panel.set_off(not settings.active(switches, panel.key))
 
     def _fit_width(self) -> None:
         """Never narrower than a card (with room for the scroll bar): the window can't be made so narrow that the
@@ -2900,6 +3185,14 @@ class MainWindow(QMainWindow):
         folder = Path.home() / ".osmbot" / "failures"
         folder.mkdir(parents=True, exist_ok=True)
         show_folder(folder)
+
+    def show_settings(self) -> None:
+        """Definições → Clubes e automações (owner, 2026-11-13, D-104). Each click is kept at once in the config; the
+        bot reads it at the start of its next pass."""
+        clubs = [{"name": c["name"], "key": c["key"], "logo": c.get("logo"), "logo_key": c.get("logo_key") or c["name"]}
+                 for c in (self.payload.get("snapshot") or {}).get("clubs") or [] if c.get("key")]
+        SettingsDialog(self, clubs).exec()
+
 
     def about(self) -> None:
         if language() == "en":

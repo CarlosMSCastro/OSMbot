@@ -86,7 +86,7 @@ def run_relist(confirm: bool) -> int:
     failures = 0
     try:
         client = OsmClient()
-        for _, team, base in _teams(client):
+        for _, team, base in _teams(client, "relistar", writing=True):
             failures += relist_club(client, team, base, confirm, time.time())
     except NeedsBrowserLogin as error:
         raise SystemExit(str(error))

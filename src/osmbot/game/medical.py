@@ -158,7 +158,7 @@ def run_medical(confirm: bool) -> tuple[int, list[float]]:
     failures, wake = 0, []
     try:
         client = OsmClient()
-        for _, team, base in _teams(client):
+        for _, team, base in _teams(client, "medico", writing=True):
             failed, ends = treat_club(client, team, base, confirm, time.time())
             failures += failed
             wake += ends

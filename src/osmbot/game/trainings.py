@@ -133,11 +133,16 @@ def _brief(player: Player) -> dict:
             "rating": player.rating, "titular": player.starter}
 
 
-def _teams(client):
+def _teams(client, automation: str | None = None, writing: bool = False):
+    """The account's clubs. ``writing``: only those the client left the bot to work on (D-104) and, with
+    ``automation``, only where that one is on; reading (the board, the logs) always sees every club."""
+    from osmbot import settings
+
     _, account = client.get("user/accounts")
+    switches = settings.load() if writing else {}
     for slot, content in sorted((account.get("teamSlots") or {}).items()):
         team = (content or {}).get("team")
-        if team:
+        if team and (not writing or settings.allowed(switches, settings.club_key(team), automation)):
             yield slot, team, f"leagues/{team['leagueId']}/teams/{team['id']}"
 
 
@@ -149,7 +154,7 @@ def run_claim(confirm: bool, limit: int | None = None) -> int:
     try:
         client = OsmClient()
         done = 0
-        for slot, team, base in _teams(client):
+        for slot, team, base in _teams(client, "treino", writing=True):
             _, sessions = client.get(f"{base}/trainingsessions/ongoing")
             note_seen(base, sessions)
             ready = ready_sessions(sessions, time.time())
@@ -199,7 +204,7 @@ def run_train(confirm: bool, limit: int | None = None) -> int:
         done = 0
         now = time.time()
         max_age = NO_AGE_LIMIT if old_players_event(calendar_events(now, days=1), now) else 30
-        for slot, team, base in _teams(client):
+        for slot, team, base in _teams(client, "treino", writing=True):
             _, sessions = client.get(f"{base}/trainingsessions/ongoing")
             _, players = client.get(f"{base}/players")
             _, market = client.get(f"{base}/transferplayers/0")
@@ -279,7 +284,7 @@ def run_event_boost(confirm: bool) -> int:
     try:
         client = OsmClient()
         products = None
-        for slot, team, base in _teams(client):
+        for slot, team, base in _teams(client, "boost", writing=True):
             _, settings = client.get(f"leagues/{team['leagueId']}/gamesettings")
             values = {g.get("name"): g.get("value") for g in settings} if isinstance(settings, list) else {}
             minutes = (values.get("TrainingSession") or NORMAL["TrainingSession"],
@@ -314,7 +319,7 @@ def run_event_end_boost(confirm: bool) -> int:
     try:
         client = OsmClient()
         products = None
-        for slot, team, base in _teams(client):
+        for slot, team, base in _teams(client, "boost", writing=True):
             _, settings = client.get(f"leagues/{team['leagueId']}/gamesettings")
             values = {g.get("name"): g.get("value") for g in settings} if isinstance(settings, list) else {}
             minutes = (values.get("TrainingSession") or NORMAL["TrainingSession"],
@@ -353,6 +358,11 @@ def _boost(client, base: str, where: str, session: dict, products: list[dict], c
     if (wallet or {}).get("amount", 0) < product["value"]:
         print(f"{where}: sem boss coins para acabar {name} ({product['value']})")
         return 0
+    from osmbot import settings
+    from osmbot.game import wallet as ledger
+
+    if ledger.cap_reached(product["value"], settings.spending_cap()):  # the client's daily ceiling (D-104)
+        return 0
     status, body = client.request(
         "PUT", f"https://web-api.onlinesoccermanager.com/api/v1.1/{base}/trainingsessions/{session['id']}/boost",
         {"productId": product["id"]})
@@ -380,7 +390,7 @@ def _boost(client, base: str, where: str, session: dict, products: list[dict], c
 def pending_finish_times(client) -> list[float]:
     """When each unclaimed training of every club finishes (a past time means ready now)."""
     times = []
-    for _, _, base in _teams(client):
+    for _, _, base in _teams(client, "treino", writing=True):  # a club left out would keep the loop awake for ever
         _, sessions = client.get(f"{base}/trainingsessions/ongoing")
         times += [s["countdownTimer"]["finishedTimestamp"] for s in sessions if not s["countdownTimer"]["isClaimed"]]
     return times

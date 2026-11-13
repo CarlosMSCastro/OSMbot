@@ -81,7 +81,7 @@ def run_savings(confirm: bool) -> tuple[int, list[float]]:
     failures, wake = 0, []
     try:
         client = OsmClient()
-        for _, team, base in _teams(client):
+        for _, team, base in _teams(client, "poupanca", writing=True):
             failed, at = deposit_club(client, team, base, confirm, time.time())
             failures += failed
             if at:

@@ -13,7 +13,7 @@ from __future__ import annotations
 import random
 import time
 
-from osmbot import logs
+from osmbot import logs, settings
 from osmbot.game import clubinfo, refusals
 from osmbot.game import wallet as ledger
 from osmbot.game.timers import minutes_text, timer
@@ -99,6 +99,8 @@ def _play_friendlies(client, team: dict, base: str, league: str, week: int, targ
         if wallet["amount"] < FRIENDLY_PRICE:
             log(f"! {team['name']}: sem boss coins para o amigável ({wallet['amount']}); "
                 f"{target - before - played} de {target} ficam por fazer")
+            return 0, before + played
+        if ledger.cap_reached(FRIENDLY_PRICE, settings.spending_cap(), log):  # the client's daily ceiling (D-104)
             return 0, before + played
         if played:
             time.sleep(PAUSE_BETWEEN_WRITES * rng.uniform(*GAP_BETWEEN_FRIENDLIES))
@@ -260,6 +262,8 @@ def _note(client, base: str, week: int, now: float, opponent: int | None = None)
 def prepare_club(client, team: dict, base: str, confirm: bool, now: float, log=print, rng=random) -> tuple[int, float | None]:
     """One club: collect a finished analyst (any hour), the friendlies due by now, the specialists when the match is
     4 hours away or less and the analysis at 2 hours. Returns (failures, time to wake at)."""
+    switches, key = settings.load(), settings.club_key(team)
+    on = lambda automation: settings.allowed(switches, key, automation)  # the client's switches (D-104)
     match = _match_time(client, base)
     league = base.rsplit("/teams/", 1)[0]
     _, info = client.get(league)
@@ -276,7 +280,7 @@ def prepare_club(client, team: dict, base: str, confirm: bool, now: float, log=p
 
     events = calendar_events(now)
     day = day_end(match, now, week)  # in the pre-season the 4 friendlies are daily (owner, 2026-10-15)
-    due = friendlies_due(day, now, events)
+    due = friendlies_due(day, now, events) if on("amigavel") else []
     played = 0
     if due:
         failed, played = _play_friendlies(client, team, base, league, week, due, confirm, log, rng,
@@ -290,7 +294,7 @@ def prepare_club(client, team: dict, base: str, confirm: bool, now: float, log=p
         from osmbot.game.specialists import fix_specialists
 
         try:  # the specialists by the owner's rule, following any change of the eleven (D-042)
-            failures += fix_specialists(client, team, base, confirm, log)
+            failures += fix_specialists(client, team, base, confirm, log) if on("especialistas") else 0
         except OSError:
             raise
         except Exception as error:
@@ -298,14 +302,15 @@ def prepare_club(client, team: dict, base: str, confirm: bool, now: float, log=p
         _, prep = client.get(f"{base}/matchpreparation")
         if not analysis_window(match, now):
             wakes.append(match - ANALYSIS_LEAD)  # the bot's analysis only in the last 2 h: before, it is the owner's
-        elif needs_analysis(prep.get("steps") or [], sent, week, opponent):
+        elif on("analise") and needs_analysis(prep.get("steps") or [], sent, week, opponent):
             failed, takes = _send_analyst(client, team, base, league, week, confirm, log)
             failures += failed
             if takes:
                 wakes.append(now + takes)  # come back when it is over, to collect it
-    failed, takes = _scout(client, team, base, league, week, match, now, opponent, confirm, log)
-    failures += failed
-    wakes.append(takes)
+    if on("analista_liga"):
+        failed, takes = _scout(client, team, base, league, week, match, now, opponent, confirm, log)
+        failures += failed
+        wakes.append(takes)
     ahead = [w for w in wakes if w and w > now]
     return failures, min(ahead) if ahead else None
 
@@ -318,7 +323,7 @@ def run_prematch(confirm: bool) -> tuple[int, list[float]]:
     failures, wake = 0, []
     try:
         client = OsmClient()
-        for _, team, base in _teams(client):
+        for _, team, base in _teams(client, writing=True):
             failed, at = prepare_club(client, team, base, confirm, time.time())
             failures += failed
             if at:

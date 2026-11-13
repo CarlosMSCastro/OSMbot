@@ -250,6 +250,13 @@ Legenda: **[V]** verificado por nós · **[R]** reportado por fonte de terceiros
 - **[V] Repetição:** previsão mediana 25 / 22 / 18 / 11 na 1.ª / 2.ª / 3.ª / 4.ª+ sessão da jornada (jogadores diferentes; bate com a rotação do §5).
 - **[V] Campo de treinos:** o jogo diz nível 1/2/3 = **+10 / +25 / +50 % progression** (`stadium`, `explanation`). **Medido no nível 1:** KV Mechelen acabado com boss coins (0 → 1, 2026-10-24 02:08); a previsão do jogo (`trainingforecasts`) dos mesmos 20 jogadores com a mesma nota, contra a última registada no nível 0, subiu **+10 %** (mediana 1,10; 1,07–1,12 pelos arredondamentos). O bónus entra na previsão. O Betis (nível 3) e o FC Van tinham a mesma previsão para a mesma nota: o FC Van estaria também no 3 (403, não se lê).
 
+### Amigáveis, vermelhos e vendas nos registos (2026-11-13, *Verificado* nos registos de todos os PCs; verificações `descida`, `intense`, `vermelhos`, `venda150`)
+
+- **[V] Cada amigável do dia rende menos do que o anterior:** ganho médio por jogador, fora de eventos: **24,9 / 20,5 / 15,1 / 10,7** no 1.º / 2.º / 3.º / 4.º (cerca de 95 jornadas), uma jornada completa ~71 (81 jornadas, média 66 nas completas).
+- **[V] Intense Friendlies (8 amigáveis):** 31,7 / 38,9 / 36,9 / 33,8 / 16,2 / 15,2 / 19,4 / 14,2, uma jornada completa ~93 (só 4 completas; **amostra curta**), cerca de **1,4×** a normal (~2,9× contando as incompletas, à mão). A descida do 5.º em diante é a mesma do normal.
+- **[V] Vermelhos (árbitro rigoroso, rigor 1–2, forças a ±15 %):** Normal 0,08 por jogo (90 jogos), Agressivo/Extremo **0,33** (12 jogos, **amostra curta**); só nos teus clubes, Normal 0,29 (21) e Agressivo 0,43 (14) com os mesmos pontos (2,33 / 2,29). Árbitros brandos ou médios: 0,01 por jogo (193). O Agressivo não rende mais pontos.
+- **[V] Vendas (linhas "Venda:"):** acima de 150 M a 75 %: 17,8 h (1 venda); 100–150 M a 100 %: mediana 14,5 h (9); 100–150 M a 75 %: 31,4 h (3). **Amostra curta.**
+
 ### Histórico de transferências da liga (2026-10-09, *Verificado*, só leitura)
 
 - **[V]** O site pede `GET leagues/{L}/transfers` ao abrir as transferências da liga (`inspect-writes`). Devolve as **últimas 100** da liga (numa liga, jornadas 5–14; noutra, 11–14). Cada uma tem `value` (valor do jogador na altura), `price` (preço pago), `weekNr`, `timestamp`, `type`, o `player` completo (idade, ratings, posição) e `sourceTeam`/`destinationTeam` com `userId` (0 = clube do jogo) e `isForeignTeam` (true = clube de fora da liga).

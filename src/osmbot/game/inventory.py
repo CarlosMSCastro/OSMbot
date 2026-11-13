@@ -214,6 +214,10 @@ def run_inventory(confirm: bool, log=None, clock=time.time) -> tuple[int, list[f
     from osmbot.game.client import NeedsBrowserLogin, OsmClient
     from osmbot.game.trainings import _teams
 
+    from osmbot import settings
+
+    if not settings.account_allowed(settings.load_account(), "inventario"):  # the client's switch (D-104)
+        return 0, []
     if log is None:
         from osmbot.game.loop import _log as log
     failures, wake = 0, []

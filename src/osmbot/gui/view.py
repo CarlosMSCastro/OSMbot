@@ -537,7 +537,7 @@ def club_view(club: dict, now: float, shortened: dict | None = None) -> dict:
     prep_title = f"PRÉ-JOGO · {done_steps}/{len(prep.get('steps') or [])}" if prep.get("steps") else "PRÉ-JOGO"
     tired_text, tired_tip = tired_view(club)
 
-    return {"name": club["name"], "logo": club.get("logo"), "logo_key": club.get("logo_key") or club["name"],
+    return {"name": club["name"], "key": club.get("key"), "logo": club.get("logo"), "logo_key": club.get("logo_key") or club["name"],
             "competition": "winners" if club.get("winners") else None,  # its emblem by the name (owner, 2026-11-09)
             "subtitle": subtitle, "facts": facts, "alert": alert, "alerts": alerts, "alerts_tips": alerts_tips, "header": header, "round": round_text, "fixtures": fixtures_view(club.get("fixtures") or [], round_text, cup_word), "cup_line": cup_line, "match": match, "prep_title": prep_title,
             "money": _money(total), "sales": sales, "sponsors": sponsor_row, "squad": squad_view(club.get("value"), club.get("value_table")),

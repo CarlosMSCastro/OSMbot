@@ -339,6 +339,10 @@ def _all_ads(dry_run: bool, clock=time.time) -> int:
     """Shop, training and money videos. Each kind is independent: one failing does not stop the others
     (the failure is reported after). Nothing is ever switched off, but a kind that keeps failing is left
     alone for longer each time (10, 20, 40, 60 min), so a broken page does not hold up every pass."""
+    from osmbot import settings
+
+    if not settings.account_allowed(settings.load_account(), "videos"):  # the client's switch (D-104)
+        return 0
     watched, errors = 0, []
 
     for step in (_shop_ads, _training_ads, _money_ads):

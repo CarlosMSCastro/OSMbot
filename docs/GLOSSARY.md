@@ -50,4 +50,7 @@
 - **Ensaio / `--simular`** — executar uma passagem sem escrever nada na conta.
 - **Portátil / instalador** — as versões empacotadas: no Windows, `OSMbot.exe` numa pasta ou o `OSMbot-<versão>-windows-setup.exe`; no Mac, a `OSMbot.app` num zip ou no `.dmg` (D-061).
 
+- **Definições (interruptores)** — o que o cliente escolhe em *Definições → Clubes e automações…*: clubes ativos, automações ligadas por clube, interruptores da conta e o teto de boss coins por dia (D-104, `THEORY.md` §24). Tudo ligado por omissão.
+- **Teto de boss coins** — o máximo que o bot gasta num dia em amigáveis, treinos acabados e estádio; um só para a conta.
+
 *Acrescentar termos à medida que forem verificados.*

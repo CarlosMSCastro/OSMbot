@@ -32,6 +32,7 @@
 | 8b | **Inventário**: usar os itens que vão expirar (treinadores universais, sacos) e avisar 24 h antes (`THEORY.md` §20, D-039) | **Feito** (0.11.6; visto em real: ativar o treinador universal e treinar com ele; abrir um saco ainda por ver) |
 | 13a | **Calendário de eventos**: o do mês, lido do fórum, e o evento em curso, visto nas definições do jogo (D-038) | **Feito** (0.11.4; lido em real: os 10 eventos de outubro; na janela, com o calendário do mês, desde a 0.11.5; 8 amigáveis no Intense Friendlies desde a 0.11.7, D-040; 0.13.3, D-059: no início de um evento de treinos, os treinos postos antes acabados com boss coins, com o evento procurado de 10 em 10 min das 05:30 às 07:00) |
 | 14 | **Quanto melhora a equipa com os amigáveis**: medir ao certo e em média o ganho por amigável, para decidir subir o número por equipa (liga-se ao 12; dono, 2026-10-09) | **Posta de lado** com o 12 (dono, 2026-10-09: o ganho medido à mão não compensa) |
+| 15 | **Definições do cliente**: clubes ativos, interruptor por automação, interruptores da conta e teto de boss coins por dia (D-104, `THEORY.md` §24; dono, 2026-11-13) | **Feito** (0.19.0; falta ver na janela real; modos "só avisa" e regras editáveis por decidir) |
 
 Os vídeos têm limites impostos pelo servidor (detalhe em `THEORY.md` §12); o bot respeita-os sempre, salta algumas janelas da **loja** de propósito (os de treino e de dinheiro vêem-se sempre, D-021) e nunca forja a recompensa (D-012, regra 8).
 

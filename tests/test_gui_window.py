@@ -91,7 +91,7 @@ def test_atualizar_comes_first_in_ver_and_works_while_the_bot_works(window, monk
 
     view = next(menu.menu() for menu in window.menuBar().actions() if menu.text() == "Ver")
     names = [action.text() for action in view.actions() if not action.isSeparator()]
-    assert names[0] == "Atualizar" and names[1] == "Dados" and len(names) == 6  # Ver → Dados (2026-11-06)
+    assert names[0] == "Atualizar" and names[1] == "Dados" and len(names) == 5  # Ver → Dados (2026-11-06); the pin and the language went to Definições (2026-11-13)
     session = tmp_path / "session.json"
     session.write_text("{}", encoding="utf-8")
     monkeypatch.setattr(browser, "STATE_FILE", session)
@@ -215,9 +215,11 @@ def test_idioma_language_switches_the_window_at_once(window):
         window.go(BOARD)
         window.on_board({"snapshot": NOW_SNAPSHOT, "status": "A TRABALHAR", "notices": [("09:26:15", "Erro", "Loja: janela saltada")]})
         menus = [action.text() for action in window.menuBar().actions()]
-        assert "Idioma / Language" in menus and "Ver" in menus
+        assert menus == ["Bot", "Ver", "Definições"]  # Ajuda merged into Ver, the language and "Sobre" into Definições
         window.choose_language("en")
-        assert [action.text() for action in window.menuBar().actions()] == ["Bot", "View", "Idioma / Language", "Help"]
+        assert [action.text() for action in window.menuBar().actions()] == ["Bot", "View", "Settings"]
+        settings_menu = next(a.menu() for a in window.menuBar().actions() if a.text() == "Settings")
+        assert "Idioma / Language" in [a.text() for a in settings_menu.actions()]
         assert window.language_actions["en"].isChecked() and window.pages.currentIndex() == BOARD
         assert window.notices_window.table.item(0, 1).text() == "Error"
         assert window.notices_window.table.item(0, 2).text() == "Shop: window skipped"
@@ -324,3 +326,43 @@ def test_the_end_of_the_season_is_built_once_not_every_second(window):
     assert card.season_end.findChildren(QLabel) == first and len(first) == 8
     card.season_end.show_end(None)
     assert card.season_end.isHidden()
+
+
+def test_pinning_the_right_column_grows_the_window_and_unpinning_shrinks_it_back(window, monkeypatch):
+    from PySide6.QtCore import QRect
+
+    from osmbot.gui.window import BOARD, SideTab
+
+    class Screen:
+        def availableGeometry(self):
+            return QRect(0, 0, 4000, 3000)
+
+    monkeypatch.setattr(window, "screen", lambda: Screen())
+    window.go(BOARD)
+    window.showNormal()
+    window.pin_side(False)
+    window.resize(1500, 800)
+    before = window.width()
+    window.pin_side(True)
+    assert window.width() == before + window.SIDE - SideTab.WIDTH  # the clubs keep their width
+    window.pin_side(False)
+    assert window.width() == before
+
+
+def test_a_club_turned_off_has_its_card_grey_and_it_comes_back_with_the_switch(window):
+    from osmbot import settings
+    from osmbot.gui.window import BOARD
+    from osmbot.i18n import set_pref
+
+    window.go(BOARD)
+    window.on_board({"snapshot": NOW_SNAPSHOT, "status": "PARADO", "notices": []})
+    card = window.panels[0]
+    name = card.club_name
+    assert card.graphicsEffect() is None and not card.name.text().endswith("desativado")
+    card.key = "5_9"
+    set_pref("clubes", settings.with_club({}, "5_9", active=False))
+    window.refresh_off()
+    assert card.graphicsEffect() is not None and card.name.text() == f"{name}  ·  desativado"
+    set_pref("clubes", settings.with_club(settings.load(), "5_9", active=True))
+    window.refresh_off()
+    assert card.graphicsEffect() is None and card.name.text() == name

@@ -407,3 +407,28 @@
 {"t":1794503741,"saldo":3724,"antes":3723,"diferenca":1,"partes":{"vídeos da loja":1}}
 {"t":1794503827,"saldo":3725,"antes":3724,"diferenca":1,"partes":{"vídeos da loja":1}}
 {"t":1794505660,"saldo":3726,"antes":3725,"diferenca":1,"partes":{"vídeos da loja":1}}
+{"t":1794562296,"saldo":3792,"antes":3726,"diferenca":66,"partes":{"fora do bot":66}}
+{"t":1794562364,"saldo":3780,"antes":3792,"diferenca":-12,"partes":{"amigáveis":-12}}
+{"t":1794562467,"saldo":3775,"antes":3780,"diferenca":-5,"partes":{"vídeos da loja":2,"fora do bot":-7}}
+{"t":1794562647,"saldo":3778,"antes":3775,"diferenca":3,"partes":{"vídeos da loja":3}}
+{"t":1794562827,"saldo":3780,"antes":3778,"diferenca":2,"partes":{"vídeos da loja":2}}
+{"t":1794563008,"saldo":3782,"antes":3780,"diferenca":2,"partes":{"vídeos da loja":2}}
+{"t":1794563208,"saldo":3778,"antes":3782,"diferenca":-4,"partes":{"amigáveis":-4}}
+{"t":1794566067,"saldo":3779,"antes":3778,"diferenca":1,"partes":{"vídeos da loja":1}}
+{"t":1794566108,"saldo":3780,"antes":3779,"diferenca":1,"partes":{"vídeos da loja":1}}
+{"t":1794566559,"saldo":3787,"antes":3780,"diferenca":7,"partes":{"vídeos da loja":7}}
+{"t":1794569847,"saldo":3789,"antes":3787,"diferenca":2,"partes":{"vídeos da loja":2}}
+{"t":1794570027,"saldo":3791,"antes":3789,"diferenca":2,"partes":{"vídeos da loja":2}}
+{"t":1794570209,"saldo":3793,"antes":3791,"diferenca":2,"partes":{"vídeos da loja":2}}
+{"t":1794570388,"saldo":3795,"antes":3793,"diferenca":2,"partes":{"vídeos da loja":2}}
+{"t":1794570409,"saldo":3796,"antes":3795,"diferenca":1,"partes":{"vídeos da loja":1}}
+{"t":1794571850,"saldo":3792,"antes":3796,"diferenca":-4,"partes":{"amigáveis":-4}}
+{"t":1794572704,"saldo":3788,"antes":3792,"diferenca":-4,"partes":{"amigáveis":-4}}
+{"t":1794573362,"saldo":3789,"antes":3788,"diferenca":1,"partes":{"vídeos da loja":1}}
+{"t":1794573458,"saldo":3790,"antes":3789,"diferenca":1,"partes":{"vídeos da loja":1}}
+{"t":1794573660,"saldo":3792,"antes":3790,"diferenca":2,"partes":{"vídeos da loja":2}}
+{"t":1794573792,"saldo":3793,"antes":3792,"diferenca":1,"partes":{"vídeos da loja":1}}
+{"t":1794574041,"saldo":3795,"antes":3793,"diferenca":2,"partes":{"vídeos da loja":2}}
+{"t":1794574073,"saldo":3796,"antes":3795,"diferenca":1,"partes":{"vídeos da loja":1}}
+{"t":1794574221,"saldo":3797,"antes":3796,"diferenca":1,"partes":{"vídeos da loja":1}}
+{"t":1794574441,"saldo":3793,"antes":3797,"diferenca":-4,"partes":{"amigáveis":-4}}

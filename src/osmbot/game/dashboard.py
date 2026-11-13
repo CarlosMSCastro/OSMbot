@@ -20,6 +20,7 @@ from datetime import datetime
 from osmbot.game.ads import SHOP_ACTION, TRAINING_ACTION, VIDEO_SAVES, money_state
 from osmbot.game.slots import SlotStatus, count_listed
 from osmbot.inventory.policy import UNIVERSAL_TRAINER, active_until
+from osmbot.settings import club_key
 from osmbot.theory.fitness import YELLOW_BELOW, low_morale, tired_starters, uncovered
 from osmbot.transfers.engine import idle_money, sale_options, sale_picks
 
@@ -133,7 +134,7 @@ def collect(client, only: str | None = None) -> dict:
             return session_length(s["id"], s["countdownTimer"]["finishedTimestamp"] - time.time(), minutes * 60, normal)
 
         club = {
-            "name": team["name"], "ranking": team.get("ranking"), "league": leagues.get(team["name"], {}).get("name", "?"),
+            "name": team["name"], "key": club_key(team), "ranking": team.get("ranking"), "league": leagues.get(team["name"], {}).get("name", "?"),
             "tired": tired_starters(players), "low_morale": low_morale(players), "match": match,
             "money": (funds["balance"], funds["savings"]),
             "stadium": {"parts": [(STADIUM_NAMES.get(p["stadiumPartType"], "?"), p["level"],

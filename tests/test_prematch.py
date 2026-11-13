@@ -298,3 +298,22 @@ def test_no_analyst_when_the_game_does_not_offer_it():
     client = FakeClient([step(7, 4), step(5, 0, enabled=False)], friendlies=4)  # e.g. his secret training
     prepare(client)
     assert client.posts == []
+
+
+def test_the_clients_switches_stop_the_friendlies_and_the_analysis_of_one_club(tmp_path):
+    from osmbot import settings
+    from osmbot.i18n import set_pref
+
+    key = settings.club_key(TEAM)
+    set_pref("clubes", settings.with_club({}, key, automation="amigavel", on=False))
+    client = FakeClient([step(7, 0), step(5, 0)], match_in=LEAD + 600, friendlies=1)
+    prepare(client)
+    assert client.posts == []  # 2 friendlies were due: the switch is off
+    set_pref("clubes", settings.with_club({}, key, automation="analise", on=False))
+    client = FakeClient([step(7, 4), step(5, 0)], match_in=2 * 3600, friendlies=4)
+    prepare(client)
+    assert client.posts == []  # in the analysis window, but that switch is off
+    set_pref("clubes", {})
+    client = FakeClient([step(7, 4), step(5, 0)], match_in=2 * 3600, friendlies=4)
+    prepare(client)
+    assert [p for p, _ in client.posts if p.endswith("/spyinstructions")]  # nothing set: everything on, as before

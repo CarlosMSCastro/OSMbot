@@ -165,3 +165,59 @@ def test_extreme_tackling_joins_each_report_to_the_next_round_s_match():
     result = theory.extreme_tackling([game], [report], minimum=1)
     assert result.verdict == theory.READY and "extremo 3.00" in result.measured and "árbitro 4.0" in result.measured
     assert theory.extreme_tackling([game], []).verdict == theory.SHORT
+
+
+def _red_match(n, rigor, style, reds, result="1-1"):
+    game = match(n, 100, 100, result, mine="casa", tatica={"style": style})
+    game["arbitro"] = {"rigor": rigor}
+    game["eventos"] = [{"equipa": "casa", "tipo": "vermelho"}] * reds + [{"equipa": "fora", "tipo": "vermelho"}]
+    return game
+
+
+def test_red_cards_compare_normal_with_aggressive_under_a_strict_referee():
+    games = [_red_match(i, 1, 1, 0, "1-1") for i in range(15)] + [_red_match(50 + i, 2, 2, 1, "0-1") for i in range(15)]
+    games += [_red_match(100 + i, 4, 2, 0, "2-0") for i in range(5)]
+    result = theory.red_cards(games)
+    assert result.verdict == theory.AGREES  # Aggressive 0 points, Normal 1: no gain
+    assert "Normal 0.00 vermelhos/jogo, 1.00 pts (15); Agressivo/Extremo 1.00, 0.00 (15)" in result.measured
+    assert "árbitro brando ou médio: 0.00 vermelhos/jogo (5)" in result.measured  # only our own side's cards count
+    assert theory.red_cards(games[:15]).verdict == theory.SHORT
+    wins = [_red_match(200 + i, 1, 2, 0, "2-0") for i in range(15)]
+    assert theory.red_cards(games[:15] + wins).verdict == theory.DISAGREES  # Aggressive earns more
+
+
+def _friendly(club, week, n, gain, event=None, t=None):
+    player = {"pos": 1, "progresso_antes": 0, "progresso_depois": gain, "att_antes": 100, "att_depois": 100}
+    return {"clube": club, "t": t if t is not None else club * 1000 + week * 10 + n, "semana": week, "n_na_jornada": n,
+            "evento": event, "jogadores": [player]}
+
+
+def test_intense_friendlies_compare_whole_rounds_of_8_with_rounds_of_4():
+    normal = [_friendly(1, w, n, 20 - 4 * n) for w in range(2) for n in range(1, 5)]  # a round: 16+12+8+4 = 40
+    intense = [_friendly(1, 10 + w, n, 10, event="Intense Friendlies") for w in range(2) for n in range(1, 9)]  # 80
+    incomplete = [_friendly(1, 99, n, 50) for n in range(1, 3)]  # 2 of 4: out of the round totals, in the order means
+    result = theory.intense_friendlies(normal + intense + incomplete, minimum=2)
+    assert result.verdict == theory.AGREES
+    assert result.measured.startswith("jornada normal 40 (2): 27.3 / 24.7 / 8.0 / 4.0")  # by order in the round, the incomplete round too
+    assert "Intense Friendlies 80 (2)" in result.measured
+    assert theory.intense_friendlies(normal + intense).verdict == theory.SHORT  # 10 rounds of each needed
+    assert theory.intense_friendlies(normal + intense + normal, minimum=2).sample == 4  # a repeated record counts once
+
+
+def test_friendly_decay_compares_the_first_friendly_of_the_day_with_the_fourth():
+    games = [_friendly(1, w, n, 20 - 4 * n) for w in range(3) for n in range(1, 5)]
+    result = theory.friendly_decay(games, minimum=3)
+    assert result.verdict == theory.AGREES and result.measured == "1.º amigável do dia 16.0 (3), 4.º 4.0 (3)"
+    assert theory.friendly_decay(games).verdict == theory.SHORT
+
+
+def test_sale_threshold_reads_the_sale_lines_and_counts_each_sale_once():
+    def sale(pct, maximum, took, n):
+        return (f"2026-10-1{n} 19:24:06  Venda: Jogador{n} (Clube) vendido por 90,00 M ({pct}% do máximo ≈ {maximum} M); "
+                f"à venda desde 16/10 11:59, vendido às 17/10 19:23, demorou {took}")
+    lines = [sale(75, "160,00", "18h30", n) for n in range(4)] + [sale(75, "160,00", "1 dia e 7h24", 4)] + [sale(100, "120,00", "10h00", 5 + n) for n in range(5)]
+    result = theory.sale_threshold(lines + lines[:2])  # two lines repeated by a second PC
+    assert result.verdict == theory.AGREES and result.sample == 10
+    assert "acima de 150 M a 75 %: mediana 18.5 h (5); 100–150 M a 100 %: 10.0 h (5)" in result.measured
+    assert theory.sale_threshold(lines[:5]).verdict == theory.SHORT
+    assert theory.sale_threshold(["Venda: X vendido por 1,00 M ; sem máximo"]).sample == 0

@@ -28,8 +28,15 @@ def records(kind: str = "jogos") -> list[dict]:
     return found
 
 
+def sale_lines() -> list[str]:
+    found = []
+    for path in sorted((ROOT / "logs").glob("*/*.log")):
+        found += [line for line in path.read_text(encoding="utf-8", errors="replace").splitlines() if "Venda:" in line]
+    return found
+
+
 def main() -> None:
-    results = run(records(), records("amigaveis"), records("xp"), records("analista"))
+    results = run(records(), records("amigaveis"), records("xp"), records("analista"), sale_lines())
     print("| Verificação | Regra | Registos | Jogos | Veredicto |")
     print("|---|---|---|---|---|")
     for r in results:

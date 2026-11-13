@@ -8,6 +8,7 @@ Verdicts: "bate" (the records agree with the rule), "não bate" (they do not: br
 """
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass
 from datetime import datetime
 from statistics import mean
@@ -415,6 +416,103 @@ def extreme_tackling(matches: list[dict], reports: Iterable[dict] = (), minimum:
                   READY if len(extreme) >= minimum else SHORT)
 
 
+def red_cards(matches: list[dict], reports: Iterable[dict] = (), minimum: int = 15) -> Result:
+    """THEORY.md section 3 (owner, 2026-11-02): 12 red cards in 41 matches with strict referees, 0 in 61 with the
+    others, and no visible gain of Aggressive over Normal. With a strict referee (strictness 1-2): red cards and points
+    per match of Normal (style 1) against Aggressive / Extreme (2, 3), strengths within 15 % (as ``extreme_tackling``:
+    Extreme is the stronger clubs' choice otherwise). The tackling is the owner's own tactic or, for the
+    other clubs, the analyst's report (``joined_reports``). With a lenient referee (3-5) the reds of every style."""
+    rows = [(m, s, (m.get("tatica") or {}).get("style")) for m, s in _own(matches)]
+    rows += [(m, s, r.get("style")) for m, s, r in joined_reports(matches, reports)]
+    rows = [(m, s, st) for m, s, st in rows if isinstance(m.get("eventos"), list) and (m.get("arbitro") or {}).get("rigor")
+            and abs(_edge(m, s)) <= 15]
+    reds = lambda group: sum(1 for m, s, _ in group for e in m["eventos"] if e.get("equipa") == s and e.get("tipo") == "vermelho")
+    per = lambda group: reds(group) / len(group) if group else 0.0
+    pts = lambda group: _ppg([(m, s) for m, s, _ in group])
+    strict = [r for r in rows if r[0]["arbitro"]["rigor"] in (1, 2)]
+    normal = [r for r in strict if r[2] == 1]
+    rough = [r for r in strict if r[2] in (2, 3)]
+    lenient = [r for r in rows if r[0]["arbitro"]["rigor"] in (3, 4, 5)]
+    measured = (f"árbitro rigoroso: Normal {per(normal):.2f} vermelhos/jogo, {pts(normal):.2f} pts ({len(normal)}); "
+                f"Agressivo/Extremo {per(rough):.2f}, {pts(rough):.2f} ({len(rough)}); "
+                f"árbitro brando ou médio: {per(lenient):.2f} vermelhos/jogo ({len(lenient)})")
+    verdict = SHORT if min(len(normal), len(rough)) < minimum else AGREES if pts(rough) <= pts(normal) else DISAGREES
+    return Result("vermelhos", "Agressivo não rende mais e só arrisca vermelhos com árbitro rigoroso (§3)", measured,
+                  len(normal) + len(rough), verdict)
+
+
+def _unique_friendlies(friendlies: Iterable[dict]) -> list[dict]:
+    seen, found = set(), []
+    for f in friendlies:
+        key = (f.get("clube"), f.get("t"))
+        if f.get("jogadores") and key not in seen:
+            seen.add(key)
+            found.append(f)
+    return found
+
+
+def _mean_gain(friendly: dict) -> float:
+    return mean(_gain(p) for p in friendly["jogadores"])
+
+
+def intense_friendlies(friendlies: Iterable[dict], minimum: int = 10) -> Result:
+    """D-038: in an Intense Friendlies event a round has 8 friendlies instead of 4. Per round (a club and a week with all
+    its friendlies, 4 or 8), the sum of the mean training gain per player: does the event round give more than a normal
+    one? Also the mean gain of each friendly by its order in the round (each one gives less than the one before)."""
+    rounds: dict = {}
+    for f in _unique_friendlies(friendlies):
+        rounds.setdefault((f.get("clube"), f.get("semana"), bool(f.get("evento"))), []).append(f)
+    full = {True: [], False: []}
+    by_order: dict = {True: {}, False: {}}
+    for (club, week, intense), group in rounds.items():
+        for f in group:
+            by_order[intense].setdefault(f.get("n_na_jornada"), []).append(_mean_gain(f))
+        if len(group) == (8 if intense else 4):
+            full[intense].append(sum(_mean_gain(f) for f in group))
+    avg = lambda values: mean(values) if values else 0.0
+    order = lambda intense: " / ".join(f"{avg(by_order[intense][n]):.1f}" for n in sorted(by_order[intense], key=lambda x: x or 0))
+    measured = (f"jornada normal {avg(full[False]):.0f} ({len(full[False])}): {order(False)}; "
+                f"Intense Friendlies {avg(full[True]):.0f} ({len(full[True])}): {order(True)}")
+    verdict = SHORT if min(len(full[True]), len(full[False])) < minimum else AGREES if avg(full[True]) > avg(full[False]) else DISAGREES
+    return Result("intense", "Intense Friendlies: 8 amigáveis rendem mais do que 4 (D-038)", measured, len(full[True]) + len(full[False]), verdict)
+
+
+def friendly_decay(friendlies: Iterable[dict], minimum: int = 30) -> Result:
+    """THEORY.md section 6: each friendly of a round gives less than the one before (the rule the bot's day plan
+    is built on). Mean gain per player of the 1st and of the 4th friendly of the day, outside the event."""
+    first, fourth = [], []
+    for f in _unique_friendlies(friendlies):
+        if f.get("evento") is None and f.get("n_na_jornada") in (1, 4):
+            (first if f["n_na_jornada"] == 1 else fourth).append(_mean_gain(f))
+    avg = lambda values: mean(values) if values else 0.0
+    measured = f"1.º amigável do dia {avg(first):.1f} ({len(first)}), 4.º {avg(fourth):.1f} ({len(fourth)})"
+    verdict = SHORT if min(len(first), len(fourth)) < minimum else AGREES if avg(fourth) < avg(first) else DISAGREES
+    return Result("descida", "Cada amigável do dia rende menos do que o anterior (§6)", measured, len(first) + len(fourth), verdict)
+
+
+_SALE = re.compile(r"Venda: .*? vendido por [\d.,]+ M \((\d+)% do máximo ≈ ([\d.,]+) M\); .*?demorou (?:(\d+) dias? e )?(\d+)h(\d+)")
+
+
+def sale_threshold(lines: Iterable[str], minimum: int = 5) -> Result:
+    """D-071 (owner, 2026-10-26): the maximum price is 2.5x the value up to 150 M, and 75 % of it above. From the
+    "Venda:" lines of the logs (the same sale logged by several PCs counts once): hours the sales took, by the
+    maximum price and the share of it asked: above 150 M at 75 %, 100-150 M at 100 % and at 75 %."""
+    sales = {}
+    for line in lines:
+        found = _SALE.search(line)
+        if found:
+            pct, maximum, days, hours, minutes = found.groups()
+            sales[line.split("  ", 1)[-1]] = (int(pct), float(maximum.replace(".", "").replace(",", ".")),
+                                              int(days or 0) * 24 + int(hours) + int(minutes) / 60)
+    pick = lambda low, high, pct: sorted(h for p, mx, h in sales.values() if p == pct and low <= mx < high)
+    median = lambda hours: hours[len(hours) // 2] if hours else 0.0
+    big, full, part = pick(150, 1e9, 75), pick(100, 150, 100), pick(100, 150, 75)
+    measured = (f"acima de 150 M a 75 %: mediana {median(big):.1f} h ({len(big)}); 100–150 M a 100 %: {median(full):.1f} h ({len(full)}); "
+                f"100–150 M a 75 %: {median(part):.1f} h ({len(part)})")
+    verdict = SHORT if len(big) < minimum or len(full) < minimum else AGREES if median(big) <= 2 * median(full) else DISAGREES
+    return Result("venda150", "Vender: 75 % do máximo só acima de 150 M (D-071)", measured, len(big) + len(full) + len(part), verdict)
+
+
 CHECKS: list[Callable[[list[dict]], Result]] = [home_advantage, clearly_stronger, away_433, fatigue,
                                                 away_523, against_stronger, counter_formations, against_523,
                                                 tempo_against_stronger, tempo_by_strength, counter_attack, corners_not_free_kicks,
@@ -422,9 +520,10 @@ CHECKS: list[Callable[[list[dict]], Result]] = [home_advantage, clearly_stronger
 
 
 def run(records: Iterable[dict], friendlies: Iterable[dict] = (), xp: Iterable[dict] = (),
-        reports: Iterable[dict] = ()) -> list[Result]:
+        reports: Iterable[dict] = (), sale_lines: Iterable[str] = ()) -> list[Result]:
     """Every check: the match records (``logs/*/jogos``), the friendlies' (``logs/*/amigaveis``), the manager's
-    XP (``logs/*/xp``) and the analyst's reports on other clubs (``logs/*/analista``)."""
-    matches = unique_matches(records)
-    return ([check(matches) for check in CHECKS] + [extreme_tackling(matches, list(reports))]
-            + [friendly_specialists(list(friendlies)), manager_xp(list(xp))])
+    XP (``logs/*/xp``), the analyst's reports on other clubs (``logs/*/analista``) and the log lines (``logs/*/*.log``)."""
+    matches, friendlies, reports = unique_matches(records), list(friendlies), list(reports)
+    return ([check(matches) for check in CHECKS] + [extreme_tackling(matches, reports), red_cards(matches, reports)]
+            + [friendly_specialists(friendlies), intense_friendlies(friendlies), friendly_decay(friendlies),
+               manager_xp(list(xp)), sale_threshold(sale_lines)])

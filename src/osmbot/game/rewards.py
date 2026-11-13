@@ -333,10 +333,15 @@ def run_rewards(confirm: bool) -> tuple[int, list[float]]:
     from osmbot.game.client import NeedsBrowserLogin, OsmClient
     from osmbot.game.predictions import claim_seasons, run_prediction
 
+    from osmbot import settings
+
     failures, wake = 0, []
+    account = settings.load_account()  # the client's switches (D-104): predictions apart from the other rewards
     try:
         client = OsmClient()
         for step in (claim_login, claim_missions, claim_video_reward, run_prediction, claim_seasons, claim_money):
+            if not settings.account_allowed(account, "previsoes" if step in (run_prediction, claim_seasons) else "recompensas"):
+                continue
             try:
                 failures += step(client, confirm)
             except (NeedsBrowserLogin, OSError):

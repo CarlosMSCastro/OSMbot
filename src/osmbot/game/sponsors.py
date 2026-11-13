@@ -67,7 +67,7 @@ def run_sponsors(confirm: bool) -> tuple[int, list[float]]:
     failures = 0
     try:
         client = OsmClient()
-        for _, team, base in _teams(client):
+        for _, team, base in _teams(client, "patrocinadores", writing=True):
             failures += sign_club(client, team, base, confirm)
     except NeedsBrowserLogin as error:
         raise SystemExit(str(error))

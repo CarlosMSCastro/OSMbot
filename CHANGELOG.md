@@ -4,6 +4,25 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-PT/1.1.0/); 
 
 Este ficheiro é o **histórico de versões, para quem lê o repo**. O diário interno de cada sessão de trabalho está em [`docs/WORKLOG.md`](docs/WORKLOG.md).
 
+## [0.19.0] — 2026-11-13
+
+O cliente passa a configurar o bot: o que ele faz, em que clubes e quanto gasta. Mais 4 medições na verificação semanal.
+
+### Adicionado
+- **Definições → Clubes e automações…:** uma grelha com um interruptor por clube e por automação (recolher e treinar, amigáveis, análise do adversário, analista pelos outros clubes da liga, especialistas, médico e advogado, poupança, estádio, patrocinadores, relistar, boss coins dos eventos). **Tudo vem ligado**, por isso nada muda para quem não mexe. Cada clique fica guardado na hora e o bot lê-o no início do ciclo seguinte. Com "Clube ativo" desligado o bot não escreve nesse clube (a janela continua a mostrá-lo) e as outras caixas dele ficam cinzentas, com as escolhas guardadas.
+- **Conta (todos os clubes):** interruptores para os vídeos (loja, treino e dinheiro), as recompensas (início de sessão, missões, vídeos acumulados), as previsões e o prémio de fim de época, e os itens que vão expirar.
+- **Teto de boss coins por dia:** botões rápidos (sem teto, 50, 100, 200, 500) e uma barra deslizante. Conta o que o bot gastou hoje em amigáveis, treinos acabados e estádio e, antes de cada gasto, não faz o que passaria o teto (avisa uma vez por dia no registo). É um só para a conta, porque a carteira é uma só; só conta o que este PC gastou.
+- **Cartão a cinzento:** o cartão de um clube desativado fica a preto e branco, com "· desativado" a seguir ao nome, e volta ao normal logo que se religa.
+- **Verificação semanal, 4 medições novas** (`tools/verificar_teoria.py`): `vermelhos` (desarme × vermelhos, com os teus clubes e os outros da liga), `intense` (8 amigáveis do Intense Friendlies contra 4), `descida` (cada amigável do dia rende menos do que o anterior) e `venda150` (vendas acima de 150 M, que se faziam à mão; lê as linhas "Venda:" dos registos).
+
+### Alterado
+- **Barra de menus:** passa de 5 menus para 3: **Bot**, **Ver** (com o que estava em Ajuda: Pasta dos logs e Capturas das falhas) e **Definições** (Clubes e automações, Idioma / Language, Fixar a coluna da direita e Sobre o OSMbot).
+- **Fixar a coluna da direita:** a janela cresce pela largura da coluna ao fixar e encolhe de volta ao desafixar, para os clubes ficarem do mesmo tamanho (maximizada, os cartões cedem, como antes).
+
+### Corrigido
+- **Verificação `vermelhos`:** a 1.ª versão dava "não bate" por comparar clubes de forças muito diferentes; só entram jogos com forças a ±15 %.
+- Um clube desativado, ou sem o treino ligado, deixava a espera do ciclo sempre a zero (o bot acordava sem parar); agora só conta os clubes em que o bot treina.
+
 ## [0.18.2] — 2026-11-09
 
 A Taça dos Vencedores no cartão, o 5-4-1 contra um adversário claramente mais forte e um falso "treino secreto" corrigido.
