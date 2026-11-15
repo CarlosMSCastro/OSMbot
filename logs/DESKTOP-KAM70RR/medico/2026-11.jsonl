@@ -11,3 +11,11 @@
 {"t":1794059305,"evento":"levantar","tipo":"doctor","clube":"leagues/246031208/teams/1","semana":43,"caso":11844877,"jogador":956155683,"nome":"Díaz","antes":{"fora":5,"lesao":21,"suspensao":0},"depois":{"fora":4,"lesao":21,"suspensao":0}}
 {"t":1794059307,"evento":"pôr","tipo":"doctor","clube":"leagues/246031208/teams/1","semana":43,"jogador":956155683,"nome":"Díaz","antes":{"fora":4,"lesao":21,"suspensao":0}}
 {"t":1794435617,"evento":"pôr","tipo":"doctor","clube":"leagues/248015013/teams/8","semana":26,"jogador":878276081,"nome":"Gvardiol","antes":{"fora":2,"lesao":17,"suspensao":0}}
+{"t":1794603133,"evento":"pôr","tipo":"lawyer","clube":"leagues/222034673/teams/3","semana":25,"jogador":972870527,"nome":"Upamecano","antes":{"fora":2,"lesao":19,"suspensao":26}}
+{"t":1794662312,"evento":"levantar","tipo":"lawyer","clube":"leagues/222034673/teams/3","semana":25,"caso":12755896,"jogador":972870527,"nome":"Upamecano","antes":{"fora":2,"lesao":19,"suspensao":26},"depois":{"fora":1,"lesao":19,"suspensao":26}}
+{"t":1794677458,"evento":"pôr","tipo":"doctor","clube":"leagues/258036629/teams/12","semana":3,"jogador":967201017,"nome":"Foden","antes":{"fora":6,"lesao":21,"suspensao":0}}
+{"t":1794706277,"evento":"levantar","tipo":"doctor","clube":"leagues/258036629/teams/12","semana":3,"caso":11576963,"jogador":967201017,"nome":"Foden","antes":{"fora":6,"lesao":21,"suspensao":0},"depois":{"fora":4,"lesao":21,"suspensao":0}}
+{"t":1794706279,"evento":"pôr","tipo":"doctor","clube":"leagues/258036629/teams/12","semana":3,"jogador":967201017,"nome":"Foden","antes":{"fora":4,"lesao":21,"suspensao":0}}
+{"t":1794709860,"evento":"pôr","tipo":"doctor","clube":"leagues/258036629/teams/12","semana":3,"jogador":967201017,"nome":"Foden","antes":{"fora":3,"lesao":21,"suspensao":0}}
+{"t":1794764370,"evento":"levantar","tipo":"doctor","clube":"leagues/258036629/teams/12","semana":4,"caso":11577613,"jogador":967201017,"nome":"Foden","antes":{"fora":2,"lesao":21,"suspensao":0},"depois":{"fora":1,"lesao":21,"suspensao":0}}
+{"t":1794764372,"evento":"pôr","tipo":"doctor","clube":"leagues/258036629/teams/12","semana":4,"jogador":967201017,"nome":"Foden","antes":{"fora":1,"lesao":21,"suspensao":0}}

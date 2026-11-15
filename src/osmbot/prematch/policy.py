@@ -105,6 +105,19 @@ def needs_analysis(steps: list[dict], sent: list[dict], week: int, opponent: int
 
 
 SCOUT_MARGIN = 10 * 60  # an analysis of another club must end this long before the opponent's window opens
+SCOUT_EVERY = 3  # rounds: another club is analysed at most once every 3 rounds (owner, 2026-11-15) [S]
+SCOUT_START_MAX = 6 * 3600  # the tour starts up to 6 h after the previous match, a different hour each round [S]
+
+
+def tour_start(match_time: float | None, now: float, week: int, key: str) -> float | None:
+    """When the tour of the league may start this round: the previous match (a day before the next day's end) plus
+    a delay of 0 to 6 h that changes with the club and the round, the same on every PC (owner, 2026-11-15: always at
+    the same hour right after the match looks like a bot). None without a match."""
+    end = day_end(match_time, now, week)
+    if end is None:
+        return None
+    seed = sum((i + 1) * ord(c) for i, c in enumerate(f"{key}:{week}"))
+    return end - DAY + (seed * 7919) % SCOUT_START_MAX
 
 
 def analysis_window(match_time: float | None, now: float) -> bool:
@@ -118,11 +131,17 @@ def analyst_busy(sent: list[dict], now: float) -> bool:
     return any((s.get("countdownTimer") or {}).get("isClaimed") is False for s in sent)
 
 
-def scout_target(teams: list[dict], matches: list[dict], team_id: int, week: int, sent: list[dict]) -> int | None:
-    """The next club for the analyst to go round the league (owner, 2026-10-28; OSMPro series point 5), once per
-    round: the opponents of the coming rounds first (not the next one: his analysis is in the 2 h before the match,
-    closest to it), then the rest by place in the table. None when every club is done this round."""
+def scout_target(teams: list[dict], matches: list[dict], team_id: int, week: int, sent: list[dict],
+                 last_seen: dict[int, int] | None = None) -> int | None:
+    """The next club for the analyst to go round the league (owner, 2026-10-28; OSMPro series point 5): the
+    opponents of the coming rounds first (not the next one: his analysis is in the 2 h before the match, closest to
+    it), then the rest by place in the table. Each club at most once every ``SCOUT_EVERY`` rounds (owner, 2026-11-15:
+    a manager complained of being analysed 14 times in 16 days): ``last_seen`` is the last round each club was
+    analysed by this club (the logs, any PC). None when no club is due."""
     done = {s.get("instructionTeamId") for s in sent if s.get("weekNr") == week}
+    for club, seen in (last_seen or {}).items():
+        if 0 <= week - seen < SCOUT_EVERY:  # a lower round than the last one is a new season: due again
+            done.add(club)
     following = next_opponent(matches, team_id, week)
     ahead = [_other(m, team_id) for m in sorted((m for m in matches if _involves(m, team_id) and m["weekNr"] > week
                                                   and m["matchType"] in (LEAGUE_MATCH, CUP_MATCH)), key=lambda m: m["weekNr"])]

@@ -66,3 +66,23 @@ def test_scouting_sends_the_analyst_and_comes_back_when_it_ends(monkeypatch):
     busy = Game([sent(5, claimed=False)])
     assert prematch._scout(busy, team, "leagues/9/teams/1", "leagues/9", 10, NOW + 10 * 3600, NOW, 2, True, said.append) == (0, None)
     assert busy.posts == []
+
+
+def test_each_club_at_most_once_every_3_rounds_except_the_next_opponent():
+    # 5 analysed in round 8: not in 9 or 10 (owner, 2026-11-15); due again in 11; a new season (lower round) too
+    assert scout_target(TEAMS, MATCHES, 1, 10, [], {5: 8}) == 3
+    assert scout_target(TEAMS, MATCHES, 1, 11, [], {3: 8}) == 3  # (in round 11 the next opponent is 5)
+    assert scout_target(TEAMS, MATCHES, 1, 11, [], {3: 9}) == 2  # then by the table
+    assert scout_target(TEAMS, MATCHES, 1, 10, [], {5: 37}) == 5
+    assert scout_target(TEAMS, MATCHES, 1, 10, [], {c: 9 for c in (3, 4, 5, 6)}) is None
+
+
+def test_the_tour_starts_a_different_hour_each_round_within_6_hours_of_the_last_match():
+    from osmbot.prematch.policy import DAY, SCOUT_START_MAX, tour_start
+
+    match = NOW + 10 * 3600
+    starts = {tour_start(match, NOW, week, "leagues/1/teams/2") for week in range(1, 11)}
+    assert all(match - DAY <= s < match - DAY + SCOUT_START_MAX for s in starts)
+    assert len(starts) > 5  # not the same hour every round
+    assert tour_start(match, NOW, 4, "leagues/1/teams/2") == tour_start(match, NOW, 4, "leagues/1/teams/2")  # every PC
+    assert tour_start(None, NOW, 4, "x") is None

@@ -2,6 +2,18 @@
 
 Entradas mais recentes primeiro. Cada sessão: o que se fez · o que ficou por fazer · próximo passo.
 
+## 2026-11-15 — Queixa de um treinador: o analista menos vezes (DESKTOP-KAM70RR)
+
+- **Jogo:** Real Betis 1-1 Gençlerbirligi (945 contra 1083 de força; na véspera 0-4 fora).
+- **Queixa (print do dono, mensagem de 2026-11-12):** um treinador da liga do KV Mechelen pediu para deixarem de analisar a equipa dele. Nos registos, o analista do KV Mechelen foi lá 14 vezes desde 2026-10-29, quase todas as jornadas, de madrugada.
+- **Feito (D-106, pedido do dono):** volta à liga com cada clube no máximo 1 vez a cada 3 jornadas e a começar 0 a 6 h depois do jogo, a uma hora diferente em cada jornada. `THEORY.md` §6, `prematch/policy.py`, `game/prematch.py`, testes. 601 testes. Por lançar numa versão.
+- **Próximo passo:** ver nos registos, daqui a uma semana, que nenhum clube recebe o analista mais de 1 vez em 3 jornadas.
+
+## 2026-11-14 — Treinos de 2 h e 8 h; "Evento agora" antes do tempo (DESKTOP-KAM70RR, só leitura)
+
+- **Pergunta do dono:** porque há treinos de 2 h e de 8 h. Todos os desta noite são de 8 h (o Golden Oldies X Legends só liga no jogo às ~06:00); os que mostram ~2 h tiveram vídeos de treino (−2 h cada). Às ~06:00 o bot acaba-os com boss coins (D-059) e põe treinos de 2 h.
+- **Corrigido (pedido do dono):** a barra de cima dizia "Evento agora" desde as 00:00 do 1.º dia. Agora diz "Próximo evento" até às 06:00 (`events/calendar.py` `BEGINS`, `gui/view.py` `calendar_view`). Só a janela: o resto do bot (30+ no evento dos veteranos, acordar às 05:30) fica como estava. 599 testes.
+
 ## 2026-11-13 (cont.) — Mais verificações semanais, tiradas dos registos (DESKTOP-KAM70RR, só leitura)
 
 - **Pedido do dono:** a verificação semanal devia aproveitar ao máximo os registos. Acrescentadas 4 a `checks/theory.py` (`tools/verificar_teoria.py` lê também as linhas "Venda:" dos `.log`): `vermelhos` (§3, desarme × vermelhos, os teus clubes e os outros da liga), `intense` (D-038), `descida` (§6) e `venda150` (D-071, antes à mão). 588 testes. Primeira corrida: `descida` **bate** (24,9 → 10,7); `vermelhos` 12 jogos em Agressivo/Extremo com árbitro rigoroso, vermelhos 0,33/jogo contra 0,08 em Normal, **amostra curta**; `intense` e `venda150` **amostra curta**. A primeira versão do `vermelhos` dava "não bate" por não igualar as forças (o Extremo é dos mais fortes): corrigido para ±15 %, como o `extremo`. Os pontos por medir que não têm dados nos registos (campo/estádio, SALE, campo de treinos, torneio de campeões, boss coin por compra) ficam como estão.
