@@ -10,6 +10,9 @@ import json
 import re
 from pathlib import Path
 
+_ROUNDS_EN = {"oitavos-de-final": "round-of-16", "quartos-de-final": "quarter-final", "meias-finais": "semi-final",
+              "final": "final", "16 avos-de-final": "round-of-32", "32 avos-de-final": "round-of-64"}
+
 
 def _between(text: str) -> str:
     """'(mudou entre 05:50 e 06:00)' -> '(changed between 05:50 and 06:00)': when an event's change was seen."""
@@ -294,7 +297,8 @@ PATTERNS = [(re.compile(pattern), replace) for pattern, replace in (
     (r"(\d+) vagas? livres? na lista de transferências",
      lambda m: f"{m[1]} free slot{'s' if m[1] != '1' else ''} on the transfer list"),
     (r"(.+) (\d+)%: se jogar contra o (.+), chega a ~(\d+)% contra o (.+)",
-     lambda m: f"{m[1]} {m[2]}%: if he plays {m[3]}, he faces {m[5]} at ~{m[4]}%"),
+     lambda m: f"{m[1]} {m[2]}%: if he plays {m[3]}, he faces "
+               f"{re.sub(r'adversário dos (.+) \(por sortear\)', lambda r: 'the ' + _ROUNDS_EN.get(r[1], r[1]) + ' opponent (not drawn yet)', m[5])} at ~{m[4]}%"),
     (r"(.+) vendido · (.+)", lambda m: f"{m[1]} sold · {m[2]}"),
     (r"(.+)/ronda", lambda m: f"{m[1]}/round"),
     (r"PRÉ-JOGO · (.+)", lambda m: f"PRE-MATCH · {m[1]}"),

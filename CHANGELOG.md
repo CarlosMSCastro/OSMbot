@@ -4,6 +4,19 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-PT/1.1.0/); 
 
 Este ficheiro é o **histórico de versões, para quem lê o repo**. O diário interno de cada sessão de trabalho está em [`docs/WORKLOG.md`](docs/WORKLOG.md).
 
+## [0.19.1] — 2026-11-16
+
+O "a poupar" avisa também antes de uma eliminatória por sortear, e entram nas notas as mudanças de formação e tática das últimas duas semanas, que a 0.19.0 já trazia.
+
+### Adicionado
+- **"A poupar" antes dos oitavos da Taça dos Vencedores:** no último jogo do grupo o jogo seguinte (a 1.ª mão do playoff) ainda não tem adversário e o bot não via o jogo a seguir, por isso não avisava. Passa a contar como **jogo seguinte importante, adversário por sortear**, e a janela avisa, por exemplo, "van Dijk 81%: se jogar contra o Konyaspor, chega a ~77% contra o adversário dos oitavos-de-final (por sortear)". Só avisa se o clube ainda pode ficar nos 2 primeiros do grupo (suposição: passam os 2 primeiros) e só para a 1.ª mão.
+
+### Alterado
+- **Formação contra um humano (D-100):** conta o que ele jogou contra nós, não o relatório do analista; contra o 5-2-3 dele a regra pede o 5-3-2 (nenhum lado claramente mais forte), o estágio dele entra na força e há uma nota no passo Onze.
+- **"A poupar" já não decide a formação (D-101):** quem está a 80–83 % para o jogo importante seguinte conta como em forma no passo Onze e no "Se mudares para…".
+- **5-4-1 B contra o 4-3-3 dele (D-102):** depois da análise, ou pelo que jogou contra nós, os médios ajudam a defesa.
+- **Clube relido ao passar o rato (D-099):** no pré-jogo e na linha das vagas, no máximo de 10 em 10 s por clube; já não volta atrás com a leitura antiga do bot.
+
 ## [0.19.0] — 2026-11-13
 
 O cliente passa a configurar o bot: o que ele faz, em que clubes e quanto gasta. Mais 4 medições na verificação semanal.

@@ -487,3 +487,59 @@ def test_the_541_b_midfield_follows_his_formation_after_the_analysis():  # THEOR
     assert "Médios: Manter posições, devia ser Ajudar a defesa" in warnings_of(t541, mine=100, opponent=102, his_formation=433)
     assert "Médios: Manter posições, devia ser Ajudar a defesa" in warnings_of(  # what he played against us counts (D-100)
         t541, mine=100, opponent=102, his_formation=442, vs_us={"formation": 433, "detail": "A"})
+
+
+def _group_c(last_two):
+    """The group of 4 after 5 of 6 rounds (the Winners Cup, 2026-11-16): ids 9 first, 12 us, 10, 11; the play-off's
+    round of 16 (weeks 7, 8) with both clubs at 0. ``last_two``: our result against 10 in week 6 is not played."""
+    played = [(1, 11, 12, 0, 1), (1, 10, 9, 0, 3), (2, 12, 10, 1, 0), (2, 9, 11, 3, 1), (3, 10, 11, 1, 1), (3, 9, 12, 4, 0),
+              (4, 11, 10, 1, 2), (4, 12, 9, 1, 1), (5, 12, 11, 3, 0), (5, 9, 10, 5, 0)]
+    matches = [{"weekNr": w, "homeTeamId": h, "awayTeamId": a, "homeGoals": hg, "awayGoals": ag, "matchType": 0}
+               for w, h, a, hg, ag in played]
+    matches += [{"weekNr": 6, "homeTeamId": h, "awayTeamId": a, "homeGoals": 0, "awayGoals": 0, "matchType": 0}
+                for h, a in ((11, 9), (10, 12))]
+    matches += [{"weekNr": w, "homeTeamId": 0, "awayTeamId": 0, "homeGoals": 0, "awayGoals": 0, "matchType": 1}
+                for w in (7, 8) for _ in range(8)]
+    teams = [{"id": i, "name": n, "poule": "C", "ranking": r} for i, n, r in ((9, "Gen", 1), (12, "Nós", 2), (10, "Kon", 3), (11, "Liv", 4))]
+    rounds = [{"weekNr": 7, "roundNr": 1, "name": "Round of 16"}, {"weekNr": 8, "roundNr": 1, "name": "Round of 16"}]
+    return matches, teams, rounds
+
+
+def test_the_last_group_match_then_the_undrawn_first_leg_of_the_play_off():
+    from osmbot.board.info import group_alive, next_matches
+
+    matches, teams, rounds = _group_c(None)
+    first, second = next_matches(matches, teams, 12, 5, rounds=rounds, groups=True)
+    assert (first["opponent"], first["side"], second["opponent"], second["undrawn"]) == (
+        "Kon", "A", "adversário dos oitavos-de-final (por sortear)", True)
+    assert len(next_matches(matches, teams, 12, 5)) == 1  # not a group cup: as before
+    assert group_alive(matches, teams, 12, 5) and group_alive(matches, teams, 9, 5)  # 10 and 13 points
+    assert not group_alive(matches, teams, 10, 5) and not group_alive(matches, teams, 11, 5)  # 4 + 3 = 7 and 1 + 3 = 4, under 10
+
+
+def test_no_ghost_when_the_club_is_out_of_the_group_or_the_round_is_drawn():
+    from osmbot.board.info import next_matches
+
+    matches, teams, rounds = _group_c(None)
+    assert [m["opponent"] for m in next_matches(matches, teams, 11, 5, rounds=rounds, groups=True)] == ["Gen"]  # out: 1 point
+    assert [m["opponent"] for m in next_matches(matches, teams, 10, 5, rounds=rounds, groups=True)] == ["Nós"]  # out: 4 + 3 < 10
+    cup = next(m for m in matches if m["matchType"] == 1 and m["weekNr"] == 7)  # drawn: the first leg has us in it
+    cup.update(homeTeamId=12, awayTeamId=3)
+    drawn = next_matches(matches, teams + [{"id": 3, "name": "Rival"}], 12, 6, rounds=rounds, groups=True)
+    assert [m["opponent"] for m in drawn] == ["Rival"]  # nothing after it: the second leg is not drawn but is not asked for
+
+
+def test_resting_before_the_undrawn_play_off():
+    from osmbot.theory.fitness import rest_warnings
+
+    matches, teams, rounds = _group_c(None)
+    from osmbot.board.info import next_matches
+
+    first, second = next_matches(matches, teams, 12, 5, rounds=rounds, groups=True)
+    pair = [{"opponent": first["opponent"], "important": False, "difficulty": 0.8},
+            {"opponent": second["opponent"], "important": True, "difficulty": None}]
+    players = [{"name": "van Dijk", "lineup": 4, "fitness": 81, "unavailable": 0},
+               {"name": "Foden", "lineup": 6, "fitness": 96, "unavailable": 0}]
+    warned = rest_warnings(players, *pair)
+    assert [(w["name"], w["fitness"], w["then"], w["second"]) for w in warned] == [
+        ("van Dijk", 81, 77, "adversário dos oitavos-de-final (por sortear)")]

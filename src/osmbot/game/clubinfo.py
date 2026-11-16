@@ -426,6 +426,8 @@ def club_extra(client, team: dict, base: str, players: list[dict], slot, market:
         upcoming["match"], upcoming["boosted"] = (mine, theirs), hidden or upcoming["camp"]
 
     def important(match: dict) -> dict:  # stronger opponent or a close direct rival (owner, 2026-10-29, THEORY.md 16)
+        if match.get("undrawn"):  # the play-off's first leg not drawn yet: a knockout, strength unknown (2026-11-16)
+            return {"opponent": match["opponent"], "important": True, "difficulty": None}
         rival = match["opponent_id"]
         rating = _cached(("strength_guess", league, rival, week), FIXTURES_FOR,  # [S] his eleven unknown: best 4-3-3
                          lambda: team_rating(_list(client, f"{league}/teams/{rival}/players"), GUESS_FORMATION))
@@ -435,7 +437,8 @@ def club_extra(client, team: dict, base: str, players: list[dict], slot, market:
         return {"opponent": match["opponent"], "important": important_match(theirs, ours, match["danger"]),
                 "difficulty": theirs / ours if theirs and ours else None}
 
-    pair = [important(m) for m in next_matches(matches, teams, team["id"], week)]
+    winners = got[0][1].get("mode") == WINNERS_CUP  # groups, then a play-off (DISCOVERY.md, 2026-11-08)
+    pair = [important(m) for m in next_matches(matches, teams, team["id"], week, rounds=rounds, groups=winners)]
     rest = rest_warnings(players, *(pair + [None, None])[:2])
     spare = spare_for(*(pair + [None, None])[:2])  # rest them before the harder one (THEORY.md 1, 16)
     away = bool(upcoming) and upcoming.get("side") == "A" and not upcoming.get("neutral")  # the 4-3-3 B away (THEORY.md 1)
@@ -482,7 +485,6 @@ def club_extra(client, team: dict, base: str, players: list[dict], slot, market:
     lawyer = _list(client, f"{base}/lawyercases") if suspended else []
     logo = next((a.get("path") for a in team.get("assets") or [] if a.get("type") == 4), None)
     standings = _cached(("standings", league), FIXTURES_FOR, lambda: _list(client, f"{league}/standings"))
-    winners = got[0][1].get("mode") == WINNERS_CUP  # groups, then a play-off (DISCOVERY.md, 2026-11-08)
     group = team.get("poule") if winners else None
     cup = cup_phase(rounds, matches, team["id"], week, groups=winners)
     return {

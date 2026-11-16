@@ -22,12 +22,66 @@ def next_match(matches: list[dict], teams: list[dict], team_id: int, week: int) 
     return ahead[0] if ahead else None
 
 
-def next_matches(matches: list[dict], teams: list[dict], team_id: int, week: int, count: int = 2) -> list[dict]:
+def next_matches(matches: list[dict], teams: list[dict], team_id: int, week: int, count: int = 2,
+                 rounds: list[dict] | None = None, groups: bool = False) -> list[dict]:
     """The club's next ``count`` official matches after ``week``, each as ``next_match`` gives it (THEORY.md 16:
-    the one after the next, to rest a starter before it)."""
+    the one after the next, to rest a starter before it). With ``rounds`` and ``groups`` (a cup of groups then a
+    play-off), when the club has no match after its last one but can still get through the group, the play-off's
+    first leg not drawn yet comes last, as ``undrawn_match`` gives it (the last group match, THEORY.md 16)."""
     ahead = sorted((m for m in matches if team_id in (m["homeTeamId"], m["awayTeamId"])
                     and m["matchType"] in (LEAGUE_MATCH, CUP_MATCH) and m["weekNr"] > week), key=lambda m: m["weekNr"])
-    return [_upcoming(m, teams, team_id) for m in ahead[:count]]
+    found = [_upcoming(m, teams, team_id) for m in ahead[:count]]
+    if groups and rounds and len(found) < count and len(ahead) == len(found):
+        ghost = undrawn_match(matches, rounds, teams, team_id, week, ahead[-1]["weekNr"] if ahead else week)
+        if ghost:
+            found.append(ghost)
+    return found
+
+
+def group_alive(matches: list[dict], teams: list[dict], team_id: int, week: int, advance: int = 2) -> bool:
+    """Whether the club can still be among the first ``advance`` of its group (``poule``) [S: the first 2 go through;
+    16 clubs in the round of 16 from groups of 4]: not once ``advance`` or more of the others already have more points
+    than it can reach (3 for each match it has left)."""
+    group = {t["id"] for t in teams if t.get("poule") and t.get("poule") == next(
+        (u.get("poule") for u in teams if u["id"] == team_id), None)}
+    if team_id not in group:
+        return False
+    points = dict.fromkeys(group, 0)
+    left = 0
+    for m in matches:
+        if m["matchType"] != LEAGUE_MATCH or m["homeTeamId"] not in group or m["awayTeamId"] not in group:
+            continue
+        if m["weekNr"] > week:
+            left += team_id in (m["homeTeamId"], m["awayTeamId"])
+            continue
+        if m["homeGoals"] == m["awayGoals"]:
+            points[m["homeTeamId"]] += 1
+            points[m["awayTeamId"]] += 1
+        else:
+            points[m["homeTeamId"] if m["homeGoals"] > m["awayGoals"] else m["awayTeamId"]] += 3
+    ceiling = points[team_id] + 3 * left
+    return sum(1 for t, p in points.items() if t != team_id and p > ceiling) < advance
+
+
+def undrawn_match(matches: list[dict], rounds: list[dict], teams: list[dict], team_id: int, week: int,
+                  after: int | None = None) -> dict | None:
+    """The first leg of the cup round after ``after`` (default ``week``, the last played) not drawn yet (its matches with both clubs at 0, DISCOVERY.md
+    2026-11-16) for a club that can still get through its group; None otherwise. As ``_upcoming``, with the opponent
+    unknown ("adversário dos oitavos-de-final (por sortear)") and ``undrawn`` True."""
+    empty = {m["weekNr"] for m in matches if m["matchType"] == CUP_MATCH and not m["homeTeamId"] and not m["awayTeamId"]}
+    first_legs = {}
+    for r in rounds:
+        key = (r.get("roundNr"), r["name"])
+        if key not in first_legs or r["weekNr"] < first_legs[key]["weekNr"]:
+            first_legs[key] = r
+    later = sorted((r for r in first_legs.values() if r["weekNr"] > (week if after is None else after)
+                    and r["weekNr"] in empty), key=lambda r: r["weekNr"])
+    if not later or not group_alive(matches, teams, team_id, week):
+        return None
+    name = CUP_NAMES.get(later[0]["name"], later[0]["name"])
+    mine = next((t.get("ranking") for t in teams if t["id"] == team_id), None)
+    return {"opponent": f"adversário dos {name} (por sortear)", "opponent_id": 0, "rank": None, "my_rank": mine,
+            "side": "", "danger": False, "cup": True, "human": False, "referee_id": None, "neutral": False, "undrawn": True}
 
 
 def decisive_match(upcoming: dict | None, boosts: list[dict], strength: float | None) -> str | None:
