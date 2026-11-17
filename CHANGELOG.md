@@ -6,12 +6,14 @@ Este ficheiro é o **histórico de versões, para quem lê o repo**. O diário i
 
 ## [0.19.1] — 2026-11-16
 
-O "a poupar" avisa também antes de uma eliminatória por sortear, e entram nas notas as mudanças de formação e tática das últimas duas semanas, que a 0.19.0 já trazia.
+O "a poupar" avisa também antes de uma eliminatória por sortear, o analista incomoda menos os outros treinadores, e entram nas notas as mudanças de formação e tática das últimas duas semanas, que a 0.19.0 já trazia.
 
 ### Adicionado
 - **"A poupar" antes dos oitavos da Taça dos Vencedores:** no último jogo do grupo o jogo seguinte (a 1.ª mão do playoff) ainda não tem adversário e o bot não via o jogo a seguir, por isso não avisava. Passa a contar como **jogo seguinte importante, adversário por sortear**, e a janela avisa, por exemplo, "van Dijk 81%: se jogar contra o Konyaspor, chega a ~77% contra o adversário dos oitavos-de-final (por sortear)". Só avisa se o clube ainda pode ficar nos 2 primeiros do grupo (suposição: passam os 2 primeiros) e só para a 1.ª mão.
 
 ### Alterado
+- **Analista pela liga (D-106):** cada outro clube recebe o analista no máximo 1 vez a cada 3 jornadas, a começar 0 a 6 h depois do jogo e a uma hora que muda com a jornada (antes, um treinador foi analisado 14 vezes em 16 dias, sempre de madrugada). O próximo adversário fica igual: analisado 2 h antes se não o fizeres tu.
+- **"Próximo evento":** a barra de cima diz "Próximo evento" até às 06:00 do 1.º dia, em vez de "Evento agora" desde as 00:00.
 - **Formação contra um humano (D-100):** conta o que ele jogou contra nós, não o relatório do analista; contra o 5-2-3 dele a regra pede o 5-3-2 (nenhum lado claramente mais forte), o estágio dele entra na força e há uma nota no passo Onze.
 - **"A poupar" já não decide a formação (D-101):** quem está a 80–83 % para o jogo importante seguinte conta como em forma no passo Onze e no "Se mudares para…".
 - **5-4-1 B contra o 4-3-3 dele (D-102):** depois da análise, ou pelo que jogou contra nós, os médios ajudam a defesa.

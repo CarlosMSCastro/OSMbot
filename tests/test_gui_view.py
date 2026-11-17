@@ -277,6 +277,8 @@ def test_events_calendar_for_the_top_bar():
     assert cells[13]["events"] == []
     during = calendar_view(months, datetime(2026, 10, 14, 9).timestamp(), "en")
     assert during["label"][0] == ("Event now: ", GREY) and during["months"][0]["title"] == "October 2026"
+    early = calendar_view(months, datetime(2026, 10, 14, 2).timestamp())  # same day, before the game turns it on
+    assert early["label"][:2] == [("Próximo evento: ", GREY), ("Super Staff", ORANGE)]
     assert calendar_view(None, now) is None
 
 

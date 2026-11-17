@@ -19,7 +19,7 @@ from osmbot.game import wallet as ledger
 from osmbot.game.timers import minutes_text, timer
 from osmbot.prematch.policy import (ANALYSIS_LEAD, LEAD, analysis_window, analyst_busy, can_scout, day_end, friendly_choices, friendly_event, friendlies_due,
                                     friendlies_missing, friendlies_played, in_window, needs_analysis, next_friendly_at,
-                                    next_opponent, scout_target)
+                                    next_opponent, scout_target, tour_start)
 
 FRIENDLY_PRODUCT = 62  # bosscoinproducts: "Friendly"
 FRIENDLY_PRICE = 4  # boss coins
@@ -209,11 +209,41 @@ def _keep_report(client, team: dict, base: str, week: int, club: int, log) -> No
     logs.record("analista", {"clube": base, "semana": week, "analisado": club, "relatorio": report})
 
 
+def scouted_rounds(base: str) -> dict[int, int]:
+    """The last round each other club was analysed by this club, from ``logs/*/analista`` (any PC)."""
+    import json
+
+    repo = logs.repo_folder()
+    found: dict[int, int] = {}
+    if repo is None:
+        return found
+    tag = f'"{base}"'
+    for path in (repo / "logs").glob("*/analista/*.jsonl"):
+        try:
+            lines = path.read_text(encoding="utf-8").splitlines()
+        except OSError:
+            continue
+        for line in lines:
+            if tag not in line:
+                continue
+            try:
+                entry = json.loads(line)
+            except ValueError:
+                continue
+            if entry.get("clube") != base:
+                continue
+            club, week = entry.get("analisado"), entry.get("semana")
+            if isinstance(club, int) and isinstance(week, int):
+                found[club] = week if club not in found else max(found[club], week)
+    return found
+
+
 def _scout(client, team: dict, base: str, league: str, week: int, match: float | None, now: float, opponent: int | None,
            confirm: bool, log) -> tuple[int, float | None]:
     """The analyst goes round the other clubs of the league when it has nothing else to do (owner, 2026-10-28;
-    OSMPro series point 5): one club at a time, once per round, from the match until the next opponent is analysed
-    (by the owner, or by the bot 2 h before the match), never after (owner, 2026-10-29).
+    OSMPro series point 5): one club at a time, each at most once every 3 rounds, starting a different hour each round
+    (owner, 2026-11-15), until the next opponent is analysed (by the owner, or by the bot 2 h before the match),
+    never after (owner, 2026-10-29).
     Returns (failures, when it ends)."""
     status, sent = client.get(f"{base}/spyinstructions")
     sent = sent if status == 200 and isinstance(sent, list) else []
@@ -223,10 +253,13 @@ def _scout(client, team: dict, base: str, league: str, week: int, match: float |
     done = any(s.get("weekNr") == week and s.get("instructionTeamId") == opponent for s in sent)
     if not can_scout(match, now, minutes * 60, done):
         return 0, None
+    start = tour_start(match, now, week, base)
+    if start is not None and now < start:
+        return 0, start  # a different hour each round (owner, 2026-11-15)
     _, teams = client.get(f"{league}/teams")
     _, matches = client.get(f"{league}/matches/filter")
     teams = teams if isinstance(teams, list) else []
-    club = scout_target(teams, matches if isinstance(matches, list) else [], team["id"], week, sent)
+    club = scout_target(teams, matches if isinstance(matches, list) else [], team["id"], week, sent, scouted_rounds(base))
     key = f"analista:explorar:{base}"
     if club is None or refusals.blocked(key, week=week):
         return 0, None

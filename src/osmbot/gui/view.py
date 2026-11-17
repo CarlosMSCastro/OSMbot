@@ -9,7 +9,7 @@ from __future__ import annotations
 from datetime import date, datetime, timedelta
 
 from osmbot.board.timeline import future_view, past_view
-from osmbot.events.calendar import effect_text, span_of
+from osmbot.events.calendar import BEGINS, effect_text, span_of
 from osmbot.game.ads import MAX_PER_BURST, MAX_TRAINING_VIDEOS, VIDEO_SAVES
 from osmbot.game.dashboard import BAR_SECONDS, SPONSOR_SLOTS, coin_jump, money, span, wake_events
 from osmbot.inventory.policy import WARN_BEFORE
@@ -784,8 +784,9 @@ def calendar_view(months: list[dict] | None, now: float, lang: str = "pt") -> di
         return None
     events.sort(key=lambda e: e["start"])
     today = datetime.fromtimestamp(now).date()
-    going = next((e for e in events if e["start"] <= now < e["end"]), None)
-    coming = next((e for e in events if e["start"] > now), None)
+    begins = BEGINS * 60  # owner, 2026-11-14: "now" only once it is on in the game (~06:00), "next" until then
+    going = next((e for e in events if e["start"] + begins <= now < e["end"]), None)
+    coming = next((e for e in events if e["start"] + begins > now), None)
     if going:
         label = [(_say(lang, "Evento agora: ", "Event now: "), GREY), (going["nome"], ORANGE),
                  (_say(lang, " · até ", " · until ") + f"{date.fromisoformat(going['fim']):%d/%m}", None)]

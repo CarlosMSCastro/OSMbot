@@ -115,6 +115,7 @@ def parse_schedule(content: str) -> dict | None:
 
 
 END_BOOST = (22 * 60 + 30, 23 * 60)  # local: an event ends at ~23:00 in Portugal (DISCOVERY.md 6c); act from 22:30
+BEGINS = 6 * 60  # local: an event begins at ~06:00 in Portugal (DISCOVERY.md 6); the window says "now" only from then
 
 
 def span_of(event: dict) -> tuple[float, float]:
