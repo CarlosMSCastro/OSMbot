@@ -34,6 +34,55 @@ def _launch(playwright, headless: bool):
     return playwright.firefox.launch(headless=headless, firefox_user_prefs=MUTED)
 
 
+AD_COOKIES_FILE = Path.home() / ".osmbot" / "anuncios_cookies.json"
+AD_COOKIES_KEPT = 300  # at most this many
+
+
+def ad_cookies(cookies: list[dict], now: float) -> list[dict]:
+    """The cookies worth keeping between two videos (D-112): those of the ad companies and Google, not the game's own
+    (its tokens are kept by ``save_browser_session``), and only those still valid. A browser that forgot every cookie
+    after each video would reach the ad network as a visitor with no history each time; keeping them is what any
+    browser does. Nothing is changed or invented: they are the ones the pages themselves set."""
+    kept = [c for c in cookies
+            if "onlinesoccermanager" not in c.get("domain", "") and (c.get("expires", -1) in (-1, None) or c["expires"] > now)]
+    return kept[-AD_COOKIES_KEPT:]
+
+
+def save_ad_cookies(cookies: list[dict], path: Path = AD_COOKIES_FILE, now: float | None = None) -> None:
+    from osmbot.game.client import save_private
+
+    try:
+        save_private(path, ad_cookies(cookies, time.time() if now is None else now))
+    except Exception:  # a failed save never stops a video
+        pass
+
+
+def load_ad_cookies(path: Path = AD_COOKIES_FILE, now: float | None = None) -> list[dict]:
+    import json
+
+    try:
+        return ad_cookies(json.loads(path.read_text(encoding="utf-8")), time.time() if now is None else now)
+    except (OSError, ValueError, TypeError):
+        return []
+
+
+def new_context(browser):
+    """The browser context for every video: the game's session as always, plus the ad cookies kept from the last videos."""
+    from osmbot.game.browser import STATE_FILE
+
+    context = browser.new_context(storage_state=str(STATE_FILE), viewport={"width": 1280, "height": 900})
+    saved = load_ad_cookies()
+    try:
+        context.add_cookies(saved)
+    except Exception:  # one odd cookie must not stop the rest: add them one by one
+        for cookie in saved:
+            try:
+                context.add_cookies([cookie])
+            except Exception:
+                pass
+    return context
+
+
 _TRACKED: dict[int, list[str]] = {}  # id(page) -> what the page and the network did during this attempt
 NOTES_KEPT = 200  # lines per attempt
 
@@ -145,7 +194,6 @@ def watch_shop_video(client, headless: bool = True) -> int:
     Returns the boss coins the video gave."""
     from playwright.sync_api import sync_playwright
 
-    from osmbot.game.browser import STATE_FILE
     from osmbot.game.client import save_browser_session
 
     before = _wallet_amount(client)
@@ -153,7 +201,7 @@ def watch_shop_video(client, headless: bool = True) -> int:
     with sync_playwright() as playwright:
         browser = _launch(playwright, headless)
         try:
-            context = browser.new_context(storage_state=str(STATE_FILE), viewport={"width": 1280, "height": 900})
+            context = new_context(browser)
             page = context.new_page()
             track(page)
             _open_game(page)
@@ -182,6 +230,10 @@ def watch_shop_video(client, headless: bool = True) -> int:
                 raise AdsError("os boss coins não subiram")
             cookies = context.cookies()
         finally:
+            try:  # also after a failed video: the ad cookies are kept for the next one (D-112)
+                save_ad_cookies(context.cookies())
+            except Exception:
+                pass
             browser.close()
     if cookies:  # the site may have renewed the tokens: keep the saved session in step with it (if newer)
         save_browser_session(cookies)
@@ -358,7 +410,6 @@ def watch_training_video(client, club: str, session: dict, base: str, headless: 
     With ``dry_run`` it only navigates and checks that the button is found (clicks nothing)."""
     from playwright.sync_api import sync_playwright
 
-    from osmbot.game.browser import STATE_FILE
     from osmbot.game.client import save_browser_session
 
     def finishes() -> float:
@@ -370,7 +421,7 @@ def watch_training_video(client, club: str, session: dict, base: str, headless: 
     with sync_playwright() as playwright:
         browser = _launch(playwright, headless)
         try:
-            context = browser.new_context(storage_state=str(STATE_FILE), viewport={"width": 1280, "height": 900})
+            context = new_context(browser)
             page = context.new_page()
             track(page)
             try:
@@ -394,6 +445,10 @@ def watch_training_video(client, club: str, session: dict, base: str, headless: 
                 raise AdsError("o tempo do treino não baixou")
             cookies = context.cookies()
         finally:
+            try:  # also after a failed video: the ad cookies are kept for the next one (D-112)
+                save_ad_cookies(context.cookies())
+            except Exception:
+                pass
             browser.close()
     if cookies:
         save_browser_session(cookies)
@@ -449,14 +504,13 @@ def watch_money_video(client, club: str, headless: bool = True) -> None:
     """Open the club, click the money bar, click the next free-reward card and wait until it counts as done."""
     from playwright.sync_api import sync_playwright
 
-    from osmbot.game.browser import STATE_FILE
     from osmbot.game.client import save_browser_session
 
     cookies = None
     with sync_playwright() as playwright:
         browser = _launch(playwright, headless)
         try:
-            context = browser.new_context(storage_state=str(STATE_FILE), viewport={"width": 1280, "height": 900})
+            context = new_context(browser)
             page = context.new_page()
             track(page)
             try:
@@ -484,6 +538,10 @@ def watch_money_video(client, club: str, headless: bool = True) -> None:
                 raise AdsError("o cartão de dinheiro não passou a visto")
             cookies = context.cookies()
         finally:
+            try:  # also after a failed video: the ad cookies are kept for the next one (D-112)
+                save_ad_cookies(context.cookies())
+            except Exception:
+                pass
             browser.close()
     if cookies:
         save_browser_session(cookies)

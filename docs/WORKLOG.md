@@ -2,6 +2,14 @@
 
 Entradas mais recentes primeiro. Cada sessão: o que se fez · o que ficou por fazer · próximo passo.
 
+## 2026-11-18 (tarde) — Vídeos: o bot não vê nenhum; cookies dos anúncios e recuo da loja (PT-LA-02-0095-N)
+
+- Auditoria com dados e 6 tentativas minhas (Firefox visível, Edge instalado, sem proteções de privacidade): o clique funciona, o leitor de anúncios arranca, o Google responde com **VAST vazio**. **À mão no Edge do dono, na mesma rede e conta, funciona** e dá boss coins. O vignette (`#google_vignette`) só aparece no Edge dele, nunca no browser do bot, e não tapa nada (medido). `DISCOVERY.md` §6e.
+- **Não se disfarça o navegador** para passar o filtro (regra 8); o dono pediu-o e o Claude recusou (limite do Claude, não só regra do repo).
+- **D-112:** cookies dos anúncios guardados entre vídeos (`~/.osmbot/anuncios_cookies.json`); loja volta ao recuo normal. 627 testes. **Por verificar:** se os vídeos da loja voltam a passar com a 1.ª corrida desta versão; contar `Loja: vídeo` por dia nos registos.
+- Fórum do OSM (anti-bots/503) e Reddit (bloqueado nas ferramentas) não lidos: a informação dos tópicos veio de resumos de pesquisa. O dono ia colar posts do Reddit.
+- Por fazer: testar no PC de casa (outro IP) se também falha; botão "abrir a loja" e aviso no Telegram (semiautomático) se o dono quiser; escrever à Gamebasics com os traces.
+
 ## 2026-11-18 — Aviso do "Onze" contra um 5-2-3 provável (PT-LA-02-0095-N, só GETs)
 
 - Dono: o pré-jogo pedia 4-3-3 A num jogo equilibrado (73,5 contra 73,0) contra um humano cujo provável onze é 5-2-3 B. Faltava a regra: a D-100 só olha para o jogo dele contra nós, e este nunca nos jogou.

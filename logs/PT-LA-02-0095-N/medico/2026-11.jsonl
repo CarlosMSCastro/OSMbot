@@ -2,3 +2,5 @@
 {"t":1793715337,"evento":"levantar","tipo":"doctor","clube":"leagues/248015013/teams/8","semana":17,"caso":11082641,"jogador":877246514,"nome":"Andersen","antes":{"fora":3,"lesao":15,"suspensao":0},"depois":{"fora":2,"lesao":15,"suspensao":0}}
 {"t":1793715339,"evento":"pôr","tipo":"doctor","clube":"leagues/248015013/teams/8","semana":17,"jogador":877246514,"nome":"Andersen","antes":{"fora":3,"lesao":15,"suspensao":0}}
 {"t":1794992717,"evento":"pôr","tipo":"doctor","clube":"leagues/215028346/teams/9","semana":28,"jogador":926818767,"nome":"Akliouche","antes":{"fora":3,"lesao":29,"suspensao":0}}
+{"t":1795021993,"evento":"levantar","tipo":"doctor","clube":"leagues/215028346/teams/9","semana":28,"caso":7448562,"jogador":926818767,"nome":"Akliouche","antes":{"fora":3,"lesao":29,"suspensao":0},"depois":{"fora":2,"lesao":29,"suspensao":0}}
+{"t":1795021995,"evento":"pôr","tipo":"doctor","clube":"leagues/215028346/teams/9","semana":28,"jogador":926818767,"nome":"Akliouche","antes":{"fora":2,"lesao":29,"suspensao":0}}

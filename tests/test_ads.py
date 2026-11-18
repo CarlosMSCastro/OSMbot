@@ -491,3 +491,27 @@ def test_the_shop_videos_pause_when_a_training_is_ready_and_say_so():
     count = run_shop_ads(lambda: True, lambda: watched.append(1), log=lines.append, rng=Rng(), sleep=lambda s: None,
                          training_ready=lambda: next(ready))
     assert count == 2 and lines[-1] == "Loja: pausa, há treinos para recolher"  # the rest waits for the next pass
+
+def test_ad_cookies_keep_only_the_ones_of_the_ad_companies_and_still_valid(tmp_path):
+    """D-112: the game's own cookies stay with save_browser_session; expired ones are dropped; session cookies are kept."""
+    cookies = [
+        {"name": "access_token", "domain": ".onlinesoccermanager.com", "expires": 9999.0},
+        {"name": "IDE", "domain": ".doubleclick.net", "expires": 9999.0},
+        {"name": "old", "domain": ".doubleclick.net", "expires": 10.0},
+        {"name": "sess", "domain": ".google.com", "expires": -1},
+    ]
+    kept = ads.ad_cookies(cookies, now=100.0)
+    assert [c["name"] for c in kept] == ["IDE", "sess"]
+    path = tmp_path / "anuncios_cookies.json"
+    ads.save_ad_cookies(cookies, path, now=100.0)
+    assert [c["name"] for c in ads.load_ad_cookies(path, now=100.0)] == ["IDE", "sess"]
+    assert ads.load_ad_cookies(path, now=99999.0) == [{"name": "sess", "domain": ".google.com", "expires": -1}]  # IDE expired by then
+    assert ads.load_ad_cookies(tmp_path / "missing.json") == []
+
+
+def test_ad_cookies_are_capped_and_a_broken_file_is_ignored(tmp_path):
+    many = [{"name": f"c{i}", "domain": ".x.com", "expires": -1} for i in range(ads.AD_COOKIES_KEPT + 50)]
+    assert len(ads.ad_cookies(many, now=1.0)) == ads.AD_COOKIES_KEPT
+    bad = tmp_path / "bad.json"
+    bad.write_text("not json", encoding="utf-8")
+    assert ads.load_ad_cookies(bad) == []

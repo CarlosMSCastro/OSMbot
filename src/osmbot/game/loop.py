@@ -255,14 +255,14 @@ ADS_RETRY_MAX = 60 * 60.0  # the same kind failing again and again: wait longer 
 _ads_backoff: dict[str, tuple[int, float]] = {}  # kind of video -> (failures in a row, not before this time)
 
 
-ADS_STEADY = ("shop_ads",)  # kinds that never back off beyond ADS_RETRY (owner, 2026-11-18: the shop keeps trying every 10 min
-# while the ad network answers with no ad; back to the normal back-off when it works again, D-111)
+ADS_STEADY: tuple[str, ...] = ()  # kinds that never back off beyond ADS_RETRY. The shop was one for a few hours (D-111,
+# owner 2026-11-18) and is back to the normal back-off (D-112): retrying every 10 min only sends the ad network more empty requests
 ADS_LABELS = {"shop_ads": "loja volta a tentar", "training_ads": "vídeo de treino volta a tentar",
               "money_ads": "dinheiro volta a tentar"}
 
 
 def ads_retry(failures: int, kind: str = "") -> float:
-    """Wait after the ``failures``-th failure in a row of one kind of video: 10, 20, 40, then 60 min (the shop: always 10)."""
+    """Wait after the ``failures``-th failure in a row of one kind of video: 10, 20, 40, then 60 min (``ADS_STEADY``: always 10)."""
     if kind in ADS_STEADY:
         return ADS_RETRY
     return min(ADS_RETRY_MAX, ADS_RETRY * 2 ** (failures - 1))

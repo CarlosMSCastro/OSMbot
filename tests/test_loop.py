@@ -86,7 +86,7 @@ def test_a_kind_of_video_that_keeps_failing_waits_longer_each_time(monkeypatch):
         except Exception:
             pass
     assert [loop.ads_retry(n) for n in (1, 2, 3, 4, 5)] == [600, 1200, 2400, 3600, 3600]
-    assert [loop.ads_retry(n, "shop_ads") for n in (1, 2, 5)] == [600, 600, 600]  # the shop does not back off (D-111)
+    assert [loop.ads_retry(n, "shop_ads") for n in (1, 2, 5)] == [600, 1200, 3600]  # the shop backs off like the others (D-112)
     assert [loop.ads_retry(n, "money_ads") for n in (1, 5)] == [600, 3600]
     assert tries[:4] == [0, 600, 1800, 4200] and len(tries) < 10
 
