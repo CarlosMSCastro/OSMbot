@@ -469,6 +469,26 @@ def test_against_a_human_who_played_the_5_2_3_against_us_the_5_3_2():
                                                              vs_us=SABAH))
 
 
+LIKELY_523 = {"formation": 523, "detail": "B", "provavel": True}  # no match against us: only his likely eleven (D-108)
+
+
+def test_his_likely_5_2_3_accepts_the_5_3_2_and_the_4_3_3():
+    five = {"formation": 532, "formationDetail": "A", "style": 2}
+    a = {**five, "formation": 433}
+    # neither clearly stronger: both are right, the 5-3-2 first (owner, 2026-11-18, D-108)
+    assert tactic_warnings(a, 108, 100, vs_us=LIKELY_523) == []
+    assert tactic_warnings(five, 108, 100, vs_us=LIKELY_523) == []
+    assert any("provável" in n for n in tactic_notes(a, None, 108, 100, vs_us=LIKELY_523))
+    assert tactic_warnings({**five, "formation": 541}, 108, 100, vs_us=LIKELY_523) == [
+        "Formação 5-4-1: devia ser 5-3-2 ou 4-3-3 A (provável 5-2-3 dele)"]
+    # a real match against us keeps D-100: only the 5-3-2
+    assert tactic_warnings(a, 108, 100, vs_us=SABAH) == ["Formação 4-3-3 A: devia ser 5-3-2 (contra nós jogou 5-2-3)"]
+    # clearly stronger on either side: as before
+    assert tactic_warnings(a, 113, 100, vs_us=LIKELY_523) == []
+    assert tactic_warnings(five, 100, 113, vs_us=LIKELY_523) == [
+        "Formação 5-3-2: devia ser 5-2-3 ou 5-4-1 (adversário claramente mais forte)"]
+
+
 def test_his_5_defenders_against_us_count_as_counter_attack_for_the_4_3_3():
     wings = {**OWNERS_433, "overallMatchTactics": 2}
     # the report said wings; against us he played the 5-2-3: passing (D-092 with D-100), when we keep the 4-3-3

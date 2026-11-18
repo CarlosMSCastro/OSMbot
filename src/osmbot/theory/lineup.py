@@ -307,6 +307,10 @@ def _plan(tactic: dict | None, players: list[dict] | None, mine: float | None, o
     if ((vs_us or {}).get("formation") == HIS_523 and not _clearly_stronger(mine, opponent)
             and not _clearly_stronger(opponent, mine) and not _lacks(532, None, players)):
         answer = [("5-3-2", 532, None)]
+        if (vs_us or {}).get("provavel"):  # only his likely eleven, no match against us: the 4-3-3 stays right too (D-108)
+            answer += [(n, 433, n[-1]) for n in _wanted(mine, opponent, away) if not _lacks(433, n[-1], players)]
+            note = "4-3-3 aceite: o 5-2-3 dele é só o provável onze (sem jogo contra nós)"
+            return judge(answer, [("5-3-2", 532, None)], "5-3-2 ou 4-3-3 A (provável 5-2-3 dele)", note)
         return judge(answer, answer, "5-3-2 (contra nós jogou 5-2-3)")
     fallback = []
     if mine and opponent and choose_formation(mine, opponent) == Formation.F532:
@@ -411,14 +415,15 @@ def tactic_check(tactic: dict | None, strictness: int | None, mine: float | None
     his formation there is his (``his_formation``: from the analysis, None before; THEORY.md 2, the midfield by it)."""
     if not tactic:
         return [], [], False
-    if (vs_us or {}).get("formation", 0) // 100 == 5:  # what he played against us, not the report (D-100)
+    real = None if (vs_us or {}).get("provavel") else vs_us  # the likely eleven is not what he played against us (D-108)
+    if (real or {}).get("formation", 0) // 100 == 5:  # what he played against us, not the report (D-100)
         his, counter = (COUNTER, "contra nós"), True
     starters = [p for p in players or [] if p.get("lineup") in ELEVEN]
     context = dict(away=away, clearly_stronger=_clearly_stronger(mine, opponent),
                    clearly_weaker=_clearly_stronger(opponent, mine), forwards=forwards,
                    defensive_forwards=defensive(starters), counter=counter, human=not cpu,
                    his=his[0] if his else None,
-                   his_formation=(vs_us or {}).get("formation") or his_formation)
+                   his_formation=(real or {}).get("formation") or his_formation)
     rule = instructions(tactic.get("formation"), tactic.get("formationDetail"), **context)
     warnings, notes = [], []
     if rule:

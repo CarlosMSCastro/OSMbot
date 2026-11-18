@@ -44,6 +44,8 @@ Implementado em `choose_formation(my_rating, opp_rating, *, stronger_pct=0)`: ad
 - O passo "Onze" diz de onde vem: "Contra nós jogou 5-2-3 com estágio (liga, semana 24)".
 - **[S]** Nenhum jogo nosso de 5-3-2 contra 5-2-3 ainda: medir na verificação semanal (`vs523`). Só o último jogo contra nós; se o clube mudar de treinador, esse jogo pode já não dizer nada.
 
+**Humano que nunca nos jogou: conta o provável onze (dono, 2026-11-18; D-108).** Sem jogo oficial dele contra nós, a formação que conta é a do **provável onze** (a do cartão, vinda do último jogo dele). Se for **5-2-3** e nenhum lado for claramente mais forte (> 12 %): o "Onze" aceita **o 5-3-2 ou o 4-3-3** (o 5-3-2 primeiro; formação do dono verde com nota). Com um jogo real contra nós, vale só a D-100. Claramente mais forte de qualquer lado: como acima. O provável onze não conta como contra-ataque dele na tática. **[S]** O 5-3-2 não tem jogos medidos; medir o `vs523` na verificação semanal, incluindo estes jogos (formação provável contra a que jogou).
+
 **Casa pelo relvado (dono, 2026-11-03; D-090):** a vantagem de casa deixa de ser 5 % para todos: o nosso relvado pelo nosso estádio (nível 0–3 → +0/2/4/6 %), o dele pelo relatório do analista (`stadiumPitchBonus`; desta jornada ou o último guardado em `logs/`). Sem nada, 5 % **[S]**.
 
 **"Mais forte" conta os bónus do jogo e a casa (dono, 2026-10-14; `match_strength`):** força = rating da equipa × (1 + bónus %) × 1,05 para quem joga em casa. **Adversário em treino secreto (dono, 2026-11-02):** somam-se-lhe o treino secreto e o estágio. **[S]** O estágio não se vê e pode não existir; a janela diz que é suposição. Porquê: taça de 2026-11-02, a janela via 140 contra 105 e o jogo deu 716 contra 779.

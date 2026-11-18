@@ -420,6 +420,9 @@ def club_extra(client, team: dict, base: str, players: list[dict], slot, market:
     vs_us = (_cached(("against_us", team["leagueId"], team["id"], rival), VALUES_FOR,  # what he played against us (D-100)
                      lambda: logged_against(team["leagueId"], team["id"], rival))
              if upcoming and upcoming.get("human") else None)
+    likely = (upcoming or {}).get("eleven") or {}  # no match against us: his likely eleven's formation (D-108)
+    plan_vs = vs_us or ({"formation": likely["formation"], "detail": likely.get("detail"), "provavel": True}
+                        if upcoming and upcoming.get("human") and likely.get("estimate") and likely.get("formation") else None)
     mine, theirs = _match_strengths(client, team, league, teams, week, upcoming, strength, done, hidden,
                                     bool((vs_us or {}).get("camp")))
     if upcoming:  # for the reminder of a decisive match: what is known of the day (THEORY.md 21)
@@ -447,14 +450,14 @@ def club_extra(client, team: dict, base: str, players: list[dict], slot, market:
     why = {SPECIALISTS_STEP: check(players, current),
            BENCH_STEP: bench_warnings(players, spare),  # THEORY.md section 21: yellow with the reason on hover
            ELEVEN_STEP: empty_places(players, tactic) + listed_starters(players, listed)
-           + tactic_warnings(tactic, mine, theirs, players, away, vs_us),
+           + tactic_warnings(tactic, mine, theirs, players, away, plan_vs),
            POSITIONS_STEP: position_warnings(players, tactic)}  # who is out of position, on the hover
     why[TACTIC_STEP], tactic_tips, known = tactic_check(tactic, strictness, mine, theirs, players, away,
                                                         (upcoming or {}).get("forwards"), bool((upcoming or {}).get("counter")),
                                                         bool(upcoming) and not upcoming.get("human"),
                                                         _cached(("his_style", base, rival, week, bool(done.get(ANALYSIS_STEP))), VALUES_FOR,
                                                                 lambda: his_style(client, base, rival))
-                                                        if upcoming and upcoming.get("human") else None, vs_us,
+                                                        if upcoming and upcoming.get("human") else None, plan_vs,
                                                         ((upcoming or {}).get("eleven") or {}).get("formation")
                                                         if (upcoming or {}).get("eleven") and not upcoming["eleven"].get("estimate") else None)
     steps = [(step[0], known, step[2]) if kind == TACTIC_STEP else step for (kind, _), step in zip(CHECKLIST, steps)]
@@ -462,7 +465,7 @@ def club_extra(client, team: dict, base: str, players: list[dict], slot, market:
              for (kind, _), (name, done_, extra) in zip(CHECKLIST, steps)]
     reasons = {name: why[kind] for (kind, _), (name, _, _) in zip(CHECKLIST, steps) if why.get(kind)}
     notes = {ELEVEN_STEP: ([vs_us_note(vs_us)] if vs_us else []) + age_warnings(players) + centre_notes(players, tactic)
-             + tactic_notes(tactic, players, mine, theirs, away, vs_us),  # within the
+             + tactic_notes(tactic, players, mine, theirs, away, plan_vs),  # within the
              BENCH_STEP: bench_notes(players, pair[1]["opponent"] if spare else None), TACTIC_STEP: tactic_tips,
              SPECIALISTS_STEP: captain_note(players, current)}  # rule: the step keeps its colour
     for (kind, _), (name, _, _) in zip(CHECKLIST, steps):
