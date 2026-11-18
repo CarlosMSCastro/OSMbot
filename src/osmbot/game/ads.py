@@ -34,19 +34,63 @@ def _launch(playwright, headless: bool):
     return playwright.firefox.launch(headless=headless, firefox_user_prefs=MUTED)
 
 
+_TRACKED: dict[int, list[str]] = {}  # id(page) -> what the page and the network did during this attempt
+NOTES_KEPT = 200  # lines per attempt
+
+
+def _plain(url: str) -> str:
+    """A URL as host and path only: no query string (it can carry tokens)."""
+    return url.split("?", 1)[0].split("#", 1)[0][:140]
+
+
+def track(page) -> None:
+    """Note, for the failure files (owner, 2026-11-18, audit of the video errors): the page's console errors, the
+    requests that failed and the answers of 400 and above, each as a line with host and path only."""
+    notes: list[str] = []
+    _TRACKED[id(page)] = notes
+
+    def add(line: str) -> None:
+        if len(notes) < NOTES_KEPT:
+            notes.append(f"{time.strftime('%H:%M:%S')} {line}")
+
+    try:
+        page.on("console", lambda m: add(f"console.{m.type}: {m.text[:200]}") if m.type in ("error", "warning") else None)
+        page.on("pageerror", lambda e: add(f"pageerror: {str(e)[:200]}"))
+        page.on("requestfailed", lambda r: add(f"falhou {r.method} {_plain(r.url)}: {(r.failure or '')[:80]}"))
+        page.on("response", lambda r: add(f"{r.status} {r.request.method} {_plain(r.url)}") if r.status >= 400 else None)
+    except Exception:
+        pass
+
+
+WINDOWS_JS = r"""() => [...document.querySelectorAll('[id*=modal i],[class*=modal i],[role=dialog],[class*=popup i],[class*=overlay i]')]
+    .filter(e => e.offsetWidth > 60 && e.offsetHeight > 60)
+    .map(e => e.tagName + '#' + (e.id || '') + '.' + String(e.className || '').slice(0, 60) + ' ' + e.offsetWidth + 'x' + e.offsetHeight
+         + ' text=' + (e.innerText || '').replace(/\s+/g, ' ').slice(0, 70)).slice(0, 14)"""
+
+
 def save_failure(page, tag: str, image: bytes | None = None) -> None:
-    """Keep a screenshot of what the browser was showing when a video failed (~/.osmbot/failures/), to debug later.
-    ``image``: one taken earlier (e.g. just after the click) instead of a new one."""
+    """Keep a screenshot of what the browser was showing when a video failed (~/.osmbot/failures/), to debug later,
+    and beside it a .txt with what the page and the network did (``track``). ``image``: one taken earlier (e.g. just
+    after the click) instead of a new one."""
     try:
         folder = Path.home() / ".osmbot" / "failures"
         folder.mkdir(parents=True, exist_ok=True)
-        for old in sorted(folder.glob("*.png"))[:-10]:  # keep the last 10 only
-            old.unlink()
-        target = folder / f"{time.strftime('%Y%m%d-%H%M%S')}-{tag}.png"
+        for pattern in ("*.png", "*.txt"):
+            for old in sorted(folder.glob(pattern))[:-10]:  # keep the last 10 of each only
+                old.unlink()
+        stamp = time.strftime('%Y%m%d-%H%M%S')
+        target = folder / f"{stamp}-{tag}.png"
         if image is not None:
             target.write_bytes(image)
         else:
             page.screenshot(path=str(target))
+        notes = _TRACKED.get(id(page))
+        if notes is not None:
+            try:  # the windows in front of the page (which one covered the card?): id, class, size and the start of its text
+                notes = notes + [f"janelas visiveis: {item}" for item in page.evaluate(WINDOWS_JS)] if hasattr(page, "evaluate") else notes
+            except Exception:
+                pass
+            (folder / f"{stamp}-{tag}.txt").write_text("\n".join(notes) or "(nada a registar)", encoding="utf-8")
     except Exception:
         pass
 
@@ -111,6 +155,7 @@ def watch_shop_video(client, headless: bool = True) -> int:
         try:
             context = browser.new_context(storage_state=str(STATE_FILE), viewport={"width": 1280, "height": 900})
             page = context.new_page()
+            track(page)
             _open_game(page)
             try:
                 _click_past_windows(page, page.locator("a:visible", has_text="Shop").first)
@@ -327,6 +372,7 @@ def watch_training_video(client, club: str, session: dict, base: str, headless: 
         try:
             context = browser.new_context(storage_state=str(STATE_FILE), viewport={"width": 1280, "height": 900})
             page = context.new_page()
+            track(page)
             try:
                 _open_training_page(page, club, session["trainer"])
                 button = _coach_button(page, session["trainer"])
@@ -412,6 +458,7 @@ def watch_money_video(client, club: str, headless: bool = True) -> None:
         try:
             context = browser.new_context(storage_state=str(STATE_FILE), viewport={"width": 1280, "height": 900})
             page = context.new_page()
+            track(page)
             try:
                 _open_club(page, club)
                 _click_past_windows(page, page.locator(".clubfunds-wallet").first)

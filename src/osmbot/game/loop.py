@@ -129,6 +129,12 @@ def _log(message: str) -> None:
         _errors.append((time.time(), line))
     timeline.add(_history, time.time(), message)
     kind = notice_kind(message)
+    try:  # Telegram (D-110): a sale, a match played, an error; never in the bot's way, sent in a thread
+        from osmbot.notify import dispatch
+
+        dispatch.default().line(message, kind == "Erro")
+    except Exception:
+        pass
     if kind:
         _notices.append((f"{now:%H:%M:%S}", kind, message.lstrip(chr(7)).lstrip("! ").strip()))
     if not _screen_on:
@@ -249,9 +255,22 @@ ADS_RETRY_MAX = 60 * 60.0  # the same kind failing again and again: wait longer 
 _ads_backoff: dict[str, tuple[int, float]] = {}  # kind of video -> (failures in a row, not before this time)
 
 
-def ads_retry(failures: int) -> float:
-    """Wait after the ``failures``-th failure in a row of one kind of video: 10, 20, 40, then 60 min."""
+ADS_STEADY = ("shop_ads",)  # kinds that never back off beyond ADS_RETRY (owner, 2026-11-18: the shop keeps trying every 10 min
+# while the ad network answers with no ad; back to the normal back-off when it works again, D-111)
+ADS_LABELS = {"shop_ads": "loja volta a tentar", "training_ads": "vídeo de treino volta a tentar",
+              "money_ads": "dinheiro volta a tentar"}
+
+
+def ads_retry(failures: int, kind: str = "") -> float:
+    """Wait after the ``failures``-th failure in a row of one kind of video: 10, 20, 40, then 60 min (the shop: always 10)."""
+    if kind in ADS_STEADY:
+        return ADS_RETRY
     return min(ADS_RETRY_MAX, ADS_RETRY * 2 ** (failures - 1))
+
+
+def ads_wakes(now: float) -> list[tuple[str, float]]:
+    """Each kind of video that is waiting to be tried again, for the "Próxima verificação" line."""
+    return [(ADS_LABELS.get(name, name), t) for name, (_, t) in _ads_backoff.items() if t > now]
 
 
 def _shop_ads(dry_run: bool) -> int:
@@ -356,7 +375,7 @@ def _all_ads(dry_run: bool, clock=time.time) -> int:
             watched += step(dry_run)
             _ads_backoff.pop(name, None)
         except Exception as error:
-            _ads_backoff[name] = (failures + 1, clock() + ads_retry(failures + 1))
+            _ads_backoff[name] = (failures + 1, clock() + ads_retry(failures + 1, name))
             errors.append(f"{name}: {error}")
     if errors:
         raise AdsError("; ".join(errors))
@@ -426,6 +445,12 @@ def run_active(dry_run: bool = False, *, claim=run_claim, train=run_train, finis
 
     def draw(status: str) -> None:
         current["status"] = status
+        try:  # Telegram (D-110): the last hour before a match, the opponent's camp or secret training
+            from osmbot.notify import dispatch
+
+            dispatch.default().snapshot(last_snapshot)
+        except Exception:
+            pass
         if screen:
             size = shutil.get_terminal_size((100, 40))
             problems = [line for when, line in _errors if time.time() - when < ERRORS_SHOWN_FOR]
@@ -656,7 +681,8 @@ def run_active(dry_run: bool = False, *, claim=run_claim, train=run_train, finis
                 if event_time:  # a training event due today: look for it from 05:30 every 10 min
                     times.append(event_time)
                     wakes = wakes + [("evento de treinos", event_time)]
-                wakes = sorted(wakes + [("depósito na poupança", t) for t in savings_times if t > clock()], key=lambda e: e[1])
+                wakes = sorted(wakes + [("depósito na poupança", t) for t in savings_times if t > clock()] + ads_wakes(clock()),
+                               key=lambda e: e[1])
                 wait = next_wait(times, clock(), rng.uniform(*JITTER))
                 if ads_failed:
                     again = ads_wake(clock())

@@ -2713,7 +2713,8 @@ class MainWindow(QMainWindow):
                                   triggered=self.pin_side)
         settings_menu = self.menuBar().addMenu(tr("Definições"))
         settings_menu.addAction(self.settings_action)
-        languages = settings_menu.addMenu("Idioma / Language")  # the same in both languages, so it is always found (D-031)
+        settings_menu.addAction(QAction(tr("Telegram…"), self, triggered=self.show_telegram))
+        languages =settings_menu.addMenu("Idioma / Language")  # the same in both languages, so it is always found (D-031)
         self.language_actions = {}
         for code, name in LANGUAGES.items():
             action = QAction(name, self, checkable=True, triggered=lambda _checked=False, code=code: self.choose_language(code))
@@ -3193,6 +3194,12 @@ class MainWindow(QMainWindow):
                  for c in (self.payload.get("snapshot") or {}).get("clubs") or [] if c.get("key")]
         SettingsDialog(self, clubs).exec()
 
+
+    def show_telegram(self) -> None:
+        """Definições → Telegram (owner, 2026-11-18, D-110): the same steps for the owner and for any user."""
+        from osmbot.gui.telegram_dialog import TelegramDialog
+
+        TelegramDialog(self).exec()
 
     def about(self) -> None:
         if language() == "en":

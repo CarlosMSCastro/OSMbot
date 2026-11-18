@@ -86,6 +86,8 @@ def test_a_kind_of_video_that_keeps_failing_waits_longer_each_time(monkeypatch):
         except Exception:
             pass
     assert [loop.ads_retry(n) for n in (1, 2, 3, 4, 5)] == [600, 1200, 2400, 3600, 3600]
+    assert [loop.ads_retry(n, "shop_ads") for n in (1, 2, 5)] == [600, 600, 600]  # the shop does not back off (D-111)
+    assert [loop.ads_retry(n, "money_ads") for n in (1, 5)] == [600, 3600]
     assert tries[:4] == [0, 600, 1800, 4200] and len(tries) < 10
 
 
@@ -440,3 +442,10 @@ def test_the_window_asks_for_a_pass_when_it_sees_a_new_club():
                     prematch=None, **_NO_EXTRAS)
     assert len(passes) == 2 and passes[1] - passes[0] < 200
     assert "Clube novo (SV Ried): passagem já" in loop.LOG_FILE.read_text(encoding="utf-8")
+
+
+def test_the_wait_line_says_when_each_failed_video_is_tried_again():
+    loop._ads_backoff.clear()
+    loop._ads_backoff.update({"shop_ads": (3, 1000.0), "money_ads": (1, 800.0), "training_ads": (2, 100.0)})
+    assert loop.ads_wakes(500.0) == [("loja volta a tentar", 1000.0), ("dinheiro volta a tentar", 800.0)]
+    loop._ads_backoff.clear()
