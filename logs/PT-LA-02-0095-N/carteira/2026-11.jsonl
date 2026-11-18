@@ -523,3 +523,6 @@
 {"t":1795004062,"saldo":3524,"antes":3523,"diferenca":1,"partes":{"vídeos da loja":1}}
 {"t":1795004718,"saldo":3520,"antes":3524,"diferenca":-4,"partes":{"amigáveis":-4}}
 {"t":1795006124,"saldo":3521,"antes":3520,"diferenca":1,"partes":{"fora do bot":1}}
+{"t":1795009450,"saldo":3517,"antes":3521,"diferenca":-4,"partes":{"fora do bot":-4}}
+{"t":1795009590,"saldo":3513,"antes":3517,"diferenca":-4,"partes":{"amigáveis":-4}}
+{"t":1795010006,"saldo":3514,"antes":3513,"diferenca":1,"partes":{"fora do bot":1}}
