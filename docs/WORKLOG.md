@@ -7,6 +7,7 @@ Entradas mais recentes primeiro. Cada sessão: o que se fez · o que ficou por f
 - Dono: o pré-jogo pedia 4-3-3 A num jogo equilibrado (73,5 contra 73,0) contra um humano cujo provável onze é 5-2-3 B. Faltava a regra: a D-100 só olha para o jogo dele contra nós, e este nunca nos jogou.
 - **D-108:** sem jogo contra nós, conta o provável onze; contra o 5-2-3 e equilibrados, aceita o 5-3-2 ou o 4-3-3 (o 5-3-2 primeiro). Código em `lineup._plan`/`tactic_check` e `clubinfo`; teste novo em `tests/test_lineup.py` (605 a passar).
 - Erro meu durante a sessão: disse que o bot não tinha a formação dele (só olhei o analista e os jogos contra nós); o cartão já a mostrava, vinda do provável onze.
+- **D-109:** o Neman só tinha 5 defesas no plantel e o 5-3-2 caía por a regra pedir 7; para o 5-3-2 contra o 5-2-3 passam a chegar 5 em forma (o banco fica amarelo no passo "Banco"). 606 testes.
 - **Falta:** medir o 5-3-2 contra o 4-3-3 nestes jogos (`vs523`, próxima verificação); ver se o dono quer lançar isto numa versão (não lancei).
 
 ## 2026-11-16 — Poupar antes dos oitavos por sortear (PT-LA-02-0095-N, só GETs)

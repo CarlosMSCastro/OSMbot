@@ -489,6 +489,21 @@ def test_his_likely_5_2_3_accepts_the_5_3_2_and_the_4_3_3():
         "Formação 5-3-2: devia ser 5-2-3 ou 5-4-1 (adversário claramente mais forte)"]
 
 
+def test_his_5_2_3_asks_only_for_5_fit_defenders_not_the_7_of_the_squad():
+    five = {"formation": 532, "formationDetail": "A", "style": 2}
+    a = {**five, "formation": 433}
+    few = squad(DC4=None, DC5=None)  # 5 defenders: 3 DC, a DE and a DD, nobody for the bench (D-109)
+    for vs in (LIKELY_523, SABAH):
+        assert tactic_warnings(five, 108, 100, few, vs_us=vs) == []
+    assert tactic_warnings(a, 108, 100, few, vs_us=SABAH) == ["Formação 4-3-3 A: devia ser 5-3-2 (contra nós jogou 5-2-3)"]
+    assert tactic_warnings(a, 108, 100, few, vs_us=LIKELY_523) == []
+    # without the 5 fit ones (no DD): back to the 4-3-3 and the 5-3-2 is out
+    no_dd = squad(DC4=None, DC5=None, James=None)
+    assert tactic_warnings(five, 108, 100, no_dd, vs_us=LIKELY_523) != []
+    # the 5-3-2 against a stronger opponent still needs the 7 (THEORY.md section 1)
+    assert tactic_warnings(five, 100, 108, few) != []
+
+
 def test_his_5_defenders_against_us_count_as_counter_attack_for_the_4_3_3():
     wings = {**OWNERS_433, "overallMatchTactics": 2}
     # the report said wings; against us he played the 5-2-3: passing (D-092 with D-100), when we keep the 4-3-3

@@ -235,21 +235,22 @@ def _short(codes: Iterable[int], players: list[dict]) -> dict[int, str]:
     return short
 
 
-def _lacks(formation: int, detail: str | None, players: list[dict] | None) -> dict[int, str]:
+def _lacks(formation: int, detail: str | None, players: list[dict] | None, bench: bool = True) -> dict[int, str]:
     """Why the squad cannot play a formation (THEORY.md section 1): its watched places with nobody fit and, with 5 at
     the back, fewer than 7 defenders in the squad or than 3 fit centre-backs (the tired ones can sit on the bench).
-    {} when it can, or with no squad to judge by; ``detail`` None: either detail."""
+    {} when it can, or with no squad to judge by; ``detail`` None: either detail. ``bench`` False: the 7 defenders are
+    not asked for, only the 5 fit ones in the right places (the 5-3-2 against his 5-2-3, D-109)."""
     if not players:
         return {}
     if detail is None:
-        a, b = (_lacks(formation, d, players) for d in "AB")
+        a, b = (_lacks(formation, d, players, bench) for d in "AB")
         return a if a and b else {}
     codes = [c for c in places({"formation": formation, "formationDetail": detail}).values() if c in WATCHED]
     lacks = _short(codes, players)
     if formation // 100 == 5:
         lacks.update(_short([DC] * 3, players))
         defenders = sum(1 for p in players if p.get("position") == 3)
-        if defenders < FIVE_SQUAD:
+        if bench and defenders < FIVE_SQUAD:
             lacks[0] = f"só {defenders} defesas no plantel"
     return dict(sorted(lacks.items()))
 
@@ -305,7 +306,8 @@ def _plan(tactic: dict | None, players: list[dict] | None, mine: float | None, o
         return [f"Formação {current}: devia ser {wanted}"], [], choices[0][:3]
 
     if ((vs_us or {}).get("formation") == HIS_523 and not _clearly_stronger(mine, opponent)
-            and not _clearly_stronger(opponent, mine) and not _lacks(532, None, players)):
+            and not _clearly_stronger(opponent, mine) and not _lacks(532, None, players, bench=False)):
+        own = _lacks(code, detail, players, bench=False) if code else {}  # the bench step warns of a short bench (D-109)
         answer = [("5-3-2", 532, None)]
         if (vs_us or {}).get("provavel"):  # only his likely eleven, no match against us: the 4-3-3 stays right too (D-108)
             answer += [(n, 433, n[-1]) for n in _wanted(mine, opponent, away) if not _lacks(433, n[-1], players)]
