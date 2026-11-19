@@ -819,8 +819,10 @@ def calendar_view(months: list[dict] | None, now: float, lang: str = "pt") -> di
 
 
 def board_view(snapshot: dict | None, stats: dict | None, now: float, doing: dict | None = None,
-               history: list[dict] | None = None, lang: str = "pt") -> dict | None:
-    """Everything the window shows for one moment (None while there is nothing read yet)."""
+               history: list[dict] | None = None, lang: str = "pt", switches: dict | None = None,
+               account: dict | None = None, videos: bool = True) -> dict | None:
+    """Everything the window shows for one moment (None while there is nothing read yet). ``switches`` and
+    ``account`` (D-104) leave out of the timeline what the client turned off."""
     if not snapshot:
         return None
     shortened = (stats or {}).get("shortened") or {}
@@ -833,5 +835,5 @@ def board_view(snapshot: dict | None, stats: dict | None, now: float, doing: dic
             "daily": [piece for piece in daily if piece[0] != "waiting"],  # the new day is on the timeline
             "event": calendar_view(snapshot.get("calendar"), now, lang),
             "inventory": inventory_view(snapshot.get("inventory"), now, lang),
-            "timeline": {"future": future_view(snapshot, now), "past": past_view(history or []),
+            "timeline": {"future": future_view(snapshot, now, switches, account, videos), "past": past_view(history or []),
                          "now": (doing or {}).get("text") or ""}}

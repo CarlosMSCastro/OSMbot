@@ -2694,6 +2694,7 @@ class MainWindow(QMainWindow):
         self.notices_action = QAction(tr("Avisos e erros"), self, triggered=self.show_notices)
         self.reload_action = QAction(tr("Atualizar"), self, triggered=lambda: self.read_game(fresh=True))
         self.data_action = QAction(tr("Dados"), self, triggered=self.show_data)
+        self.videos_log_action = QAction(tr("Vídeos"), self, triggered=self.show_videos)
         self.logs_action = QAction(tr("Pasta dos logs"), self, triggered=self.open_logs)
         self.failures_action = QAction(tr("Capturas das falhas"), self, triggered=self.open_failures)
         self.quit_action = QAction(tr("Sair"), self, triggered=self.quit_app)
@@ -2703,8 +2704,12 @@ class MainWindow(QMainWindow):
         bot.addSeparator()
         bot.addAction(self.quit_action)
         view = self.menuBar().addMenu(tr("Ver"))
-        for action in (self.reload_action, self.data_action):
+        for action in (self.reload_action, self.data_action, self.videos_log_action):
             view.addAction(action)
+        self.videos_action = QAction(tr("Vídeos na timeline"), self, checkable=True,  # owner, 2026-11-19
+                                     checked=get_pref("timeline_videos", True) is not False,
+                                     triggered=lambda on: (set_pref("timeline_videos", on), self.render()))
+        view.addAction(self.videos_action)
         view.addSeparator()
         for action in (self.notices_action, self.logs_action, self.failures_action):
             view.addAction(action)
@@ -3044,9 +3049,11 @@ class MainWindow(QMainWindow):
         if self.pages.currentIndex() != BOARD:
             return
         running = self.running()
+        from osmbot import settings
+
         view = board_view(self.payload.get("snapshot"), self.payload.get("stats") if running else None, now,
                           self.payload.get("doing") if running else None, self.payload.get("history") if running else None,
-                          language())
+                          language(), settings.load(), settings.load_account(), get_pref("timeline_videos", True) is not False)
         if not view:
             return
         self._show_clubs(view["clubs"])
@@ -3141,6 +3148,17 @@ class MainWindow(QMainWindow):
             QApplication.restoreOverrideCursor()
         self.data_window.show()
         dark_title_bar(self.data_window)
+
+    def show_videos(self) -> None:
+        """Ver → Vídeos (owner, 2026-11-19): the videos tried each day, read again each time the window opens."""
+        from osmbot.gui.videos_window import VideosWindow
+
+        old = getattr(self, "videos_window", None)
+        if old is not None:
+            old.deleteLater()
+        self.videos_window = VideosWindow(self)
+        self.videos_window.show()
+        dark_title_bar(self.videos_window)
 
     def show_notices(self) -> None:
         self.notices_window.show()

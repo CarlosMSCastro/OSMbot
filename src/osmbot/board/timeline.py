@@ -11,6 +11,7 @@ from datetime import datetime
 
 from osmbot.game.dashboard import span
 from osmbot.prematch.policy import day_end, friendly_deadlines
+from osmbot.settings import account_allowed, allowed
 
 MERGE_WITHIN = 15 * 60  # s: the same kind of action this close to the last one joins it
 KEEP = 40  # past entries kept
@@ -115,13 +116,19 @@ def _clock(ts: float) -> str:
     return f"{datetime.fromtimestamp(ts):%H:%M}"
 
 
-def future_events(snapshot: dict | None, now: float) -> list[dict]:
+def future_events(snapshot: dict | None, now: float, switches: dict | None = None,
+                  account: dict | None = None, videos: bool = True) -> list[dict]:
     """What comes next, soonest first: {"ts", "title", "sub", "club"} (club = its index, None for the account).
-    Things already due (a video open, a training to collect) get ``now``."""
+    Things already due (a video open, a training to collect) get ``now``. What the bot would do but a switch turned
+    off (D-104: ``switches`` per club, ``account`` for the whole account) is left out (owner, 2026-11-19); what the
+    game does by itself (a match, a training ending, the stadium) stays. ``videos`` False hides the three kinds of
+    video even while the bot keeps trying them (Ver → Vídeos na timeline; owner, 2026-11-19)."""
     if not snapshot:
         return []
+    switches, account = switches or {}, account or {}
     events = []
-    ads = snapshot.get("ads") or {}
+    ads = snapshot.get("ads") if videos and account_allowed(account, "videos") else None
+    ads = ads or {}
     for key, title, plural, icon in (("shop", "Vídeos da loja", True, "coins"), ("training", "Acelerar treinos", False, "training"),
                                      ("money", "Vídeos de dinheiro", True, "funds")):
         info = ads.get(key) or {}
@@ -130,7 +137,7 @@ def future_events(snapshot: dict | None, now: float) -> list[dict]:
         elif info.get("reopen") and info["reopen"] > now:
             events.append(_event(info["reopen"], title, f"reabre às {_clock(info['reopen'])}", icon=icon))
     daily = snapshot.get("daily") or {}
-    videos = daily.get("videos") or {}
+    videos = (daily.get("videos") or {}) if account_allowed(account, "recompensas") else {}
     if videos.get("claimable"):
         events.append(_event(now, "Reward cumulativo", "por reclamar", icon="missions"))
     elif videos.get("reopen") and videos["reopen"] > now:
@@ -146,6 +153,8 @@ def future_events(snapshot: dict | None, now: float) -> list[dict]:
 
     for index, club in enumerate(snapshot.get("clubs") or []):
         name = club["name"]
+        key = club.get("key")
+        may = (lambda automation: allowed(switches, key, automation)) if key else (lambda automation: True)
         groups: list[tuple[float, list[str]]] = []  # trainings ending within a minute of each other: one line
         universal = [(club.get("universal") or {}).get("session")]  # its session ends like a training (THEORY.md section 20)
         for t in sorted((t for t in (club.get("trainings") or []) + [u for u in universal if u] if not t.get("claimed")),
@@ -168,9 +177,10 @@ def future_events(snapshot: dict | None, now: float) -> list[dict]:
             friendly = None  # the next friendly: one more due at 16/12/8/4 h before the match, 8 in an Intense Friendlies
             day = day_end(match, now, club.get("week"))  # in the pre-season, daily
             deadlines = friendly_deadlines(day, now, snapshot.get("events"))  # ("já" when overdue)
-            if played is not None and played < len(deadlines):
+            if played is not None and played < len(deadlines) and may("amigavel"):
                 friendly = max(deadlines[played], now)
-            analysis = any(step == "Análise" and not done for step, done, _ in steps) and match - PREP_BEFORE > now
+            analysis = (any(step == "Análise" and not done for step, done, _ in steps) and match - PREP_BEFORE > now
+                        and may("analise"))
             if friendly and analysis and friendly == match - PREP_BEFORE:
                 events.append(_event(friendly, "Amigáveis e Análise", name, index))
             else:
@@ -182,6 +192,8 @@ def future_events(snapshot: dict | None, now: float) -> list[dict]:
             if ends and ends > now:
                 events.append(_event(ends, f"{part} {name}", f"{level}/{top} → {level + 1}/{top}", index, "stadium"))
         for people, place in ((club.get("injured") or [], "Médico"), (club.get("suspended") or [], "Advogado")):
+            if not may("medico"):
+                break
             for p in people:
                 if p.get("ready"):
                     events.append(_event(now, f"{place}: levantar {p['name']}", name, index, MATCH_ICONS[place]))
@@ -190,6 +202,8 @@ def future_events(snapshot: dict | None, now: float) -> list[dict]:
     return sorted(events, key=lambda e: (e["ts"], e["title"]))
 
 
-def future_view(snapshot: dict | None, now: float) -> list[dict]:
+def future_view(snapshot: dict | None, now: float, switches: dict | None = None,
+                account: dict | None = None, videos: bool = True) -> list[dict]:
     """The future for the window, soonest first, with the time left as text ("já" when due)."""
-    return [{**e, "left": "já" if e["ts"] <= now else span(e["ts"] - now)} for e in future_events(snapshot, now)]
+    return [{**e, "left": "já" if e["ts"] <= now else span(e["ts"] - now)}
+            for e in future_events(snapshot, now, switches, account, videos)]

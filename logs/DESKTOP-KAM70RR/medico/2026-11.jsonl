@@ -19,3 +19,7 @@
 {"t":1794709860,"evento":"pôr","tipo":"doctor","clube":"leagues/258036629/teams/12","semana":3,"jogador":967201017,"nome":"Foden","antes":{"fora":3,"lesao":21,"suspensao":0}}
 {"t":1794764370,"evento":"levantar","tipo":"doctor","clube":"leagues/258036629/teams/12","semana":4,"caso":11577613,"jogador":967201017,"nome":"Foden","antes":{"fora":2,"lesao":21,"suspensao":0},"depois":{"fora":1,"lesao":21,"suspensao":0}}
 {"t":1794764372,"evento":"pôr","tipo":"doctor","clube":"leagues/258036629/teams/12","semana":4,"jogador":967201017,"nome":"Foden","antes":{"fora":1,"lesao":21,"suspensao":0}}
+{"t":1794775534,"evento":"pôr","tipo":"doctor","clube":"leagues/229039036/teams/12","semana":2,"jogador":989801922,"nome":"V. Muñoz","antes":{"fora":1,"lesao":25,"suspensao":0}}
+{"t":1794794404,"evento":"levantar","tipo":"doctor","clube":"leagues/258036629/teams/12","semana":4,"caso":11578741,"jogador":967201017,"nome":"Foden","antes":{"fora":1,"lesao":21,"suspensao":0},"depois":{"fora":0,"lesao":0,"suspensao":0}}
+{"t":1795052379,"evento":"levantar","tipo":"doctor","clube":"leagues/215028346/teams/9","semana":29,"caso":7448815,"jogador":926818767,"nome":"Akliouche","antes":{"fora":1,"lesao":29,"suspensao":0},"depois":{"fora":0,"lesao":0,"suspensao":0}}
+{"t":1795052381,"evento":"pôr","tipo":"doctor","clube":"leagues/229039036/teams/12","semana":5,"jogador":990744287,"nome":"Cucurella","antes":{"fora":2,"lesao":13,"suspensao":0}}

@@ -515,3 +515,28 @@ def test_ad_cookies_are_capped_and_a_broken_file_is_ignored(tmp_path):
     bad = tmp_path / "bad.json"
     bad.write_text("not json", encoding="utf-8")
     assert ads.load_ad_cookies(bad) == []
+
+
+def test_a_wait_inside_a_video_gives_way_to_a_stop():
+    """Owner, 2026-11-19: closing the window waited minutes for a failing video."""
+    import pytest
+    from osmbot.game import ads
+
+    class Page:
+        waited = 0
+
+        def wait_for_timeout(self, ms):
+            Page.waited += ms
+
+    page = Page()
+    old = ads.STOP
+    try:
+        ads.STOP = lambda: False
+        ads._wait(page, 3000)
+        assert Page.waited == 3000
+        ads.STOP = lambda: True
+        with pytest.raises(KeyboardInterrupt):
+            ads._wait(page, 3000)
+        assert Page.waited == 3000  # no more waiting once a stop is asked
+    finally:
+        ads.STOP = old

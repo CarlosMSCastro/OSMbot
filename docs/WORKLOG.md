@@ -2,6 +2,20 @@
 
 Entradas mais recentes primeiro. Cada sessão: o que se fez · o que ficou por fazer · próximo passo.
 
+## 2026-11-19 — Sem vídeos: o que gasta boss coins (DESKTOP-KAM70RR, só leitura, conversa)
+
+- **Contexto:** os vídeos da loja não dão nada desde 2026-11-17 (VAST vazio, ver 2026-11-18). Disfarçar o navegador ou automatizar uma janela aberta continua recusado (regra 8). Ver os vídeos à mão não compensa: eram ~60/dia por PC, a 1 coin cada.
+- **Carteira (`logs/*/carteira`, os dois PCs têm a mesma conta):** saldo ~3 470. Gastos do bot: **amigáveis ~60/dia** (4 por jogo a 4 coins), treinos acabados nos eventos 64–136 por evento, estádio até 40 por evento. Sem vídeos entram ~5/dia (recompensas) + fins de época (48 e 6 este mês), e as previsões quase nada (1 certa em 9, sempre 1-1). Orçamento sustentável: ~8–10/dia.
+- **Decisão do dono:** desliga os amigáveis nos botões da D-104 e faz à mão os que forem importantes. Não se constrói, por agora, o "modo sem publicidade" nem o "amigáveis por jogo".
+- **Corrigido (pedido do dono):** a timeline mostrava os amigáveis com o botão desligado. `future_events`/`future_view` e `board_view` recebem os botões da D-104: amigáveis, análise, médico/advogado (por clube, ou clube desligado), vídeos e reward cumulativo (conta) saem; jogo, treinos e estádio ficam. Teste novo em `tests/test_timeline.py`; 627 a passar. Falha à parte: `test_telegram` QR, falta o `segno` no venv deste PC (`pip install segno`).
+- **Vídeos de treino voltaram a passar** (01:41 e 02:07, Neman Grodno, −2 h cada), na 1.ª corrida com a D-112. A loja ainda não foi tentada. Por ver: contar `Loja: vídeo` por hora nos próximos dias (D-112 resolveu, ou só há anúncios de madrugada?).
+- **Botão dos vídeos desligado às 02:05 e o vídeo das 02:07 passou na mesma:** o botão só era lido no início do passo dos vídeos (02:02). Agora é lido antes de cada tipo (loja, treino, dinheiro), em `loop._all_ads`.
+- **Ver → Vídeos na timeline** (pedido do dono): os vídeos ficam ligados (o bot continua a tentar), mas a timeline deixa de os mostrar com a opção desmarcada (`timeline_videos` no `config.json`). Teste em `test_timeline.py`; `test_gui_window` passa a contar 6 entradas no Ver. 628 a passar (só o QR, sem `segno`).
+- **Registos novos (D-113, pedido do dono):** `logs/<PC>/videos/` + **Ver → Vídeos** (por dia, passaram/falharam, tipo) e `logs/<PC>/preparacao/` (checklist nas últimas 4 h, uma linha quando muda). Experimentado sem ecrã com dados de exemplo; falta ver na janela real. **Próximo passo:** em ~1 semana, contar os vídeos por hora e cruzar a checklist com os resultados (ponto dos treinos; 100 % contra menos).
+- **Telegram não abria:** faltava o `segno` no venv deste PC (a janela rebentava ao desenhar o QR, sem erro à vista). Instalado; 632 testes.
+- **Fechar demorava minutos** (o dono matava no gestor de tarefas, ex.: corrida das 02:02 sem "Parado"): o pedido de paragem só era visto nas pausas, e um passo de vídeos a falhar dura ~9 min (90 s por tentativa, loja 2 vezes). Agora `ads._wait` vê o pedido de 3 em 3 s e `_all_ads` antes de cada tipo; o browser fecha no `finally`. Fica o limite de 150 s do "Sair". 633 testes.
+- **Por ver:** o dono pondera se o projeto, sem a vantagem dos vídeos, ainda o motiva a longo prazo.
+
 ## 2026-11-18 (tarde) — Vídeos: o bot não vê nenhum; cookies dos anúncios e recuo da loja (PT-LA-02-0095-N)
 
 - Auditoria com dados e 6 tentativas minhas (Firefox visível, Edge instalado, sem proteções de privacidade): o clique funciona, o leitor de anúncios arranca, o Google responde com **VAST vazio**. **À mão no Edge do dono, na mesma rede e conta, funciona** e dá boss coins. O vignette (`#google_vignette`) só aparece no Edge dele, nunca no browser do bot, e não tapa nada (medido). `DISCOVERY.md` §6e.

@@ -188,11 +188,41 @@ def _shown(snapshot: dict | None) -> dict | None:
     return shown
 
 
+VIDEO_KINDS = {"shop": "loja", "training": "treino", "money": "dinheiro"}
+
+
+def video_record(key: str, args: tuple, result=None, error: Exception | None = None) -> dict:
+    """One video tried, for ``logs/<PC>/videos`` (owner, 2026-11-19: which videos went through, day by day).
+    ``args`` are the watch call's: (club, session) for a training video, (club,) for money, () for the shop."""
+    line = {"tipo": VIDEO_KINDS.get(key, key), "ok": error is None}
+    if args:
+        line["clube"] = args[0]
+    if len(args) > 1 and isinstance(args[1], dict):
+        line["jogador"] = (args[1].get("player") or {}).get("name")
+    if key == "shop" and isinstance(result, int):
+        line["coins"] = result
+    if error is not None:
+        line["erro"] = str(error)[:200]
+    return line
+
+
+def _record_video(key: str, args: tuple, result=None, error: Exception | None = None) -> None:
+    try:
+        repo_log.record("videos", video_record(key, args, result, error))
+    except Exception:
+        pass
+
+
 def _counted(key: str, function, refresh=None):
     """Wrap a "watch one video" call so it is counted the moment it succeeds (a stop mid-burst loses nothing).
     ``refresh`` (optional) reads fresh values for the board, e.g. the boss coins; its failure is ignored."""
     def wrapper(*args):
-        result = function(*args)
+        try:
+            result = function(*args)
+        except Exception as error:
+            _record_video(key, args, None, error)
+            raise
+        _record_video(key, args, result)
         _stats[key] = _stats.get(key, 0) + 1
         if refresh:
             try:
@@ -286,13 +316,14 @@ def _shop_ads(dry_run: bool) -> int:
 
     count = 0
 
-    def watch() -> None:
+    def watch() -> int:
         nonlocal count
         count += 1
         _now(f"vídeo da loja {count}/{MAX_PER_BURST}", "shop", count=count)
         gained = watch_with_retry(lambda: watch_shop_video(client), lambda: is_claimable(client))
         _stats["shop_coins"] = _stats.get("shop_coins", 0) + gained  # the "+X" beside the boss coins (owner, 2026-10-09)
         ledger.note("vídeos da loja", gained)
+        return gained
 
     return run_shop_ads(lambda: is_claimable(client), _counted("shop", watch, refresh_coins),
                         dry_run=dry_run, log=_log, sleep=_tick_sleep, training_ready=lambda: _training_ready(client))
@@ -364,7 +395,13 @@ def _all_ads(dry_run: bool, clock=time.time) -> int:
         return 0
     watched, errors = 0, []
 
+    from osmbot.game import ads as ads_module
+
+    ads_module.STOP = _stop.is_set  # a video in the middle gives way to the window's "Parar"/"Sair"
     for step in (_shop_ads, _training_ads, _money_ads):
+        _check_stop()
+        if not settings.account_allowed(settings.load_account(), "videos"):  # turned off meanwhile (owner, 2026-11-19)
+            break
         name = step.__name__.strip("_")
         failures, not_before = _ads_backoff.get(name, (0, 0.0))
         if clock() < not_before:

@@ -19,7 +19,7 @@ from osmbot.game import wallet as ledger
 from osmbot.game.timers import minutes_text, timer
 from osmbot.prematch.policy import (ANALYSIS_LEAD, LEAD, analysis_window, analyst_busy, can_scout, day_end, friendly_choices, friendly_event, friendlies_due,
                                     friendlies_missing, friendlies_played, in_window, needs_analysis, next_friendly_at,
-                                    next_opponent, scout_target, tour_start)
+                                    next_opponent, prep_record, scout_target, tour_start)
 
 FRIENDLY_PRODUCT = 62  # bosscoinproducts: "Friendly"
 FRIENDLY_PRICE = 4  # boss coins
@@ -29,6 +29,7 @@ PAUSE_BETWEEN_WRITES = 1.5  # seconds
 MAX_REFUSALS = 3  # refused friendlies per club per pass before giving up until the next pass (each moves on to another club)
 GAP_BETWEEN_FRIENDLIES = (3, 8)  # × PAUSE_BETWEEN_WRITES: a few seconds between friendlies, not a burst
 API_V11 = "https://web-api.onlinesoccermanager.com/api/v1.1"
+_PREP_LOGGED: dict[str, dict] = {}  # club -> the checklist last logged (a line only when it changes)
 COUNTS = {"friendlies": 0, "analyses": 0, "collected": 0}
 
 
@@ -292,6 +293,18 @@ def _note(client, base: str, week: int, now: float, opponent: int | None = None)
         pass
 
 
+def _log_prep(prep: dict, base: str, week: int, match: float, now: float) -> None:
+    """The checklist in ``logs/<PC>/preparacao`` in the last 4 h, a line each time it changes (owner, 2026-11-19);
+    the last line before the match is how it went into it. Never stops the pre-match."""
+    try:
+        line = prep_record(prep, base, week, match)
+        if _PREP_LOGGED.get(base) != line:
+            logs.record("preparacao", {**line, "faltam_min": round((match - now) / 60)})
+            _PREP_LOGGED[base] = line
+    except Exception:
+        pass
+
+
 def prepare_club(client, team: dict, base: str, confirm: bool, now: float, log=print, rng=random) -> tuple[int, float | None]:
     """One club: collect a finished analyst (any hour), the friendlies due by now, the specialists when the match is
     4 hours away or less and the analysis at 2 hours. Returns (failures, time to wake at)."""
@@ -333,6 +346,7 @@ def prepare_club(client, team: dict, base: str, confirm: bool, now: float, log=p
         except Exception as error:
             log(f"Especialistas ({team['name']}): erro ({error})")
         _, prep = client.get(f"{base}/matchpreparation")
+        _log_prep(prep, base, week, match, now)
         if not analysis_window(match, now):
             wakes.append(match - ANALYSIS_LEAD)  # the bot's analysis only in the last 2 h: before, it is the owner's
         elif on("analise") and needs_analysis(prep.get("steps") or [], sent, week, opponent):

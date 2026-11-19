@@ -317,3 +317,12 @@ def test_the_clients_switches_stop_the_friendlies_and_the_analysis_of_one_club(t
     client = FakeClient([step(7, 4), step(5, 0)], match_in=2 * 3600, friendlies=4)
     prepare(client)
     assert [p for p, _ in client.posts if p.endswith("/spyinstructions")]  # nothing set: everything on, as before
+
+
+def test_the_checklist_as_a_log_line():
+    from osmbot.prematch.policy import prep_record
+
+    prep = {"completionPercentage": 80, "steps": [{"type": 6, "progressAmount": 3, "completionAmount": 4},
+                                                  {"type": 7, "progressAmount": 0, "completionAmount": 1}]}
+    assert prep_record(prep, "leagues/1/teams/2", 12, 1000.4) == {
+        "clube": "leagues/1/teams/2", "semana": 12, "jogo": 1000, "pct": 80, "pontos": {"treinos": [3, 4], "amigável": [0, 1]}}

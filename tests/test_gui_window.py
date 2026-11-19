@@ -91,7 +91,7 @@ def test_atualizar_comes_first_in_ver_and_works_while_the_bot_works(window, monk
 
     view = next(menu.menu() for menu in window.menuBar().actions() if menu.text() == "Ver")
     names = [action.text() for action in view.actions() if not action.isSeparator()]
-    assert names[0] == "Atualizar" and names[1] == "Dados" and len(names) == 5  # Ver → Dados (2026-11-06); the pin and the language went to Definições (2026-11-13)
+    assert names[0] == "Atualizar" and names[1] == "Dados" and len(names) == 7 and "Vídeos" in names and "Vídeos na timeline" in names  # Vídeos na timeline (2026-11-19); Ver → Dados (2026-11-06); the pin and the language went to Definições (2026-11-13)
     session = tmp_path / "session.json"
     session.write_text("{}", encoding="utf-8")
     monkeypatch.setattr(browser, "STATE_FILE", session)

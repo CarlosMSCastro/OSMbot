@@ -186,3 +186,17 @@ def friendly_choices(teams: list[dict], matches: list[dict], team_id: int, week:
               if m["matchType"] == FRIENDLY_MATCH and m["weekNr"] == week and _involves(m, team_id)}
     played.add(next_opponent(matches, team_id, week))
     return [t["id"] for t in teams if t["id"] != team_id and t["id"] not in played]
+
+
+STEP_NAMES = {0: "onze", 1: "banco", 2: "posições", 3: "em forma", 4: "especialistas", 5: "análise", 6: "treinos",
+              7: "amigável", 8: "treino secreto", 9: "estágio"}  # matchpreparation step types (DISCOVERY.md section 3)
+
+
+def prep_record(prep: dict, base: str, week: int, match: float) -> dict:
+    """The game's pre-match checklist as one log line (owner, 2026-11-19: measure what the checklist is worth):
+    the total and each point as [done, needed], by name."""
+    points = {}
+    for step in prep.get("steps") or []:
+        name = STEP_NAMES.get(step.get("type"), str(step.get("type")))
+        points[name] = [step.get("progressAmount", 0), step.get("completionAmount", 1)]
+    return {"clube": base, "semana": week, "jogo": round(match), "pct": prep.get("completionPercentage"), "pontos": points}

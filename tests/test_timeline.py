@@ -74,3 +74,31 @@ def test_the_next_friendly_and_the_analysis_in_the_timeline():
     assert ("já", "Amigáveis") in rows(1, True, 10 * 3600)  # the 2nd was due 2 h ago
     assert ("2h00", "Amigáveis") in rows(3, False, 6 * 3600) and ("4h00", "Análise") in rows(3, False, 6 * 3600)
     assert not [t for _, t in rows(4, True, 6 * 3600) if "Amig" in t]
+
+
+def test_what_a_switch_turned_off_leaves_the_timeline():
+    """D-104 (owner, 2026-11-19): friendlies, analysis, doctor and videos turned off are not shown; the game's own
+    things (the match, a training ending) stay."""
+    snapshot = {"ads": {"shop": {"open": True}},
+                "clubs": [{"name": "A", "key": "1_2", "match": NOW + 20 * 3600,
+                           "prep": {"steps": [("Amigáveis (0)", False, None), ("Análise", False, None)]},
+                           "trainings": [{"name": "J1", "finish": NOW + 1800, "claimed": False}],
+                           "injured": [{"name": "J4", "until": NOW + 7200}]}]}
+
+    def titles(switches=None, account=None):
+        return {r["title"] for r in future_view(snapshot, NOW, switches, account)}
+
+    everything = titles()
+    assert {"Amigáveis", "Análise", "Médico: J4", "Vídeos da loja"} <= everything
+    off = titles({"1_2": {"automacoes": {"amigavel": False, "analise": False, "medico": False}}}, {"videos": False})
+    assert not off & {"Amigáveis", "Análise", "Médico: J4", "Vídeos da loja"}
+    assert {"Treino J1", "Jogo A"} <= off
+    assert "Amigáveis" not in titles({"1_2": {"ativo": False}})  # a club turned off: the bot does nothing in it
+
+
+def test_videos_can_leave_the_timeline_while_the_bot_still_tries_them():
+    """Ver → Vídeos na timeline off (owner, 2026-11-19): the videos are not shown, the rest is."""
+    snapshot = {"ads": {"shop": {"open": True}, "training": {"reopen": NOW + 600}},
+                "clubs": [{"name": "A", "trainings": [{"name": "J1", "finish": NOW + 1800, "claimed": False}]}]}
+    assert {"Vídeos da loja", "Acelerar treinos"} <= {r["title"] for r in future_view(snapshot, NOW)}
+    assert {r["title"] for r in future_view(snapshot, NOW, videos=False)} == {"Treino J1"}

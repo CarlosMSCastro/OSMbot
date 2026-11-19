@@ -186,6 +186,19 @@ def _wallet_amount(client) -> int:
     return wallet["amount"]
 
 
+STOP: Callable[[], bool] = lambda: False  # set by the loop: the window asked to stop (owner, 2026-11-19)
+
+
+def _wait(page, ms: int) -> None:
+    """A wait inside a video that gives way at once to a stop: a failing video used to hold the window's "Sair"
+    for minutes (90 s per try, the shop tried twice). The browser still closes (the callers' ``finally``)."""
+    if STOP():
+        raise KeyboardInterrupt
+    page.wait_for_timeout(ms)
+    if STOP():
+        raise KeyboardInterrupt
+
+
 AFTER_CLICK = 5000  # ms: the screenshot kept (only if the video then fails) to tell "never started" from "no coins"
 
 
@@ -213,14 +226,14 @@ def watch_shop_video(client, headless: bool = True) -> int:
             except Exception as error:
                 save_failure(page, "loja")
                 raise AdsError(f"botão da loja não encontrado ({type(error).__name__})") from error
-            page.wait_for_timeout(AFTER_CLICK)
+            _wait(page, AFTER_CLICK)
             try:
                 clicked = page.screenshot()
             except Exception:
                 clicked = None
             deadline = time.time() + WAIT_FOR_REWARD
             while time.time() < deadline:
-                page.wait_for_timeout(3000)
+                _wait(page, 3000)
                 gained = _wallet_amount(client) - before
                 if gained > 0:
                     break
@@ -437,7 +450,7 @@ def watch_training_video(client, club: str, session: dict, base: str, headless: 
                 raise AdsError(f"botão do vídeo de treino não encontrado ({type(error).__name__})") from error
             deadline = time.time() + WAIT_FOR_REWARD
             while time.time() < deadline:
-                page.wait_for_timeout(3000)
+                _wait(page, 3000)
                 if before - finishes() >= VIDEO_SAVES / 2:
                     break
             else:
@@ -525,7 +538,7 @@ def watch_money_video(client, club: str, headless: bool = True) -> None:
             deadline = time.time() + WAIT_FOR_REWARD
             claimed_by_hand = False
             while time.time() < deadline:
-                page.wait_for_timeout(3000)
+                _wait(page, 3000)
                 if page.locator(MONEY_DONE).count() > before:
                     break
                 if not claimed_by_hand and time.time() > deadline - WAIT_FOR_REWARD + 20:
