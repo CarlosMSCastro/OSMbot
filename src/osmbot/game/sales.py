@@ -8,6 +8,7 @@ from datetime import datetime
 from pathlib import Path
 
 from osmbot.board.info import purchases, settle_sales, track_sales
+from osmbot.game import wallet as ledger
 from osmbot.game.dashboard import money, span
 
 SALES_FILE = Path.home() / ".osmbot" / "sales.json"
@@ -76,6 +77,7 @@ def update(club_key: str, listed: dict[int, dict], squad: set[int], club: str = 
             pass
     if log is None:
         from osmbot.game.loop import _log as log  # the bot's log: ~/.osmbot/bot.log and the repo (D-022)
+    ledger.note_purchases([buy["name"] for buy in state.get("bought") or []])
     for line in describe(club, state):
         log(line)
     return state["sales"]

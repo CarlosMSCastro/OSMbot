@@ -20,8 +20,11 @@ from osmbot import logs
 
 FILE = Path.home() / ".osmbot" / "carteira.json"
 OUTSIDE = "fora do bot"
-ORDER = ("vídeos da loja", "recompensas", "amigáveis", "treinos acabados", "estádio", OUTSIDE)
+TRANSFERS = "transferências"  # players the owner signs by hand (1 token each, 5 for a black card in form; D-114)
+ORDER = ("vídeos da loja", "recompensas", "amigáveis", "treinos acabados", "estádio", TRANSFERS, OUTSIDE)
 _pending: dict[str, int] = {}
+_history: list[dict] = []  # this run's changes, for the window's "since the bot started" (D-114)
+_purchases: list[tuple[float, str]] = []  # players seen arriving, waiting for the drop of the wallet (time, name)
 _lock = threading.Lock()
 
 
@@ -30,6 +33,52 @@ def note(kind: str, amount: int) -> None:
     if amount:
         with _lock:
             _pending[kind] = _pending.get(kind, 0) + amount
+
+
+def since(start: float | None) -> list[dict] | None:
+    """The changes of the balance noted since ``start`` ({"t", "diff", "parts", "players"}); None when not started."""
+    if start is None:
+        return None
+    with _lock:
+        return [entry for entry in _history if entry["t"] >= start]
+
+
+PURCHASE_WINDOW = 20 * 60  # a purchase and the drop of the wallet are seen in either order, minutes apart
+
+
+def note_purchases(players: list[str], now: datetime | None = None) -> None:
+    """Players seen arriving in a squad by a transfer (``sales.update``). The wallet drops when the owner signs,
+    but the squad is read minutes later, so either order happens: a drop already noted as "fora do bot" in the last
+    20 min is moved to "transferências" (and corrected in the log); otherwise the players wait for the next drop.
+    [S] An owner's spend at the same moment is also put here."""
+    if not players:
+        return
+    now = now or datetime.now()
+    with _lock:
+        for entry in reversed(_history):
+            if now.timestamp() - entry["t"] > PURCHASE_WINDOW:
+                break
+            if entry["parts"].get(OUTSIDE, 0) < 0 and not entry.get("players"):
+                amount = entry["parts"].pop(OUTSIDE)
+                entry["parts"][TRANSFERS] = entry["parts"].get(TRANSFERS, 0) + amount
+                entry["players"] = list(players)
+                _correct(amount, list(players), now)
+                return
+        _purchases.extend((now.timestamp(), name) for name in players)
+
+
+def _correct(amount: int, players: list[str], now: datetime) -> None:
+    """The totals and the log say "transferências" for a drop first written as "fora do bot" (no change of balance)."""
+    state = _load()
+    if state.get("saldo") is None:
+        return
+    state["totais"] = add(state.get("totais") or {}, {TRANSFERS: amount, OUTSIDE: -amount})
+    try:
+        FILE.write_text(json.dumps(state, ensure_ascii=False), encoding="utf-8")
+    except OSError:
+        pass
+    logs.record("carteira", {"saldo": state["saldo"], "antes": state["saldo"], "diferenca": 0,
+                             "partes": {TRANSFERS: amount, OUTSIDE: -amount}, "jogadores": players}, now)
 
 
 SPENDING = ("amigáveis", "treinos acabados", "estádio")  # where the bot spends boss coins (and what a ceiling stops)
@@ -57,12 +106,13 @@ def cap_reached(price: int, cap: int | None, log=print, now: datetime | None = N
     return True
 
 
-def split(change: int, done: dict[str, int]) -> dict[str, int]:
-    """The change of the balance as the bot's kinds plus what is left, "fora do bot" (pure)."""
+def split(change: int, done: dict[str, int], purchases: int = 0) -> dict[str, int]:
+    """The change of the balance as the bot's kinds plus what is left, "fora do bot" (pure). With ``purchases`` (players
+    seen arriving), a drop that is left is "transferências"."""
     parts = {kind: amount for kind, amount in done.items() if amount}
     left = change - sum(parts.values())
     if left:
-        parts[OUTSIDE] = left
+        parts[TRANSFERS if purchases and left < 0 else OUTSIDE] = left
     return parts
 
 
@@ -94,6 +144,8 @@ def check(balance: int | None, log=None, now: datetime | None = None) -> None:
     with _lock:
         done = dict(_pending)
         _pending.clear()
+        _purchases[:] = [p for p in _purchases if now.timestamp() - p[0] <= PURCHASE_WINDOW]
+        bought = [name for _, name in _purchases]
     state = _load()
     if state.get("dia") and state["dia"] != today:
         if log and state.get("totais"):
@@ -102,9 +154,17 @@ def check(balance: int | None, log=None, now: datetime | None = None) -> None:
     state["dia"] = today
     before = state.get("saldo")
     if before is not None and (balance != before or done):
-        parts = split(balance - before, done)
+        parts = split(balance - before, done, len(bought))
+        if TRANSFERS in parts:
+            with _lock:
+                _purchases.clear()
         if parts:
-            logs.record("carteira", {"saldo": balance, "antes": before, "diferenca": balance - before, "partes": parts})
+            record = {"saldo": balance, "antes": before, "diferenca": balance - before, "partes": parts}
+            if TRANSFERS in parts:
+                record["jogadores"] = bought
+            logs.record("carteira", record)
+            with _lock:
+                _history.append({"t": now.timestamp(), "diff": balance - before, "parts": parts, "players": bought})
             state["totais"] = add(state.get("totais") or {}, parts)
     state["saldo"] = balance
     FILE.parent.mkdir(parents=True, exist_ok=True)

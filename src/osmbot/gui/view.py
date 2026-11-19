@@ -675,9 +675,25 @@ def _timer_row(label: str, info: dict | None, open_text: str, now: float) -> tup
     return label, "—", GREY
 
 
-def account_view(snapshot: dict, stats: dict | None, now: float) -> dict:
-    """The bottom panel: boss coins (and the gain since the bot started) and the timers of the account."""
+def coin_changes(entries: list[dict]) -> tuple[int, list[tuple[str | None, str, str | None]]]:
+    """The net change of the wallet since the bot started and one hover row per change, newest first
+    (owner, 2026-11-19): "09:35  -1 · -1 transferências (Torres)"."""
+    rows = []
+    for entry in sorted(entries, key=lambda e: e["t"], reverse=True):
+        causes = []
+        for kind, part in entry["parts"].items():
+            players = f" ({', '.join(entry['players'])})" if kind == "transferências" and entry.get("players") else ""
+            causes.append(f"{part:+d} {kind}{players}")
+        rows.append((None, f"{datetime.fromtimestamp(entry['t']):%H:%M}  {entry['diff']:+d} · " + " · ".join(causes),
+                     GREEN if entry["diff"] > 0 else RED))
+    return sum(entry["diff"] for entry in entries), rows
+
+
+def account_view(snapshot: dict, stats: dict | None, now: float, coins_log: list[dict] | None = None) -> dict:
+    """The bottom panel: boss coins (and the net change since the bot started, with what moved them in ``jump_tip``)
+    and the timers of the account. ``coins_log``: ``wallet.since``; without it, the shop videos' gain."""
     jump = coin_jump(snapshot, stats)
+    net, tip = (coin_changes(coins_log) if coins_log is not None and jump is not None else (jump, []))
     coins = f"{snapshot['coins']:,}".replace(",", " ") if snapshot.get("coins") is not None else "?"
     ads = snapshot.get("ads") or {}
     daily, videos = daily_view(snapshot.get("daily"), now)
@@ -686,7 +702,8 @@ def account_view(snapshot: dict, stats: dict | None, now: float) -> dict:
               _timer_row("Acelerar treinos", ads.get("training"), "disponível", now),
               _timer_row("Vídeos de dinheiro", ads.get("money"), "disponíveis", now),
               ("Reward cumulativo", *cumulative)]
-    return {"coins": coins, "jump": f"{jump:+d}" if jump is not None else "", "timers": timers, "daily": daily,
+    return {"coins": coins, "jump": f"{net:+d}" if net is not None else "", "jump_tip": tip,
+            "jump_colour": RED if net is not None and net < 0 else GREEN, "timers": timers, "daily": daily,
             "since": f"desde que o bot foi ligado ({span(now - stats['start'])})" if stats and stats.get("start") else ""}
 
 
@@ -820,7 +837,7 @@ def calendar_view(months: list[dict] | None, now: float, lang: str = "pt") -> di
 
 def board_view(snapshot: dict | None, stats: dict | None, now: float, doing: dict | None = None,
                history: list[dict] | None = None, lang: str = "pt", switches: dict | None = None,
-               account: dict | None = None, videos: bool = True) -> dict | None:
+               account: dict | None = None, videos: bool = True, coins_log: list[dict] | None = None) -> dict | None:
     """Everything the window shows for one moment (None while there is nothing read yet). ``switches`` and
     ``account`` (D-104) leave out of the timeline what the client turned off."""
     if not snapshot:
@@ -830,7 +847,7 @@ def board_view(snapshot: dict | None, stats: dict | None, now: float, doing: dic
     daily = [(kind, text, colour, tips.get(which, []))
              for which, kind, text, colour in _daily_parts(snapshot.get("daily") or {}, now, lang)]
     return {"clubs": [club_view(c, now, shortened) for c in snapshot["clubs"]],
-            "account": account_view(snapshot, stats, now), "next": next_check(snapshot, now),
+            "account": account_view(snapshot, stats, now, coins_log), "next": next_check(snapshot, now),
             "doing": doing_view(snapshot, doing, now),
             "daily": [piece for piece in daily if piece[0] != "waiting"],  # the new day is on the timeline
             "event": calendar_view(snapshot.get("calendar"), now, lang),

@@ -572,3 +572,18 @@ def test_a_club_read_again_on_its_own_outlives_an_older_full_reading():
     later = {"read_at": 400, "clubs": [{"name": "A", "read_at": 400, "step": "newer"}, {"name": "B", "read_at": 400}]}
     assert newest(later, shown) is later  # a full reading after the hover wins whole
     assert newest(None, bot) is bot and newest(bot, None) is bot
+
+
+def test_the_coins_change_is_the_net_of_the_wallet_with_a_hover_per_change():
+    from osmbot.gui.view import coin_changes
+
+    snap = {"coins": 3400, "clubs": [club()], "ads": {}, "daily": {}}
+    log = [{"t": NOW - 300, "diff": -1, "parts": {"transferências": -1}, "players": ["Torres"]},
+           {"t": NOW - 100, "diff": 3, "parts": {"vídeos da loja": 3}, "players": []}]
+    net, rows = coin_changes(log)
+    assert net == 2 and rows[0][1].endswith("+3 · +3 vídeos da loja") and rows[0][2] == GREEN
+    assert rows[1][1].endswith("-1 · -1 transferências (Torres)") and rows[1][2] == "red"
+    down = account_view(snap, {"start": NOW - 600}, NOW, log[:1])
+    assert down["jump"] == "-1" and down["jump_colour"] == "red" and len(down["jump_tip"]) == 1
+    assert account_view(snap, {"start": NOW - 600}, NOW, [])["jump"] == "+0"
+    assert account_view(snap, None, NOW, [])["jump"] == ""

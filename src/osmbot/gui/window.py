@@ -2578,6 +2578,7 @@ class MainWindow(QMainWindow):
         side.setSpacing(14)
         coins = QFrame()
         coins.setObjectName("coins")
+        self.coins_frame = coins
         across = QHBoxLayout(coins)  # the numbers on the left, the boss coin big on the right (owner, 2026-10-10)
         across.setContentsMargins(20, 14, 16, 14)
         box = QVBoxLayout()
@@ -3050,16 +3051,21 @@ class MainWindow(QMainWindow):
             return
         running = self.running()
         from osmbot import settings
+        from osmbot.game import wallet
 
         view = board_view(self.payload.get("snapshot"), self.payload.get("stats") if running else None, now,
                           self.payload.get("doing") if running else None, self.payload.get("history") if running else None,
-                          language(), settings.load(), settings.load_account(), get_pref("timeline_videos", True) is not False)
+                          language(), settings.load(), settings.load_account(), get_pref("timeline_videos", True) is not False,
+                          wallet.since((self.payload.get("stats") or {}).get("start")) if running else None)
         if not view:
             return
         self._show_clubs(view["clubs"])
         account = view["account"]
         self.coins.setText(account["coins"])
         self.coins_jump.setText(account["jump"])
+        self.coins_jump.setStyleSheet(f"color:{COLOURS[account['jump_colour']]};")  # red when the wallet went down
+        self.coins_frame.setToolTip(tip_html([(icon_, tr(text), colour) for icon_, text, colour in account["jump_tip"]],
+                                             tr("Desde que o bot foi ligado")) if account["jump_tip"] else "")
         self.coins_since.setText(tr(account["since"]))
         self.daily.show_steps([(kind, tr(text), colour, tip) for kind, text, colour, tip in view["daily"]])  # tip: rows
         self.event_label.show_calendar(view["event"])

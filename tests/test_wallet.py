@@ -28,3 +28,32 @@ def test_check_records_each_change_and_writes_the_day_before_s_summary(monkeypat
     assert len(recorded) == 1 and said == []
     wallet.check(95, said.append, datetime(2026, 10, 29, 9))
     assert said == ["Boss coins (2026-10-28): -4 amigáveis · -6 fora do bot · saldo 90"]
+
+
+def test_a_drop_with_a_purchase_seen_is_transfers_not_outside():
+    from osmbot.game import wallet
+
+    assert wallet.split(-5, {}, 1) == {"transferências": -5}
+    assert wallet.split(-5, {}, 0) == {"fora do bot": -5}
+    assert wallet.split(3, {}, 1) == {"fora do bot": 3}  # a gain is never a transfer's
+
+
+def test_a_purchase_seen_after_the_drop_moves_it_to_transfers(tmp_path, monkeypatch):
+    from datetime import datetime, timedelta
+
+    from osmbot.game import wallet
+
+    monkeypatch.setattr(wallet, "FILE", tmp_path / "carteira.json")
+    monkeypatch.setattr(wallet.logs, "record", lambda *a, **k: None)
+    monkeypatch.setattr(wallet, "_history", [])
+    monkeypatch.setattr(wallet, "_purchases", [])
+    t0 = datetime(2026, 11, 19, 12, 0)
+    wallet.check(100, now=t0)
+    wallet.check(99, now=t0 + timedelta(minutes=1))  # the drop first: "fora do bot"
+    assert wallet._history[-1]["parts"] == {"fora do bot": -1}
+    wallet.note_purchases(["Torres"], now=t0 + timedelta(minutes=4))  # the squad is read later
+    assert wallet._history[-1]["parts"] == {"transferências": -1} and wallet._history[-1]["players"] == ["Torres"]
+    assert wallet._load()["totais"] == {"transferências": -1, "fora do bot": 0}
+    wallet.note_purchases(["Konan"], now=t0 + timedelta(minutes=10))  # the purchase first, the drop after
+    wallet.check(98, now=t0 + timedelta(minutes=11))
+    assert wallet._history[-1]["parts"] == {"transferências": -1} and wallet._history[-1]["players"] == ["Konan"]
