@@ -2,6 +2,13 @@
 
 Entradas mais recentes primeiro. Cada sessão: o que se fez · o que ficou por fazer · próximo passo.
 
+## 2026-11-19 (tarde) — Análise de outro clube: gravar o motivo da recusa (PT-LA-02-0095-N)
+
+- **Pergunta do dono:** "Análise de outro clube: o jogo recusou" já tinha acontecido? Sim: 8 vezes desde 2026-11-02, sempre 400 (KV Mechelen→Club Brugge, Real Betis→Konyaspor, Real Betis→Liverpool FC em 11-18 e 11-19, FK Imishli→Neftchi/Sabah). O motivo não estava registado.
+- **Feito:** `prematch._scout` regista agora a resposta do jogo (estado + corpo, até 300 caracteres) numa linha própria do registo, antes do aviso. Linha sem `!`, não vai para a janela de avisos. Testes: 633 verdes.
+- **Vídeo da loja na janela Vídeos:** já aparecia (linha `loja · falhou`); sem alteração.
+- **Próximo passo:** na próxima recusa, ler `resposta do jogo` em `logs/<PC>/AAAA-MM-DD.log` e ver se o motivo é o alvo ou o analista.
+
 ## 2026-11-19 — Sem vídeos: o que gasta boss coins (DESKTOP-KAM70RR, só leitura, conversa)
 
 - **Contexto:** os vídeos da loja não dão nada desde 2026-11-17 (VAST vazio, ver 2026-11-18). Disfarçar o navegador ou automatizar uma janela aberta continua recusado (regra 8). Ver os vídeos à mão não compensa: eram ~60/dia por PC, a 1 coin cada.

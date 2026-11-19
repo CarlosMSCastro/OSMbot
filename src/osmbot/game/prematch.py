@@ -10,6 +10,7 @@ A refused request is noted and not repeated this round (D-032): a refused oppone
 """
 from __future__ import annotations
 
+import json
 import random
 import time
 
@@ -268,11 +269,14 @@ def _scout(client, team: dict, base: str, league: str, week: int, match: float |
     if not confirm:
         log(f"{team['name']}: enviaria o analista a {name} (outro clube)")
         return 0, None
-    status, _ = client.post(f"{base}/spyinstructions", {"instructionTeamId": club, "timerGameSettingId": setting})
+    status, body = client.post(f"{base}/spyinstructions", {"instructionTeamId": club, "timerGameSettingId": setting})
     time.sleep(PAUSE_BETWEEN_WRITES)
     if status == 200:
         COUNTS["scouted"] = COUNTS.get("scouted", 0) + 1
         return 0, now + minutes * 60
+    # the game's own reason, to learn why it refuses (owner, 2026-11-19)
+    reason = body if isinstance(body, str) else json.dumps(body, ensure_ascii=False)
+    log(f"Análise de outro clube: resposta do jogo ({status}): {reason[:300] or 'vazia'}")
     if refusals.is_refusal(status):
         refusals.refuse(key, log, f"! Análise de outro clube: o jogo recusou ({team['name']} → {name}, {status}); "
                         "volto a tentar na próxima jornada", week=week)
