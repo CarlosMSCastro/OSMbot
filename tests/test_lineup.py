@@ -578,3 +578,16 @@ def test_resting_before_the_undrawn_play_off():
     warned = rest_warnings(players, *pair)
     assert [(w["name"], w["fitness"], w["then"], w["second"]) for w in warned] == [
         ("van Dijk", 81, 77, "adversário dos oitavos-de-final (por sortear)")]
+
+
+def test_away_before_the_analysis_of_a_human_with_close_strengths_the_5_2_3_serves_too():
+    """D-115 (owner, 2026-11-20): his login boosts are only known after the analysis, so the 5-2-3 is right too."""
+    five = {"formation": 523, "formationDetail": "B", "style": 2}
+    b = {"formation": 433, "formationDetail": "B", "style": 2}
+    assert tactic_warnings(five, 100, 99, [], True) == ["Formação 5-2-3: devia ser 4-3-3 B (fora de casa)"]  # as before
+    assert tactic_warnings(five, 100, 99, [], True, unseen=True) == []
+    assert tactic_notes(five, [], 100, 99, True, unseen=True) == [
+        "5-2-3 aceite: fora, forças parecidas e a análise dele ainda não foi feita"]
+    assert tactic_warnings(b, 100, 99, [], True, unseen=True) == []  # the rule stays right
+    assert tactic_warnings(five, 100, 99, [], False, unseen=True) != []  # at home no
+    assert tactic_warnings(five, 110, 100, [], True, unseen=True) != []  # we are more than 5 % above: no

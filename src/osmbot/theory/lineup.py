@@ -261,6 +261,7 @@ def _names(choices: list[tuple]) -> str:
 
 CLEARLY_STRONGER = 0.12  # more than 12 % stronger (match strength; measured in 572 matches, D-074): the 4-3-3 A away, the offside trap, only the 5-2-3 or the 5-4-1
 HIS_523 = 523  # a human who played the 5-2-3 against us: the 5-3-2, the author's answer (D-100)
+UNSEEN_MARGIN = 0.05  # [S] away, before the analysis of a human: close = we are not more than 5 % above his estimate (D-115)
 CLEARLY_WEAKER_FIVE = (523, 541)  # 5 at the back against a clearly stronger opponent (D-070; the 5-4-1 too, D-098)
 
 
@@ -281,13 +282,14 @@ def _wanted(mine: float | None, opponent: float | None, away: bool) -> list[str]
 
 def _plan(tactic: dict | None, players: list[dict] | None, mine: float | None, opponent: float | None,
           away: bool = False,
-          vs_us: dict | None = None) -> tuple[list[str], list[str], tuple[str, int, str | None] | None]:
+          vs_us: dict | None = None, unseen: bool = False) -> tuple[list[str], list[str], tuple[str, int, str | None] | None]:
     """The "Onze" step on the formation (THEORY.md section 1): (warnings, notes on what is right on purpose, the
     formation to switch to when the one set is out of the rule). Only formations the squad can play are asked for
     (owner, 2026-10-29): 5 defenders against a stronger opponent (only the 5-2-3 or the 5-4-1 against a clearly stronger one), else
     the 4-3-3 A at home (the B too) and the B away, and when the squad cannot play those, ``INSTEAD``. ``vs_us``: a
     human's last official match against us (``tactics.against_us``): against his 5-2-3, the 5-3-2 when neither side is
-    clearly stronger (owner, 2026-11-10, D-100)."""
+    clearly stronger (owner, 2026-11-10, D-100). ``unseen``: a human opponent not analysed yet: his login boosts are
+    only known after the analysis, so away with close strengths the 5-2-3 serves too (owner, 2026-11-20, D-115)."""
     if not tactic:
         return [], [], None
     current, code = formation_name(tactic), tactic.get("formation")
@@ -336,7 +338,14 @@ def _plan(tactic: dict | None, players: list[dict] | None, mine: float | None, o
             return [], ["4-3-3 B aceite: em casa a regra é o 4-3-3 A"] + fallback, None
         note = (f"4-3-3 A aceite: fora, mas claramente mais forte (+{mine / opponent - 1:.0%})"
                 if away and current == Formation.F433_A.value and _clearly_stronger(mine, opponent) else None)
-        warnings, notes, other = judge(able, rule, _names(able) + where, note)
+        if (away and unseen and mine and opponent and mine <= opponent * (1 + UNSEEN_MARGIN)
+                and not _lacks(523, None, players)):  # his boosts are not in the estimate yet (D-115)
+            five = ("5-2-3", 523, None)
+            warnings, notes, other = judge(able + [five], rule + [five], _names(able) + where + " ou 5-2-3",
+                                           "5-2-3 aceite: fora, forças parecidas e a análise dele ainda não foi feita"
+                                           if set_(five) else note)
+        else:
+            warnings, notes, other = judge(able, rule, _names(able) + where, note)
         return warnings, notes + (fallback if not warnings else []), other
     gone = _short(list(WATCHED), players or [])
     get = [GET_ONE] if MIDDLE.keys() <= gone.keys() else []
@@ -356,27 +365,27 @@ def _plan(tactic: dict | None, players: list[dict] | None, mine: float | None, o
 
 
 def tactic_notes(tactic: dict | None, players: list[dict] | None, mine: float | None, opponent: float | None,
-                 away: bool = False, vs_us: dict | None = None) -> list[str]:
+                 away: bool = False, vs_us: dict | None = None, unseen: bool = False) -> list[str]:
     """What the tactics do differently from the rule, on purpose and within it (the step stays green): the 4-3-3 B
     for want of an MO, the 4-4-2 B (or 5-3-2, 3-5-2) for want of wingers, the 3-4-3 (or 3-5-2) for want of full-backs,
     the 5-2-3 A or 4-2-4 for want of both an MO and an MDC, the 4-3-3 A away when clearly stronger, the 4-3-3 B at home
     (THEORY.md section 1)."""
-    return _plan(tactic, players, mine, opponent, away, vs_us)[1]
+    return _plan(tactic, players, mine, opponent, away, vs_us, unseen)[1]
 
 
 def tactic_warnings(tactic: dict | None, mine: float | None, opponent: float | None,
                     players: list[dict] | None = None, away: bool = False,
-                    vs_us: dict | None = None) -> list[str]:
+                    vs_us: dict | None = None, unseen: bool = False) -> list[str]:
     """What is out of the rule in the formation (the tackling went to the "Tática" step, ``tactic_check``): see
     ``_plan``. ``opponent``: before the analysis an estimate (THEORY.md section 1); None when unknown."""
-    return _plan(tactic, players, mine, opponent, away, vs_us)[0]
+    return _plan(tactic, players, mine, opponent, away, vs_us, unseen)[0]
 
 
 def _suggested(tactic: dict, players: list[dict] | None, mine: float | None, opponent: float | None, away: bool,
-               vs_us: dict | None = None) -> tuple[str, int, str | None] | None:
+               vs_us: dict | None = None, unseen: bool = False) -> tuple[str, int, str | None] | None:
     """The formation the "Onze" step asks for when the one set is out of the rule (``tactic_warnings``): its name,
     code and detail, for the "Tática" step to say what the instructions would be; None when it is right."""
-    return _plan(tactic, players, mine, opponent, away, vs_us)[2]
+    return _plan(tactic, players, mine, opponent, away, vs_us, unseen)[2]
 
 
 FIELDS = (("Estilo de jogo", "overallMatchTactics", "plan", PLANS), ("Defesa", "defense", "defense", DEFENSE),
@@ -405,7 +414,7 @@ def tactic_check(tactic: dict | None, strictness: int | None, mine: float | None
                  players: list[dict] | None = None, away: bool = False,
                  forwards: int | None = None, counter: bool = False, cpu: bool = False,
                  his: tuple[int, str] | None = None, vs_us: dict | None = None,
-                 his_formation: int | None = None) -> tuple[list[str], list[str], bool]:
+                 his_formation: int | None = None, unseen: bool = False) -> tuple[list[str], list[str], bool]:
     """The "Tática" step (owner, 2026-10-28, D-073; THEORY.md 2 and 21): the instructions, the sliders and the tackling
     set in the game against the rule for the formation that is set. Returns (warnings, notes, known): a warning per
     field out of the rule, "Pressão: 45, devia ser 60–80 (~75)"; notes with what the formation the "Onze" step asks for
@@ -441,7 +450,7 @@ def tactic_check(tactic: dict | None, strictness: int | None, mine: float | None
     if accepted and style is not None and style not in accepted:
         wanted = " ou ".join(TACKLING[s] for s in sorted(accepted))
         warnings.append(f"Desarme: {TACKLING.get(style, style)}, devia ser {wanted} (árbitro {REFEREES[strictness]})")
-    other = _suggested(tactic, players, mine, opponent, away, vs_us)
+    other = _suggested(tactic, players, mine, opponent, away, vs_us, unseen)
     if other and (better := instructions(other[1], other[2], **context)):
         notes.append(f"Se mudares para {other[0]}:")
         notes += [f"{label}: {_rule(getattr(better, field), names)}" for label, _, field, names in FIELDS]

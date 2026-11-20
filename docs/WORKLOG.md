@@ -2,6 +2,11 @@
 
 Entradas mais recentes primeiro. Cada sessão: o que se fez · o que ficou por fazer · próximo passo.
 
+## 2026-11-20 — 5-2-3 fora, antes da análise de um humano (PT-LA-02-0095-N)
+- **Dono:** no Imishli o aviso pedia 4-3-3 B fora contra o Sumgayit (1.º, humano). Os registos davam-no ~9–12 % mais forte, mas a estimativa antes da análise não tem os bónus de login dele.
+- **Feito (D-115):** antes da análise de um humano, fora, com forças parecidas (nós ≤ +5 %), o 5-2-3 serve também. `lineup.py`, `clubinfo.py`, teste novo, `THEORY.md` §1, `DECISIONS.md`. 637 testes; pyflakes limpo.
+- **Por medir:** `523fora` (amostra curta). **Por instalar:** só vale com a versão nova.
+
 ## 2026-11-19 (tarde) — Análise de outro clube: gravar o motivo da recusa (PT-LA-02-0095-N)
 
 - **Pergunta do dono:** "Análise de outro clube: o jogo recusou" já tinha acontecido? Sim: 8 vezes desde 2026-11-02, sempre 400 (KV Mechelen→Club Brugge, Real Betis→Konyaspor, Real Betis→Liverpool FC em 11-18 e 11-19, FK Imishli→Neftchi/Sabah). O motivo não estava registado.

@@ -6,3 +6,4 @@
 {"t":1795021995,"evento":"pôr","tipo":"doctor","clube":"leagues/215028346/teams/9","semana":28,"jogador":926818767,"nome":"Akliouche","antes":{"fora":2,"lesao":29,"suspensao":0}}
 {"t":1795081231,"evento":"levantar","tipo":"doctor","clube":"leagues/229039036/teams/12","semana":5,"caso":11871348,"jogador":990744287,"nome":"Cucurella","antes":{"fora":2,"lesao":13,"suspensao":0},"depois":{"fora":1,"lesao":13,"suspensao":0}}
 {"t":1795081233,"evento":"pôr","tipo":"doctor","clube":"leagues/229039036/teams/12","semana":5,"jogador":990744287,"nome":"Cucurella","antes":{"fora":1,"lesao":13,"suspensao":0}}
+{"t":1795110068,"evento":"levantar","tipo":"doctor","clube":"leagues/229039036/teams/12","semana":5,"caso":11871895,"jogador":990744287,"nome":"Cucurella","antes":{"fora":1,"lesao":13,"suspensao":0},"depois":{"fora":0,"lesao":0,"suspensao":0}}

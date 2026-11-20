@@ -544,3 +544,10 @@
 {"t":1795081690,"saldo":3463,"antes":3466,"diferenca":-3,"partes":{"fora do bot":-3}}
 {"t":1795088068,"saldo":3462,"antes":3463,"diferenca":-1,"partes":{"fora do bot":-1}}
 {"t":1795092022,"saldo":3461,"antes":3462,"diferenca":-1,"partes":{"fora do bot":-1}}
+{"t":1795105524,"saldo":3464,"antes":3461,"diferenca":3,"partes":{"recompensas":3}}
+{"t":1795109261,"saldo":3462,"antes":3464,"diferenca":-2,"partes":{"transferências":-2},"jogadores":["Torp","Lacroix"]}
+{"t":1795109335,"saldo":3460,"antes":3462,"diferenca":-2,"partes":{"transferências":-2},"jogadores":["Satriano","Cubas"]}
+{"t":1795111080,"saldo":3447,"antes":3460,"diferenca":-13,"partes":{"fora do bot":-13}}
+{"t":1795147248,"saldo":3452,"antes":3447,"diferenca":5,"partes":{"recompensas":5}}
+{"t":1795165394,"saldo":3449,"antes":3452,"diferenca":-3,"partes":{"transferências":-3},"jogadores":["Hincapié"]}
+{"t":1795165574,"saldo":3447,"antes":3449,"diferenca":-2,"partes":{"transferências":-2},"jogadores":["Kane","Dimarco"]}
