@@ -2140,6 +2140,7 @@ class Bridge(QObject):
     club = Signal(object)  # one club read again (its card hovered)
     login = Signal(str)
     logo = Signal(str)
+    stop = Signal()  # "/parar" on Telegram (D-116): the same as Sair in the tray
 
 
 class NoticesWindow(QWidget):
@@ -2467,6 +2468,8 @@ class MainWindow(QMainWindow):
         self.reader = QTimer(self)
         self.reader.timeout.connect(self.auto_read)
         self.reader.start(READ_EVERY * 1000)
+        self.bridge.stop.connect(self.quit_app)
+        self._listen_to_telegram()
         self.go(START)
 
     # ---- the three faces ------------------------------------------------------------------------------------
@@ -2795,6 +2798,35 @@ class MainWindow(QMainWindow):
     # ---- state ----------------------------------------------------------------------------------------------
     def running(self) -> bool:
         return self.worker is not None and self.worker.is_alive()
+
+    def _listen_to_telegram(self) -> None:
+        """``/estado`` and ``/parar <PC>`` from the owner's Telegram (D-116). Reads only; a failed look is just tried again."""
+        from osmbot.notify import commands
+
+        def stop() -> None:
+            try:
+                from osmbot.game.loop import _log
+
+                _log("Telegram: /parar recebido, a fechar")
+            except Exception:
+                pass
+            self.bridge.stop.emit()  # from this thread to the window's
+
+        def uptime() -> float | None:
+            started = self.started_at
+            return time.time() - started if started and self.running() else None
+
+        commander = commands.default(commands.pc_name(), uptime, stop)
+
+        def work() -> None:
+            while True:
+                time.sleep(commands.POLL_EVERY)
+                try:
+                    commander.poll_once()
+                except Exception:
+                    pass  # no connection or a bad answer: the next look tries again
+
+        threading.Thread(target=work, name="osmbot-telegram-commands", daemon=True).start()
 
     def refresh_state(self) -> None:
         from osmbot.game.browser import STATE_FILE

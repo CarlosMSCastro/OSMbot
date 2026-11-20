@@ -2,6 +2,13 @@
 
 Entradas mais recentes primeiro. Cada sessão: o que se fez · o que ficou por fazer · próximo passo.
 
+## 2026-11-20 (tarde) — `/parar` no Telegram (PT-LA-02-0095-N)
+- **Versão 0.20.0 (pedido do dono):** `pyproject`, `__init__`, `CHANGELOG` (D-108 a D-116), `README`, `dist/release-notes-v0.20.0.md`. **Dist 0.20.0 feito aqui:** `build_portable.py --zip --installer` → `dist/windows/` (portátil 530 MB, zip 206 MB, instalador 148 MB; `notify/commands.py` e `__version__` 0.20.0 confirmados dentro); os builds e as notas da 0.19.1 apagados. **Por fazer (dono):** commit, push, tag e `gh release create`.
+- **Dono:** deixou o bot ligado no PC do trabalho; quer fechá-lo à distância. Escolheu o Telegram, um só bot, só parar.
+- **Feito (D-116):** `notify/commands.py` (`/parar <PC>`, `/estado`, só o `chat_id` do dono), ligado à janela por `Bridge.stop` → `quit_app`. 648 testes.
+- **Nomes (dono):** `PCTrabalho` e `PCCasa`, em Definições → Telegram… → "Nome deste PC"; este PC já ficou `PCTrabalho`. 649 testes.
+- **Por testar:** no PC real, com `/estado` e `/parar PCTrabalho`. Em casa, colar o mesmo token no wizard. **Por instalar** (só vale com a versão nova). Sem commit nem versão (regra 9).
+
 ## 2026-11-20 — 5-2-3 fora, antes da análise de um humano (PT-LA-02-0095-N)
 - **Dono:** no Imishli o aviso pedia 4-3-3 B fora contra o Sumgayit (1.º, humano). Os registos davam-no ~9–12 % mais forte, mas a estimativa antes da análise não tem os bónus de login dele.
 - **Feito (D-115):** antes da análise de um humano, fora, com forças parecidas (nós ≤ +5 %), o 5-2-3 serve também. `lineup.py`, `clubinfo.py`, teste novo, `THEORY.md` §1, `DECISIONS.md`. 637 testes; pyflakes limpo.

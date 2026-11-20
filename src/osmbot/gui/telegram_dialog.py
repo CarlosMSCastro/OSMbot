@@ -11,8 +11,8 @@ from PySide6.QtGui import QColor, QDesktopServices, QImage, QPainter, QPixmap
 from PySide6.QtWidgets import (QApplication, QCheckBox, QDialog, QFrame, QHBoxLayout, QLabel, QLineEdit, QPushButton,
                                QScrollArea, QVBoxLayout, QWidget)
 
-from osmbot.i18n import tr
-from osmbot.notify import qr, rules, telegram
+from osmbot.i18n import get_pref, set_pref, tr
+from osmbot.notify import commands, qr, rules, telegram
 
 MUTED, GOOD, BAD = "#8f95b8", "#5cd17a", "#ff6b6b"
 POLL_MS = 2000
@@ -105,6 +105,12 @@ class TelegramDialog(QDialog):
         line.setFixedHeight(1)
         line.setStyleSheet("background:#2d3366;")
         layout.addWidget(line)
+        layout.addWidget(self._step(tr("Nome deste PC")))
+        layout.addWidget(self._note(tr("Aparece nas mensagens e serve no /parar (ex.: /parar PCTrabalho). Com vários PCs, dá um nome a cada um.")))
+        self.pc_field = QLineEdit(get_pref("nome_pc", "") or "")
+        self.pc_field.setPlaceholderText(commands.pc_name(""))
+        self.pc_field.editingFinished.connect(lambda: set_pref("nome_pc", commands.pc_name(self.pc_field.text(), "")))
+        layout.addWidget(self.pc_field)
         layout.addWidget(self._step(tr("O que queres receber")))
         alerts = self.config.get("avisos") or {}
         self.boxes = {}

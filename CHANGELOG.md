@@ -4,6 +4,21 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-PT/1.1.0/); 
 
 Este ficheiro é o **histórico de versões, para quem lê o repo**. O diário interno de cada sessão de trabalho está em [`docs/WORKLOG.md`](docs/WORKLOG.md).
 
+## [0.20.0] — 2026-11-20
+
+O bot passa a falar contigo no Telegram: avisa o que importa e fecha-se à distância com `/parar`. A formação fora de casa contra um humano ainda por analisar aceita também o 5-2-3, e os vídeos ficam menos expostos às falhas do Google.
+
+### Adicionado
+- **Notificações no Telegram (D-110):** Definições → Telegram… guia-te (criar o teu bot, colar o token, carregar em Start, mensagem de teste) e escolhes o que receber: jogo passado (sem resultado), pré-jogo a 1 h se houver algo laranja ou por marcar, vendas, o adversário com estágio ou treino secreto e os erros que param o bot. O token fica só neste PC.
+- **`/parar <PC>` e `/estado` (D-116):** do telemóvel, `/parar PCTrabalho` fecha o bot como o "Sair" do ícone junto ao relógio (acaba o passo em curso) e `/estado` diz o que cada PC está a fazer. Um só bot para vários PCs: cada PC só obedece ao seu nome, que escolhes em Definições → Telegram… → "Nome deste PC". Só lê mensagens do teu chat; comandos com mais de 2 min são ignorados.
+- **Registos dos vídeos e da checklist (D-113):** o que o bot tentou, o que o Google deu e o que ficou por fazer, para estudar as falhas.
+- **Carteira (D-114):** as transferências ficam separadas e as boss coins na janela mostram o saldo líquido; a análise de outro clube grava o motivo da recusa do jogo.
+
+### Alterado
+- **5-2-3 fora de casa (D-115):** contra um humano ainda sem análise, com forças parecidas (a tua não mais de 5 % acima), o 5-2-3 serve também, porque os bónus de login dele só se veem depois da análise.
+- **Humano que nunca nos jogou (D-108, D-109):** conta o provável onze dele; contra o 5-2-3 aceita o 5-3-2 ou o 4-3-3, e o 5-3-2 só pede 5 defesas em forma, não 7 no plantel.
+- **Vídeos (D-111, D-112, D-113):** o browser guarda os cookies dos anúncios entre vídeos; sem vídeos a passar, os amigáveis e o boost ficam desligados nos botões e fechar já não espera pelos vídeos.
+
 ## [0.19.1] — 2026-11-16
 
 O "a poupar" avisa também antes de uma eliminatória por sortear, o analista incomoda menos os outros treinadores, e entram nas notas as mudanças de formação e tática das últimas duas semanas, que a 0.19.0 já trazia.
