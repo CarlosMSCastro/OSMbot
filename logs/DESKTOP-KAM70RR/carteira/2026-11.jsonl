@@ -820,3 +820,8 @@
 {"t":1795027987,"saldo":3475,"antes":3479,"diferenca":-4,"partes":{"amigáveis":-4}}
 {"t":1795028634,"saldo":3471,"antes":3475,"diferenca":-4,"partes":{"fora do bot":-4}}
 {"t":1795028854,"saldo":3470,"antes":3471,"diferenca":-1,"partes":{"fora do bot":-1}}
+{"t":1795056273,"saldo":3473,"antes":3470,"diferenca":3,"partes":{"fora do bot":3}}
+{"t":1795056715,"saldo":3467,"antes":3473,"diferenca":-6,"partes":{"fora do bot":-6}}
+{"t":1795057441,"saldo":3468,"antes":3467,"diferenca":1,"partes":{"vídeos da loja":1}}
+{"t":1795060863,"saldo":3473,"antes":3468,"diferenca":5,"partes":{"recompensas":5}}
+{"t":1795201398,"saldo":3428,"antes":3473,"diferenca":-45,"partes":{"transferências":-45},"jogadores":["Kane","Dimarco","Bijol","Saka","Hincapié","Lopy","Molumby","Konan","Isak","Torp","Lacroix","Neymar","L. Martínez","Paquetá"]}
