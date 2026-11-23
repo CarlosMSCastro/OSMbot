@@ -2,8 +2,16 @@
 
 Entradas mais recentes primeiro. Cada sessão: o que se fez · o que ficou por fazer · próximo passo.
 
+## 2026-11-23 — Verificação semanal (PT-LA-02-0095-N, só leitura)
+- Corrida de `tools/verificar_teoria.py` (1213 jogos) + medições à mão; tudo em `VERIFICACAO.md` (2026-11-23).
+- **Levado ao dono:** não bate `cantos` (continua), `vermelhos` e `venda150` (por 0,3 h); pronto a decidir `523fora` (a favor do 4-3-3) e `vs523` (B 2,25 > A 1,45).
+- **Dono:** "explicas bué mal": voltei a explicar sem siglas. Respostas: cantos fica a testar; vermelhos ver mais tarde; 5-2-3 fora fica; 5-3-2 contra 5-2-3 continua aceite.
+- **Comentador do fim do jogo (pergunta do dono):** queixa-se de 3 papéis no mesmo jogador, não de 2 (`DISCOVERY.md` §3). **Feito (D-118):** nunca 3 papéis; os livres passam para o 2.º com mais ataque (escolha do dono). `theory/specialists.py`, `THEORY.md` §4, 3 testes novos (e 1 antigo acertado: tinha um trio sem querer).
+- **Vendas, todas as ligas (pedido do dono):** verificação nova `vendaliga` com `transferencias/motor`: acima de 150 M, 75 % vende em ~21 h, 100 % em ~57 h · **bate** (D-071 fica). `checks/theory.league_sales`, `tools/verificar_teoria.py`, teste em `test_checks.py`. 654 testes; pyflakes limpo.
+- **Por instalar:** a D-118 só vale com a versão nova. Próxima corrida ~2026-11-30.
+
 ## 2026-11-20 (tarde) — `/parar` no Telegram (PT-LA-02-0095-N)
-- **Versão 0.20.0 (pedido do dono):** `pyproject`, `__init__`, `CHANGELOG` (D-108 a D-116), `README`, `dist/release-notes-v0.20.0.md`. **Dist 0.20.0 feito aqui:** `build_portable.py --zip --installer` → `dist/windows/` (portátil 530 MB, zip 206 MB, instalador 148 MB; `notify/commands.py` e `__version__` 0.20.0 confirmados dentro); os builds e as notas da 0.19.1 apagados. **Por fazer (dono):** commit, push, tag e `gh release create`.
+- **Versão 0.20.0 (pedido do dono):** `pyproject`, `__init__`, `CHANGELOG` (D-108 a D-116), `README`, `dist/release-notes-v0.20.0.md`. **Depois do dist (D-117):** o 5-2-3 fora voltou a ser pedido a 4-3-3 A por o plantel não ter MDC; corrigido, 650 testes; **o dist 0.20.0 já não leva isto: refazer antes do release.** **Dist 0.20.0 feito aqui:** `build_portable.py --zip --installer` → `dist/windows/` (portátil 530 MB, zip 206 MB, instalador 148 MB; `notify/commands.py` e `__version__` 0.20.0 confirmados dentro); os builds e as notas da 0.19.1 apagados. **Por fazer (dono):** commit, push, tag e `gh release create`.
 - **Dono:** deixou o bot ligado no PC do trabalho; quer fechá-lo à distância. Escolheu o Telegram, um só bot, só parar.
 - **Feito (D-116):** `notify/commands.py` (`/parar <PC>`, `/estado`, só o `chat_id` do dono), ligado à janela por `Bridge.stop` → `quit_app`. 648 testes.
 - **Nomes (dono):** `PCTrabalho` e `PCCasa`, em Definições → Telegram… → "Nome deste PC"; este PC já ficou `PCTrabalho`. 649 testes.

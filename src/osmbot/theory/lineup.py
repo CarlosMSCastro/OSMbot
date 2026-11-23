@@ -332,18 +332,19 @@ def _plan(tactic: dict | None, players: list[dict] | None, mine: float | None, o
         fallback = [f"Sem 5 defesas contra um mais forte: {'; '.join(_lacks(532, None, players).values())}"]
     rule = [(name, 433, name[-1]) for name in _wanted(mine, opponent, away)]
     able = [c for c in rule if not _lacks(c[1], c[2], players)]
+    five = ("5-2-3", 523, None)  # also right away, close and before the analysis of a human (D-115, D-117)
+    close = bool(away and unseen and mine and opponent and mine <= opponent * (1 + UNSEEN_MARGIN)
+                 and not _lacks(523, None, players))
+    close_note = "5-2-3 aceite: fora, forças parecidas e a análise dele ainda não foi feita"
     where = " (fora de casa)" if away else ""
     if able:
         if not away and current == Formation.F433_B.value and not own:  # right too, not the rule (owner, 2026-10-26)
             return [], ["4-3-3 B aceite: em casa a regra é o 4-3-3 A"] + fallback, None
         note = (f"4-3-3 A aceite: fora, mas claramente mais forte (+{mine / opponent - 1:.0%})"
                 if away and current == Formation.F433_A.value and _clearly_stronger(mine, opponent) else None)
-        if (away and unseen and mine and opponent and mine <= opponent * (1 + UNSEEN_MARGIN)
-                and not _lacks(523, None, players)):  # his boosts are not in the estimate yet (D-115)
-            five = ("5-2-3", 523, None)
+        if close:  # his boosts are not in the estimate yet (D-115)
             warnings, notes, other = judge(able + [five], rule + [five], _names(able) + where + " ou 5-2-3",
-                                           "5-2-3 aceite: fora, forças parecidas e a análise dele ainda não foi feita"
-                                           if set_(five) else note)
+                                           close_note if set_(five) else note)
         else:
             warnings, notes, other = judge(able, rule, _names(able) + where, note)
         return warnings, notes + (fallback if not warnings else []), other
@@ -352,11 +353,13 @@ def _plan(tactic: dict | None, players: list[dict] | None, mine: float | None, o
     alts = [(name, formation, d, group) for name, formation, d, group, every in INSTEAD
             if (group <= gone.keys() if every else group & gone.keys()) and not _lacks(formation, d, players)]
     hit = next((a for a in alts if set_(a)), None)
+    if close and set_(five) and not own:  # no 4-3-3 B to play, the 5-2-3 is right all the same (D-117)
+        return [], [close_note] + get + fallback, None
     if hit and not own:
         why = "; ".join(why for c, why in sorted(gone.items()) if c in hit[3])
         return [], [f"{hit[0]} aceite: {why}"] + get + fallback, None
     if alts:
-        warnings, _, other = judge(alts, rule + alts, _names(alts))
+        warnings, _, other = judge(alts + ([five] if close else []), rule + alts, _names(alts))
         return warnings + get, fallback, other
     if any(set_(c) for c in rule):  # nothing the squad can play
         return [f"Formação {current} {'; '.join(own.values())}"] + get, fallback, None

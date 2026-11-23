@@ -591,3 +591,16 @@ def test_away_before_the_analysis_of_a_human_with_close_strengths_the_5_2_3_serv
     assert tactic_warnings(b, 100, 99, [], True, unseen=True) == []  # the rule stays right
     assert tactic_warnings(five, 100, 99, [], False, unseen=True) != []  # at home no
     assert tactic_warnings(five, 110, 100, [], True, unseen=True) != []  # we are more than 5 % above: no
+
+
+def test_away_without_an_mdc_and_before_the_analysis_of_a_human_the_5_2_3_a_serves_too():
+    """D-117 (owner, 2026-11-20): with no 4-3-3 B to play (no MDC), the 5-2-3 is right all the same when close."""
+    no_mdc = squad(Rice=60)
+    five = {"formation": 523, "formationDetail": "A", "style": 2}
+    assert tactic_warnings(five, 100, 99, no_mdc, True) == ["Formação 5-2-3: devia ser 4-3-3 A"]  # as before
+    assert tactic_warnings(five, 100, 99, no_mdc, True, unseen=True) == []
+    assert tactic_notes(five, no_mdc, 100, 99, True, unseen=True) == [
+        "5-2-3 aceite: fora, forças parecidas e a análise dele ainda não foi feita"]
+    assert tactic_warnings(five, 110, 100, no_mdc, True, unseen=True) != []  # more than 5 % above: no
+    a433 = {"formation": 433, "formationDetail": "A", "style": 2}
+    assert tactic_warnings(a433, 100, 99, no_mdc, True, unseen=True) == []  # the 4-3-3 A stays right

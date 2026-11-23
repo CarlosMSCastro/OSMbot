@@ -107,13 +107,41 @@ def test_a_new_midfielder_competes_for_the_corners_with_enough_attack(make_playe
 
 def test_corners_stay_when_they_do_not_collide_or_nobody_else_can_take_them(make_player):
     mid = _graded(make_player(Position.MID, att=80), 8.0, 20)
-    other = _graded(make_player(Position.MID, att=70), 9.0, 20)
+    other = _graded(make_player(Position.MID, age=30, att=70), 9.0, 20)  # the captain, so the forward has two roles
     forward = make_player(Position.ATT, att=95)
     assert pick_specialists([mid, other, forward]).corner_taker is mid  # the forward takes the free kicks
     assert pick_corner_taker([mid], mid) is mid
     fresh = _graded(make_player(Position.MID, att=60), 0, 1)
     second = _graded(make_player(Position.MID, att=75), 0, 2)
     assert pick_corner_taker([mid, fresh, second], mid) is second  # nobody with 3 matches: the next by attack
+
+
+def test_nobody_takes_three_roles_the_free_kicks_move(make_player):  # owner, 2026-11-23
+    star = make_player(Position.ATT, age=33, att=110)  # oldest and most attack: captain, penalties, free kicks
+    second = make_player(Position.ATT, age=24, att=100)
+    mid = make_player(Position.MID, age=25, att=90)
+    other_mid = make_player(Position.MID, age=26, att=70)
+    result = pick_specialists([star, second, mid, other_mid])
+    assert (result.captain, result.penalty_taker) == (star, star)
+    assert result.free_kick_taker is second
+    assert result.corner_taker is mid
+
+
+def test_two_roles_stay_on_the_same_player(make_player):
+    star = make_player(Position.ATT, age=24, att=110)
+    old = make_player(Position.DEF, age=34, att=30)
+    result = pick_specialists([star, old, make_player(Position.MID, att=60)])
+    assert result.captain is old
+    assert result.penalty_taker is star and result.free_kick_taker is star
+
+
+def test_free_kicks_moving_to_the_best_midfielder_send_the_corners_to_another(make_player):
+    star = make_player(Position.ATT, age=33, att=110)
+    mid = make_player(Position.MID, age=25, att=100)
+    other_mid = make_player(Position.MID, age=26, att=70)
+    result = pick_specialists([star, mid, other_mid])
+    assert result.free_kick_taker is mid
+    assert result.corner_taker is other_mid
 
 
 def test_a_midfielder_takes_the_penalties_with_10_more_attack_than_the_best_forward(make_player):

@@ -80,11 +80,16 @@ class Specialists:
 
 
 def pick_specialists(starters: Iterable[Player]) -> Specialists:
+    """Nobody takes three roles (owner, 2026-11-23: the commentator complains "in over his head... divide the
+    responsibilities"): when the captain is also the penalty and free-kick taker, the free kicks go to the starter
+    with the next most attack. That is the only possible triple, since the corners never go to the free-kick taker."""
     squad = list(starters)
-    free_kick = pick_free_kick_taker(squad)
+    captain, penalty, free_kick = pick_captain(squad), pick_penalty_taker(squad), pick_free_kick_taker(squad)
+    if captain and penalty and free_kick and captain.id == penalty.id == free_kick.id:
+        free_kick = pick_free_kick_taker(p for p in squad if p.id != captain.id) or free_kick
     return Specialists(
-        captain=pick_captain(squad),
-        penalty_taker=pick_penalty_taker(squad),
+        captain=captain,
+        penalty_taker=penalty,
         free_kick_taker=free_kick,
         corner_taker=pick_corner_taker(squad, free_kick),
     )

@@ -552,3 +552,14 @@
 {"t":1795165394,"saldo":3449,"antes":3452,"diferenca":-3,"partes":{"transferências":-3},"jogadores":["Hincapié"]}
 {"t":1795165574,"saldo":3447,"antes":3449,"diferenca":-2,"partes":{"transferências":-2},"jogadores":["Kane","Dimarco"]}
 {"t":1795168670,"saldo":3445,"antes":3447,"diferenca":-2,"partes":{"transferências":-2},"jogadores":["Isak","Worrall"]}
+{"t":1795172090,"saldo":3444,"antes":3445,"diferenca":-1,"partes":{"transferências":-1},"jogadores":["Saka"]}
+{"t":1795197244,"saldo":3431,"antes":3444,"diferenca":-13,"partes":{"fora do bot":-13}}
+{"t":1795197320,"saldo":3431,"antes":3431,"diferenca":0,"partes":{"transferências":-13,"fora do bot":13},"jogadores":["Neymar"]}
+{"t":1795197322,"saldo":3430,"antes":3431,"diferenca":-1,"partes":{"fora do bot":-1}}
+{"t":1795197365,"saldo":3430,"antes":3430,"diferenca":0,"partes":{"transferências":-1,"fora do bot":1},"jogadores":["L. Martínez"]}
+{"t":1795431422,"saldo":3428,"antes":3430,"diferenca":-2,"partes":{"fora do bot":-2}}
+{"t":1795431499,"saldo":3433,"antes":3428,"diferenca":5,"partes":{"recompensas":5}}
+{"t":1795432097,"saldo":3412,"antes":3433,"diferenca":-21,"partes":{"transferências":-21},"jogadores":["Hildebrandt","Sier","Assignon","Alexander-Arnold","Timoshenko","Anderson"]}
+{"t":1795432278,"saldo":3350,"antes":3412,"diferenca":-62,"partes":{"transferências":-62},"jogadores":["Hackney","Q. Sullivan"]}
+{"t":1795432457,"saldo":3348,"antes":3350,"diferenca":-2,"partes":{"transferências":-2},"jogadores":["Alexander-Arnold","Osimhen"]}
+{"t":1795432637,"saldo":3346,"antes":3348,"diferenca":-2,"partes":{"transferências":-2},"jogadores":["K. Koné","García"]}

@@ -519,11 +519,39 @@ CHECKS: list[Callable[[list[dict]], Result]] = [home_advantage, clearly_stronger
                                                 offside_433, against_five, own_home]
 
 
+def league_sales(engine_records: Iterable[dict], minimum: int = 5) -> Result:
+    """D-071 measured on every manager of the owner's leagues (owner, 2026-11-23: "olhar às transferências de toda a
+    liga"): the transfer-engine records (``logs/*/transferencias/motor``) list each manager's player for sale (share of
+    the maximum asked, since when) and which of them sold, and when. Above 150 M of maximum: hours to sell at ~100 %
+    against ~75 % (the owner's own sales included). Each listing counts once, whatever PC saw it."""
+    listed, sold = {}, {}
+    for record in engine_records:
+        by_player = {a.get("jogador"): a for a in record.get("a_venda") or [] if a.get("utilizador") and a.get("do_maximo")}
+        for a in by_player.values():
+            listed[a.get("anuncio")] = a
+        for s in record.get("vendidos") or []:
+            a = by_player.get(s.get("jogador"))
+            if a and s.get("quando") and a.get("desde"):
+                sold[a.get("anuncio")] = (a, (s["quando"] - a["desde"]) / 3600)
+    big = lambda a: a["preco"] / a["do_maximo"] >= 150e6
+    share = lambda a, low, high: low <= a["do_maximo"] <= high
+    groups = {name: ([a for a in listed.values() if big(a) and share(a, low, high)],
+                     sorted(h for a, h in sold.values() if big(a) and share(a, low, high)))
+              for name, low, high in (("100", 0.97, 1.01), ("75", 0.72, 0.78))}
+    median = lambda hours: hours[len(hours) // 2] if hours else 0.0
+    (full_listed, full), (part_listed, part) = groups["100"], groups["75"]
+    measured = (f"todas as ligas, máximo acima de 150 M: a 100 % vendeu {len(full)} de {len(full_listed)}, mediana "
+                f"{median(full):.1f} h; a 75 % vendeu {len(part)} de {len(part_listed)}, mediana {median(part):.1f} h")
+    verdict = SHORT if min(len(full), len(part)) < minimum else AGREES if median(part) < median(full) else DISAGREES
+    return Result("vendaliga", "Vender: 75 % do máximo acima de 150 M vende mais depressa (D-071, todas as ligas)",
+                  measured, len(full) + len(part), verdict)
+
+
 def run(records: Iterable[dict], friendlies: Iterable[dict] = (), xp: Iterable[dict] = (),
-        reports: Iterable[dict] = (), sale_lines: Iterable[str] = ()) -> list[Result]:
+        reports: Iterable[dict] = (), sale_lines: Iterable[str] = (), engine_records: Iterable[dict] = ()) -> list[Result]:
     """Every check: the match records (``logs/*/jogos``), the friendlies' (``logs/*/amigaveis``), the manager's
     XP (``logs/*/xp``), the analyst's reports on other clubs (``logs/*/analista``) and the log lines (``logs/*/*.log``)."""
     matches, friendlies, reports = unique_matches(records), list(friendlies), list(reports)
     return ([check(matches) for check in CHECKS] + [extreme_tackling(matches, reports), red_cards(matches, reports)]
             + [friendly_specialists(friendlies), intense_friendlies(friendlies), friendly_decay(friendlies),
-               manager_xp(list(xp)), sale_threshold(sale_lines)])
+               manager_xp(list(xp)), sale_threshold(sale_lines), league_sales(engine_records)])

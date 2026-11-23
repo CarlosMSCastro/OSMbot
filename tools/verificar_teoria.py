@@ -36,7 +36,8 @@ def sale_lines() -> list[str]:
 
 
 def main() -> None:
-    results = run(records(), records("amigaveis"), records("xp"), records("analista"), sale_lines())
+    results = run(records(), records("amigaveis"), records("xp"), records("analista"), sale_lines(),
+                  records("transferencias/motor"))
     print("| Verificação | Regra | Registos | Jogos | Veredicto |")
     print("|---|---|---|---|---|")
     for r in results:

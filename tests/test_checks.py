@@ -211,6 +211,23 @@ def test_friendly_decay_compares_the_first_friendly_of_the_day_with_the_fourth()
     assert theory.friendly_decay(games).verdict == theory.SHORT
 
 
+def test_league_sales_compare_100_and_75_percent_above_150m_on_every_manager():
+    def listing(n, share, maximum=200e6, desde=3600):
+        return {"anuncio": n, "jogador": 1000 + n, "utilizador": True, "dono": n % 2 == 0,
+                "preco": maximum * share, "do_maximo": share, "desde": desde}
+    full = [listing(n, 1.0) for n in range(6)]
+    part = [listing(10 + n, 0.75) for n in range(6)]
+    small = [listing(20, 1.0, maximum=120e6)]  # below 150 M: not counted
+    sold = lambda rows, hours: [{"jogador": r["jogador"], "quando": (hours + 1) * 3600} for r in rows]
+    records = [{"a_venda": full + part + small, "vendidos": sold(full[:5], 50) + sold(part[:5], 20) + sold(small, 5)},
+               {"a_venda": full + part, "vendidos": sold(full[:5], 50)}]  # a second PC saw the same sales
+    result = theory.league_sales(records)
+    assert result.verdict == theory.AGREES and result.sample == 10
+    assert "a 100 % vendeu 5 de 6, mediana 50.0 h; a 75 % vendeu 5 de 6, mediana 20.0 h" in result.measured
+    assert theory.league_sales(records[1:]).verdict == theory.SHORT
+    assert theory.league_sales([{"a_venda": [{**full[0], "utilizador": False}], "vendidos": []}]).sample == 0
+
+
 def test_sale_threshold_reads_the_sale_lines_and_counts_each_sale_once():
     def sale(pct, maximum, took, n):
         return (f"2026-10-1{n} 19:24:06  Venda: Jogador{n} (Clube) vendido por 90,00 M ({pct}% do máximo ≈ {maximum} M); "
