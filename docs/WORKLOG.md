@@ -2,6 +2,21 @@
 
 Entradas mais recentes primeiro. Cada sessão: o que se fez · o que ficou por fazer · próximo passo.
 
+## 2026-11-24 — Amigáveis que os rivais fazem contra nós (PT-LA-02-0095-N)
+- **Pergunta do dono:** quem fez os amigáveis de hoje no KV Mechelen e no FK Imishli. **Resposta:** não foi o bot (sem linha "Amigável:", resumo "amigáveis 0"); foram o Royale Union e o Sabah a desafiar (o nosso clube jogou fora). O Royale Union já vai na 6.ª vez este mês.
+- **Dono:** a checklist do jogo só marca o amigável se formos nós a fazê-lo; o bot deve contar igual. **Feito (D-119):** só contam os amigáveis em casa (`prematch.policy.friendlies_played`), `THEORY.md` §6, `DISCOVERY.md`, 1 teste novo. 655 testes.
+- **Versão 0.20.1 (pedido do dono):** `pyproject`, `__init__`, `CHANGELOG` (D-117, D-118, D-119, `vendaliga`), `README`, `dist/release-notes-v0.20.1.md`. Dist feito aqui (`build_portable.py --zip --installer`: portátil 553 MB, zip 206 MB, instalador 148 MB; versão e D-119 confirmadas dentro); os da 0.20.0 apagados. **Por fazer (dono):** commit, push, tag e `gh release create`.
+
+## 2026-11-23 (tarde) — Samsung antigo para o "bot no Android" (PT-LA-02-0095-N, conversa)
+- **Dono:** ligou um Samsung antigo para pôr o bot a "fazer o mesmo que o browser, mas no Android"; diz que isto já tinha sido combinado. Nos docs só existe a linha de 2026-10 (opções para observar a app; nada decidido).
+- **Claude:** o resto do bot já corre no PC; o que o Android traria de novo eram os vídeos, que deixaram de passar porque a rede de anúncios reconhece o bot (2026-11-18). Ver anúncios automaticamente num telemóvel real para passar esse filtro é o mesmo que disfarçar o navegador: recusado (regra 8). Continua possível: limpar e acelerar o telemóvel, vê-los à mão com aviso no Telegram, ou só observar a app.
+- **Corrigido pelo dono:** os vídeos falham na web para todos e funcionam nas apps (`DISCOVERY.md` §6e). Logo não há filtro ao bot. Mesmo assim, o Claude não faz o telemóvel ver anúncios sozinho: seriam visualizações sem ninguém a ver.
+- **Proposta em aberto (dono pediu "abre os anúncios e eu fico a ver"):** o bot deixa tudo pronto no telemóvel (app aberta, no vídeo certo) e avisa no Telegram; **o dono dá 1 toque por vídeo** (no telemóvel, ou "Ver agora" no Telegram) e vê-o; o bot recolhe e passa ao seguinte. Antes: observar a app (fluxo novo, regra 5) e limpar o telemóvel. Por decidir.
+- **Dono:** fica separado e não interfere com o bot atual; faz como o resto do programa (lê com GETs, decide a ordem pelo `THEORY.md` §12) e corre só durante o "Estou aqui". Passos: 1) preparar o telemóvel, 2) observar a app, 3) ordem do médico/advogado/estádio (dono), 4) construir.
+- **Passo 1 feito:** Galaxy J5 2017 (SM-J530F, Android 8.1), formatado e atualizado pelo dono. `adb` em `~/android-tools/platform-tools` (fora do repo; o `!` do prompt corre bash). Bateria: saúde "boa", 256 ciclos. OSM 4.3.0.3 instalado da Play Store. Desativadas (`pm disable-user`, reversível) 30 apps (Facebook, Microsoft, Google exceto Gmail/Chrome/Play, extras Samsung); AR Core desinstalado; animações a 0, ecrã sempre ligado a carregar, brilho 40 manual. Memória livre depois do reinício: ~650 → ~990 MB. Falta (dono): desligar a sincronização automática à mão.
+- **Passo 2 (observar a app):** botões nativos com nome (`email_login_button`, `teamSlot_N`, `shop_medium_item_container` + `ad_free` na loja). Onde há um relógio a contar, a leitura normal do ecrã (`uiautomator dump`) falha ("could not get idle state"); `dumpsys activity top` dá os nomes e as posições, sem os textos. Anúncios pela **AppLovin** (`AppLovinFullscreenActivity`), não Google. O 1.º foi um "playable" (Playable Factory): ficou >3 min a carregar, sem botão de fechar.
+- **Dono desistiu do Android** (pedia toques). Nada construído; o telemóvel fica limpo e com o `adb`. Factos em `DISCOVERY.md` §6e.
+
 ## 2026-11-23 — Verificação semanal (PT-LA-02-0095-N, só leitura)
 - Corrida de `tools/verificar_teoria.py` (1213 jogos) + medições à mão; tudo em `VERIFICACAO.md` (2026-11-23).
 - **Levado ao dono:** não bate `cantos` (continua), `vermelhos` e `venda150` (por 0,3 h); pronto a decidir `523fora` (a favor do 4-3-3) e `vs523` (B 2,25 > A 1,45).

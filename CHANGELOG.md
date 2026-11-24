@@ -4,6 +4,18 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-PT/1.1.0/); 
 
 Este ficheiro é o **histórico de versões, para quem lê o repo**. O diário interno de cada sessão de trabalho está em [`docs/WORKLOG.md`](docs/WORKLOG.md).
 
+## [0.20.1] — 2026-11-24
+
+Correções à regra: os amigáveis que um rival joga contra ti já não tiram lugar aos teus, o capitão deixa de ficar com os 3 papéis e o 5-2-3 fora de casa vale também quando o plantel não tem médio defensivo.
+
+### Alterado
+- **Amigáveis (D-119):** para os 4 da jornada (8 no Intense Friendlies) só contam os que o clube pede, como na checklist do próprio jogo. Antes, um rival que jogava um amigável contra ti contava, e o bot fazia menos um. O "Amigáveis (n)" do cartão e a linha do tempo contam da mesma forma.
+- **Especialistas (D-118):** quando o capitão é também o dos penáltis e o dos livres, os livres passam para o titular com o 2.º maior ataque (o comentador queixa-se de um jogador com 3 papéis). Os cantos seguem a regra de sempre com o novo marcador.
+- **5-2-3 fora de casa (D-117):** a exceção da D-115 (humano sem análise, forças parecidas) vale também quando o plantel não tem médio defensivo para o 4-3-3 B. Antes, nesse caso, o aviso voltava a pedir o 4-3-3 A.
+
+### Adicionado
+- **Verificação semanal `vendaliga`:** tempo de venda acima de 150 M em todas as ligas, a partir dos registos do motor de transferências (só para quem desenvolve; `tools/verificar_teoria.py`).
+
 ## [0.20.0] — 2026-11-20
 
 O bot passa a falar contigo no Telegram: avisa o que importa e fecha-se à distância com `/parar`. A formação fora de casa contra um humano ainda por analisar aceita também o 5-2-3, e os vídeos ficam menos expostos às falhas do Google.

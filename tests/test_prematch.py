@@ -34,9 +34,15 @@ def test_only_in_the_last_4_hours_before_the_match():
 
 def test_four_friendlies_before_each_match_the_owners_included():
     assert friendlies_missing([], 1, 14) == 4
-    played = [match(14, 1, 2, kind=2), match(14, 3, 1, kind=2), match(13, 1, 4, kind=2), match(14, 1, 5)]
+    played = [match(14, 1, 2, kind=2), match(14, 1, 3, kind=2), match(13, 1, 4, kind=2), match(14, 1, 5)]
     assert friendlies_missing(played, 1, 14) == 2  # last round's and the league match don't count
-    assert friendlies_missing(played + [match(14, 1, 6, kind=2), match(14, 7, 1, kind=2)], 1, 14) == 0
+    assert friendlies_missing(played + [match(14, 1, 6, kind=2), match(14, 1, 7, kind=2)], 1, 14) == 0
+
+
+def test_a_rivals_friendly_against_the_club_does_not_count():
+    """D-119: only the friendlies the club asked for (at home) count, as in the game's checklist."""
+    played = [match(14, 1, 2, kind=2), match(14, 3, 1, kind=2), match(14, 4, 1, kind=2)]
+    assert friendlies_missing(played, 1, 14) == 3
 
 
 def test_an_analyst_sent_this_week_counts_while_still_working():

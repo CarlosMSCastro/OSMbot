@@ -79,8 +79,10 @@ def step_done(steps: list[dict], step_type: int) -> bool:
 
 
 def friendlies_played(matches: list[dict], team_id: int, week: int) -> int:
-    """Friendlies the club already played this round (since its last match), the owner's included."""
-    return sum(1 for m in matches if m["matchType"] == FRIENDLY_MATCH and m["weekNr"] == week and _involves(m, team_id))
+    """Friendlies the club already played this round (since its last match), the owner's included. Only the ones the
+    club played at home, i.e. that it asked for: a rival who plays a friendly against it does not count, as in the
+    game's own checklist (D-119)."""
+    return sum(1 for m in matches if m["matchType"] == FRIENDLY_MATCH and m["weekNr"] == week and m["homeTeamId"] == team_id)
 
 
 def friendlies_missing(matches: list[dict], team_id: int, week: int, target: int = FRIENDLIES_PER_MATCH) -> int:

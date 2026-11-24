@@ -24,3 +24,7 @@
 {"t":1795434331,"tipo":"loja","ok":false,"erro":"os boss coins não subiram"}
 {"t":1795434471,"tipo":"treino","ok":false,"clube":"Neman Grodno","jogador":"Onana","erro":"o tempo do treino não baixou"}
 {"t":1795434593,"tipo":"dinheiro","ok":false,"clube":"FK Imishli ","erro":"o cartão de dinheiro não passou a visto"}
+{"t":1795435127,"tipo":"loja","ok":false,"erro":"<urlopen error [Errno 11001] getaddrinfo failed>"}
+{"t":1795437239,"tipo":"loja","ok":false,"erro":"os boss coins não subiram"}
+{"t":1795437365,"tipo":"treino","ok":false,"clube":"Neman Grodno","jogador":"Onana","erro":"o tempo do treino não baixou"}
+{"t":1795437490,"tipo":"dinheiro","ok":false,"clube":"FK Imishli ","erro":"o cartão de dinheiro não passou a visto"}

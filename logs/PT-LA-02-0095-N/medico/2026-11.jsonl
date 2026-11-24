@@ -8,3 +8,5 @@
 {"t":1795081233,"evento":"pôr","tipo":"doctor","clube":"leagues/229039036/teams/12","semana":5,"jogador":990744287,"nome":"Cucurella","antes":{"fora":1,"lesao":13,"suspensao":0}}
 {"t":1795110068,"evento":"levantar","tipo":"doctor","clube":"leagues/229039036/teams/12","semana":5,"caso":11871895,"jogador":990744287,"nome":"Cucurella","antes":{"fora":1,"lesao":13,"suspensao":0},"depois":{"fora":0,"lesao":0,"suspensao":0}}
 {"t":1795431501,"evento":"pôr","tipo":"doctor","clube":"leagues/78927532/teams/9","semana":8,"jogador":1097150166,"nome":"Krstović","antes":{"fora":3,"lesao":26,"suspensao":0}}
+{"t":1795511417,"evento":"pôr","tipo":"doctor","clube":"leagues/229039036/teams/12","semana":10,"jogador":993108403,"nome":"Bijol","antes":{"fora":2,"lesao":20,"suspensao":0}}
+{"t":1795511419,"evento":"levantar","tipo":"doctor","clube":"leagues/78927532/teams/9","semana":9,"caso":14819029,"jogador":1097150166,"nome":"Krstović","antes":{"fora":2,"lesao":26,"suspensao":0},"depois":{"fora":0,"lesao":0,"suspensao":0}}
