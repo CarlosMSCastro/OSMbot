@@ -567,3 +567,21 @@
 {"t":1795511873,"saldo":3339,"antes":3344,"diferenca":-5,"partes":{"transferências":-5},"jogadores":["Mamardashvili"]}
 {"t":1795512233,"saldo":3338,"antes":3339,"diferenca":-1,"partes":{"transferências":-1},"jogadores":["Giménez"]}
 {"t":1795512593,"saldo":3335,"antes":3338,"diferenca":-3,"partes":{"transferências":-3},"jogadores":["Cucurella","Tchouaméni","Konsa"]}
+{"t":1795516501,"saldo":3334,"antes":3335,"diferenca":-1,"partes":{"fora do bot":-1}}
+{"t":1795518472,"saldo":3335,"antes":3334,"diferenca":1,"partes":{"fora do bot":1}}
+{"t":1795518832,"saldo":3336,"antes":3335,"diferenca":1,"partes":{"vídeos da loja":1}}
+{"t":1795519194,"saldo":3340,"antes":3336,"diferenca":4,"partes":{"vídeos da loja":4}}
+{"t":1795519553,"saldo":3343,"antes":3340,"diferenca":3,"partes":{"vídeos da loja":3}}
+{"t":1795520850,"saldo":3346,"antes":3343,"diferenca":3,"partes":{"fora do bot":3}}
+{"t":1795522156,"saldo":3347,"antes":3346,"diferenca":1,"partes":{"vídeos da loja":1}}
+{"t":1795523156,"saldo":3352,"antes":3347,"diferenca":5,"partes":{"vídeos da loja":5}}
+{"t":1795523443,"saldo":3355,"antes":3352,"diferenca":3,"partes":{"vídeos da loja":3}}
+{"t":1795526075,"saldo":3356,"antes":3355,"diferenca":1,"partes":{"vídeos da loja":1}}
+{"t":1795526208,"saldo":3356,"antes":3356,"diferenca":0,"partes":{"vídeos da loja":1,"transferências":-1},"jogadores":["Guéhi"]}
+{"t":1795526312,"saldo":3357,"antes":3356,"diferenca":1,"partes":{"vídeos da loja":1}}
+{"t":1795526394,"saldo":3356,"antes":3357,"diferenca":-1,"partes":{"transferências":-1},"jogadores":["Hjulmand"]}
+{"t":1795526573,"saldo":3358,"antes":3356,"diferenca":2,"partes":{"vídeos da loja":2}}
+{"t":1795526607,"saldo":3359,"antes":3358,"diferenca":1,"partes":{"vídeos da loja":1}}
+{"t":1795526837,"saldo":3360,"antes":3359,"diferenca":1,"partes":{"vídeos da loja":1}}
+{"t":1795527005,"saldo":3361,"antes":3360,"diferenca":1,"partes":{"vídeos da loja":1}}
+{"t":1795527113,"saldo":3362,"antes":3361,"diferenca":1,"partes":{"vídeos da loja":1}}
