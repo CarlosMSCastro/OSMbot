@@ -2214,7 +2214,7 @@ class SettingsDialog(QDialog):
         title = QLabel(tr("Clubes e automações"))
         title.setStyleSheet("font-size: 16px; font-weight: bold;")
         layout.addWidget(title)
-        hint = QLabel(tr("Só muda o que o bot faz; a janela continua a mostrar todos os clubes. Aplica-se no próximo ciclo."))
+        hint = QLabel(tr("Só muda o que o bot faz; a janela continua a mostrar todos os clubes. Aplica-se ao fechar esta janela."))
         hint.setWordWrap(True)
         hint.setStyleSheet(f"color:{MUTED};")
         layout.addWidget(hint)
@@ -3265,10 +3265,20 @@ class MainWindow(QMainWindow):
 
     def show_settings(self) -> None:
         """Definições → Clubes e automações (owner, 2026-11-13, D-104). Each click is kept at once in the config; the
-        bot reads it at the start of its next pass."""
+        bot reads it at the start of its next pass, asked for as soon as the window closes when something changed (owner,
+        2026-11-24: friendlies turned on waited ~40 min while the timeline already said "já")."""
+        from osmbot import settings
+
         clubs = [{"name": c["name"], "key": c["key"], "logo": c.get("logo"), "logo_key": c.get("logo_key") or c["name"]}
                  for c in (self.payload.get("snapshot") or {}).get("clubs") or [] if c.get("key")]
+        before = (settings.load(), settings.load_account())
         SettingsDialog(self, clubs).exec()
+        if (settings.load(), settings.load_account()) != before:
+            self.render()  # the timeline follows the switches at once
+            if self.running():
+                from osmbot.game.loop import request_pass
+
+                request_pass("Definições mudadas")
 
 
     def show_telegram(self) -> None:

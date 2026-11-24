@@ -106,7 +106,7 @@ WORDS = {
     "Clubes e automações": "Clubs and automations",
     "Clube ativo (o bot trabalha nele)": "Active club (the bot works on it)",
     "Ainda não li os clubes. Usa Ver → Atualizar e volta aqui.": "The clubs have not been read yet. Use View → Refresh and come back.",
-    "Só muda o que o bot faz; a janela continua a mostrar todos os clubes. Aplica-se no próximo ciclo.": "This only changes what the bot does; the window still shows every club. It applies from the next cycle.",
+    "Só muda o que o bot faz; a janela continua a mostrar todos os clubes. Aplica-se ao fechar esta janela.": "This only changes what the bot does; the window still shows every club. It applies when this window closes.",
     "Amigáveis por jornada (o dobro nos eventos)": "Friendlies per round (double in events)",
     "Amigáveis por jornada; nos eventos de amigáveis faz o dobro": "Friendlies per round; twice as many in friendlies events",
     "não": "no",

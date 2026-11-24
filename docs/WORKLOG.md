@@ -2,6 +2,11 @@
 
 Entradas mais recentes primeiro. Cada sessão: o que se fez · o que ficou por fazer · próximo passo.
 
+## 2026-11-24 (tarde, 2) — Definições contam logo (PT-LA-02-0095-N)
+- **Pergunta do dono:** porque está "à espera" há tanto tempo com os amigáveis "já" nos 3 clubes. **Resposta:** os amigáveis estavam desligados desde 2026-11-19 (D-113); o dono pôs 2 por clube às 13h38, 2 min depois da passagem das 13h35. O bot só lê as Definições no início de cada passagem e a seguinte estava marcada para ~14h14 (loja). A timeline já lia o número novo, daí o "já".
+- **Feito (pedido do dono):** ao fechar Definições → Clubes e automações, se algo mudou, a janela redesenha e, com o bot a trabalhar, pede uma passagem já ("Definições mudadas: passagem já" no registo), como já fazia com um clube novo. `gui/window.py` (`show_settings`), texto da janela e `i18n`. 657 testes; pyflakes sem nada novo.
+- **Por fazer:** ver na janela a sério (não coberta pelos testes).
+
 ## 2026-11-24 (tarde) — Número de amigáveis por clube (PT-LA-02-0095-N)
 - **Dono:** "os vídeos estão a dar"; nas Definições, um número de amigáveis em vez de sim/não. Escolheu: **0 a 8** por jornada, **o dobro** nos eventos de amigáveis.
 - **Feito (D-120):** `settings.friendlies` (o sim/não antigo continua a ler-se: não = 0, sim = 4), `prematch.policy` (N espalhados de 16 h a 4 h; no evento 2N de 16 h a 2 h; 4 e 8 dão as horas de sempre), `game/prematch`, linha do tempo, caixa numérica nas Definições ("não" no 0), `THEORY.md` §6, 2 testes novos. 657 testes; pyflakes sem nada novo.
