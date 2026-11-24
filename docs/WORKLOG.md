@@ -2,6 +2,11 @@
 
 Entradas mais recentes primeiro. Cada sessão: o que se fez · o que ficou por fazer · próximo passo.
 
+## 2026-11-24 (tarde) — Número de amigáveis por clube (PT-LA-02-0095-N)
+- **Dono:** "os vídeos estão a dar"; nas Definições, um número de amigáveis em vez de sim/não. Escolheu: **0 a 8** por jornada, **o dobro** nos eventos de amigáveis.
+- **Feito (D-120):** `settings.friendlies` (o sim/não antigo continua a ler-se: não = 0, sim = 4), `prematch.policy` (N espalhados de 16 h a 4 h; no evento 2N de 16 h a 2 h; 4 e 8 dão as horas de sempre), `game/prematch`, linha do tempo, caixa numérica nas Definições ("não" no 0), `THEORY.md` §6, 2 testes novos. 657 testes; pyflakes sem nada novo.
+- **Por fazer:** ver a caixa na janela a sério (não coberta pelos testes); só vale com a versão nova.
+
 ## 2026-11-24 — Amigáveis que os rivais fazem contra nós (PT-LA-02-0095-N)
 - **Pergunta do dono:** quem fez os amigáveis de hoje no KV Mechelen e no FK Imishli. **Resposta:** não foi o bot (sem linha "Amigável:", resumo "amigáveis 0"); foram o Royale Union e o Sabah a desafiar (o nosso clube jogou fora). O Royale Union já vai na 6.ª vez este mês.
 - **Dono:** a checklist do jogo só marca o amigável se formos nós a fazê-lo; o bot deve contar igual. **Feito (D-119):** só contam os amigáveis em casa (`prematch.policy.friendlies_played`), `THEORY.md` §6, `DISCOVERY.md`, 1 teste novo. 655 testes.

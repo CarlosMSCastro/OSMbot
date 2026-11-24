@@ -13,7 +13,7 @@ from __future__ import annotations
 # key -> what it does (the board's "Definições" shows these)
 AUTOMATIONS = {
     "treino": "Recolher e pôr a treinar",
-    "amigavel": "Amigáveis antes do jogo",
+    "amigavel": "Amigáveis por jornada (o dobro nos eventos)",
     "analise": "Análise do adversário (2 h antes)",
     "analista_liga": "Analista pelos outros clubes da liga",
     "especialistas": "Especialistas pela regra (4 h antes)",
@@ -33,6 +33,8 @@ ACCOUNT = {
     "previsoes": "Previsões de jogos reais e prémio de fim de época",
     "inventario": "Usar os itens que vão expirar",
 }
+FRIENDLIES = "amigavel"  # not a tick but a number: friendlies per round, 0 to 8 (owner, 2026-11-24, D-120)
+FRIENDLIES_DEFAULT, FRIENDLIES_MAX = 4, 8
 CAP = "teto_boss_coins_dia"  # in "conta": the most boss coins the bot spends a day (0 or missing: no ceiling)
 
 
@@ -58,11 +60,24 @@ def allowed(clubs: dict, key: str, automation: str | None = None) -> bool:
         return False
     if automation is None:
         return True
+    if automation == FRIENDLIES:
+        return friendlies(clubs, key) > 0
     return ((clubs.get(key) or {}).get("automacoes") or {}).get(automation, True) is not False
 
 
-def with_club(clubs: dict, key: str, *, active: bool | None = None, automation: str | None = None, on: bool | None = None) -> dict:
-    """A copy of ``clubs`` with one switch changed (the club's, or one automation's)."""
+def friendlies(clubs: dict, key: str) -> int:
+    """How many friendlies a round the bot plays in the club (its own count, before an event doubles it): 0 to 8.
+    The old tick still reads: off is 0, on is 4 (D-120). Not counting whether the club is active."""
+    value = ((clubs.get(key) or {}).get("automacoes") or {}).get(FRIENDLIES, True)
+    if value is False:
+        return 0
+    if value is True or not isinstance(value, int):
+        return FRIENDLIES_DEFAULT
+    return max(0, min(value, FRIENDLIES_MAX))
+
+
+def with_club(clubs: dict, key: str, *, active: bool | None = None, automation: str | None = None, on: bool | int | None = None) -> dict:
+    """A copy of ``clubs`` with one switch changed (the club's, or one automation's; the friendlies' ``on`` is a number)."""
     new = {k: {**v, "automacoes": dict(v.get("automacoes") or {})} for k, v in clubs.items()}
     club = new.setdefault(key, {"automacoes": {}})
     if active is not None:

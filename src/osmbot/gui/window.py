@@ -2288,6 +2288,11 @@ class SettingsDialog(QDialog):
             grid.addWidget(name, row, 0)
             for column, club in enumerate(self.clubs, start=1):
                 key = club["key"]
+                if automation == self.settings.FRIENDLIES:  # a number, not a tick (D-120)
+                    box = self._friendlies_box(key, saved)
+                    grid.addWidget(box, row, column, Qt.AlignCenter)
+                    self.columns[key].append(box)
+                    continue
                 box = TickBox()
                 box.setChecked(self.settings.active(saved, key) if automation is None
                                else ((saved.get(key) or {}).get("automacoes") or {}).get(automation, True) is not False)
@@ -2302,6 +2307,21 @@ class SettingsDialog(QDialog):
                 grid.addWidget(line, row + 1, 0, 1, len(self.clubs) + 1)
         for club in self.clubs:
             self._refresh(club["key"], self.settings.active(saved, club["key"]))
+
+    def _friendlies_box(self, key: str, saved: dict) -> QWidget:
+        """How many friendlies a round in the club, 0 ("não") to 8; an event doubles them (D-120)."""
+        from PySide6.QtWidgets import QSpinBox
+
+        box = QSpinBox()
+        box.setRange(0, self.settings.FRIENDLIES_MAX)
+        box.setSpecialValueText(tr("não"))
+        box.setAlignment(Qt.AlignCenter)
+        box.setMinimumWidth(64)
+        box.setToolTip(tr("Amigáveis por jornada; nos eventos de amigáveis faz o dobro"))
+        box.setValue(self.settings.friendlies(saved, key))
+        box.valueChanged.connect(lambda value, key=key: set_pref(
+            "clubes", self.settings.with_club(self.settings.load(), key, automation=self.settings.FRIENDLIES, on=value)))
+        return box
 
     def _account_card(self) -> QFrame:
         """What belongs to the whole account, not to a club: the videos, the rewards, the items, and the day's ceiling of boss coins."""

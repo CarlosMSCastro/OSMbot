@@ -10,6 +10,18 @@ def test_everything_is_on_until_a_switch_is_turned_off():
     assert settings.allowed(clubs, "1_9") and settings.allowed(clubs, "1_7", "amigavel")  # the others stay on
 
 
+def test_the_friendlies_are_a_number_and_the_old_tick_still_reads():
+    assert settings.friendlies({}, "1_9") == 4  # nothing saved: 4, as before
+    assert settings.friendlies(settings.with_club({}, "1_9", automation="amigavel", on=True), "1_9") == 4
+    off = settings.with_club({}, "1_9", automation="amigavel", on=False)
+    assert settings.friendlies(off, "1_9") == 0 and not settings.allowed(off, "1_9", "amigavel")
+    six = settings.with_club({}, "1_9", automation="amigavel", on=6)
+    assert settings.friendlies(six, "1_9") == 6 and settings.allowed(six, "1_9", "amigavel")
+    zero = settings.with_club({}, "1_9", automation="amigavel", on=0)
+    assert settings.friendlies(zero, "1_9") == 0 and not settings.allowed(zero, "1_9", "amigavel")
+    assert settings.friendlies(settings.with_club({}, "1_9", automation="amigavel", on=99), "1_9") == 8
+
+
 def test_an_inactive_club_allows_nothing_and_a_change_does_not_touch_the_original():
     original = settings.with_club({}, "1_9", automation="analise", on=False)
     clubs = settings.with_club(original, "1_9", active=False)

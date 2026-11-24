@@ -265,6 +265,20 @@ def test_eight_friendlies_during_an_intense_friendlies_and_never_after_it_ends()
     assert friendlies_due(match, now, [later]) == 1 and len(friendly_deadlines(match, now, [later])) == 4
 
 
+def test_the_clubs_number_of_friendlies_spreads_from_16_to_4_hours_and_doubles_in_an_event():
+    from osmbot.prematch.policy import friendlies_due, friendly_deadlines, next_friendly_at
+
+    hour, match = 3600, 2_000_000_000.0
+    event = {"nome": "Intense Friendlies", "start": match - 30 * hour, "end": match + 20 * hour}
+    assert [match - t for t in friendly_deadlines(match, 0, None, 7)] == [h * hour for h in (16, 14, 12, 10, 8, 6, 4)]
+    assert friendly_deadlines(match, 0, None, 1) == [match - 16 * hour] and friendly_deadlines(match, 0, None, 0) == []
+    assert friendlies_due(match, match - 1, None, 0) == 0 and next_friendly_at(match, 0, 0, None, 0) is None
+    assert friendlies_due(match, match - 1, None, 8) == 8
+    deadlines = friendly_deadlines(match, match - 20 * hour, [event], 6)  # 12 in the event, from 16 to 2 h
+    assert len(deadlines) == 12 and deadlines[0] == match - 16 * hour and deadlines[-1] == match - 2 * hour
+    assert friendlies_due(match, match - 1, [event], 2) == 4
+
+
 def test_in_the_pre_season_the_day_ends_at_the_hour_of_the_first_match():
     from osmbot.prematch.policy import DAY, day_end
 

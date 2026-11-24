@@ -11,7 +11,7 @@ from datetime import datetime
 
 from osmbot.game.dashboard import span
 from osmbot.prematch.policy import day_end, friendly_deadlines
-from osmbot.settings import account_allowed, allowed
+from osmbot.settings import FRIENDLIES_DEFAULT, account_allowed, allowed, friendlies
 
 MERGE_WITHIN = 15 * 60  # s: the same kind of action this close to the last one joins it
 KEEP = 40  # past entries kept
@@ -174,9 +174,10 @@ def future_events(snapshot: dict | None, now: float, switches: dict | None = Non
             events.append(_event(match, f"{name} vs {opponent}" if opponent else f"Jogo {name}", sub, index, "ball"))
             steps = (club.get("prep") or {}).get("steps") or []
             played = next((int(m[1]) for step, _, _ in steps if (m := re.match(r"Amigáveis \((\d+)\)", step))), None)
-            friendly = None  # the next friendly: one more due at 16/12/8/4 h before the match, 8 in an Intense Friendlies
+            friendly = None  # the next friendly: the club's number from 16 to 4 h before the match, doubled in an event
             day = day_end(match, now, club.get("week"))  # in the pre-season, daily
-            deadlines = friendly_deadlines(day, now, snapshot.get("events"))  # ("já" when overdue)
+            count = friendlies(switches, key) if key else FRIENDLIES_DEFAULT  # D-120
+            deadlines = friendly_deadlines(day, now, snapshot.get("events"), count)  # ("já" when overdue)
             if played is not None and played < len(deadlines) and may("amigavel"):
                 friendly = max(deadlines[played], now)
             analysis = (any(step == "Análise" and not done for step, done, _ in steps) and match - PREP_BEFORE > now

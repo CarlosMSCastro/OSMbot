@@ -330,13 +330,14 @@ def prepare_club(client, team: dict, base: str, confirm: bool, now: float, log=p
 
     events = calendar_events(now)
     day = day_end(match, now, week)  # in the pre-season the 4 friendlies are daily (owner, 2026-10-15)
-    due = friendlies_due(day, now, events) if on("amigavel") else []
+    count = settings.friendlies(switches, key) if on("amigavel") else 0  # the client's number a round (D-120)
+    due = friendlies_due(day, now, events, count)
     played = 0
     if due:
         failed, played = _play_friendlies(client, team, base, league, week, due, confirm, log, rng,
                                           event=(friendly_event(events, now) or {}).get("nome"))
         failures += failed
-    wakes.append(next_friendly_at(day, now, played, events))
+    wakes.append(next_friendly_at(day, now, played, events, count))
     if not in_window(match, now):
         wakes.append(match - LEAD)  # the specialists only in the last 4 hours
     else:
