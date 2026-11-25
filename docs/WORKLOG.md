@@ -2,6 +2,11 @@
 
 Entradas mais recentes primeiro. Cada sessão: o que se fez · o que ficou por fazer · próximo passo.
 
+## 2026-11-25 (noite) — 5 defesas no KV Mechelen; eventos na timeline (DESKTOP-KAM70RR)
+- **Pergunta do dono:** porque sugere 5 defesas no KV Mechelen vs Royal Antwerp. **Resposta (lido só com GETs):** o Antwerp está em treino secreto, por isso `hidden_boost` presume secreto + estágio = 2 % + **25 %** (estágio desta liga, provavelmente subido pelo evento); 106 × 1,27 = 134,6 > os nossos 124,5 (114, +3 % logins, +6 % relvado). Sem o estágio presumido éramos +15 %. **Dono: manter a regra.**
+- **Dono:** os eventos a decorrer ficavam sempre em "já" no topo da timeline. **Feito:** um evento já começado fica na hora em que acaba (mostra o tempo até acabar). `board/timeline.py`, teste em `test_events.py`. 658 testes.
+- **Por fazer:** ver na janela a sério.
+
 ## 2026-11-25 — Cartão de compras: mais baratos, com ou sem SALE (PT-LA-02-0095-N)
 - **Dono:** mostrar sempre os mais baratos face ao valor, mesmo acima de 1,5×; podem ser de treinadores, dentro dos mesmos limites; sem teto.
 - **Feito (D-122):** `sale_picks` lê todos os anúncios (sem teto, com treinadores, nunca os do clube); marca "treinador" (fita SALE só se for do jogo e ≤ 1,5×); `THEORY.md` §7.7; `i18n`. Testes: dados das compras com ids próprios; novas verificações em 2 testes. 658 testes.

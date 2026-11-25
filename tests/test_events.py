@@ -112,10 +112,13 @@ def test_the_timeline_shows_the_event_going_on_and_the_next_ones():
 
     calendar = parse_schedule(POST)
     now = datetime(2026, 10, 11, 12).timestamp()
-    rows = future_view({"events": upcoming([calendar], now)}, now)
+    soon = upcoming([calendar], now)
+    rows = future_view({"events": soon}, now)
     assert [(r["title"], r["sub"]) for r in rows] == [("Evento: Transfer Madness", "10/10–11/10"),
                                                      ("Evento: Super Staff", "14/10")]
-    assert rows[0]["left"] == "já" and rows[1]["ts"] == datetime(2026, 10, 14).timestamp()
+    # the one going on sits at its end (time left until it is over), not at "já"
+    assert rows[0]["ts"] == soon[0]["end"] > now and rows[0]["left"] != "já"
+    assert rows[1]["ts"] == datetime(2026, 10, 14).timestamp()
 
 
 def test_event_lines_in_english():
