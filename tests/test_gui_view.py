@@ -354,6 +354,8 @@ def test_the_sale_line_shows_the_best_and_the_three_on_hover():
     assert (sale["player"], sale["price"], sale["profit"]) == ("DEF 85 · S1", "11 M", "lucro ~14 M")
     assert sale["tags"] == ["reforço", "pechincha"] and sale["more"] == 1  # the blue stripe (owner, 2026-10-15)
     assert sale["sale"] and not sale_view({"sale": {"picks": [{**deal, "razao": 1.7}], "certo": True}})["sale"]  # no ribbon
+    theirs = sale_view({"sale": {"picks": [{**deal, "treinador": True}], "certo": True}})  # a manager's (owner, 2026-11-25)
+    assert not theirs["sale"] and theirs["tags"] == ["treinador"]
     rows = sale["tip"]["rows"]
     assert rows[0][0][-1] == "reforço (> T1 79) · pechincha" and rows[1][0][-1] == "" and not sale["tip"]["foot"]
     assert rows[0][0][5] == "1,1×" and sale["tip"]["columns"][5][0] == "× valor"  # price against value, with a comma

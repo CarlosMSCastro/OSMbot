@@ -63,13 +63,14 @@ def observe(state: dict | None, market: list[dict], now: float, owner: int | Non
     return new_state, record
 
 
-def sale_rows(market: list[dict], ratio: float = SALE_RATIO) -> dict[str, dict]:
-    """The game's players with the "SALE" ribbon (never a manager's: the owner buys only from the game, THEORY.md 7.6)."""
+def sale_rows(market: list[dict], ratio: float = SALE_RATIO, managers: bool = False) -> dict[str, dict]:
+    """The game's players with the "SALE" ribbon (never a manager's: the owner buys only from the game, THEORY.md 7.6).
+    ``managers``: the managers' listings too (``treinador``), for the card's buys (owner, 2026-11-25)."""
     rows = {}
     for item in market:
         player, team = item.get("player") or {}, item.get("team") or {}
         value, price = player.get("value") or 0, item.get("price") or 0
-        if team.get("userId") or not value or price > ratio * value:
+        if (team.get("userId") and not managers) or not value or price > ratio * value:
             continue
         position = player.get("position")
         rows[str(item["id"])] = {"anuncio": item["id"], "jogador": player.get("id"), "nome": player.get("name"),
@@ -77,7 +78,8 @@ def sale_rows(market: list[dict], ratio: float = SALE_RATIO) -> dict[str, dict]:
                                  "rating": player.get(MAIN_STAT.get(position, "statOvr")),
                                  "idade": player.get("age"), "preco": price, "valor": value,
                                  "razao": round(price / value, 2), "fora_da_liga": bool(team.get("isForeignTeam")),
-                                 "desde": item.get("timeStampForSale"), "raridade": RARITIES.get(player.get("rarity"))}
+                                 "desde": item.get("timeStampForSale"), "raridade": RARITIES.get(player.get("rarity")),
+                                 "treinador": bool(team.get("userId"))}
     return rows
 
 
@@ -195,8 +197,9 @@ def sale_picks(market: list[dict], players: list[dict], money: float, count: int
                places: dict[int, int] | None = None, rounds_left: int | None = None) -> list[dict]:
     """The game's players worth buying now (THEORY.md 7.7, owner 2026-10-15): to sell again at once, those valued
     10-60 M, and to strengthen the eleven, any that beats the weakest starter of its specific position where he is
-    below the eleven's average (``reforco``, ``weak_spots``); only "SALE" ones the club can pay for (owner, 2026-10-20);
-    and 1 at most of a general position of the eleven with no backup (``suplente``, ``depth_gaps``), first, whatever its
+    below the eleven's average (``reforco``, ``weak_spots``); those the club can pay for, at any price against their
+    value, and also a manager's (``treinador``; owner, 2026-11-25, in place of "only SALE" of 2026-10-20), never the
+    club's own; and 1 at most of a general position of the eleven with no backup (``suplente``, ``depth_gaps``), first, whatever its
     rating (owner, 2026-11-02: it used to fill the card). Then the reinforcements and those valued 24-60 M, cheapest
     against their value first, then the biggest profit. In the last ``LAST_ROUNDS`` league rounds nobody only to sell
     again. ``pechincha``: at most 1.25 × value. ``places``: the formation's places, so an empty one counts."""
@@ -207,8 +210,8 @@ def sale_picks(market: list[dict], players: list[dict], money: float, count: int
     gaps = depth_gaps(players, listed, places)
     flips = rounds_left is None or rounds_left > LAST_ROUNDS
     picks = []
-    for row in sale_rows(market).values():
-        if row["preco"] > money:
+    for row in sale_rows(market, ratio=float("inf"), managers=True).values():
+        if row["preco"] > money or row["jogador"] in squad:
             continue
         spot = row["especifica"] or ("pos", next((k for k, v in POSITIONS.items() if v == row["pos"]), None))
         weak = spots.get(spot)

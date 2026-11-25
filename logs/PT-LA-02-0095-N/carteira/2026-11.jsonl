@@ -586,3 +586,67 @@
 {"t":1795527005,"saldo":3361,"antes":3360,"diferenca":1,"partes":{"vídeos da loja":1}}
 {"t":1795527113,"saldo":3362,"antes":3361,"diferenca":1,"partes":{"vídeos da loja":1}}
 {"t":1795529177,"saldo":3350,"antes":3362,"diferenca":-12,"partes":{"amigáveis":-12}}
+{"t":1795529784,"saldo":3351,"antes":3350,"diferenca":1,"partes":{"vídeos da loja":1}}
+{"t":1795529895,"saldo":3352,"antes":3351,"diferenca":1,"partes":{"vídeos da loja":1}}
+{"t":1795530341,"saldo":3348,"antes":3352,"diferenca":-4,"partes":{"amigáveis":-4}}
+{"t":1795530357,"saldo":3340,"antes":3348,"diferenca":-8,"partes":{"amigáveis":-8}}
+{"t":1795531059,"saldo":3335,"antes":3340,"diferenca":-5,"partes":{"transferências":-5},"jogadores":["Salah"]}
+{"t":1795532680,"saldo":3336,"antes":3335,"diferenca":1,"partes":{"vídeos da loja":1}}
+{"t":1795532859,"saldo":3338,"antes":3336,"diferenca":2,"partes":{"vídeos da loja":2}}
+{"t":1795533043,"saldo":3339,"antes":3338,"diferenca":1,"partes":{"vídeos da loja":1}}
+{"t":1795533047,"saldo":3340,"antes":3339,"diferenca":1,"partes":{"vídeos da loja":1}}
+{"t":1795533219,"saldo":3341,"antes":3340,"diferenca":1,"partes":{"vídeos da loja":1}}
+{"t":1795533400,"saldo":3342,"antes":3341,"diferenca":1,"partes":{"vídeos da loja":1}}
+{"t":1795534141,"saldo":3344,"antes":3342,"diferenca":2,"partes":{"vídeos da loja":2}}
+{"t":1795534382,"saldo":3340,"antes":3344,"diferenca":-4,"partes":{"amigáveis":-4}}
+{"t":1795536279,"saldo":3339,"antes":3340,"diferenca":-1,"partes":{"transferências":-1},"jogadores":["Koundé"]}
+{"t":1795537361,"saldo":3340,"antes":3339,"diferenca":1,"partes":{"vídeos da loja":1}}
+{"t":1795538119,"saldo":3348,"antes":3340,"diferenca":8,"partes":{"vídeos da loja":8}}
+{"t":1795540946,"saldo":3349,"antes":3348,"diferenca":1,"partes":{"vídeos da loja":1}}
+{"t":1795541139,"saldo":3350,"antes":3349,"diferenca":1,"partes":{"vídeos da loja":1}}
+{"t":1795541281,"saldo":3352,"antes":3350,"diferenca":2,"partes":{"vídeos da loja":2}}
+{"t":1795541680,"saldo":3354,"antes":3352,"diferenca":2,"partes":{"vídeos da loja":2}}
+{"t":1795541861,"saldo":3355,"antes":3354,"diferenca":1,"partes":{"vídeos da loja":1}}
+{"t":1795542040,"saldo":3356,"antes":3355,"diferenca":1,"partes":{"vídeos da loja":1}}
+{"t":1795542160,"saldo":3357,"antes":3356,"diferenca":1,"partes":{"vídeos da loja":1}}
+{"t":1795597448,"saldo":3393,"antes":3357,"diferenca":36,"partes":{"fora do bot":36}}
+{"t":1795597615,"saldo":3382,"antes":3386,"diferenca":-4,"partes":{"amigáveis":-4}}
+{"t":1795597925,"saldo":3381,"antes":3382,"diferenca":-1,"partes":{"transferências":-1},"jogadores":["Maguire"]}
+{"t":1795598070,"saldo":3375,"antes":3381,"diferenca":-6,"partes":{"transferências":-6},"jogadores":["Salah","Muharemović"]}
+{"t":1795598292,"saldo":3376,"antes":3375,"diferenca":1,"partes":{"vídeos da loja":1}}
+{"t":1795598472,"saldo":3378,"antes":3376,"diferenca":2,"partes":{"vídeos da loja":2}}
+{"t":1795598656,"saldo":3380,"antes":3378,"diferenca":2,"partes":{"vídeos da loja":2}}
+{"t":1795598832,"saldo":3382,"antes":3380,"diferenca":2,"partes":{"vídeos da loja":2}}
+{"t":1795599011,"saldo":3384,"antes":3382,"diferenca":2,"partes":{"vídeos da loja":2}}
+{"t":1795600092,"saldo":3382,"antes":3384,"diferenca":-2,"partes":{"transferências":-2},"jogadores":["B. Fernandes"]}
+{"t":1795600857,"saldo":3376,"antes":3382,"diferenca":-6,"partes":{"transferências":-6},"jogadores":["Malen","Calafiori"]}
+{"t":1795601998,"saldo":3378,"antes":3376,"diferenca":2,"partes":{"vídeos da loja":2}}
+{"t":1795602297,"saldo":3381,"antes":3378,"diferenca":3,"partes":{"vídeos da loja":3}}
+{"t":1795603724,"saldo":3382,"antes":3381,"diferenca":1,"partes":{"vídeos da loja":1}}
+{"t":1795605099,"saldo":3383,"antes":3382,"diferenca":1,"partes":{"vídeos da loja":1}}
+{"t":1795606860,"saldo":3380,"antes":3383,"diferenca":-3,"partes":{"transferências":-3},"jogadores":["Maignan","Gibbs-White"]}
+{"t":1795607040,"saldo":3381,"antes":3380,"diferenca":1,"partes":{"vídeos da loja":1}}
+{"t":1795607218,"saldo":3384,"antes":3381,"diferenca":3,"partes":{"vídeos da loja":3}}
+{"t":1795607400,"saldo":3386,"antes":3384,"diferenca":2,"partes":{"vídeos da loja":2}}
+{"t":1795607579,"saldo":3388,"antes":3386,"diferenca":2,"partes":{"vídeos da loja":2}}
+{"t":1795607619,"saldo":3389,"antes":3388,"diferenca":1,"partes":{"vídeos da loja":1}}
+{"t":1795611074,"saldo":3393,"antes":3389,"diferenca":4,"partes":{"vídeos da loja":4}}
+{"t":1795611657,"saldo":3398,"antes":3393,"diferenca":5,"partes":{"vídeos da loja":5}}
+{"t":1795615159,"saldo":3399,"antes":3398,"diferenca":1,"partes":{"vídeos da loja":1}}
+{"t":1795615956,"saldo":3401,"antes":3399,"diferenca":2,"partes":{"vídeos da loja":2}}
+{"t":1795616135,"saldo":3402,"antes":3401,"diferenca":1,"partes":{"vídeos da loja":1}}
+{"t":1795616314,"saldo":3404,"antes":3402,"diferenca":2,"partes":{"vídeos da loja":2}}
+{"t":1795616494,"saldo":3406,"antes":3404,"diferenca":2,"partes":{"vídeos da loja":2}}
+{"t":1795616543,"saldo":3407,"antes":3406,"diferenca":1,"partes":{"vídeos da loja":1}}
+{"t":1795618277,"saldo":3406,"antes":3407,"diferenca":-1,"partes":{"transferências":-1},"jogadores":["De Bruyne"]}
+{"t":1795618347,"saldo":3407,"antes":3406,"diferenca":1,"partes":{"vídeos da loja":1}}
+{"t":1795619736,"saldo":3409,"antes":3407,"diferenca":2,"partes":{"vídeos da loja":2}}
+{"t":1795619749,"saldo":3410,"antes":3409,"diferenca":1,"partes":{"vídeos da loja":1}}
+{"t":1795619914,"saldo":3411,"antes":3410,"diferenca":1,"partes":{"vídeos da loja":1}}
+{"t":1795620994,"saldo":3413,"antes":3411,"diferenca":2,"partes":{"vídeos da loja":2}}
+{"t":1795621140,"saldo":3415,"antes":3413,"diferenca":2,"partes":{"vídeos da loja":2}}
+{"t":1795622006,"saldo":3416,"antes":3415,"diferenca":1,"partes":{"vídeos da loja":1}}
+{"t":1795623336,"saldo":3417,"antes":3416,"diferenca":1,"partes":{"vídeos da loja":1}}
+{"t":1795623515,"saldo":3419,"antes":3417,"diferenca":2,"partes":{"vídeos da loja":2}}
+{"t":1795623735,"saldo":3418,"antes":3420,"diferenca":-2,"partes":{"transferências":-2},"jogadores":["Elvedi","Gelli"]}
+{"t":1795623936,"saldo":3405,"antes":3418,"diferenca":-13,"partes":{"transferências":-13},"jogadores":["J. García","Doku","Nmecha","Bisseck"]}

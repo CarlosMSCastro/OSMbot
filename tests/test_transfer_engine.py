@@ -104,7 +104,7 @@ def test_sale_options_are_the_games_sale_players_of_that_position_the_club_can_p
 
 def _sale(aid, pos, rating, price, value):
     return {"id": aid, "price": price, "team": {"userId": None, "isForeignTeam": True},
-            "player": {"id": aid, "name": f"S{aid}", "position": pos, "age": 26, "value": value,
+            "player": {"id": 1000 + aid, "name": f"S{aid}", "position": pos, "age": 26, "value": value,
                        "statDef": rating, "statAtt": rating, "statOvr": rating}}
 
 
@@ -121,16 +121,21 @@ def test_sale_picks_are_the_affordable_sale_players_by_resale_profit_with_reinfo
               _sale(2, 1, 70, 12e6, 10e6),  # to sell again, at 1.2×: a bargain, the best bet
               _sale(3, 3, 99, 30e6, 25e6),  # too dear
               _sale(4, 1, 60, 1.2e6, 1e6),  # worth too little to sell again (under 10 M)
-              _sale(5, 1, 70, 17e6, 10e6),  # no "SALE" (1.7×): out (owner, 2026-10-20)
+              _sale(5, 1, 70, 17e6, 10e6),  # no "SALE" (1.7×): in, after the cheaper ones (owner, 2026-11-25)
               _sale(6, 1, 75, 13e6, 10e6),  # 1.3× like S1, smaller profit: after it
               _sale(7, 2, 70, 19e6, 15e6)]
     picks = sale_picks(market, players, money=20e6, count=5)
     assert [(p["nome"], p["reforco"], p["pechincha"]) for p in picks] == [
-        ("S1", True, False), ("S2", False, True), ("S7", False, False), ("S6", False, False)]  # the reinforcement first
+        ("S1", True, False), ("S2", False, True), ("S7", False, False), ("S6", False, False),
+        ("S5", False, False)]  # the reinforcement first, then the cheapest against their value
     assert picks[0]["lucro"] == 27.5e6 - 14.3e6 and picks[0]["fraco"] == "T1 79"
     assert len(sale_picks(market, players, money=20e6)) == 3
     big = _sale(8, 3, 90, 17e6, 12e6)  # a reinforcement is shown whatever its value
     assert sale_picks([big], players, 20e6)[0]["reforco"] and not sale_picks([_sale(9, 1, 90, 90e6, 70e6)], players, 100e6)
+    manager = {**_sale(10, 1, 70, 11e6, 10e6), "team": {"userId": 5, "isForeignTeam": True}}  # 1.1×: a manager's
+    own = {**_sale(11, 1, 70, 10e6, 10e6), "team": {"userId": 7, "isForeignTeam": False}, "player": {**_sale(1, 3, 79, 0, 10e6)["player"], "id": 1}}
+    picks = sale_picks([manager, own] + market, players, money=20e6)
+    assert [(p["nome"], p["treinador"]) for p in picks] == [("S1", False), ("S10", True), ("S2", False)]  # never the club's own
 
 
 def test_reinforcements_go_by_specific_position_below_the_average_and_a_listed_starter_counts_as_his_cover():

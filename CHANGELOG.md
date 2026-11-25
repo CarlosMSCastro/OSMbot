@@ -4,6 +4,18 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-PT/1.1.0/); 
 
 Este ficheiro é o **histórico de versões, para quem lê o repo**. O diário interno de cada sessão de trabalho está em [`docs/WORKLOG.md`](docs/WORKLOG.md).
 
+## [0.21.0] — 2026-11-25
+
+Escolhes quantos amigáveis o bot faz em cada clube, as mudanças nas Definições contam logo e o cartão de compras mostra sempre as mais baratas, com ou sem "SALE".
+
+### Adicionado
+- **Amigáveis por clube (D-120):** em Definições → Clubes e automações…, uma caixa com os amigáveis por jornada de cada clube, de 0 ("não") a 8, por omissão 4. Nos eventos de amigáveis (Intense Friendlies, Trainingcamp Terror) faz o dobro. Ficam espalhados de 16 h a 4 h antes do jogo (no evento, de 16 h a 2 h). O sim/não antigo lê-se como 4 ou 0.
+
+### Alterado
+- **Compras no cartão (D-122):** a melhor compra e as 3 ao passar o rato são sempre as mais baratas face ao valor, com ou sem "SALE" e sem teto (1,6×, 1,9×…). Entram também jogadores à venda por outros treinadores, marcados "treinador", mas nunca os do teu clube. Os limites são os mesmos: cabe no dinheiro (conta + poupança) e serve para revenda, reforço ou suplente. A fita azul "SALE" só aparece quando a melhor é do jogo e está a 1,5× ou menos.
+- **As Definições contam logo:** ao fechar Definições → Clubes e automações… com alguma mudança, a janela redesenha e, com o bot a trabalhar, faz uma passagem já, em vez de esperar pela seguinte.
+- **Boss coins ao ligar (D-121):** o saldo quando o bot liga é o ponto de partida. O que mudou com o bot desligado já não aparece como gasto do dia (fica só uma linha no registo).
+
 ## [0.20.1] — 2026-11-24
 
 Correções à regra: os amigáveis que um rival joga contra ti já não tiram lugar aos teus, o capitão deixa de ficar com os 3 papéis e o 5-2-3 fora de casa vale também quando o plantel não tem médio defensivo.

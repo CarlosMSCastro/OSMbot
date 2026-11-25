@@ -313,7 +313,8 @@ def sale_view(club: dict) -> dict | None:
     unsure = "" if sale.get("certo") else "?"
 
     def tags(p: dict) -> list[str]:
-        return (["suplente"] if p.get("suplente") else []) + (["reforço"] if p["reforco"] else []) +             (["pechincha"] if p["pechincha"] else [])
+        return ((["treinador"] if p.get("treinador") else []) + (["suplente"] if p.get("suplente") else []) +
+                (["reforço"] if p["reforco"] else []) + (["pechincha"] if p["pechincha"] else []))
 
     def detail(tag: str, p: dict) -> str:  # on hover, why: "suplente (DC sem suplente)", "reforço (> Ndicka 109)"
         why = {"suplente": p.get("suplente"), "reforço": p["fraco"] and f"> {p['fraco']}"}.get(tag)
@@ -334,7 +335,7 @@ def sale_view(club: dict) -> dict | None:
     from osmbot.transfers.engine import SALE_RATIO
 
     return {"player": f"{pos(best)} {best['rating']} · {best['nome']}", "price": money(best["preco"]),
-            "sale": best["razao"] <= SALE_RATIO,  # the game's "SALE" ribbon: not every pick has it (2026-10-15)
+            "sale": best["razao"] <= SALE_RATIO and not best.get("treinador"),  # the game's ribbon: not every pick has it
             "profit": f"lucro ~{money(best['lucro'])}{unsure}", "tags": tags(best), "more": len(picks) - 1, "tip": grid}
 
 

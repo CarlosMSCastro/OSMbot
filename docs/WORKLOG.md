@@ -2,6 +2,12 @@
 
 Entradas mais recentes primeiro. Cada sessão: o que se fez · o que ficou por fazer · próximo passo.
 
+## 2026-11-25 — Cartão de compras: mais baratos, com ou sem SALE (PT-LA-02-0095-N)
+- **Dono:** mostrar sempre os mais baratos face ao valor, mesmo acima de 1,5×; podem ser de treinadores, dentro dos mesmos limites; sem teto.
+- **Feito (D-122):** `sale_picks` lê todos os anúncios (sem teto, com treinadores, nunca os do clube); marca "treinador" (fita SALE só se for do jogo e ≤ 1,5×); `THEORY.md` §7.7; `i18n`. Testes: dados das compras com ids próprios; novas verificações em 2 testes. 658 testes.
+- **Por fazer:** ver na janela a sério; só vale com a versão nova.
+- **Versão 0.21.0 (pedido do dono):** `pyproject`, `__init__`, `CHANGELOG` (D-120, D-121, D-122, Definições contam logo), `README` (amigáveis 0–8, compras com ou sem SALE, revenda 10–60 M), `dist/release-notes-v0.21.0.md`. Dist feito aqui (`build_portable.py --zip --installer`: portátil 553 MB, zip 206 MB, instalador 148 MB; versão e D-122 confirmadas dentro); os da 0.20.1 apagados. 658 testes. **Por fazer (dono):** commit, push, tag e `gh release create`.
+
 ## 2026-11-24 (noite) — Boss coins −75 ao ligar (DESKTOP-KAM70RR)
 - **Dono:** "aparece −75 coins, quando devia ser 0". **Causa:** este PC estava desligado desde 20/11 19h03; ao ligar (24/11 19h23) comparou o saldo com o de há 4 dias e pôs a diferença toda (−71: vídeos, amigáveis e compras feitos nesses dias, já registados pelo PC do trabalho) como "transferências", por ter visto 18 compras de uma vez. Mais −4 de um amigável real do bot às 19h24.
 - O Claude fez primeiro uma correção (regra dos 30 min) **sem confirmar com o dono**; o dono chamou a atenção. Substituída pela regra que o dono escolheu.
