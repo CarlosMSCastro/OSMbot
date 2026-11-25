@@ -2,6 +2,12 @@
 
 Entradas mais recentes primeiro. Cada sessão: o que se fez · o que ficou por fazer · próximo passo.
 
+## 2026-11-24 (noite) — Boss coins −75 ao ligar (DESKTOP-KAM70RR)
+- **Dono:** "aparece −75 coins, quando devia ser 0". **Causa:** este PC estava desligado desde 20/11 19h03; ao ligar (24/11 19h23) comparou o saldo com o de há 4 dias e pôs a diferença toda (−71: vídeos, amigáveis e compras feitos nesses dias, já registados pelo PC do trabalho) como "transferências", por ter visto 18 compras de uma vez. Mais −4 de um amigável real do bot às 19h24.
+- O Claude fez primeiro uma correção (regra dos 30 min) **sem confirmar com o dono**; o dono chamou a atenção. Substituída pela regra que o dono escolheu.
+- **Feito (D-121, OK do dono):** a primeira leitura da carteira em cada arranque é o ponto de partida; o que mudou antes não conta (só uma linha no log, "… antes de o bot ligar …; não contam"). `game/wallet.py`, `tests/conftest.py`, `THEORY.md` §17, 1 teste novo. 658 testes; pyflakes limpo.
+- **Por fazer:** a linha −71 já escrita em `logs/DESKTOP-KAM70RR/carteira/2026-11.jsonl` e o total do dia em `~/.osmbot/carteira.json` ficam como estão (o dono decide se se apaga). Só vale com a versão nova / ao reiniciar o bot.
+
 ## 2026-11-24 (tarde, 2) — Definições contam logo (PT-LA-02-0095-N)
 - **Pergunta do dono:** porque está "à espera" há tanto tempo com os amigáveis "já" nos 3 clubes. **Resposta:** os amigáveis estavam desligados desde 2026-11-19 (D-113); o dono pôs 2 por clube às 13h38, 2 min depois da passagem das 13h35. O bot só lê as Definições no início de cada passagem e a seguinte estava marcada para ~14h14 (loja). A timeline já lia o número novo, daí o "já".
 - **Feito (pedido do dono):** ao fechar Definições → Clubes e automações, se algo mudou, a janela redesenha e, com o bot a trabalhar, pede uma passagem já ("Definições mudadas: passagem já" no registo), como já fazia com um clube novo. `gui/window.py` (`show_settings`), texto da janela e `i18n`. 657 testes; pyflakes sem nada novo.

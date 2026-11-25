@@ -825,3 +825,43 @@
 {"t":1795057441,"saldo":3468,"antes":3467,"diferenca":1,"partes":{"vídeos da loja":1}}
 {"t":1795060863,"saldo":3473,"antes":3468,"diferenca":5,"partes":{"recompensas":5}}
 {"t":1795201398,"saldo":3428,"antes":3473,"diferenca":-45,"partes":{"transferências":-45},"jogadores":["Kane","Dimarco","Bijol","Saka","Hincapié","Lopy","Molumby","Konan","Isak","Torp","Lacroix","Neymar","L. Martínez","Paquetá"]}
+{"t":1795548245,"saldo":3357,"antes":3428,"diferenca":-71,"partes":{"transferências":-71},"jogadores":["Mamardashvili","Hildebrandt","Guéhi","Salah","Alexander-Arnold","Isak","Giménez","Anderson","Mac Allister","Cucurella","Hjulmand","Koundé","Tchouaméni","Alexander-Arnold","K. Koné","Osimhen","Konsa","García"]}
+{"t":1795548274,"saldo":3353,"antes":3357,"diferenca":-4,"partes":{"amigáveis":-4}}
+{"t":1795550600,"saldo":3345,"antes":3353,"diferenca":-8,"partes":{"amigáveis":-8}}
+{"t":1795550787,"saldo":3347,"antes":3345,"diferenca":2,"partes":{"vídeos da loja":2}}
+{"t":1795550967,"saldo":3349,"antes":3347,"diferenca":2,"partes":{"vídeos da loja":2}}
+{"t":1795551148,"saldo":3350,"antes":3349,"diferenca":1,"partes":{"vídeos da loja":1}}
+{"t":1795551330,"saldo":3351,"antes":3350,"diferenca":1,"partes":{"vídeos da loja":1}}
+{"t":1795551508,"saldo":3352,"antes":3351,"diferenca":1,"partes":{"vídeos da loja":1}}
+{"t":1795551688,"saldo":3353,"antes":3352,"diferenca":1,"partes":{"vídeos da loja":1}}
+{"t":1795552050,"saldo":3354,"antes":3353,"diferenca":1,"partes":{"vídeos da loja":1}}
+{"t":1795554388,"saldo":3355,"antes":3354,"diferenca":1,"partes":{"vídeos da loja":1}}
+{"t":1795554567,"saldo":3356,"antes":3355,"diferenca":1,"partes":{"vídeos da loja":1}}
+{"t":1795554739,"saldo":3358,"antes":3356,"diferenca":2,"partes":{"vídeos da loja":2}}
+{"t":1795554929,"saldo":3359,"antes":3358,"diferenca":1,"partes":{"vídeos da loja":1}}
+{"t":1795555035,"saldo":3360,"antes":3359,"diferenca":1,"partes":{"vídeos da loja":1}}
+{"t":1795556188,"saldo":3361,"antes":3360,"diferenca":1,"partes":{"vídeos da loja":1}}
+{"t":1795556364,"saldo":3363,"antes":3361,"diferenca":2,"partes":{"vídeos da loja":2}}
+{"t":1795557448,"saldo":3362,"antes":3363,"diferenca":-1,"partes":{"transferências":-1},"jogadores":["Douvikas"]}
+{"t":1795558168,"saldo":3363,"antes":3362,"diferenca":1,"partes":{"vídeos da loja":1}}
+{"t":1795558348,"saldo":3365,"antes":3363,"diferenca":2,"partes":{"vídeos da loja":2}}
+{"t":1795558448,"saldo":3366,"antes":3365,"diferenca":1,"partes":{"vídeos da loja":1}}
+{"t":1795558607,"saldo":3367,"antes":3366,"diferenca":1,"partes":{"vídeos da loja":1}}
+{"t":1795558718,"saldo":3368,"antes":3367,"diferenca":1,"partes":{"vídeos da loja":1}}
+{"t":1795559734,"saldo":3369,"antes":3368,"diferenca":1,"partes":{"vídeos da loja":1}}
+{"t":1795559933,"saldo":3370,"antes":3369,"diferenca":1,"partes":{"vídeos da loja":1}}
+{"t":1795560037,"saldo":3371,"antes":3370,"diferenca":1,"partes":{"vídeos da loja":1}}
+{"t":1795561815,"saldo":3372,"antes":3371,"diferenca":1,"partes":{"vídeos da loja":1}}
+{"t":1795561957,"saldo":3373,"antes":3372,"diferenca":1,"partes":{"vídeos da loja":1}}
+{"t":1795562308,"saldo":3375,"antes":3373,"diferenca":2,"partes":{"vídeos da loja":2}}
+{"t":1795562541,"saldo":3377,"antes":3375,"diferenca":2,"partes":{"vídeos da loja":2}}
+{"t":1795563208,"saldo":3376,"antes":3377,"diferenca":-1,"partes":{"transferências":-1},"jogadores":["Bonmann"]}
+{"t":1795563450,"saldo":3377,"antes":3376,"diferenca":1,"partes":{"vídeos da loja":1}}
+{"t":1795563748,"saldo":3378,"antes":3377,"diferenca":1,"partes":{"fora do bot":1}}
+{"t":1795563751,"saldo":3378,"antes":3378,"diferenca":0,"partes":{"vídeos da loja":1,"transferências":-1},"jogadores":["A. Doğan"]}
+{"t":1795565161,"saldo":3381,"antes":3378,"diferenca":3,"partes":{"fora do bot":3}}
+{"t":1795565524,"saldo":3382,"antes":3381,"diferenca":1,"partes":{"vídeos da loja":1}}
+{"t":1795565908,"saldo":3384,"antes":3382,"diferenca":2,"partes":{"vídeos da loja":2}}
+{"t":1795566113,"saldo":3386,"antes":3384,"diferenca":2,"partes":{"vídeos da loja":2}}
+{"t":1795566251,"saldo":3387,"antes":3386,"diferenca":1,"partes":{"vídeos da loja":1}}
+{"t":1795567584,"saldo":3390,"antes":3387,"diferenca":3,"partes":{"vídeos da loja":3}}

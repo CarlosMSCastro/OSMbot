@@ -30,6 +30,30 @@ def test_check_records_each_change_and_writes_the_day_before_s_summary(monkeypat
     assert said == ["Boss coins (2026-10-28): -4 amigáveis · -6 fora do bot · saldo 90"]
 
 
+def test_the_first_reading_of_a_run_is_the_starting_point(tmp_path, monkeypatch):
+    """Owner, 2026-11-24: 4 days off here (the other PC was working), then -71 "transferências" for the squads read;
+    the change since the bot started is what counts (D-121)."""
+    from datetime import timedelta
+
+    recorded, said = [], []
+    monkeypatch.setattr(wallet, "FILE", tmp_path / "carteira.json")
+    monkeypatch.setattr(logs, "record", lambda kind, data: recorded.append((kind, data)))
+    monkeypatch.setattr(wallet, "_history", [])
+    monkeypatch.setattr(wallet, "_purchases", [])
+    t0 = datetime(2026, 11, 20, 19, 3)
+    wallet.check(3428, now=t0)
+    monkeypatch.setattr(wallet, "_run", {"started": False})  # the bot is started again, 4 days later
+    later = datetime(2026, 11, 24, 19, 24)
+    wallet.note_purchases(["Salah", "Isak"], now=later)
+    wallet.note("amigáveis", -4)
+    wallet.check(3353, said.append, later)
+    assert recorded == [("carteira", {"saldo": 3353, "antes": 3357, "diferenca": -4, "partes": {"amigáveis": -4}})]
+    assert said == ["Boss coins: -71 antes de o bot ligar (saldo 3 428 → 3 353); não contam"]
+    assert wallet._purchases == [] and wallet._load()["totais"] == {"amigáveis": -4}
+    wallet.check(3352, now=later + timedelta(minutes=3))  # back to normal: the next drop is "fora do bot"
+    assert recorded[-1][1]["partes"] == {"fora do bot": -1}
+
+
 def test_a_drop_with_a_purchase_seen_is_transfers_not_outside():
     from osmbot.game import wallet
 

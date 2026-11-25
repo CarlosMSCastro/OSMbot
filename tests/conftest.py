@@ -120,6 +120,7 @@ def _isolated_from_the_game(monkeypatch, tmp_path):
 
     monkeypatch.setattr(wallet, "FILE", tmp_path / "carteira.json")
     monkeypatch.setattr(wallet, "_pending", {})
+    monkeypatch.setattr(wallet, "_run", {"started": True})
     monkeypatch.setattr(stadium, "EVENT_FILE", tmp_path / "estadio_evento.json")
     from osmbot.game import events
 

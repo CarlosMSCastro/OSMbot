@@ -645,6 +645,7 @@ Há **3 componentes** a melhorar, cada um com **níveis 0, 1, 2 e 3**:
 
 - A cada leitura da carteira (a do quadro, de 3 em 3 min), a diferença desde a anterior divide-se pelo que o bot fez: **vídeos da loja**, **recompensas** (início de sessão, missões e vídeos acumulados, inventário, sacos, prémio de fim de época), **amigáveis**, **treinos acabados**, **estádio**; o que sobra é **fora do bot** (o dono à mão no jogo, p. ex. o olheiro, ou algo que o bot não regista). Uma linha em `logs/<PC>/carteira/` sempre que o saldo muda; uma vez por dia, no log do dia, o resumo do dia anterior: "Boss coins (2026-10-28): +80 vídeos da loja · −56 amigáveis · −40 estádio · −15 fora do bot · saldo 3 275".
 - **[S]** Dois PCs com o bot ao mesmo tempo veem os gastos um do outro como "fora do bot". Uma leitura entre um gasto e o seu registo mostra-o como "fora do bot" e a seguinte desfaz: o total do dia está certo.
+- **Ponto de partida (dono, 2026-11-24; D-121):** quando o bot liga, o saldo lido é o ponto de partida; o que mudou antes disso não conta. Mostra-se saldo agora − saldo ao ligar (negativo se se gastou mais do que se ganhou).
 - Por fazer (dono, "mais tarde"): dizer **o quê** foi o "fora do bot" (olheiro, estágio…), depois de ver que leituras do jogo mostram cada coisa (regra 7).
 
 ## 18. Médico e advogado

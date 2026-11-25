@@ -8,6 +8,10 @@ balance and the day's totals) in ``~/.osmbot/carteira.json``.
 
 [S] Two PCs running the bot at once see each other's spending as "fora do bot". A reading that falls between a spend
 and its note shows it as "fora do bot" and the next one takes it back: the day's totals are right.
+
+The first reading of each run is the starting point (owner, 2026-11-24: "quando o bot liga devia mostrar o saldo";
+D-121): what changed before it is not counted, neither as "fora do bot" nor as "transferências", only what the bot
+noted itself. The players seen arriving before it are dropped too.
 """
 from __future__ import annotations
 
@@ -25,6 +29,7 @@ ORDER = ("vídeos da loja", "recompensas", "amigáveis", "treinos acabados", "es
 _pending: dict[str, int] = {}
 _history: list[dict] = []  # this run's changes, for the window's "since the bot started" (D-114)
 _purchases: list[tuple[float, str]] = []  # players seen arriving, waiting for the drop of the wallet (time, name)
+_run = {"started": False}  # False until this run's first reading of the wallet
 _lock = threading.Lock()
 
 
@@ -153,18 +158,28 @@ def check(balance: int | None, log=None, now: datetime | None = None) -> None:
         state["totais"] = {}
     state["dia"] = today
     before = state.get("saldo")
+    stale = before is not None and not _run["started"]
+    _run["started"] = True
+    if stale:
+        with _lock:
+            _purchases.clear()
+        bought = []
+        if log and balance - before - sum(done.values()):
+            log(f"Boss coins: {balance - before - sum(done.values()):+d} antes de o bot ligar "
+                f"(saldo {before:,} → {balance:,}); não contam".replace(",", " "))
     if before is not None and (balance != before or done):
-        parts = split(balance - before, done, len(bought))
+        parts = {k: v for k, v in done.items() if v} if stale else split(balance - before, done, len(bought))
         if TRANSFERS in parts:
             with _lock:
                 _purchases.clear()
+        diff = sum(parts.values()) if stale else balance - before
         if parts:
-            record = {"saldo": balance, "antes": before, "diferenca": balance - before, "partes": parts}
+            record = {"saldo": balance, "antes": balance - diff, "diferenca": diff, "partes": parts}
             if TRANSFERS in parts:
                 record["jogadores"] = bought
             logs.record("carteira", record)
             with _lock:
-                _history.append({"t": now.timestamp(), "diff": balance - before, "parts": parts, "players": bought})
+                _history.append({"t": now.timestamp(), "diff": diff, "parts": parts, "players": bought})
             state["totais"] = add(state.get("totais") or {}, parts)
     state["saldo"] = balance
     FILE.parent.mkdir(parents=True, exist_ok=True)
