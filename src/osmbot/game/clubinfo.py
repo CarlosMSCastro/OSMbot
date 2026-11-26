@@ -161,12 +161,11 @@ def hidden_boost(settings: dict) -> float:
 
 
 def _match_strengths(client, team: dict, league: str, teams: list[dict], week: int, upcoming: dict | None,
-                     strength: float | None, done: dict, hidden: bool = False,
-                     his_camp: bool = False) -> tuple[float | None, float | None]:
+                     strength: float | None, done: dict, hidden: bool = False) -> tuple[float | None, float | None]:
     """Both sides' strength for the formation rule (THEORY.md section 1): team rating, match boosts (own daily logins,
     camp and secret training when marked; the opponent's daily logins once analysed and only with a human manager,
-    as the site shows them, or ``hidden_boost`` when he is on a secret training; his camp when he went on one in his
-    last official match against us, D-100) and the home advantage (not on neutral ground)."""
+    as the site shows them, or ``hidden_boost`` when he is on a secret training) and the home advantage (not on neutral
+    ground). His camp in his last match against us is not assumed: a camp is circumstantial (owner, 2026-11-26, D-123)."""
     from osmbot.theory.tactics import match_strength
 
     if not strength or not upcoming or not upcoming.get("strength"):
@@ -181,8 +180,6 @@ def _match_strengths(client, team: dict, league: str, teams: list[dict], week: i
         if user and done.get(ANALYSIS_STEP) else 0
     if hidden:
         theirs += hidden_boost(settings)
-    elif his_camp:
-        theirs += settings.get("CampBoostPercentage") or 0
     home, base = not upcoming.get("neutral"), f"{league}/teams/{team['id']}"
     return (match_strength(strength, boost_pct=own, home=home and upcoming.get("side") == "H", home_pct=own_pitch(client, base)),
             match_strength(upcoming["strength"], boost_pct=theirs, home=home and upcoming.get("side") == "A",
@@ -423,8 +420,7 @@ def club_extra(client, team: dict, base: str, players: list[dict], slot, market:
     likely = (upcoming or {}).get("eleven") or {}  # no match against us: his likely eleven's formation (D-108)
     plan_vs = vs_us or ({"formation": likely["formation"], "detail": likely.get("detail"), "provavel": True}
                         if upcoming and upcoming.get("human") and likely.get("estimate") and likely.get("formation") else None)
-    mine, theirs = _match_strengths(client, team, league, teams, week, upcoming, strength, done, hidden,
-                                    bool((vs_us or {}).get("camp")))
+    mine, theirs = _match_strengths(client, team, league, teams, week, upcoming, strength, done, hidden)
     if upcoming:  # for the reminder of a decisive match: what is known of the day (THEORY.md 21)
         upcoming["match"], upcoming["boosted"] = (mine, theirs), hidden or upcoming["camp"]
 

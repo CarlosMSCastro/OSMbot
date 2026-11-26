@@ -2,6 +2,11 @@
 
 Entradas mais recentes primeiro. Cada sessão: o que se fez · o que ficou por fazer · próximo passo.
 
+## 2026-11-26 — Não assumir o estágio dele (PT-LA-02-0095-N)
+- **Dono:** "No KV Mechelen não devia aceitar 5-3-2?" O bot via o Union SG a 155 contra 117 (ratings 114 × 117): +25 % de estágio assumido pelo jogo da taça (semana 26, D-100) e +6 % de casa → claramente mais forte → só 5-2-3/5-4-1. O Claude mostrou primeiro os 117 × 155 sem explicar de onde vinham.
+- **Feito (D-123):** o estágio do último jogo contra nós deixa de somar à força dele; `clubinfo._match_strengths`; `THEORY.md` §1. Lido ao vivo (só GET): Mechelen 117 × 124, sem aviso no "Onze". 658 testes; pyflakes limpo.
+- **Por fazer:** só vale com a versão nova / ao reiniciar o bot.
+
 ## 2026-11-25 — Cartão de compras: mais baratos, com ou sem SALE (PT-LA-02-0095-N)
 - **Dono:** mostrar sempre os mais baratos face ao valor, mesmo acima de 1,5×; podem ser de treinadores, dentro dos mesmos limites; sem teto.
 - **Feito (D-122):** `sale_picks` lê todos os anúncios (sem teto, com treinadores, nunca os do clube); marca "treinador" (fita SALE só se for do jogo e ≤ 1,5×); `THEORY.md` §7.7; `i18n`. Testes: dados das compras com ids próprios; novas verificações em 2 testes. 658 testes.
