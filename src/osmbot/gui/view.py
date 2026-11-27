@@ -27,6 +27,33 @@ def _money(amount: int | None) -> str:
     return "?" if amount is None else "0" if amount == 0 else money(amount)
 
 
+def late_view(club: dict, now: float) -> dict | None:
+    """The lamp "Estágio + secreto a 10 min" under the boosts (D-103): green when lit, grey otherwise; the hover says
+    the price, and a click asks before lighting it (the window). None when the card has no offer."""
+    from osmbot.prematch import camp as rules
+
+    late = (club.get("prep") or {}).get("late")
+    match, week = club.get("match"), club.get("week")
+    if not late or not match or week is None or match <= now:
+        return None
+    at = datetime.fromtimestamp(match - rules.LEAD).strftime("%H:%M")
+    item = late["offer"]
+    parts = ([f"Estágio n.º {item['camp_nr']} ({item['camp']['value']} BC)"] if item.get("camp") else [])
+    parts += [f"treino secreto ({item['secret']['value']} BC)"] if item.get("secret") else []
+    price = " + ".join(parts) + f" = {item['total']} BC" if parts else ""
+    if late["on"]:
+        tip = (f"Ligado: o bot marca o treino secreto e o estágio às {at} (aceite: {late.get('accepted')} BC).\n"
+               "Prepara já a tática para depois do estágio.\nClica para desligar.")
+    elif late.get("why_not"):
+        tip = late["why_not"]
+    else:
+        tip = f"{price}.\nClica para o bot os marcar às {at} (10 min antes do jogo)."
+    return {"on": late["on"], "can": not late.get("why_not") or late["on"], "tip": tip,
+            "name": "Estágio + secreto a 10 min",
+            "question": rules.question(club.get("name", "?"), late.get("opponent"), item, at),
+            "lamp": rules.lamp(item, week, match, now), "key": club.get("key")}
+
+
 def _done(left: float, total: float) -> float:
     """Share of a timer already gone by (0 to 1)."""
     return 1 - min(max(left, 0), total) / total
@@ -543,7 +570,7 @@ def club_view(club: dict, now: float, shortened: dict | None = None) -> dict:
             "subtitle": subtitle, "facts": facts, "alert": alert, "alerts": alerts, "alerts_tips": alerts_tips, "header": header, "round": round_text, "fixtures": fixtures_view(club.get("fixtures") or [], round_text, cup_word), "cup_line": cup_line, "match": match, "prep_title": prep_title,
             "money": _money(total), "sales": sales, "sponsors": sponsor_row, "squad": squad_view(club.get("value"), club.get("value_table")),
             "stadium": {"still": still, "moving": moving},
-            "prep": {"steps": steps, "boosts": boosts},
+            "prep": {"steps": steps, "boosts": boosts, "late": late_view(club, now)},
             "trainings": trainings,
             "tired": tired_text, "tired_tip": tired_tip,
             "morale": " · ".join(f"{p['name']} {p['morale']}" for p in club.get("low_morale") or []), "rest": [  # THEORY.md 16: rest him before the important one

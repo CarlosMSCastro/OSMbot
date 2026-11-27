@@ -87,7 +87,8 @@ def test_the_part_going_up_has_a_bar_when_its_length_is_known():
 
 def test_pre_match_checklist_shows_done_waiting_and_open_points():
     prep = club_view(club(), NOW)["prep"]
-    assert set(prep) == {"steps", "boosts"}  # no percentage, only the marks (owner, 2026-10-09)
+    assert set(prep) == {"steps", "boosts", "late"}  # no percentage, only the marks (owner, 2026-10-09)
+    assert prep["late"] is None  # no offer read: no lamp (D-103)
     assert prep["steps"] == [("done", "Amigável", "", []), ("waiting", "Análise", "0h10", []), ("open", "Onze", "", [])]
     later = club_view(club(), NOW + 700)["prep"]
     assert later["steps"][1] == ("collect", "Análise", "por levantar", [])

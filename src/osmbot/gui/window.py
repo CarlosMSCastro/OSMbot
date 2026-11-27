@@ -683,6 +683,66 @@ class BoostList(QWidget):
                 row.setToolTip(tip_text(tr(boost["tip"])))  # the name is already beside the icon (owner, 2026-10-15)
 
 
+class LampDot(QWidget):
+    """The lamp of "Estágio + secreto a 10 min" (D-103): a green light when lit, a grey ring when not."""
+
+    def __init__(self):
+        super().__init__()
+        self.on = False
+        self.setFixedSize(20, 20)
+
+    def paintEvent(self, _event) -> None:
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.Antialiasing)
+        colour = QColor(COLOURS[GREEN] if self.on else COLOURS[GREY])
+        painter.setPen(QPen(colour, 1.6))
+        painter.setBrush(colour if self.on else Qt.NoBrush)
+        painter.drawEllipse(QRectF(5, 5, 10, 10))
+
+
+class LampRow(QWidget):
+    """Under the secret training and the camp: the owner lights it, match by match, after seeing the price; the bot
+    then books both 10 min before the match (D-103). A click calls ``clicked``."""
+
+    def __init__(self, size: int):
+        super().__init__()
+        line = QHBoxLayout(self)
+        line.setContentsMargins(0, 0, 0, 0)
+        line.setSpacing(4)
+        self.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
+        self.mark, self.text = LampDot(), text_label(size)
+        line.addWidget(self.mark, 0, Qt.AlignVCenter)
+        line.addWidget(self.text, 1, Qt.AlignVCenter)
+        self.late: dict | None = None
+        self.override: bool | None = None  # what the owner just chose, until a reading of the game agrees
+        self.clicked = None
+
+    def show_late(self, late: dict | None) -> None:
+        self.late = late
+        self.setVisible(bool(late))
+        if not late:
+            self.override = None
+            return
+        on, tip = late["on"], late["tip"]
+        if self.override is not None:
+            if self.override == on:
+                self.override = None
+            else:
+                on = self.override
+                tip = ("Ligado: o bot marca o treino secreto e o estágio 10 min antes do jogo.\nClica para desligar."
+                       if on else "Desligado.")
+        self.mark.on = on
+        self.mark.update()
+        self.text.setText(rich([(late["name"], GREEN if on else GREY)]))
+        self.setToolTip(tip_text("\n".join(tr(line) for line in tip.split("\n"))))
+        self.setCursor(Qt.PointingHandCursor if late.get("can") else Qt.ArrowCursor)
+
+    def mousePressEvent(self, event) -> None:
+        if event.button() == Qt.LeftButton and self.late and self.late.get("can") and self.clicked:
+            self.clicked()
+        super().mousePressEvent(event)
+
+
 _tip_icons: dict[str, str] = {}
 
 
@@ -1748,6 +1808,9 @@ class ClubCard(QFrame):
         prep.addSpacing(7)  # a step's gap less half of the 4 px the boost rows are taller
         self.boosts = BoostList(size=10, spacing=9)  # secret training and training camp, after the steps (owner, 2026-10-14)
         prep.addWidget(self.boosts)
+        self.late = LampRow(size=10)  # the camp + secret training 10 min before the match, by the owner's lamp (D-103)
+        self.late.clicked = self._late_clicked
+        prep.addWidget(self.late)
         self.season_end = SeasonEnd(235 - 36)  # the column's width less its margins
         self.season_end.hide()
         prep.addWidget(self.season_end)
@@ -1830,6 +1893,31 @@ class ClubCard(QFrame):
         if self.club_name:
             self.name.setText(self.club_name + (f"  ·  {tr('desativado')}" if off else ""))
 
+    def _late_clicked(self) -> None:
+        """Light the lamp after the owner's yes to the price, or put it out (D-103). Only the config is written here:
+        the bot does the booking, and a pass is asked for so that it knows when to wake."""
+        from osmbot.game import camp
+        from osmbot.game.loop import request_pass
+
+        late = self.late.late
+        key = late.get("key") or self.key
+        lit = late["on"] if self.late.override is None else self.late.override
+        if lit:
+            answer = QMessageBox.question(self, "OSMbot", tr("Desligar o estágio + treino secreto a 10 min do jogo?"))
+            if answer != QMessageBox.Yes:
+                return
+            camp.set_lamp(key, None)
+        else:
+            answer = QMessageBox.question(self, "OSMbot", tr(late["question"]))
+            if answer != QMessageBox.Yes:
+                return
+            camp.set_lamp(key, {**late["lamp"], "aceite": time.time()})
+        self.late.override = not lit
+        self.late.show_late(late)
+        request_pass("Estágio a 10 min " + ("desligado" if lit else "ligado"))
+        if self.hovered and self.club_name:
+            self.hovered(self.club_name)
+
     def show_club(self, club: dict) -> None:
         self.club_name = club["name"]
         self.key = club.get("key")
@@ -1879,10 +1967,12 @@ class ClubCard(QFrame):
         if end:  # the steps and boosts hidden, not filled and hidden again every second (it blinked)
             self.prep.hide()
             self.boosts.hide()
+            self.late.hide()
         else:
             self.prep.show()
             self._show_prep(club["prep"]["steps"])
             self.boosts.show_boosts(club["prep"].get("boosts") or [])
+            self.late.show_late(club["prep"].get("late"))
         self.season_end.show_end(end)
         self._show_trainings(club["trainings"])
         self.show_competition(club.get("competition"))

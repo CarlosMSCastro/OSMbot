@@ -43,6 +43,7 @@ from osmbot.game.reports import save_reports
 from osmbot.game.medical import run_medical
 from osmbot.game.transfers import save_transfers
 from osmbot.game.prematch import run_prematch
+from osmbot.game import camp as camp_module
 from osmbot.game.rewards import run_rewards
 from osmbot.game.sponsors import run_sponsors
 from osmbot.game.savings import run_savings
@@ -326,7 +327,18 @@ def _shop_ads(dry_run: bool) -> int:
         return gained
 
     return run_shop_ads(lambda: is_claimable(client), _counted("shop", watch, refresh_coins),
-                        dry_run=dry_run, log=_log, sleep=_tick_sleep, training_ready=lambda: _training_ready(client))
+                        dry_run=dry_run, log=_log, sleep=_tick_sleep,
+                        training_ready=lambda: _training_ready(client) or _camp_soon())
+
+
+CAMP_AHEAD = 2 * 60.0  # the videos stop this long before a lit lamp's 10 minutes (D-103)
+
+
+def _camp_soon() -> bool:
+    try:
+        return camp_module.soon(time.time(), CAMP_AHEAD)
+    except Exception:  # never stops the videos
+        return False
 
 
 def _training_ready(client=None) -> bool:
@@ -408,6 +420,8 @@ def _all_ads(dry_run: bool, clock=time.time) -> int:
             continue
         if watched and _training_ready():  # collect first: the other videos wait for the next pass
             break
+        if _camp_soon():  # the camp of a lit lamp comes first (D-103)
+            break
         try:
             watched += step(dry_run)
             _ads_backoff.pop(name, None)
@@ -435,6 +449,7 @@ def run_active(dry_run: bool = False, *, claim=run_claim, train=run_train, finis
                reports=lambda: save_reports(log=_log), boost=lambda confirm: run_event_boost(confirm) + run_event_end_boost(confirm)
                + run_event_stadium_boost(confirm, log=_log),
                relist=lambda confirm: run_relist(confirm),
+               camp=lambda confirm: camp_module.run_camps(confirm, log=_log),
                event_wake=lambda now: events_module.training_wake(now),
                snapshot=None, use_screen: bool | None = None,
                sleep=time.sleep, clock=time.time, rng=random, board=None) -> None:
@@ -550,6 +565,17 @@ def run_active(dry_run: bool = False, *, claim=run_claim, train=run_train, finis
                         raise
                     except Exception as error:
                         _log(f"Poupança: erro ({error}); volto a tentar")
+                camp_times: list[float] = []
+                if camp:
+                    _now("estágio")
+                    try:  # the camp + secret training of a lit lamp, 10 min before the match (D-103): early in the pass
+                        camp_failed, camp_times = _quiet(camp, not dry_run)
+                        if camp_failed:
+                            _log(f"Estágio: {camp_failed} falha(s); volto a tentar")
+                    except OSError:
+                        raise
+                    except Exception as error:
+                        _log(f"Estágio: erro ({error}); volto a tentar")
                 if boost:
                     try:  # a training event began: finish the trainings put before it (THEORY.md section 5)
                         boost_failed = _quiet(boost, not dry_run)
@@ -713,12 +739,13 @@ def run_active(dry_run: bool = False, *, claim=run_claim, train=run_train, finis
                 # a time that went by during this pass (e.g. a friendly due while the videos ran, FC Van 2026-10-19)
                 # means a pass at once, not a lost wake
                 times = times + [max(t, clock()) for t in stadium_times + reward_times + prematch_times + medical_times
-                                 + savings_times + inventory_times if t > pass_start]
+                                 + savings_times + inventory_times + camp_times if t > pass_start]
                 event_time = event_wake(clock()) if event_wake else None
                 if event_time:  # a training event due today: look for it from 05:30 every 10 min
                     times.append(event_time)
                     wakes = wakes + [("evento de treinos", event_time)]
-                wakes = sorted(wakes + [("depósito na poupança", t) for t in savings_times if t > clock()] + ads_wakes(clock()),
+                wakes = sorted(wakes + [("depósito na poupança", t) for t in savings_times if t > clock()]
+                               + [("estágio", t) for t in camp_times if t > clock()] + ads_wakes(clock()),
                                key=lambda e: e[1])
                 wait = next_wait(times, clock(), rng.uniform(*JITTER))
                 if ads_failed:
@@ -726,6 +753,9 @@ def run_active(dry_run: bool = False, *, claim=run_claim, train=run_train, finis
                     wait = min(wait, max(MIN_WAIT, again - clock()) if again else ADS_RETRY)
                 if failed:  # look again in 10 min, never sooner: a training left to collect would otherwise wake it every 30 s
                     wait = WRITE_RETRY
+                    ahead = [c - clock() for c in camp_times if c > clock()]
+                    if ahead:  # but never past a lit lamp's camp (D-103)
+                        wait = max(MIN_WAIT, min(wait, min(ahead)))
                 retries, offline_since = 0, None
             except SystemExit as error:  # NeedsBrowserLogin is turned into SystemExit by the commands
                 if error.code in (0, None, 1):

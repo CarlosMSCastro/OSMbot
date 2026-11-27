@@ -658,3 +658,49 @@
 {"t":1795684916,"saldo":3367,"antes":3365,"diferenca":2,"partes":{"vídeos da loja":2}}
 {"t":1795685098,"saldo":3369,"antes":3367,"diferenca":2,"partes":{"vídeos da loja":2}}
 {"t":1795685276,"saldo":3371,"antes":3369,"diferenca":2,"partes":{"vídeos da loja":2}}
+{"t":1795686947,"saldo":3368,"antes":3371,"diferenca":-3,"partes":{"transferências":-3},"jogadores":["Pacho"]}
+{"t":1795686970,"saldo":3363,"antes":3368,"diferenca":-5,"partes":{"transferências":-5},"jogadores":["Laurienté"]}
+{"t":1795690752,"saldo":3372,"antes":3363,"diferenca":9,"partes":{"vídeos da loja":9}}
+{"t":1795692189,"saldo":3371,"antes":3372,"diferenca":-1,"partes":{"transferências":-1},"jogadores":["Oblak"]}
+{"t":1795692368,"saldo":3370,"antes":3371,"diferenca":-1,"partes":{"transferências":-1},"jogadores":["Wätjen"]}
+{"t":1795695790,"saldo":3373,"antes":3370,"diferenca":3,"partes":{"vídeos da loja":3}}
+{"t":1795696232,"saldo":3379,"antes":3373,"diferenca":6,"partes":{"vídeos da loja":6}}
+{"t":1795701352,"saldo":3377,"antes":3379,"diferenca":-2,"partes":{"transferências":-2},"jogadores":["Ekstein","Fara","Okoli"]}
+{"t":1795701381,"saldo":3378,"antes":3377,"diferenca":1,"partes":{"vídeos da loja":1}}
+{"t":1795701532,"saldo":3380,"antes":3378,"diferenca":2,"partes":{"vídeos da loja":2}}
+{"t":1795701829,"saldo":3376,"antes":3380,"diferenca":-4,"partes":{"transferências":-4},"jogadores":["M. Cunha"]}
+{"t":1795706132,"saldo":3377,"antes":3376,"diferenca":1,"partes":{"vídeos da loja":1}}
+{"t":1795706850,"saldo":3385,"antes":3377,"diferenca":8,"partes":{"vídeos da loja":8}}
+{"t":1795709891,"saldo":3387,"antes":3385,"diferenca":2,"partes":{"vídeos da loja":2}}
+{"t":1795710534,"saldo":3392,"antes":3387,"diferenca":5,"partes":{"vídeos da loja":5}}
+{"t":1795710695,"saldo":3394,"antes":3392,"diferenca":2,"partes":{"vídeos da loja":2}}
+{"t":1795711973,"saldo":3393,"antes":3394,"diferenca":-1,"partes":{"transferências":-1},"jogadores":["Șerbănică"]}
+{"t":1795713632,"saldo":3395,"antes":3393,"diferenca":2,"partes":{"vídeos da loja":2}}
+{"t":1795713734,"saldo":3396,"antes":3395,"diferenca":1,"partes":{"vídeos da loja":1}}
+{"t":1795713953,"saldo":3397,"antes":3396,"diferenca":1,"partes":{"vídeos da loja":1}}
+{"t":1795714021,"saldo":3398,"antes":3397,"diferenca":1,"partes":{"vídeos da loja":1}}
+{"t":1795714448,"saldo":3402,"antes":3398,"diferenca":4,"partes":{"vídeos da loja":4}}
+{"t":1795770703,"saldo":3409,"antes":3420,"diferenca":-11,"partes":{"recompensas":5,"amigáveis":-16}}
+{"t":1795770948,"saldo":3408,"antes":3409,"diferenca":-1,"partes":{"transferências":-1},"jogadores":["Raveloson","T. Mokoena","C. Roberts"]}
+{"t":1795771128,"saldo":3397,"antes":3408,"diferenca":-11,"partes":{"transferências":-11},"jogadores":["Radošević"]}
+{"t":1795771310,"saldo":3394,"antes":3397,"diferenca":-3,"partes":{"transferências":-3},"jogadores":["Bastoni"]}
+{"t":1795771533,"saldo":3391,"antes":3394,"diferenca":-3,"partes":{"transferências":-3},"jogadores":["Joelinton","M. Nunes"]}
+{"t":1795772203,"saldo":3398,"antes":3391,"diferenca":7,"partes":{"vídeos da loja":7}}
+{"t":1795774612,"saldo":3400,"antes":3398,"diferenca":2,"partes":{"vídeos da loja":2}}
+{"t":1795775341,"saldo":3401,"antes":3400,"diferenca":1,"partes":{"vídeos da loja":1}}
+{"t":1795775439,"saldo":3402,"antes":3401,"diferenca":1,"partes":{"vídeos da loja":1}}
+{"t":1795775989,"saldo":3404,"antes":3402,"diferenca":2,"partes":{"vídeos da loja":3,"transferências":-1},"jogadores":["M. Abdulridha","Zab"]}
+{"t":1795775997,"saldo":3405,"antes":3404,"diferenca":1,"partes":{"vídeos da loja":1}}
+{"t":1795778694,"saldo":3404,"antes":3405,"diferenca":-1,"partes":{"transferências":-1},"jogadores":["Guimarães"]}
+{"t":1795780313,"saldo":3405,"antes":3404,"diferenca":1,"partes":{"vídeos da loja":3,"transferências":-2},"jogadores":["D. Muñoz"]}
+{"t":1795781080,"saldo":3411,"antes":3405,"diferenca":6,"partes":{"vídeos da loja":6}}
+{"t":1795783914,"saldo":3412,"antes":3411,"diferenca":1,"partes":{"vídeos da loja":1}}
+{"t":1795784180,"saldo":3415,"antes":3412,"diferenca":3,"partes":{"vídeos da loja":3}}
+{"t":1795788051,"saldo":3414,"antes":3415,"diferenca":-1,"partes":{"transferências":-1},"jogadores":["Acolatse"]}
+{"t":1795791643,"saldo":3423,"antes":3414,"diferenca":9,"partes":{"vídeos da loja":9}}
+{"t":1795795255,"saldo":3430,"antes":3423,"diferenca":7,"partes":{"vídeos da loja":7}}
+{"t":1795795425,"saldo":3432,"antes":3430,"diferenca":2,"partes":{"vídeos da loja":2}}
+{"t":1795797774,"saldo":3426,"antes":3432,"diferenca":-6,"partes":{"transferências":-6},"jogadores":["T. Freitas","Doku"]}
+{"t":1795799569,"saldo":3427,"antes":3426,"diferenca":1,"partes":{"vídeos da loja":1}}
+{"t":1795799932,"saldo":3429,"antes":3427,"diferenca":2,"partes":{"vídeos da loja":3,"transferências":-1},"jogadores":["Emiliano Martínez"]}
+{"t":1795800472,"saldo":3434,"antes":3429,"diferenca":5,"partes":{"vídeos da loja":5}}

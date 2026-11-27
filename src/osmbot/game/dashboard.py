@@ -106,6 +106,12 @@ def session_length(session_id, left: float, now_length: float, normal: float) ->
     return _session_lengths[session_id]
 
 
+def _boosts_due(prep: dict) -> list[dict]:
+    """The boosts for the decisive-match reminder: with the lamp lit (D-103) they count as marked, no reminder."""
+    boosts = prep.get("boosts") or []
+    return [{**b, "on": True} for b in boosts] if (prep.get("late") or {}).get("on") else boosts
+
+
 def collect(client, only: str | None = None) -> dict:
     """One snapshot of everything the board shows (GET requests only, several at a time). ``only``: just that club
     (the card's pre-match or transfer-list line hovered, owner 2026-11-09): {"clubs": [club], "read_at"}, nothing else."""
@@ -192,7 +198,7 @@ def collect(client, only: str | None = None) -> dict:
             club["sale"] = {"picks": sale_picks(market, players, budget, places=club.get("places"), rounds_left=left),
                             "certo": league_sells_at_max(client, team["leagueId"])}
             notes = [idle_money(market, players, budget, left, club.get("places")),
-                     decisive_match(club.get("next"), (club.get("prep") or {}).get("boosts") or [], club.get("strength"))]
+                     decisive_match(club.get("next"), _boosts_due(club.get("prep") or {}), club.get("strength"))]
             club["reminders"] = [note for note in notes if note]
         except OSError:
             raise

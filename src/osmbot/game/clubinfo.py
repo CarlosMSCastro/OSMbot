@@ -161,11 +161,12 @@ def hidden_boost(settings: dict) -> float:
 
 
 def _match_strengths(client, team: dict, league: str, teams: list[dict], week: int, upcoming: dict | None,
-                     strength: float | None, done: dict, hidden: bool = False) -> tuple[float | None, float | None]:
+                     strength: float | None, done: dict, hidden: bool = False, lamp: bool = False) -> tuple[float | None, float | None]:
     """Both sides' strength for the formation rule (THEORY.md section 1): team rating, match boosts (own daily logins,
     camp and secret training when marked; the opponent's daily logins once analysed and only with a human manager,
     as the site shows them, or ``hidden_boost`` when he is on a secret training) and the home advantage (not on neutral
-    ground). His camp in his last match against us is not assumed: a camp is circumstantial (owner, 2026-11-26, D-123)."""
+    ground). His camp in his last match against us is not assumed: a camp is circumstantial (owner, 2026-11-26, D-123).
+    With the lamp lit (D-103) our camp and secret training count already: the bot books them 10 min before."""
     from osmbot.theory.tactics import match_strength
 
     if not strength or not upcoming or not upcoming.get("strength"):
@@ -173,7 +174,7 @@ def _match_strengths(client, team: dict, league: str, teams: list[dict], week: i
     settings = {g["name"]: g["value"] for g in _settings(client, team["leagueId"])}
     own = _boost(client, "user/dailylogin", ("matchboost", "me"))
     own += sum(settings.get(name) or 0 for kind, name in ((9, "CampBoostPercentage"), (8, "SecretBoostPercentage"))
-               if done.get(kind))
+               if done.get(kind) or lamp)
     rival = upcoming["opponent_id"]
     user = next((t.get("userId") for t in teams if t["id"] == rival), None)
     theirs = _boost(client, f"user/dailylogin/{user}/matchboost", ("matchboost", user, week)) \
@@ -184,6 +185,27 @@ def _match_strengths(client, team: dict, league: str, teams: list[dict], week: i
     return (match_strength(strength, boost_pct=own, home=home and upcoming.get("side") == "H", home_pct=own_pitch(client, base)),
             match_strength(upcoming["strength"], boost_pct=theirs, home=home and upcoming.get("side") == "A",
                            home_pct=rival_pitch(client, base, rival)))
+
+
+def _late_offer(client, team: dict, base: str, week: int, matches: list[dict], upcoming: dict | None,
+                blocked: bool) -> dict | None:
+    """The lamp "Estágio + secreto a 10 min" of the pre-match (D-103): the price now, whether it can be lit, whether
+    it is. None without a next match this round (the game does not let them be booked) or when the read fails."""
+    from osmbot import settings
+    from osmbot.game import camp
+    from osmbot.prematch import camp as rules
+
+    try:
+        item = camp.read_offer(client, team, base, week, matches)
+        light = camp.lamp(settings.club_key(team))
+    except OSError:
+        raise
+    except Exception:
+        return None
+    on = bool(light) and light.get("semana") == week
+    return {"on": on, "accepted": (light or {}).get("total") if on else None, "offer": item,
+            "why_not": "Sem jogo nesta jornada" if blocked or not upcoming else rules.why_not(item),
+            "opponent": (upcoming or {}).get("opponent")}
 
 
 def plays_counter(client, base: str, rival: int) -> bool:
@@ -420,7 +442,10 @@ def club_extra(client, team: dict, base: str, players: list[dict], slot, market:
     likely = (upcoming or {}).get("eleven") or {}  # no match against us: his likely eleven's formation (D-108)
     plan_vs = vs_us or ({"formation": likely["formation"], "detail": likely.get("detail"), "provavel": True}
                         if upcoming and upcoming.get("human") and likely.get("estimate") and likely.get("formation") else None)
-    mine, theirs = _match_strengths(client, team, league, teams, week, upcoming, strength, done, hidden)
+    late = _late_offer(client, team, base, week, matches, upcoming,
+                       not (by_type.get(9) or {}).get("enabled", True))  # the lamp of the last 10 min (D-103)
+    mine, theirs = _match_strengths(client, team, league, teams, week, upcoming, strength, done, hidden,
+                                    lamp=bool(late and late["on"]))
     if upcoming:  # for the reminder of a decisive match: what is known of the day (THEORY.md 21)
         upcoming["match"], upcoming["boosted"] = (mine, theirs), hidden or upcoming["camp"]
 
@@ -499,7 +524,7 @@ def club_extra(client, team: dict, base: str, players: list[dict], slot, market:
         "value_table": value_table(values, {t["id"]: t["name"] for t in teams}, team["id"]),
         "table": league_summary(standings, teams, matches, team["id"], week, team.get("goal"), group),
         "free_slots": free, "sales": sold, "rest": rest,
-        "prep": {"pct": prep.get("completionPercentage"), "steps": steps, "why": reasons, "boosts": boosts},
+        "prep": {"pct": prep.get("completionPercentage"), "steps": steps, "why": reasons, "boosts": boosts, "late": late},
         "injured": _people(injured, doctor, timer_minutes(client, team["leagueId"], "DoctorTreatmentTimer")),
         "suspended": _people(suspended, lawyer, timer_minutes(client, team["leagueId"], "LawyerCaseTimer")),
     }

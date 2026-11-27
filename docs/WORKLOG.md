@@ -2,6 +2,11 @@
 
 Entradas mais recentes primeiro. Cada sessão: o que se fez · o que ficou por fazer · próximo passo.
 
+## 2026-11-27 — Estágio + treino secreto a 10 min do jogo (PT-LA-02-0095-N)
+- **Dono:** fazer o estágio e o treino secreto nos últimos 10 min, de forma automática. Respostas: sempre os dois; o bot diz antes quanto custa e a decisão é dele (sem teto); "lê o código do site" em vez de observar com `inspect-writes`. O Claude propôs luz no pré-jogo (não uma definição) e o dono aceitou; a tática fica preparada já para o "depois do estágio" (o bot não mexe na tática).
+- **Feito (D-103, agora Aceite; `THEORY.md` §6):** pedido lido do código do site (`DISCOVERY.md` §3, [H]). `prematch/camp.py` (puro: preço, n.º do estágio, quando, mais caro, falta, tarde), `game/camp.py` (luz em `config.json` → `estagio`, marca secreto e depois estágio a 10 min, confirma com leitura e carteira, tenta de minuto a minuto até 1 min antes, apaga a luz; registo `logs/<PC>/estagios`, carteira "estágio", fora do teto), ciclo (`loop.py`: passo logo a seguir à poupança, os vídeos param 2 min antes, acorda a horas mesmo com falhas nos treinos), cartão (`clubinfo._late_offer`, `view.late_view`, `window.LampRow`: clique → pergunta com o custo → luz verde; com a luz acesa a força do "Onze" já conta o nosso estágio e o lembrete do jogo decisivo cala-se), `i18n`. 7 testes novos; 665 testes; pyflakes sem nada novo. Lido ao vivo (só GET): os preços batem com o jogo nos 4 clubes.
+- **Por fazer:** ver a luz na janela a sério; o 1.º estágio do bot é o teste do pedido (se o jogo recusar: "Estágio não ligado" e ainda há 10 min para o fazer à mão). Só vale com a versão nova / ao reiniciar o bot.
+
 ## 2026-11-26 — Não assumir o estágio dele (PT-LA-02-0095-N)
 - **Dono:** "No KV Mechelen não devia aceitar 5-3-2?" O bot via o Union SG a 155 contra 117 (ratings 114 × 117): +25 % de estágio assumido pelo jogo da taça (semana 26, D-100) e +6 % de casa → claramente mais forte → só 5-2-3/5-4-1. O Claude mostrou primeiro os 117 × 155 sem explicar de onde vinham.
 - **Feito (D-123):** o estágio do último jogo contra nós deixa de somar à força dele; `clubinfo._match_strengths`; `THEORY.md` §1. Lido ao vivo (só GET): Mechelen 117 × 124, sem aviso no "Onze". 658 testes; pyflakes limpo.

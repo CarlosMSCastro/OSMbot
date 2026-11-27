@@ -25,7 +25,7 @@ from osmbot import logs
 FILE = Path.home() / ".osmbot" / "carteira.json"
 OUTSIDE = "fora do bot"
 TRANSFERS = "transferências"  # players the owner signs by hand (1 token each, 5 for a black card in form; D-114)
-ORDER = ("vídeos da loja", "recompensas", "amigáveis", "treinos acabados", "estádio", TRANSFERS, OUTSIDE)
+ORDER = ("vídeos da loja", "recompensas", "amigáveis", "treinos acabados", "estádio", "estágio", TRANSFERS, OUTSIDE)
 _pending: dict[str, int] = {}
 _history: list[dict] = []  # this run's changes, for the window's "since the bot started" (D-114)
 _purchases: list[tuple[float, str]] = []  # players seen arriving, waiting for the drop of the wallet (time, name)
